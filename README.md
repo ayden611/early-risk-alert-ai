@@ -1,4 +1,6 @@
 # Early Risk Alert AI
+Author: Milton Munroe
+Course: Elements of AI - University of Helsinki
 
 ## 1. Project Idea in a Nutshell
 
