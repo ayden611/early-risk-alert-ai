@@ -54,4 +54,15 @@ Stakeholders include patients, healthcare providers, and public health organizat
 This project was inspired by:
 - University of Helsinki – Elements of AI
 - Public health data research
+
+## Demo Code
+
+A simple Python implementation using Gaussian Naive Bayes is included in `demo_model.py`.
+
+This demonstrates:
+- Feature structuring
+- Model training
+- Risk classification
+- Probability estimation
+
 - Open-source Python libraries such as NumPy and scikit-learn
