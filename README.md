@@ -1,6 +1,7 @@
 # Early Risk Alert AI
-Author: Milton Munroe
-Course: Elements of AI - University of Helsinki
+Author: Milton Munroe  
+Course: Elements of AI – University of Helsinki  
+Project Type: Probabilistic Classification (Naive Bayes)
 
 ## 1. Project Idea in a Nutshell
 
