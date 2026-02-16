@@ -2,11 +2,10 @@
 
 import numpy as np
 from sklearn.naive_bayes import GaussianNB
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
 
-# Example dataset:
-# [Age, BMI, Exercise Level]
-# Exercise Level: 0 = Low, 1 = Medium, 2 = High
-
+# Feature matrix: [Age, BMI, Exercise Level]
 X = np.array([
     [25, 22, 2],
     [45, 28, 0],
@@ -18,22 +17,33 @@ X = np.array([
     [55, 33, 0]
 ])
 
-# 0 = Low Risk
-# 1 = High Risk
-
+# 0 = Low Risk, 1 = High Risk
 y = np.array([0, 1, 1, 0, 1, 1, 0, 1])
+
+# Split data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.3, random_state=42
+)
 
 # Create model
 model = GaussianNB()
 
 # Train model
-model.fit(X, y)
+model.fit(X_train, y_train)
 
-# New patient example
+# Make predictions
+y_pred = model.predict(X_test)
+
+# Evaluation Metrics
+print("Accuracy:", accuracy_score(y_test, y_pred))
+print("\nConfusion Matrix:\n", confusion_matrix(y_test, y_pred))
+print("\nClassification Report:\n", classification_report(y_test, y_pred))
+
+# Example new patient
 new_patient = np.array([[50, 32, 0]])
-
 prediction = model.predict(new_patient)
 probability = model.predict_proba(new_patient)
 
-print("Prediction (0 = Low Risk, 1 = High Risk):", prediction[0])
+print("\nNew Patient Prediction (0=Low Risk, 1=High Risk):", prediction[0])
 print("Probability:", probability)
+
