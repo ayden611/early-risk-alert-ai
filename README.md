@@ -65,4 +65,30 @@ This demonstrates:
 - Risk classification
 - Probability estimation
 
+## 9. How to Run This Project
+
+1. Clone the repository:
+   git clone https://github.com/ayden611/early-risk-alert-ai.git
+
+2. Navigate into the folder:
+   cd early-risk-alert-ai
+
+3. Install dependencies:
+   pip install -r requirements.txt
+
+4. Run the demo model:
+   python demo_model.py
+
+## 10. Model Evaluation
+
+The model can be evaluated using:
+
+- Accuracy score
+- Confusion matrix
+- Classification report (precision, recall, F1-score)
+
+Future versions will include train/test split validation
+and performance metrics visualization.
+
+
 - Open-source Python libraries such as NumPy and scikit-learn
