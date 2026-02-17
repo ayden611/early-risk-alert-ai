@@ -49,7 +49,7 @@ probability = model.predict_proba(new_patient)
 print("\nNew Patient Prediction (0=Low Risk, 1=High Risk):", prediction[0])
 print("Probability:", probability)
 
-# saved trained model
+# Save model to THIS folder
 joblib.dump(model, "demo_model.pkl")
-print("model saved as demo_model.pkl")
+print("Saved model to:", os.path.abspath("demo_model.pkl"))
 
