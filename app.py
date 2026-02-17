@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template_string
+from flask import Flask, request, render_template
 import numpy as np
 from sklearn.naive_bayes import GaussianNB
 
@@ -21,35 +21,26 @@ y = np.array([0, 1, 1, 0, 1, 1, 0, 1])
 model = GaussianNB()
 model.fit(X, y)
 
-HTML = """
-<h2>Early Risk Alert AI</h2>
-<form method="post">
-Age: <input type="number" name="age"><br><br>
-BMI: <input type="number" name="bmi"><br><br>
-Exercise Level (0=Low,1=Medium,2=High):
-<input type="number" name="exercise"><br><br>
-<input type="submit">
-</form>
-
-{% if prediction is not none %}
-<h3>Prediction: {{ prediction }}</h3>
-{% endif %}
-"""
-
 @app.route("/", methods=["GET", "POST"])
 def home():
     prediction = None
+    probability = None
+
     if request.method == "POST":
         age = float(request.form["age"])
         bmi = float(request.form["bmi"])
         exercise = float(request.form["exercise"])
 
-        new_data = np.array([[age, bmi, exercise]])
-        result = model.predict(new_data)
+        data = np.array([[age, bmi, exercise]])
+        pred = model.predict(data)[0]
+        prob = model.predict_proba(data)[0][pred]
 
-        prediction = "High Risk" if result[0] == 1 else "Low Risk"
+        prediction = "High Risk" if pred == 1 else "Low Risk"
+        probability = round(float(prob), 2)
 
-    return render_template_string(HTML, prediction=prediction)
+    return render_template("index.html",
+                           prediction=prediction,
+                           probability=probability)
 
 if __name__ == "__main__":
     app.run(debug=True)
