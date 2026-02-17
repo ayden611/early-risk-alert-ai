@@ -20,6 +20,11 @@ def home():
 
         data = np.array([[age, bmi, exercise]])
         prediction = model.predict(data)[0]
+        if prediction == 1:
+            prediction = "High Risk"
+        else:
+            prediction = "Low Risk"
+    
         prob = model.predict_proba(data)[0]
         probability = round(float(max(prob)) * 100, 2)
 
