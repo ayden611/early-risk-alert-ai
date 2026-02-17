@@ -32,15 +32,17 @@ def home():
         exercise = float(request.form["exercise"])
 
         data = np.array([[age, bmi, exercise]])
-        pred = model.predict(data)[0]
-        prob = model.predict_proba(data)[0][pred]
 
-        prediction = "High Risk" if pred == 1 else "Low Risk"
-        probability = round(float(prob), 2)
+	result = model.predict(data)
+	prediction = "High Risk" if result[0] == 1 else "Low Risk"
 
-    return render_template("index.html",
-                           prediction=prediction,
-                           probability=probability)
+	probability = model.predict_proba(data)[0][result[0]]
+
+	return render_template(
+    	"index.html",
+    	prediction=prediction,
+    	probability=round(probability, 2))
+
 
 if __name__ == "__main__":
     app.run(debug=True)

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Early Risk Alert AI</title>
+</head>
+<body>
+
+    <h2>Early Risk Alert AI</h2>
+
+    <form method="POST">
+        Age: <input type="number" name="age"><br><br>
+        BMI: <input type="number" name="bmi"><br><br>
+        Exercise Level (0=Low,1=Medium,2=High):
+        <input type="number" name="exercise"><br><br>
+
+        <input type="submit" value="Submit">
+    </form>
+
+    {% if prediction %}
+        <h3>Prediction: {{ prediction }}</h3>
+        <h4>Probability: {{ probability }}</h4>
+    {% endif %}
+
+</body>
+</html>
+
