@@ -24,5 +24,5 @@ def home():
 
     return render_template("index.html", prediction=prediction, probability=probability)
 
-    if_name_== "_main_":
+    if__name__== "__main__":
         app.run(debug=True)
