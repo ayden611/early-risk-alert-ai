@@ -23,3 +23,6 @@ def home():
         probability = model.predict_proba(data)[0].tolist()
 
     return render_template("index.html", prediction=prediction, probability=probability)
+
+    if_name_== "_main_":
+        app.run(debug=True)
