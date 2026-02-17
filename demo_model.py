@@ -43,6 +43,10 @@ print("\nClassification Report:\n", classification_report(y_test, y_pred))
 new_patient = np.array([[50, 32, 0]])
 prediction = model.predict(new_patient)
 probability = model.predict_proba(new_patient)
+import jpblib
+
+joblib.dump(model, 'demo_model.pkl")
+            print("model saved as demo_model.pkl")
 
 print("\nNew Patient Prediction (0=Low Risk, 1=High Risk):", prediction[0])
 print("Probability:", probability)
