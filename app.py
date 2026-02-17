@@ -20,7 +20,8 @@ def home():
 
         data = np.array([[age, bmi, exercise]])
         prediction = model.predict(data)[0]
-        probability = model.predict_proba(data)[0].tolist()
+        prob = model.predict_proba(data)[0]
+        probability = round(float(max(prob)) * 100, 2)
 
     return render_template("index.html", prediction=prediction, probability=probability)
 
