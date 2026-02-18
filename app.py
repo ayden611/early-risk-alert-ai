@@ -110,7 +110,8 @@ def home():
             # MODEL PREDICTION
             # =========================
 
-            data = np.array([[age, bmi, sys_bp, dia_bp, heart_rate, exercise]])
+           data = np.array([[age, bmi, exercise, sys_bp, dia_bp, heart_rate]])
+
 
             prediction_value = int(model.predict(data)[0])
             prob = model.predict_proba(data)[0]
