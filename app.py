@@ -29,6 +29,3 @@ def home():
         probability = round(float(max(prob)) * 100, 2)
 
     return render_template("index.html", prediction=prediction, probability=probability)
-
-    if __name__ == "__main__":
-    app.run(debug=True)
