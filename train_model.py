@@ -2,14 +2,15 @@ import numpy as np
 from sklearn.linear_model import LogisticRegression
 import joblib
 
-# DEMO data (replace with real data later)
-# Columns: age, bmi, exercise, sys_bp, dia_bp, smoker
+# Columns (MUST match Flask order exactly):
+# age, bmi, sys_bp, dia_bp, heart_rate, exercise
+
 X = np.array([
-    [25, 22.0, 2, 118, 76, 0],
-    [55, 33.0, 0, 150, 95, 1],
-    [40, 28.0, 1, 135, 85, 0],
-    [65, 36.0, 0, 160, 100, 1],
-    [30, 24.0, 2, 120, 78, 0],
+    [25, 22.0, 118, 76, 72, 2],
+    [55, 33.0, 150, 95, 88, 0],
+    [40, 28.0, 135, 85, 76, 1],
+    [65, 36.0, 160, 100, 92, 0],
+    [30, 24.0, 120, 78, 70, 2],
 ])
 
 # Labels: 0 = Low Risk, 1 = High Risk
