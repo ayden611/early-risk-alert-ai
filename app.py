@@ -151,6 +151,7 @@ def home():
                            prediction=prediction,
                            probability=probability,
                            explanation=explanation,
+                           explanation=explanation_text,
                            error=error,
                            version=APP_VERSION)
 
@@ -177,6 +178,26 @@ def predict_api():
         probability = round(float(prob[1]) * 100, 2)
 
         prediction = "High Risk" if prediction_value == 1 else "Low Risk"
+        # Simple explanation logic
+explanation = []
+
+if sys_bp > 140:
+    explanation.append("Elevated systolic blood pressure")
+
+if dia_bp > 90:
+    explanation.append("Elevated diastolic blood pressure")
+
+if bmi > 30:
+    explanation.append("High BMI")
+
+if heart_rate > 100:
+    explanation.append("Elevated heart rate")
+
+if not explanation:
+    explanation_text = "Risk appears influenced by combined moderate factors."
+else:
+    explanation_text = ", ".join(explanation)
+
 
         return jsonify({
             "prediction": prediction,
