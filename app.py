@@ -151,7 +151,6 @@ def home():
     return render_template("index.html",
                            prediction=prediction,
                            probability=probability,
-                           explanation=explanation,
                            explanation=explanation_text,
                            error=error,
                            version=APP_VERSION)
