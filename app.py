@@ -11,7 +11,7 @@ MODEL_PATH = os.path.join(os.path.dirname(__file__), "demo_model.pkl")
 
 def load_model():
     if not os.path.exists(MODEL_PATH):
-        subprocess.run(["python", "train_model.py"], check=True)
+        subprocess.run(["python3", "train_model.py"], check=True)
     return joblib.load(MODEL_PATH)
 
 model = load_model()
