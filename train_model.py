@@ -13,7 +13,6 @@ X = np.array([
     [30, 24.0, 120, 78, 70, 2],
 ])
 
-# Labels: 0 = Low Risk, 1 = High Risk
 y = np.array([0, 1, 0, 1, 0])
 
 model = LogisticRegression()
