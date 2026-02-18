@@ -110,14 +110,14 @@ def home():
             # MODEL PREDICTION
             # =========================
 
-           data = np.array([[age, bmi, exercise, sys_bp, dia_bp, heart_rate]])
+                    data = np.array([[age, bmi, sys_bp, dia_bp, heart_rate, exercise]])
 
 
-            prediction_value = int(model.predict(data)[0])
-            prob = model.predict_proba(data)[0]
-            probability = round(float(prob[1]) * 100, 2)
+                    prediction_value = int(model.predict(data)[0])
+                    prob = model.predict_proba(data)[0]
+                    probability = round(float(prob[1]) * 100, 2)
 
-            prediction = "High Risk" if prediction_value == 1 else "Low Risk"
+                prediction = "High Risk" if prediction_value == 1 else "Low Risk"
 
             # =========================
             # EXPLANATION ENGINE
