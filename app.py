@@ -203,8 +203,7 @@ else:
         return jsonify({
             "prediction": prediction,
             "probability_high_risk": probability,
-            "version": APP_VERSION
-        })
+            "version": APP_VERSION})
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
