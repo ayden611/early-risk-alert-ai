@@ -5,22 +5,37 @@
 </head>
 <body>
 
-    <h2>Early Risk Alert AI</h2>
+<h1>Early Risk Alert AI</h1>
 
-    <form method="POST">
-        Age: <input type="number" name="age"><br><br>
-        BMI: <input type="number" name="bmi"><br><br>
-        Exercise Level (0=Low,1=Medium,2=High):
-        <input type="number" name="exercise"><br><br>
+<form method="POST">
 
-        <input type="submit" value="Submit">
-    </form>
+    <label>Age:</label><br>
+    <input type="number" name="age" required><br><br>
 
-    {% if prediction %}
-        <h3>Prediction: {{ prediction }}</h3>
-        <h4>Probability: {{ probability }}</h4>
-    {% endif %}
+    <label>BMI:</label><br>
+    <input type="number" step="any" name="bmi" required><br><br>
+
+    <label>Exercise Level (0=Low, 1=Medium, 2=High):</label><br>
+    <input type="number" name="exercise" min="0" max="2" required><br><br>
+
+    <label>Systolic BP:</label><br>
+    <input type="number" name="sys_bp" required><br><br>
+
+    <label>Diastolic BP:</label><br>
+    <input type="number" name="dia_bp" required><br><br>
+
+    <label>Heart Rate:</label><br>
+    <input type="number" name="heart_rate" required><br><br>
+
+    <button type="submit">Predict</button>
+
+</form>
+
+{% if prediction %}
+<hr>
+<h2>Prediction: {{ prediction }}</h2>
+<h3>Probability (High Risk): {{ probability }}%</h3>
+{% endif %}
 
 </body>
 </html>
-
