@@ -9,12 +9,12 @@ app = Flask(__name__)
 # Path to model file
 MODEL_PATH = os.path.join(os.path.dirname(__file__), "demo_model.pkl")
 
-# Train model if it's missing (works on Render too)
-if not os.path.exists(MODEL_PATH):
-    subprocess.run(["python3", "train_model.py"], check=True)
+def load_model():
+    if not os.path.exists(MODEL_PATH):
+        subprocess.run(["python", "train_model.py"], check=True)
+    return joblib.load(MODEL_PATH)
 
-# Load model
-model = joblib.load(MODEL_PATH)
+model = load_model()
 
 @app.route("/", methods=["GET", "POST"])
 def home():
