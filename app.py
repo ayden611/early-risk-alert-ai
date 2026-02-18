@@ -98,12 +98,13 @@ def home():
                 error = "Heart rate must be between 30 and 220."
 
             if error:
-                return render_template("index.html",
-                                       prediction=None,
-                                       probability=None,
-                                       explanation=None,
-                                       error=error,
-                                       version=APP_VERSION)
+                return render_template(
+                    "index.html",
+                    prediction=None,
+                    probability=None,
+                    explanation=None,
+                    error=error,
+                    version=APP_VERSION)
 
             # =========================
             # MODEL PREDICTION
