@@ -53,20 +53,6 @@
 
       <button type="submit">Predict</button>
     </form>
-    {% if error %}
-  <p style="color:red;"><b>{{ error }}</b></p>
-{% endif %}
-
-{% if prediction %}
-  <hr>
-  <h2>Prediction: {{ prediction }}</h2>
-  <h3>Probability (High Risk): {{ probability }}%</h3>
-
-  {% if explanation %}
-    <p><b>Why:</b> {{ explanation }}</p>
-  {% endif %}
-{% endif %}
-
 
     {% if error %}
       <div class="card error">
