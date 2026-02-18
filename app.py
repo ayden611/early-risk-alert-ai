@@ -180,7 +180,7 @@ def predict_api():
 
         prediction = "High Risk" if prediction_value == 1 else "Low Risk"
         # Simple explanation logic
-explanation = []
+        explanation = []
 
 if sys_bp > 140:
     explanation.append("Elevated systolic blood pressure")
@@ -205,6 +205,7 @@ else:
             "probability_high_risk": probability,
             "version": APP_VERSION
         })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
 
-    except:
-        return jsonify({"error": "Invalid JSON payload"}), 400
+    y({"error": "Invalid JSON payload"}), 400
