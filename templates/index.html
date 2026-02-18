@@ -1,41 +1,76 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Early Risk Alert AI</title>
+  <title>Early Risk Alert AI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; }
+    .wrap { max-width: 520px; }
+    label { display:block; margin-top: 12px; font-weight: 600; }
+    input { width: 100%; padding: 10px; margin-top: 6px; }
+    button { margin-top: 16px; padding: 10px 14px; cursor: pointer; }
+    .card { margin-top: 18px; padding: 14px; border: 1px solid #ccc; border-radius: 8px; }
+    .error { background: #ffecec; border: 1px solid #ffb3b3; }
+    .success { background: #f4fff4; border: 1px solid #b7f0b7; }
+    .small { margin-top: 10px; font-size: 12px; opacity: 0.75; }
+    .row { display:flex; gap:12px; }
+    .row > div { flex:1; }
+  </style>
 </head>
+
 <body>
+  <div class="wrap">
+    <h1>Early Risk Alert AI</h1>
 
-<h1>Early Risk Alert AI</h1>
+    <form method="POST">
+      <div class="row">
+        <div>
+          <label>Age</label>
+          <input type="number" name="age" required min="1" max="120" step="1">
+        </div>
+        <div>
+          <label>BMI</label>
+          <input type="number" name="bmi" required min="10" max="70" step="any">
+        </div>
+      </div>
 
-<form method="POST">
+      <label>Exercise Level (0=Low, 1=Medium, 2=High)</label>
+      <input type="number" name="exercise" required min="0" max="2" step="1">
 
-    <label>Age:</label><br>
-    <input type="number" name="age" required><br><br>
+      <div class="row">
+        <div>
+          <label>Systolic BP (top number)</label>
+          <input type="number" name="sys_bp" required min="70" max="250" step="1">
+        </div>
+        <div>
+          <label>Diastolic BP (bottom number)</label>
+          <input type="number" name="dia_bp" required min="40" max="150" step="1">
+        </div>
+      </div>
 
-    <label>BMI:</label><br>
-    <input type="number" step="any" name="bmi" required><br><br>
+      <label>Heart Rate (bpm)</label>
+      <input type="number" name="heart_rate" required min="30" max="220" step="1">
 
-    <label>Exercise Level (0=Low, 1=Medium, 2=High):</label><br>
-    <input type="number" name="exercise" min="0" max="2" required><br><br>
+      <button type="submit">Predict</button>
+    </form>
 
-    <label>Systolic BP:</label><br>
-    <input type="number" name="sys_bp" required><br><br>
+    {% if error %}
+      <div class="card error">
+        <strong>Error:</strong> {{ error }}
+      </div>
+    {% endif %}
 
-    <label>Diastolic BP:</label><br>
-    <input type="number" name="dia_bp" required><br><br>
+    {% if prediction %}
+      <div class="card success">
+        <h2>Prediction: {{ prediction }}</h2>
+        <h3>Probability (High Risk): {{ probability }}%</h3>
+        <p><strong>Explanation:</strong> {{ explanation }}</p>
+      </div>
+    {% endif %}
 
-    <label>Heart Rate:</label><br>
-    <input type="number" name="heart_rate" required><br><br>
-
-    <button type="submit">Predict</button>
-
-</form>
-
-{% if prediction %}
-<hr>
-<h2>Prediction: {{ prediction }}</h2>
-<h3>Probability (High Risk): {{ probability }}%</h3>
-{% endif %}
-
+    <div class="small">
+      Demo model for learning purposes. Version: {{ version }}
+    </div>
+  </div>
 </body>
 </html>
