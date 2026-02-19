@@ -1,25 +1,64 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="utf-8" />
   <title>Early Risk Alert AI</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
   <div class="container">
-    <h1>Early Risk Alert AI</h1>
+    <div class="card">
+      <h1>Early Risk Alert AI</h1>
+      <p class="subtitle">Demo prediction system (learning project)</p>
 
-    <form method="POST">
-      <label>Age:</label>
-      <input type="number" name="age" required>
+      <form method="POST">
+        <label>Age</label>
+        <input type="number" step="1" name="age" required value="{{ form_vals.age }}"/>
 
-      <label>BMI:</label>
-      <input type="number" step="any" name="bmi" required>
+        <label>BMI</label>
+        <input type="number" step="0.1" name="bmi" required value="{{ form_vals.bmi }}"/>
 
-      <label>Exercise Level (0=Low, 1=Medium, 2=High):</label>
-      <input type="number" name="exercise" min="0" max="2" required>
+        <label>Exercise Level (0=Low, 1=Medium, 2=High)</label>
+        <select name="exercise" required>
+          <option value="" {% if form_vals.exercise=="" %}selected{% endif %}>Select…</option>
+          <option value="0" {% if form_vals.exercise=="0" %}selected{% endif %}>0 - Low</option>
+          <option value="1" {% if form_vals.exercise=="1" %}selected{% endif %}>1 - Medium</option>
+          <option value="2" {% if form_vals.exercise=="2" %}selected{% endif %}>2 - High</option>
+        </select>
 
-      <label>Systolic BP (top number):</label>
-      <input type="number" name="sys_bp" required>
+        <label>Systolic BP (top number)</label>
+        <input type="number" step="1" name="sys_bp" required value="{{ form_vals.sys_bp }}"/>
 
-      <label>Diastolic BP (bottom number):</label>
-      <input type="number" name="dia_bp" required>
+        <label>Diastolic BP (bottom number)</label>
+        <input type="number" step="1" name="dia_bp" required value="{{ form_vals.dia_bp }}"/>
+
+        <label>Heart Rate (bpm)</label>
+        <input type="number" step="1" name="heart_rate" required value="{{ form_vals.heart_rate }}"/>
+
+        <button class="btn" type="submit">Predict</button>
+      </form>
+
+      {% if prediction %}
+        <div class="result {{ risk_class }}">
+          <div class="result-title">Prediction: {{ prediction }}</div>
+          <div class="result-prob">Confidence: {{ probability }}%</div>
+
+          <div class="meter-wrap">
+            <div class="meter-label">Risk Meter (P(High Risk))</div>
+            <div class="meter">
+              <div class="meter-fill" style="width: {{ risk_meter }}%;"></div>
+            </div>
+            <div class="meter-num">{{ risk_meter }}%</div>
+          </div>
+        </div>
+      {% endif %}
+
+      <div class="links">
+        <a href="/history">View recent predictions</a>
+      </div>
+
+      <p class="note">Note: This is a demo model for learning purposes.</p>
+    </div>
+  </div>
+</body>
+</html>
