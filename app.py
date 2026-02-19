@@ -21,11 +21,14 @@ model = joblib.load(MODEL_PATH)
 # -----------------------------
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
-# Render/Heroku sometimes provide postgres://, SQLAlchemy expects postgresql://
 if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
-# Default local DB if not provided
+# If deployed (Render sets RENDER), require DATABASE_URL
+if os.environ.get("RENDER") and not DATABASE_URL:
+    raise RuntimeError("DATABASE_URL is required on Render")
+
+# Local fallback only
 if not DATABASE_URL:
     DATABASE_URL = "sqlite:///predictions.db"
 
