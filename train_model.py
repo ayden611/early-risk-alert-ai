@@ -1,36 +1,21 @@
-import pandas as pd
-import joblib
-from sklearn.model_selection import train_test_split
+import numpy as np
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score
+import joblib
 
-CSV_PATH = "data/health_data.csv"
-MODEL_PATH = "demo_model.pkl"
+# Columns: age, bmi, exercise, sys_bp, dia_bp, heart_rate
+X = np.array([
+    [25, 22.0, 2, 118, 76, 72],
+    [55, 33.0, 0, 150, 95, 92],
+    [40, 28.0, 1, 135, 85, 80],
+    [65, 36.0, 0, 160, 100, 98],
+    [30, 24.0, 2, 120, 78, 70],
+])
 
-def main():
-    df = pd.read_csv(CSV_PATH)
+# Labels: 0 = Low Risk, 1 = High Risk
+y = np.array([0, 1, 0, 1, 0])
 
-    required = ["age","bmi","exercise","sys_bp","dia_bp","heart_rate","label"]
-    missing = [c for c in required if c not in df.columns]
-    if missing:
-        raise ValueError(f"Missing columns in CSV: {missing}")
+model = LogisticRegression()
+model.fit(X, y)
 
-    X = df[["age","bmi","exercise","sys_bp","dia_bp","heart_rate"]]
-    y = df["label"]
-
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, random_state=42, stratify=y
-    )
-
-    model = LogisticRegression(max_iter=2000)
-    model.fit(X_train, y_train)
-
-    preds = model.predict(X_test)
-    acc = accuracy_score(y_test, preds)
-    print(f"Model accuracy: {acc:.3f}")
-
-    joblib.dump(model, MODEL_PATH)
-    print(f"Saved {MODEL_PATH}")
-
-if __name__ == "__main__":
-    main()
+joblib.dump(model, "demo_model.pkl")
+print("Saved demo_model.pkl")
