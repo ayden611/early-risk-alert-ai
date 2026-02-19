@@ -1,7 +1,7 @@
 Flask
-gunicorn
 numpy
+joblib
 pandas
 scikit-learn
-scipy
-joblib
+SQLAlchemy
+psycopg2-binary
