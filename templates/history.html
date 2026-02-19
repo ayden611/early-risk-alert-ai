@@ -1,40 +1,74 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="en">
 <head>
   <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Prediction History</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    .wrap { max-width: 900px; margin: 24px auto; padding: 0 16px; }
+    .topbar { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom: 16px; }
+    .btn { display:inline-block; padding:10px 14px; border-radius:10px; text-decoration:none; border:1px solid rgba(0,0,0,.12); }
+    .card { background: #fff; border:1px solid rgba(0,0,0,.10); border-radius:16px; padding:16px; box-shadow: 0 6px 18px rgba(0,0,0,.06); }
+    table { width:100%; border-collapse: collapse; }
+    th, td { text-align:left; padding:10px 8px; border-bottom:1px solid rgba(0,0,0,.08); font-size: 14px; }
+    th { font-size: 12px; text-transform: uppercase; letter-spacing:.06em; opacity:.75; }
+    .pill { padding:4px 10px; border-radius:999px; font-weight:600; font-size:12px; display:inline-block; }
+    .high { background:#ffe3e3; color:#8b0000; }
+    .low  { background:#e7f7ea; color:#0b5d1e; }
+    .muted { opacity:.7; font-size:12px; }
+    .empty { padding:14px; opacity:.75; }
+  </style>
 </head>
 <body>
-  <div class="container">
+  <div class="wrap">
+    <div class="topbar">
+      <div>
+        <h2 style="margin:0;">Prediction History</h2>
+        <div class="muted">Most recent entries first</div>
+      </div>
+      <a class="btn" href="{{ url_for('home') }}">← Back to Predictor</a>
+    </div>
+
     <div class="card">
-      <h1>Recent Predictions</h1>
-      <p class="subtitle">Last 25 runs (stored in DB)</p>
-
-      <div class="table">
-        <div class="row head">
-          <div>Date</div><div>Prediction</div><div>Confidence</div>
-          <div>Age</div><div>BMI</div><div>Ex</div><div>Sys</div><div>Dia</div><div>HR</div>
-        </div>
-
-        {% for r in rows %}
-          <div class="row">
-            <div>{{ r.created_at }}</div>
-            <div>{{ r.prediction }}</div>
-            <div>{{ "%.2f"|format(r.probability) }}%</div>
-            <div>{{ r.age }}</div>
-            <div>{{ r.bmi }}</div>
-            <div>{{ r.exercise }}</div>
-            <div>{{ r.sys_bp }}</div>
-            <div>{{ r.dia_bp }}</div>
-            <div>{{ r.heart_rate }}</div>
-          </div>
-        {% endfor %}
-      </div>
-
-      <div class="links">
-        <a href="/">← Back</a>
-      </div>
+      {% if rows and rows|length > 0 %}
+        <table>
+          <thead>
+            <tr>
+              <th>Time (UTC)</th>
+              <th>Age</th>
+              <th>BMI</th>
+              <th>Exercise</th>
+              <th>BP</th>
+              <th>HR</th>
+              <th>Result</th>
+              <th>Confidence</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in rows %}
+              <tr>
+                <td>{{ r.created_at }}</td>
+                <td>{{ '%.0f'|format(r.age) }}</td>
+                <td>{{ '%.1f'|format(r.bmi) }}</td>
+                <td>{{ '%.0f'|format(r.exercise) }}</td>
+                <td>{{ '%.0f'|format(r.sys_bp) }}/{{ '%.0f'|format(r.dia_bp) }}</td>
+                <td>{{ '%.0f'|format(r.heart_rate) }}</td>
+                <td>
+                  {% if 'High' in r.prediction %}
+                    <span class="pill high">{{ r.prediction }}</span>
+                  {% else %}
+                    <span class="pill low">{{ r.prediction }}</span>
+                  {% endif %}
+                </td>
+                <td>{{ '%.2f'|format(r.probability) }}%</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <div class="empty">No history yet. Run a prediction first.</div>
+      {% endif %}
     </div>
   </div>
 </body>
