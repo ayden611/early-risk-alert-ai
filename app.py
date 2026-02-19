@@ -1,15 +1,14 @@
 from flask import Flask, render_template, request
-import numpy as np
 import joblib
-import os
+import numpy as np
 
 app = Flask(__name__)
 
-MODEL_PATH = os.path.join(os.path.dirname(__file__), "demo_model.pkl")
-model = joblib.load(MODEL_PATH)
+# Load trained model
+model = joblib.load("demo_model.pkl")
 
 @app.route("/", methods=["GET", "POST"])
-def home():
+def index():
     prediction = None
     probability = None
 
@@ -21,14 +20,13 @@ def home():
         dia_bp = float(request.form["dia_bp"])
         heart_rate = float(request.form["heart_rate"])
 
-        # IMPORTANT: order must match training
-        data = np.array([[age, bmi, exercise, sys_bp, dia_bp, heart_rate]])
+        features = np.array([[age, bmi, exercise, sys_bp, dia_bp, heart_rate]])
 
-        prediction_value = int(model.predict(data)[0])
-        prediction = "High Risk" if prediction_value == 1 else "Low Risk"
+        result = model.predict(features)[0]
+        prob = model.predict_proba(features)[0][1]
 
-        prob = model.predict_proba(data)[0]
-        probability = round(float(max(prob)) * 100, 2)
+        prediction = "High Risk" if result == 1 else "Low Risk"
+        probability = round(prob * 100, 2)
 
     return render_template("index.html", prediction=prediction, probability=probability)
 
