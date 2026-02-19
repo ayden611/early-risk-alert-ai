@@ -3,58 +3,90 @@ Author: Milton Munroe
 Course: Elements of AI – University of Helsinki  
 Project Type: Probabilistic Classification (Naive Bayes)
 
-## 1. Project Idea in a Nutshell
+1. Your idea in a nutshell
+Project Name: Early Risk Alert AI
+Early Risk Alert AI is a web-based machine learning application that predicts whether a person may be at low or high cardiovascular risk based on health indicators such as age, BMI, exercise level, blood pressure, and heart rate. The system provides a risk classification and probability score and stores prediction history in a database.
 
-Early Risk Alert is a probabilistic AI system designed to predict potential high blood pressure risk based on simple health indicators such as age, BMI, activity level, and diet patterns. The model uses Naive Bayes classification to estimate the probability of health risk.
+2. Background
+Cardiovascular disease is one of the leading causes of death worldwide. Many individuals are unaware of their potential risk level until symptoms become serious.
+This project addresses the problem of early awareness. By using health indicators that people commonly know (age, blood pressure, heart rate, BMI), the system provides an immediate estimate of risk.
+The motivation behind this project is to demonstrate how AI can assist in preventative health awareness. Even simple models can help individuals better understand how lifestyle and measurable health metrics influence risk.
+This topic is important because early detection and awareness can lead to better health decisions and potentially prevent serious outcomes.
 
-## 2. Background
+3. Data and AI Techniques
+This project uses a supervised machine learning classification model trained on structured health-related data.
+AI techniques used:
+Supervised learning
+Binary classification
+Probability prediction
+Feature-based modeling
+NumPy for feature arrays
+Joblib for model loading
+SQLAlchemy + PostgreSQL for storing prediction logs
+The model takes numerical inputs:
+Age
+BMI
+Exercise level
+Systolic blood pressure
+Diastolic blood pressure
+Heart rate
+The system outputs:
+Risk classification (Low / High)
+Probability score
+The application is implemented using:
+Python
+Flask (web framework)
+PostgreSQL (cloud database)
+Deployed on Render
 
-High blood pressure is a widespread global health issue that often goes undetected until complications arise. Early risk detection can significantly reduce long-term health consequences. This project explores how basic probabilistic models can assist in early health screening using structured data.
+4. How it is used
+The application is used through a web interface.
+A user:
+Enters their health metrics
+Submits the form
+Receives a risk classification and probability
+The prediction is stored in a database
+The user can view previous predictions in a history page
+The affected users are:
+Individuals interested in understanding cardiovascular risk
+Students learning about AI in healthcare
+Developers studying ML deployment
 
-## 3. Data and AI Techniques
+5. Challenges
+This project does not replace medical professionals. It is not a diagnostic tool.
+Limitations include:
+Model accuracy depends on training data quality
+Limited feature set
+No integration with real medical records
+No personalization beyond input variables
+Risk of over-reliance on simplified predictions
+AI models must be interpreted carefully and responsibly.
 
-### Data Sources:
-- Public health datasets (e.g., CDC)
-- Age
-- BMI
-- Exercise frequency
-- Diet patterns
-- Family medical history
+6. Whats next?
+Future improvements could include:
+Larger and more diverse datasets
+Integration with wearable devices
+Personalized health tracking
+Mobile app version
+Improved UI/UX design
+Model retraining pipeline
+Security and authentication
+HIPAA-compliant architecture
+API for mobile apps
+Cloud scaling and monitoring
+The project could evolve into a full preventive health monitoring platform.
 
-### AI Techniques Used:
-- Naive Bayes classification
-- Probability estimation
-- Feature independence assumption
-- Basic threshold optimization
-
-Naive Bayes was chosen due to its efficiency and suitability for classification problems involving structured features.
-
-## 4. How It Is Used
-
-This system could be integrated into health apps, clinics, and preventative care platforms. It is intended as a decision-support tool, not a medical diagnosis system.
-
-Stakeholders include patients, healthcare providers, and public health organizations.
-
-## 5. Challenges
-
-- Data bias risk  
-- Assumption of feature independence  
-- Limited accuracy without large datasets  
-- Ethical considerations in health prediction  
-
-## 6. Future Improvements
-
-- Expand dataset size  
-- Integrate wearable device data  
-- Test logistic regression and ensemble models  
-- Develop a web-based interface  
-
-## 7. Acknowledgements
-
-This project was inspired by:
-- University of Helsinki – Elements of AI
-- Public health data research
-
+7. Acknowledgments
+This project was developed using:
+Python
+Flask
+SQLAlchemy
+NumPy
+Joblib
+PostgreSQL
+Render for deployment
+Open-source machine learning tools
+Inspiration from introductory AI coursework and machine learning education materials.
 ## 8. Demo Code
 
 A simple Python implementation using Gaussian Naive Bayes is included in `demo_model.py`.
