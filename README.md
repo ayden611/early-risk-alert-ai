@@ -1,4 +1,8 @@
 # Early Risk Alert AI
+## Summary
+
+Early Risk Alert AI is a web-based machine learning application that predicts whether a person may be at low or high cardiovascular risk using health indicators such as age, BMI, exercise level, blood pressure, heart rate, and smoking status. The system provides a risk classification and probability score, stores predictions in a cloud database, and is deployed as a scalable web service.
+
 Author: Milton Munroe  
 Course: Elements of AI – University of Helsinki  
 Project Type: Probabilistic Classification (Naive Bayes)
