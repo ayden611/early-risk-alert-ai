@@ -129,14 +129,7 @@ def home():
         risk_class=risk_class,
         form_vals=form_vals,
         error=error
-    )
-        "index.html",
-        prediction=prediction_text,
-        probability=probability_percent,
-        risk_meter=probability_class1_percent,  # 0-100 bar based on high-risk probability
-        risk_class=risk_class,
-        form_vals=form_vals
-    )
+)
 
 @app.route("/history")
 def history():
