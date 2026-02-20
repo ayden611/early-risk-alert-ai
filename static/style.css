@@ -1,117 +1,67 @@
-* { box-sizing: border-box; }
-body {
-  margin: 0;
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-  background: #0b1220;
-  color: #e8eefc;
-}
-.shell { max-width: 1100px; margin: 32px auto; padding: 0 16px; }
-.top {
-  display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: 18px;
-}
-.brand { display: flex; gap: 12px; align-items: center; }
-.logo {
-  width: 44px; height: 44px; border-radius: 12px;
-  background: rgba(255,255,255,0.08);
-  display: grid; place-items: center; font-weight: 700;
-}
-.title { font-size: 18px; font-weight: 700; }
-.subtitle { font-size: 13px; opacity: 0.75; margin-top: 2px; }
-.pill {
-  padding: 8px 12px; border-radius: 999px;
-  background: rgba(255,255,255,0.08);
-  font-size: 12px; opacity: 0.9;
-}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Recent Predictions - Early Risk Alert AI</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <div class="shell">
+    <header class="header">
+      <div class="logo">ERA</div>
+      <div>
+        <div class="title">Recent Predictions</div>
+        <div class="subtitle">Last 30 submissions</div>
+      </div>
+      <div class="spacer"></div>
+      <a class="btn" href="/">Back</a>
+    </header>
 
-.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-@media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
-
-.card {
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 18px;
-  padding: 18px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
-}
-
-h2 { margin: 0 0 10px; font-size: 16px; }
-.muted { opacity: 0.75; margin: 0 0 14px; font-size: 13px; }
-
-.form label { display: grid; gap: 8px; margin: 10px 0; font-size: 13px; }
-.row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-
-input, select {
-  width: 100%;
-  padding: 10px 12px;
-  border-radius: 12px;
-  border: 1px solid rgba(255,255,255,0.12);
-  background: rgba(0,0,0,0.22);
-  color: #e8eefc;
-  outline: none;
-}
-input:focus, select:focus { border-color: rgba(120,170,255,0.7); }
-
-.hint { font-size: 12px; opacity: 0.7; margin-top: -4px; }
-
-.actions { display: flex; gap: 10px; margin-top: 12px; }
-.btn {
-  padding: 10px 12px;
-  border-radius: 12px;
-  border: 1px solid rgba(255,255,255,0.14);
-  background: rgba(255,255,255,0.06);
-  color: #e8eefc;
-  cursor: pointer;
-  text-decoration: none;
-  display: inline-flex; align-items: center; justify-content: center;
-}
-.btn.primary {
-  background: rgba(120,170,255,0.25);
-  border-color: rgba(120,170,255,0.35);
-}
-
-.check { display: flex; gap: 10px; align-items: flex-start; margin-top: 8px; }
-.check input { width: 18px; height: 18px; margin-top: 2px; }
-
-.link { display: inline-block; margin-top: 12px; opacity: 0.85; color: #bcd2ff; }
-
-.result {
-  padding: 14px;
-  border-radius: 14px;
-  border: 1px solid rgba(255,255,255,0.10);
-  background: rgba(0,0,0,0.18);
-}
-.result.low { border-color: rgba(70,200,120,0.35); }
-.result.high { border-color: rgba(255,120,120,0.35); }
-
-.result-head { display: flex; justify-content: space-between; align-items: center; }
-.result-title { font-size: 20px; font-weight: 800; }
-.badge {
-  font-size: 12px;
-  padding: 6px 10px;
-  border-radius: 999px;
-  background: rgba(255,255,255,0.08);
-}
-
-.confidence { margin: 10px 0; }
-.meter { height: 12px; border-radius: 999px; background: rgba(255,255,255,0.10); overflow: hidden; }
-.meter-fill { height: 100%; background: linear-gradient(90deg, #4ee59b, #ffd36a, #ff6b6b); }
-.meter-caption { margin-top: 8px; font-size: 12px; opacity: 0.85; }
-.meter-number { font-weight: 700; }
-
-.disclaimer { margin-top: 10px; font-size: 12px; opacity: 0.75; line-height: 1.35; }
-.footnote { margin-top: 14px; font-size: 12px; opacity: 0.75; display: flex; gap: 8px; align-items: center; }
-.dot { width: 8px; height: 8px; border-radius: 999px; background: rgba(120,170,255,0.8); }
-
-.table { display: grid; gap: 8px; }
-.trow {
-  display: grid;
-  grid-template-columns: 160px 60px 60px 50px 60px 60px 60px 90px 60px;
-  gap: 8px;
-  padding: 10px;
-  border-radius: 12px;
-  background: rgba(0,0,0,0.16);
-  border: 1px solid rgba(255,255,255,0.08);
-  overflow-x: auto;
-}
-.thead { font-weight: 700; opacity: 0.9; }
+    <main class="card">
+      {% if items and items|length > 0 %}
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Age</th>
+                <th>BMI</th>
+                <th>Exercise</th>
+                <th>Sys BP</th>
+                <th>Dia BP</th>
+                <th>HR</th>
+                <th>Risk</th>
+                <th>Prob</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for p in items %}
+                <tr>
+                  <td class="mono">{{ p.created_at }}</td>
+                  <td>{{ p.age }}</td>
+                  <td>{{ p.bmi }}</td>
+                  <td>{{ p.exercise }}</td>
+                  <td>{{ p.sys_bp }}</td>
+                  <td>{{ p.dia_bp }}</td>
+                  <td>{{ p.heart_rate }}</td>
+                  <td>
+                    <span class="badge {{ 'high' if p.risk_class == 'high' else 'low' }}">
+                      {{ p.risk_class }}
+                    </span>
+                  </td>
+                  <td>{{ p.probability }}%</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="empty">
+          No history yet. Submit a prediction first.
+        </div>
+      {% endif %}
+    </main>
+  </div>
+</body>
+</html>
