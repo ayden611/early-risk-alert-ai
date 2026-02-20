@@ -1,42 +1,100 @@
+<!-- templates/index.html (REPLACE THE WHOLE FILE WITH THIS) -->
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8" />
   <title>Early Risk Alert AI</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    .actions { display:flex; gap:10px; margin-top:14px; }
+    .btn-secondary {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(0,0,0,0.14);
+      font-weight: 700;
+      cursor: pointer;
+      background: #ffffff;
+      color: #111827;
+    }
+    .disclaimer {
+      margin-top: 14px;
+      font-size: 12px;
+      color: #6b7280;
+      line-height: 1.4;
+    }
+    .consent {
+      margin-top: 12px;
+      display:flex;
+      gap:10px;
+      align-items:flex-start;
+      font-size: 13px;
+      color: #374151;
+    }
+    .consent input { width: 18px; height: 18px; margin-top:2px; }
+    .error {
+      margin-top: 14px;
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid #fecaca;
+      background: #fef2f2;
+      color: #7f1d1d;
+      font-weight: 700;
+    }
+  </style>
 </head>
 <body>
   <div class="container">
     <div class="card">
       <h1>Early Risk Alert AI</h1>
-      <p class="subtitle">Demo prediction system (learning project)</p>
+      <p class="subtitle">Preventive risk insight based on measurable inputs.</p>
 
       <form method="POST">
         <label>Age</label>
-        <input type="number" step="1" name="age" required value="{{ form_vals.age }}"/>
+        <input type="number" name="age" min="1" max="120" required value="{{ form_vals.age }}"/>
 
         <label>BMI</label>
-        <input type="number" step="0.1" name="bmi" required value="{{ form_vals.bmi }}"/>
+        <input type="number" step="0.1" name="bmi" min="10" max="80" required value="{{ form_vals.bmi }}"/>
 
-        <label>Exercise Level (0=Low, 1=Medium, 2=High)</label>
+        <label>Exercise Level</label>
         <select name="exercise" required>
           <option value="" {% if form_vals.exercise=="" %}selected{% endif %}>Select…</option>
-          <option value="0" {% if form_vals.exercise=="0" %}selected{% endif %}>0 - Low</option>
-          <option value="1" {% if form_vals.exercise=="1" %}selected{% endif %}>1 - Medium</option>
-          <option value="2" {% if form_vals.exercise=="2" %}selected{% endif %}>2 - High</option>
+          <option value="0" {% if form_vals.exercise=="0" %}selected{% endif %}>Low</option>
+          <option value="1" {% if form_vals.exercise=="1" %}selected{% endif %}>Medium</option>
+          <option value="2" {% if form_vals.exercise=="2" %}selected{% endif %}>High</option>
         </select>
 
         <label>Systolic BP (top number)</label>
-        <input type="number" step="1" name="sys_bp" required value="{{ form_vals.sys_bp }}"/>
+        <input type="number" name="sys_bp" min="70" max="250" required value="{{ form_vals.sys_bp }}"/>
 
         <label>Diastolic BP (bottom number)</label>
-        <input type="number" step="1" name="dia_bp" required value="{{ form_vals.dia_bp }}"/>
+        <input type="number" name="dia_bp" min="40" max="150" required value="{{ form_vals.dia_bp }}"/>
 
         <label>Heart Rate (bpm)</label>
-        <input type="number" step="1" name="heart_rate" required value="{{ form_vals.heart_rate }}"/>
+        <input type="number" name="heart_rate" min="30" max="220" required value="{{ form_vals.heart_rate }}"/>
 
-        <button class="btn" type="submit">Predict</button>
+        <!-- Consent -->
+        <div class="consent">
+          <input type="checkbox" name="consent" required>
+          <div>
+            <strong>I understand</strong> this tool provides a risk estimate for awareness only and is
+            <strong>not medical advice</strong>. Do not enter personal identifiers.
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="btn" type="submit">Predict</button>
+
+          <!-- CLEAR / RESET: redirects to GET / so the form + result clears -->
+          <button class="btn-secondary" type="button" onclick="window.location.href='{{ url_for('home') }}'">
+            Clear
+          </button>
+        </div>
       </form>
+
+      {% if error %}
+        <div class="error">{{ error }}</div>
+      {% endif %}
 
       {% if prediction %}
         <div class="result {{ risk_class }}">
@@ -50,6 +108,12 @@
             </div>
             <div class="meter-num">{{ risk_meter }}%</div>
           </div>
+
+          <div class="disclaimer">
+            <strong>What this means:</strong> This is an estimated risk score based on the inputs provided.
+            If you have concerning symptoms or consistently high blood pressure, consider speaking with a
+            licensed healthcare professional.
+          </div>
         </div>
       {% endif %}
 
@@ -57,7 +121,7 @@
         <a href="/history">View recent predictions</a>
       </div>
 
-      <p class="note">Note: This is a demo model for learning purposes.</p>
+      <p class="note">Early Risk Alert AI — preventive awareness tool.</p>
     </div>
   </div>
 </body>
