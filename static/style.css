@@ -162,3 +162,57 @@ input, select {
 .row:last-child {
   border-bottom: none;
 }
+
+.result-card {
+    margin-top: 20px;
+    padding: 20px;
+    border-radius: 10px;
+    font-size: 16px;
+}
+
+.low {
+    background-color: #e8f5e9;
+    border-left: 6px solid #2e7d32;
+}
+
+.moderate {
+    background-color: #fff8e1;
+    border-left: 6px solid #ff8f00;
+}
+
+.high {
+    background-color: #ffebee;
+    border-left: 6px solid #c62828;
+}
+
+.result-title {
+    font-size: 22px;
+    margin-bottom: 10px;
+}
+
+.confidence {
+    margin-bottom: 15px;
+}
+
+.meter {
+    height: 14px;
+    background: #ddd;
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 8px 0;
+}
+
+.meter-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4caf50, #ff9800, #f44336);
+}
+
+.meter-number {
+    font-weight: bold;
+}
+
+.disclaimer {
+    font-size: 13px;
+    margin-top: 15px;
+    opacity: 0.8;
+}
