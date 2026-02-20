@@ -2,47 +2,66 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Prediction History</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Recent Predictions - Early Risk Alert AI</title>
   <link rel="stylesheet" href="/static/style.css" />
 </head>
 <body>
   <div class="shell">
-    <header class="top">
-      <div class="brand">
-        <div class="logo">ERA</div>
-        <div>
-          <div class="title">Recent Predictions</div>
-          <div class="subtitle">Last 30 submissions</div>
-        </div>
+    <header class="header">
+      <div class="logo">ERA</div>
+      <div>
+        <div class="title">Recent Predictions</div>
+        <div class="subtitle">Last 30 submissions</div>
       </div>
+      <div class="spacer"></div>
       <a class="btn" href="/">Back</a>
     </header>
 
-    <section class="card">
-      {% if rows and rows|length > 0 %}
-        <div class="table">
-          <div class="trow thead">
-            <div>Date</div><div>Age</div><div>BMI</div><div>Ex</div><div>Sys</div><div>Dia</div><div>HR</div><div>Risk</div><div>%</div>
-          </div>
-          {% for r in rows %}
-            <div class="trow">
-              <div>{{ r[0] }}</div>
-              <div>{{ r[1] }}</div>
-              <div>{{ r[2] }}</div>
-              <div>{{ r[3] }}</div>
-              <div>{{ r[4] }}</div>
-              <div>{{ r[5] }}</div>
-              <div>{{ r[6] }}</div>
-              <div>{{ r[7] }}</div>
-              <div>{{ r[8] }}</div>
-            </div>
-          {% endfor %}
+    <main class="card">
+      {% if items and items|length > 0 %}
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Age</th>
+                <th>BMI</th>
+                <th>Exercise</th>
+                <th>Sys BP</th>
+                <th>Dia BP</th>
+                <th>HR</th>
+                <th>Risk</th>
+                <th>Prob</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for p in items %}
+                <tr>
+                  <td class="mono">{{ p.created_at }}</td>
+                  <td>{{ p.age }}</td>
+                  <td>{{ p.bmi }}</td>
+                  <td>{{ p.exercise }}</td>
+                  <td>{{ p.sys_bp }}</td>
+                  <td>{{ p.dia_bp }}</td>
+                  <td>{{ p.heart_rate }}</td>
+                  <td>
+                    <span class="badge {{ 'high' if p.risk_class == 'high' else 'low' }}">
+                      {{ p.risk_class }}
+                    </span>
+                  </td>
+                  <td>{{ p.probability }}%</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
         </div>
       {% else %}
-        <p class="muted">No history yet. Submit a prediction first.</p>
+        <div class="empty">
+          No history yet. Submit a prediction first.
+        </div>
       {% endif %}
-    </section>
+    </main>
   </div>
 </body>
 </html>
