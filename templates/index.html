@@ -97,25 +97,33 @@
       {% endif %}
 
       {% if prediction %}
-        <div class="result {{ risk_class }}">
-          <div class="result-title">Prediction: {{ prediction }}</div>
-          <div class="result-prob">Confidence: {{ probability }}%</div>
+<div class="result-card {{ risk_class }}">
 
-          <div class="meter-wrap">
-            <div class="meter-label">Risk Meter (P(High Risk))</div>
-            <div class="meter">
-              <div class="meter-fill" style="width: {{ risk_meter }}%;"></div>
-            </div>
-            <div class="meter-num">{{ risk_meter }}%</div>
-          </div>
+    <h3 class="result-title">{{ prediction }}</h3>
 
-          <div class="disclaimer">
-            <strong>What this means:</strong> This is an estimated risk score based on the inputs provided.
-            If you have concerning symptoms or consistently high blood pressure, consider speaking with a
-            licensed healthcare professional.
-          </div>
+    <p class="confidence">
+        Confidence: <strong>{{ probability }}%</strong>
+    </p>
+
+    <div class="meter-wrap">
+        <div class="meter-label">High Risk Probability</div>
+
+        <div class="meter">
+            <div class="meter-fill" style="width: {{ risk_meter }}%;"></div>
         </div>
-      {% endif %}
+
+        <div class="meter-number">{{ risk_meter }}%</div>
+    </div>
+
+    <div class="disclaimer">
+        <strong>Important:</strong> This is an estimated risk score based on the inputs provided.
+        This tool is for awareness only and is not medical advice.
+        If you experience symptoms or consistently high blood pressure,
+        consult a licensed healthcare professional.
+    </div>
+
+</div>
+{% endif %}
 
       <div class="links">
         <a href="/history">View recent predictions</a>
