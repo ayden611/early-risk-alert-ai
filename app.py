@@ -1,124 +1,104 @@
 import os
-from datetime import datetime, timezone
+from datetime import datetime
 
-import numpy as np
 import joblib
+import numpy as np
 from flask import Flask, render_template, request, redirect, url_for
-
 from sqlalchemy import create_engine, text
-from sqlalchemy.orm import sessionmaker
-
 
 app = Flask(__name__)
 
-# ----------------------------
-# Database (Postgres on Render)
-# ----------------------------
-DATABASE_URL = os.getenv("DATABASE_URL", "")
+# -----------------------------
+# Database (Render Postgres)
+# -----------------------------
+def get_database_url() -> str | None:
+    url = os.getenv("DATABASE_URL")
+    if not url:
+        return None
 
-# Render sometimes gives postgres://... but SQLAlchemy wants postgresql://...
-if DATABASE_URL.startswith("postgres://"):
-    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+    # Render often provides postgres://... which SQLAlchemy prefers as postgresql+psycopg2://...
+    if url.startswith("postgres://"):
+        url = url.replace("postgres://", "postgresql+psycopg2://", 1)
 
-if not DATABASE_URL:
-    raise RuntimeError("DATABASE_URL is not set. Add it in Render Environment Variables.")
+    # Make SSL explicit for hosted DB connections
+    if "sslmode=" not in url:
+        joiner = "&" if "?" in url else "?"
+        url = f"{url}{joiner}sslmode=require"
 
-engine = create_engine(DATABASE_URL, pool_pre_ping=True)
-SessionLocal = sessionmaker(bind=engine)
+    return url
+
+DATABASE_URL = get_database_url()
+engine = create_engine(DATABASE_URL, pool_pre_ping=True) if DATABASE_URL else None
 
 
 def init_db():
     """Create table if it doesn't exist."""
-    create_sql = """
-    CREATE TABLE IF NOT EXISTS predictions (
-        id SERIAL PRIMARY KEY,
-        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-        age DOUBLE PRECISION NOT NULL,
-        bmi DOUBLE PRECISION NOT NULL,
-        exercise INTEGER NOT NULL,
-        sys_bp DOUBLE PRECISION NOT NULL,
-        dia_bp DOUBLE PRECISION NOT NULL,
-        heart_rate DOUBLE PRECISION NOT NULL,
-        risk_class TEXT NOT NULL,
-        probability DOUBLE PRECISION NOT NULL
-    );
-    """
+    if not engine:
+        return
     with engine.begin() as conn:
-        conn.execute(text(create_sql))
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS predictions (
+                id SERIAL PRIMARY KEY,
+                created_at TIMESTAMP NOT NULL,
+                age FLOAT NOT NULL,
+                bmi FLOAT NOT NULL,
+                exercise INTEGER NOT NULL,
+                sys_bp FLOAT NOT NULL,
+                dia_bp FLOAT NOT NULL,
+                heart_rate FLOAT NOT NULL,
+                risk_class TEXT NOT NULL,
+                probability FLOAT NOT NULL
+            );
+        """))
 
 
-init_db()
-
-# ----------------------------
+# -----------------------------
 # Model loading
-# ----------------------------
+# -----------------------------
 MODEL_PATH = os.path.join(os.path.dirname(__file__), "demo_model.pkl")
-
-try:
-    model = joblib.load(MODEL_PATH)
-except Exception as e:
-    raise RuntimeError(f"Could not load model at {MODEL_PATH}: {e}")
-
-
-def to_float(value, default=0.0):
-    try:
-        return float(value)
-    except Exception:
-        return float(default)
-
-
-def to_int(value, default=0):
-    try:
-        return int(value)
-    except Exception:
-        return int(default)
+model = joblib.load(MODEL_PATH)  # will work once scikit-learn is installed
 
 
 def predict_risk(age, bmi, exercise, sys_bp, dia_bp, heart_rate):
-    """
-    Feature order MUST match training:
-    [age, bmi, exercise, sys_bp, dia_bp, heart_rate]
-    """
     X = np.array([[age, bmi, exercise, sys_bp, dia_bp, heart_rate]], dtype=float)
 
-    probability = None
-
+    # Try predict_proba first (best)
     if hasattr(model, "predict_proba"):
-        proba = model.predict_proba(X)
-        # probability of class 1 (high risk) assumed in column 1
-        probability = float(proba[0][1])
+        proba = float(model.predict_proba(X)[0][1])
     else:
-        # fallback: use predict and make probability 0 or 1
-        pred = model.predict(X)
-        probability = float(pred[0])
+        # Fallback: decision_function -> sigmoid-ish scale
+        score = float(model.decision_function(X)[0])
+        proba = 1.0 / (1.0 + np.exp(-score))
 
-    risk_class = "high" if probability >= 0.5 else "low"
-    return risk_class, round(probability * 100.0, 1)
+    risk_class = "high" if proba >= 0.5 else "low"
+    return risk_class, proba
 
 
 @app.route("/", methods=["GET", "POST"])
 def index():
-    prediction = None
-    risk_class = None
-    probability = None
+    init_db()
 
-    # Keep form values after submit
     form_vals = {
         "age": "",
         "bmi": "",
         "exercise": "",
         "sys_bp": "",
         "dia_bp": "",
-        "heart_rate": ""
+        "heart_rate": "",
     }
 
+    prediction = None
+    risk_class = None
+    probability_pct = None
+
     if request.method == "POST":
-        age = to_float(request.form.get("age"))
-        bmi = to_float(request.form.get("bmi"))
-        exercise = to_int(request.form.get("exercise"))
-        sys_bp = to_float(request.form.get("sys_bp"))
-        dia_bp = to_float(request.form.get("dia_bp"))
-        heart_rate = to_float(request.form.get("heart_rate"))
+        # Read inputs
+        age = float(request.form.get("age", 0))
+        bmi = float(request.form.get("bmi", 0))
+        exercise = int(request.form.get("exercise", 0))
+        sys_bp = float(request.form.get("sys_bp", 0))
+        dia_bp = float(request.form.get("dia_bp", 0))
+        heart_rate = float(request.form.get("heart_rate", 0))
 
         form_vals = {
             "age": age,
@@ -126,79 +106,73 @@ def index():
             "exercise": exercise,
             "sys_bp": sys_bp,
             "dia_bp": dia_bp,
-            "heart_rate": heart_rate
+            "heart_rate": heart_rate,
         }
 
-        risk_class, probability = predict_risk(age, bmi, exercise, sys_bp, dia_bp, heart_rate)
+        # Predict
+        risk_class, proba = predict_risk(age, bmi, exercise, sys_bp, dia_bp, heart_rate)
+        probability_pct = round(proba * 100, 1)
         prediction = True
 
-        # Save to DB
-        insert_sql = """
-        INSERT INTO predictions (age, bmi, exercise, sys_bp, dia_bp, heart_rate, risk_class, probability)
-        VALUES (:age, :bmi, :exercise, :sys_bp, :dia_bp, :heart_rate, :risk_class, :probability);
-        """
-
-        db = SessionLocal()
-        try:
-            db.execute(
-                text(insert_sql),
-                {
-                    "age": age,
-                    "bmi": bmi,
-                    "exercise": exercise,
-                    "sys_bp": sys_bp,
-                    "dia_bp": dia_bp,
-                    "heart_rate": heart_rate,
-                    "risk_class": risk_class,
-                    "probability": probability
-                },
-            )
-            db.commit()
-        finally:
-            db.close()
+        # Save to Postgres
+        if engine:
+            with engine.begin() as conn:
+                conn.execute(
+                    text("""
+                        INSERT INTO predictions
+                        (created_at, age, bmi, exercise, sys_bp, dia_bp, heart_rate, risk_class, probability)
+                        VALUES (:created_at, :age, :bmi, :exercise, :sys_bp, :dia_bp, :heart_rate, :risk_class, :probability)
+                    """),
+                    {
+                        "created_at": datetime.utcnow(),
+                        "age": age,
+                        "bmi": bmi,
+                        "exercise": exercise,
+                        "sys_bp": sys_bp,
+                        "dia_bp": dia_bp,
+                        "heart_rate": heart_rate,
+                        "risk_class": risk_class,
+                        "probability": float(proba),
+                    },
+                )
 
     return render_template(
         "index.html",
+        form_vals=form_vals,
         prediction=prediction,
         risk_class=risk_class,
-        probability=probability,
-        form_vals=form_vals
+        probability=probability_pct,
     )
 
 
-@app.route("/history", methods=["GET"])
+@app.route("/history")
 def history():
-    db = SessionLocal()
-    try:
-        rows = db.execute(
-            text("""
+    init_db()
+
+    rows = []
+    if engine:
+        with engine.begin() as conn:
+            result = conn.execute(text("""
                 SELECT created_at, age, bmi, exercise, sys_bp, dia_bp, heart_rate, risk_class, probability
                 FROM predictions
                 ORDER BY created_at DESC
                 LIMIT 30;
-            """)
-        ).fetchall()
-    finally:
-        db.close()
+            """))
+            for r in result.fetchall():
+                rows.append({
+                    "created_at": r[0],
+                    "age": r[1],
+                    "bmi": r[2],
+                    "exercise": r[3],
+                    "sys_bp": r[4],
+                    "dia_bp": r[5],
+                    "heart_rate": r[6],
+                    "risk_class": r[7],
+                    "probability": round(float(r[8]) * 100, 1),
+                })
 
-    # Convert to dictionaries for template readability
-    items = []
-    for r in rows:
-        items.append({
-            "created_at": r[0],
-            "age": r[1],
-            "bmi": r[2],
-            "exercise": r[3],
-            "sys_bp": r[4],
-            "dia_bp": r[5],
-            "heart_rate": r[6],
-            "risk_class": r[7],
-            "probability": r[8],
-        })
-
-    return render_template("history.html", items=items)
+    return render_template("history.html", rows=rows)
 
 
-@app.route("/health", methods=["GET"])
-def health():
-    return {"status": "ok", "time": datetime.now(timezone.utc).isoformat()}
+if __name__ == "__main__":
+    app.run(debug=True)
