@@ -1,152 +1,117 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Early Risk Alert AI</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
+from flask import Flask, render_template, request, redirect, url_for
+import os
+import sqlite3
+import numpy as np
+import joblib
 
-<body>
-  <div class="page">
-    <header class="topbar">
-      <div class="brand">
-        <div class="logo">ERA</div>
-        <div>
-          <div class="title">Early Risk Alert AI</div>
-          <div class="subtitle">Preventive risk insight based on measurable inputs.</div>
-        </div>
-      </div>
-      <div class="badge">Demo ML App</div>
-    </header>
+app = Flask(__name__)
 
-    <main class="grid">
-      <!-- FORM CARD -->
-      <section class="card">
-        <h2 class="card-title">Enter your health indicators</h2>
-        <p class="card-hint">This tool estimates risk for awareness only (not medical advice).</p>
+# ----------------------------
+# Model load (safe for Render)
+# ----------------------------
+MODEL_PATH = os.path.join(os.path.dirname(__file__), "demo_model.pkl")
+model = joblib.load(MODEL_PATH)
 
-        <form method="POST" class="form" id="riskForm">
-          <div class="row">
-            <div class="field">
-              <label>Age</label>
-              <input type="number" name="age" min="1" max="120" step="1" required
-                     value="{{ form_vals.age if form_vals is defined else '' }}"
-                     placeholder="e.g., 42" />
-            </div>
+# ----------------------------
+# Simple SQLite history (no Flask-SQLAlchemy needed)
+# ----------------------------
+DB_PATH = os.path.join(os.path.dirname(__file__), "predictions.db")
 
-            <div class="field">
-              <label>BMI</label>
-              <input type="number" name="bmi" min="10" max="80" step="0.1" required
-                     value="{{ form_vals.bmi if form_vals is defined else '' }}"
-                     placeholder="e.g., 27.5" />
-            </div>
-          </div>
+def init_db():
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS history (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                created_at TEXT DEFAULT (datetime('now')),
+                age REAL,
+                bmi REAL,
+                exercise REAL,
+                sys_bp REAL,
+                dia_bp REAL,
+                heart_rate REAL,
+                risk TEXT,
+                probability REAL
+            )
+        """)
+init_db()
 
-          <div class="field">
-            <label>Exercise Level</label>
-            <select name="exercise" required>
-              {% set ex = form_vals.exercise if form_vals is defined else '' %}
-              <option value="" {% if ex == '' %}selected{% endif %}>Select…</option>
-              <option value="0" {% if ex == '0' %}selected{% endif %}>0 — Low</option>
-              <option value="1" {% if ex == '1' %}selected{% endif %}>1 — Medium</option>
-              <option value="2" {% if ex == '2' %}selected{% endif %}>2 — High</option>
-            </select>
-            <small class="help">Tip: If unsure, choose “Low”.</small>
-          </div>
+def save_history(row):
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.execute("""
+            INSERT INTO history (age,bmi,exercise,sys_bp,dia_bp,heart_rate,risk,probability)
+            VALUES (?,?,?,?,?,?,?,?)
+        """, row)
 
-          <div class="row">
-            <div class="field">
-              <label>Systolic BP (top number)</label>
-              <input type="number" name="sys_bp" min="60" max="260" step="1" required
-                     value="{{ form_vals.sys_bp if form_vals is defined else '' }}"
-                     placeholder="e.g., 120" />
-            </div>
+def get_history(limit=25):
+    with sqlite3.connect(DB_PATH) as conn:
+        cur = conn.execute("""
+            SELECT created_at, age,bmi,exercise,sys_bp,dia_bp,heart_rate,risk,probability
+            FROM history
+            ORDER BY id DESC
+            LIMIT ?
+        """, (limit,))
+        return cur.fetchall()
 
-            <div class="field">
-              <label>Diastolic BP (bottom number)</label>
-              <input type="number" name="dia_bp" min="30" max="160" step="1" required
-                     value="{{ form_vals.dia_bp if form_vals is defined else '' }}"
-                     placeholder="e.g., 80" />
-            </div>
-          </div>
+# ----------------------------
+# Routes
+# ----------------------------
+@app.route("/", methods=["GET", "POST"])
+def home():
+    # defaults for form re-fill
+    form_vals = {
+        "age": "",
+        "bmi": "",
+        "exercise": "",
+        "sys_bp": "",
+        "dia_bp": "",
+        "heart_rate": ""
+    }
 
-          <div class="field">
-            <label>Heart Rate (bpm)</label>
-            <input type="number" name="heart_rate" min="30" max="220" step="1" required
-                   value="{{ form_vals.heart_rate if form_vals is defined else '' }}"
-                   placeholder="e.g., 72" />
-          </div>
+    prediction = None
+    probability = None
+    risk_class = None  # "low" or "high"
 
-          <label class="check">
-            <input type="checkbox" required />
-            <span>I understand this tool provides a risk estimate for awareness only and is not medical advice. Do not enter personal identifiers.</span>
-          </label>
+    if request.method == "POST":
+        # read inputs
+        form_vals["age"] = request.form.get("age", "")
+        form_vals["bmi"] = request.form.get("bmi", "")
+        form_vals["exercise"] = request.form.get("exercise", "")
+        form_vals["sys_bp"] = request.form.get("sys_bp", "")
+        form_vals["dia_bp"] = request.form.get("dia_bp", "")
+        form_vals["heart_rate"] = request.form.get("heart_rate", "")
 
-          <div class="actions">
-            <button type="submit" class="btn primary">Predict</button>
-            <button type="button" class="btn ghost" id="clearBtn">Clear</button>
-          </div>
-        </form>
-      </section>
+        # convert to float safely
+        age = float(form_vals["age"])
+        bmi = float(form_vals["bmi"])
+        exercise = float(form_vals["exercise"])
+        sys_bp = float(form_vals["sys_bp"])
+        dia_bp = float(form_vals["dia_bp"])
+        heart_rate = float(form_vals["heart_rate"])
 
-      <!-- RESULT CARD -->
-      <section class="card">
-        <h2 class="card-title">Result</h2>
+        data = np.array([[age, bmi, exercise, sys_bp, dia_bp, heart_rate]])
 
-        {% if prediction %}
-          {% set risk_class = 'high' if prediction == 'High Risk' else 'low' %}
-          {% if prediction not in ['High Risk','Low Risk'] %}
-            {% set risk_class = 'moderate' %}
-          {% endif %}
+        pred = int(model.predict(data)[0])
+        prob_high = float(model.predict_proba(data)[0][1])
 
-          <div class="result-card {{ risk_class }}">
-            <div class="result-head">
-              <div>
-                <div class="result-title">{{ prediction }}</div>
-                <div class="result-sub">
-                  Confidence: <strong>{{ probability }}%</strong>
-                </div>
-              </div>
-              <div class="pill {{ risk_class }}">{{ risk_class|title }}</div>
-            </div>
+        prediction = "High Risk" if pred == 1 else "Low Risk"
+        probability = round(prob_high * 100, 2)
 
-            <div class="meter">
-              <div class="meter-fill" style="width: {{ probability }}%"></div>
-            </div>
-            <div class="meter-caption">
-              High Risk Probability: <span class="meter-number">{{ probability }}%</span>
-            </div>
+        risk_class = "high" if pred == 1 else "low"
 
-            <div class="disclaimer">
-              Important: This is an estimated risk score based on the inputs provided. This tool is for awareness only and is not medical advice.
-              If you experience symptoms or consistently high blood pressure, consult a licensed healthcare professional.
-            </div>
-          </div>
-        {% else %}
-          <div class="empty">
-            Submit the form to see your risk prediction and confidence score.
-          </div>
-        {% endif %}
-        <a href="/history" style="display:inline-block;margin-top:12px;opacity:.9;">View recent predictions</a>
+        # save history
+        save_history((age, bmi, exercise, sys_bp, dia_bp, heart_rate, prediction, probability))
 
-        <div class="footer-note">
-          <span class="dot"></span> Model runs on your deployed Flask app + trained model file.
-        </div>
-      </section>
-    </main>
-  </div>
+    return render_template(
+        "index.html",
+        prediction=prediction,
+        probability=probability,
+        risk_class=risk_class,
+        form_vals=form_vals
+    )
 
-  <script>
-    // Clears the form inputs without reloading the page
-    document.getElementById("clearBtn").addEventListener("click", () => {
-      const form = document.getElementById("riskForm");
-      form.reset();
-      // Optional: scroll to top of form
-      form.querySelector("input, select").focus();
-    });
-  </script>
-</body>
-</html>
+@app.route("/history", methods=["GET"])
+def history():
+    rows = get_history(limit=30)
+    return render_template("history.html", rows=rows)
 
-
+# Render/Gunicorn entry point uses "app"
