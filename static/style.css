@@ -1,67 +1,176 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Recent Predictions - Early Risk Alert AI</title>
-  <link rel="stylesheet" href="/static/style.css" />
-</head>
-<body>
-  <div class="shell">
-    <header class="header">
-      <div class="logo">ERA</div>
-      <div>
-        <div class="title">Recent Predictions</div>
-        <div class="subtitle">Last 30 submissions</div>
-      </div>
-      <div class="spacer"></div>
-      <a class="btn" href="/">Back</a>
-    </header>
+:root{
+  --bg:#0b1220;
+  --card:#101a2e;
+  --card2:#0f1930;
+  --text:#e7eefc;
+  --muted:#a6b3d4;
+  --line:rgba(255,255,255,.08);
+  --btn:#1a2a4d;
+  --btn2:#22375f;
+  --good:#2e7d32;
+  --warn:#ff8f00;
+  --bad:#c62828;
+}
 
-    <main class="card">
-      {% if items and items|length > 0 %}
-        <div class="table-wrap">
-          <table class="table">
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Age</th>
-                <th>BMI</th>
-                <th>Exercise</th>
-                <th>Sys BP</th>
-                <th>Dia BP</th>
-                <th>HR</th>
-                <th>Risk</th>
-                <th>Prob</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for p in items %}
-                <tr>
-                  <td class="mono">{{ p.created_at }}</td>
-                  <td>{{ p.age }}</td>
-                  <td>{{ p.bmi }}</td>
-                  <td>{{ p.exercise }}</td>
-                  <td>{{ p.sys_bp }}</td>
-                  <td>{{ p.dia_bp }}</td>
-                  <td>{{ p.heart_rate }}</td>
-                  <td>
-                    <span class="badge {{ 'high' if p.risk_class == 'high' else 'low' }}">
-                      {{ p.risk_class }}
-                    </span>
-                  </td>
-                  <td>{{ p.probability }}%</td>
-                </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      {% else %}
-        <div class="empty">
-          No history yet. Submit a prediction first.
-        </div>
-      {% endif %}
-    </main>
-  </div>
-</body>
-</html>
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+  background: radial-gradient(1200px 600px at 20% 10%, rgba(75,124,255,.25), transparent 55%),
+              radial-gradient(900px 500px at 80% 20%, rgba(255,140,0,.18), transparent 60%),
+              var(--bg);
+  color:var(--text);
+}
+
+.shell{max-width:1100px;margin:30px auto;padding:0 18px}
+
+.header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:18px;
+}
+
+.brand{display:flex;gap:12px;align-items:center}
+.logo{
+  width:44px;height:44px;border-radius:14px;
+  background: linear-gradient(135deg, rgba(75,124,255,.9), rgba(255,140,0,.65));
+  display:grid;place-items:center;
+  font-weight:800;
+}
+.title{font-size:18px;font-weight:800}
+.subtitle{font-size:13px;color:var(--muted)}
+
+.tag{
+  padding:8px 12px;border:1px solid var(--line);
+  border-radius:999px;background:rgba(255,255,255,.05);
+  font-size:12px;color:var(--muted);
+}
+
+.grid{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:16px;
+}
+@media (max-width: 900px){
+  .grid{grid-template-columns:1fr}
+}
+
+.card{
+  background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:18px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.25);
+}
+
+.card h2{margin:0 0 8px 0;font-size:18px}
+.muted{color:var(--muted);margin:0 0 14px 0;font-size:13px}
+
+.form label{display:block;margin-bottom:12px;font-size:13px;color:var(--muted)}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width: 520px){.row{grid-template-columns:1fr}}
+
+input,select{
+  width:100%;
+  margin-top:6px;
+  padding:10px 12px;
+  border-radius:12px;
+  border:1px solid var(--line);
+  outline:none;
+  background:rgba(0,0,0,.18);
+  color:var(--text);
+}
+
+.hint{font-size:12px;color:var(--muted);margin-top:6px}
+
+.check{display:flex;gap:10px;align-items:flex-start}
+.check input{width:auto;margin-top:3px}
+
+.actions{display:flex;gap:10px;margin-top:6px}
+.btn{
+  cursor:pointer;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.06);
+  color:var(--text);
+  padding:10px 14px;
+  border-radius:12px;
+  font-weight:700;
+  text-decoration:none;
+  display:inline-block;
+}
+.btn:hover{background:rgba(255,255,255,.09)}
+.primary{background:linear-gradient(135deg, rgba(75,124,255,.95), rgba(34,55,95,.95))}
+.link{display:inline-block;margin-top:12px;color:#b9c6ff;text-decoration:underline;font-size:13px}
+
+.result{
+  margin-top:10px;
+  padding:16px;
+  border-radius:14px;
+  border:1px solid var(--line);
+  background: rgba(0,0,0,.20);
+}
+.result.low{border-left:6px solid var(--good)}
+.result.high{border-left:6px solid var(--bad)}
+
+.result-head{display:flex;justify-content:space-between;align-items:center}
+.result-title{font-size:16px;font-weight:800}
+.badge{
+  font-size:12px;
+  padding:6px 10px;
+  border-radius:999px;
+  background:rgba(255,255,255,.08);
+  border:1px solid var(--line);
+}
+
+.confidence{margin:10px 0 10px 0}
+.meter{
+  height:14px;background:rgba(255,255,255,.08);
+  border-radius:999px;overflow:hidden;
+}
+.meter-fill{
+  height:100%;
+  background: linear-gradient(90deg, #4caf50, #ff9800, #f44336);
+}
+.meter-caption{margin-top:8px;font-size:13px;color:var(--muted)}
+.meter-number{color:var(--text);font-weight:800}
+
+.disclaimer{
+  margin-top:10px;
+  font-size:12px;
+  color:var(--muted);
+  line-height:1.35;
+}
+
+.footnote{
+  margin-top:14px;
+  display:flex;gap:8px;align-items:center;
+  font-size:12px;color:var(--muted);
+}
+.dot{width:8px;height:8px;border-radius:99px;background:#7bd389;display:inline-block}
+
+.wide{grid-column:1 / -1}
+.table-wrap{overflow:auto}
+.table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:13px;
+}
+.table th,.table td{
+  padding:10px 10px;
+  border-bottom:1px solid var(--line);
+  white-space:nowrap;
+}
+.table th{color:var(--muted);font-weight:800;text-align:left}
+
+.pill{
+  padding:4px 8px;border-radius:999px;border:1px solid var(--line);
+  background:rgba(255,255,255,.06);
+}
+.pill.high{border-left:6px solid var(--bad)}
+.pill.low{border-left:6px solid var(--good)}
+
+.empty{
+  padding:14px;
+  border:1px dashed var(--line);
+  border-radius:14px;
+  color:var(--muted);
+}
