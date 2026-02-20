@@ -55,75 +55,81 @@ Base.metadata.create_all(engine)
 # Routes
 # -----------------------------
 @app.route("/", methods=["GET", "POST"])
+# app.py (MAKE THESE SMALL EDITS INSIDE home() ONLY)
+# 1) Add: error = None
+# 2) Add simple validation + pass error to template
+
+# --- inside home() ---
 def home():
     prediction_text = None
     probability_percent = None
     probability_class1_percent = None
-    risk_class = None  # "low" or "high"
+    risk_class = None
+    error = None
 
-    # form values (keep them so page doesn't reset)
     form_vals = {
-        "age": "",
-        "bmi": "",
-        "exercise": "",
-        "sys_bp": "",
-        "dia_bp": "",
-        "heart_rate": ""
+        "age": "", "bmi": "", "exercise": "", "sys_bp": "", "dia_bp": "", "heart_rate": ""
     }
 
     if request.method == "POST":
-        # Read inputs
-        age = float(request.form["age"])
-        bmi = float(request.form["bmi"])
-        exercise = float(request.form["exercise"])
-        sys_bp = float(request.form["sys_bp"])
-        dia_bp = float(request.form["dia_bp"])
-        heart_rate = float(request.form["heart_rate"])
-
-        form_vals = {
-            "age": request.form["age"],
-            "bmi": request.form["bmi"],
-            "exercise": request.form["exercise"],
-            "sys_bp": request.form["sys_bp"],
-            "dia_bp": request.form["dia_bp"],
-            "heart_rate": request.form["heart_rate"]
-        }
-
-        # IMPORTANT: feature order MUST match training
-        X = np.array([[age, bmi, exercise, sys_bp, dia_bp, heart_rate]])
-
-        # Predict class
-        pred_class = int(model.predict(X)[0])
-
-        # Predict probabilities: returns [P(class0), P(class1)]
-        proba = model.predict_proba(X)[0]
-        p0 = float(proba[0])
-        p1 = float(proba[1])
-
-        # Decide display
-        prediction_text = "High Risk" if pred_class == 1 else "Low Risk"
-        risk_class = "high" if pred_class == 1 else "low"
-
-        # Display probability for the predicted class (so it matches the label shown)
-        p_pred = p1 if pred_class == 1 else p0
-
-        probability_percent = round(p_pred * 100, 2)
-        probability_class1_percent = round(p1 * 100, 2)  # helpful for the risk meter
-
-        # Save to DB
-        db = SessionLocal()
         try:
-            db.add(PredictionLog(
-                age=age, bmi=bmi, exercise=exercise,
-                sys_bp=sys_bp, dia_bp=dia_bp, heart_rate=heart_rate,
-                prediction=prediction_text,
-                probability=probability_percent
-            ))
-            db.commit()
-        finally:
-            db.close()
+            age = float(request.form["age"])
+            bmi = float(request.form["bmi"])
+            exercise = float(request.form["exercise"])
+            sys_bp = float(request.form["sys_bp"])
+            dia_bp = float(request.form["dia_bp"])
+            heart_rate = float(request.form["heart_rate"])
+
+            form_vals = {
+                "age": request.form["age"],
+                "bmi": request.form["bmi"],
+                "exercise": request.form["exercise"],
+                "sys_bp": request.form["sys_bp"],
+                "dia_bp": request.form["dia_bp"],
+                "heart_rate": request.form["heart_rate"],
+            }
+
+            # Simple sanity checks
+            if dia_bp >= sys_bp:
+                raise ValueError("Diastolic BP must be lower than Systolic BP.")
+
+            X = np.array([[age, bmi, exercise, sys_bp, dia_bp, heart_rate]])
+
+            pred_class = int(model.predict(X)[0])
+            proba = model.predict_proba(X)[0]
+            p0, p1 = float(proba[0]), float(proba[1])
+
+            prediction_text = "High Risk" if pred_class == 1 else "Low Risk"
+            risk_class = "high" if pred_class == 1 else "low"
+
+            p_pred = p1 if pred_class == 1 else p0
+            probability_percent = round(p_pred * 100, 2)
+            probability_class1_percent = round(p1 * 100, 2)
+
+            db = SessionLocal()
+            try:
+                db.add(PredictionLog(
+                    age=age, bmi=bmi, exercise=exercise,
+                    sys_bp=sys_bp, dia_bp=dia_bp, heart_rate=heart_rate,
+                    prediction=prediction_text,
+                    probability=probability_percent
+                ))
+                db.commit()
+            finally:
+                db.close()
+
+        except Exception as e:
+            error = str(e)
 
     return render_template(
+        "index.html",
+        prediction=prediction_text,
+        probability=probability_percent,
+        risk_meter=probability_class1_percent,
+        risk_class=risk_class,
+        form_vals=form_vals,
+        error=error
+    )
         "index.html",
         prediction=prediction_text,
         probability=probability_percent,
