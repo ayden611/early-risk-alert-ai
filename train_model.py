@@ -20,4 +20,4 @@ model.fit(X, y)
 
 joblib.dump(model, "demo_model.pkl")
 
-print("Model retrained and saved as demo_model.pkl")op
+print("Model retrained and saved as demo_model.pkl")
