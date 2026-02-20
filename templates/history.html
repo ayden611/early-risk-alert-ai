@@ -1,75 +1,149 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Prediction History</title>
+  <title>Early Risk Alert AI</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-  <style>
-    .wrap { max-width: 900px; margin: 24px auto; padding: 0 16px; }
-    .topbar { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom: 16px; }
-    .btn { display:inline-block; padding:10px 14px; border-radius:10px; text-decoration:none; border:1px solid rgba(0,0,0,.12); }
-    .card { background: #fff; border:1px solid rgba(0,0,0,.10); border-radius:16px; padding:16px; box-shadow: 0 6px 18px rgba(0,0,0,.06); }
-    table { width:100%; border-collapse: collapse; }
-    th, td { text-align:left; padding:10px 8px; border-bottom:1px solid rgba(0,0,0,.08); font-size: 14px; }
-    th { font-size: 12px; text-transform: uppercase; letter-spacing:.06em; opacity:.75; }
-    .pill { padding:4px 10px; border-radius:999px; font-weight:600; font-size:12px; display:inline-block; }
-    .high { background:#ffe3e3; color:#8b0000; }
-    .low  { background:#e7f7ea; color:#0b5d1e; }
-    .muted { opacity:.7; font-size:12px; }
-    .empty { padding:14px; opacity:.75; }
-  </style>
 </head>
-<body>
-  <div class="wrap">
-    <div class="topbar">
-      <div>
-        <h2 style="margin:0;">Prediction History</h2>
-        <div class="muted">Most recent entries first</div>
-      </div>
-      <a class="btn" href="{{ url_for('home') }}">← Back to Predictor</a>
-    </div>
 
-    <div class="card">
-      {% if rows and rows|length > 0 %}
-        <table>
-          <thead>
-            <tr>
-              <th>Time (UTC)</th>
-              <th>Age</th>
-              <th>BMI</th>
-              <th>Exercise</th>
-              <th>BP</th>
-              <th>HR</th>
-              <th>Result</th>
-              <th>Confidence</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for r in rows %}
-              <tr>
-                <td>{{ r.created_at }}</td>
-                <td>{{ '%.0f'|format(r.age) }}</td>
-                <td>{{ '%.1f'|format(r.bmi) }}</td>
-                <td>{{ '%.0f'|format(r.exercise) }}</td>
-                <td>{{ '%.0f'|format(r.sys_bp) }}/{{ '%.0f'|format(r.dia_bp) }}</td>
-                <td>{{ '%.0f'|format(r.heart_rate) }}</td>
-                <td>
-                  {% if 'High' in r.prediction %}
-                    <span class="pill high">{{ r.prediction }}</span>
-                  {% else %}
-                    <span class="pill low">{{ r.prediction }}</span>
-                  {% endif %}
-                </td>
-                <td>{{ '%.2f'|format(r.probability) }}%</td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      {% else %}
-        <div class="empty">No history yet. Run a prediction first.</div>
-      {% endif %}
-    </div>
+<body>
+  <div class="page">
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo">ERA</div>
+        <div>
+          <div class="title">Early Risk Alert AI</div>
+          <div class="subtitle">Preventive risk insight based on measurable inputs.</div>
+        </div>
+      </div>
+      <div class="badge">Demo ML App</div>
+    </header>
+
+    <main class="grid">
+      <!-- FORM CARD -->
+      <section class="card">
+        <h2 class="card-title">Enter your health indicators</h2>
+        <p class="card-hint">This tool estimates risk for awareness only (not medical advice).</p>
+
+        <form method="POST" class="form" id="riskForm">
+          <div class="row">
+            <div class="field">
+              <label>Age</label>
+              <input type="number" name="age" min="1" max="120" step="1" required
+                     value="{{ form_vals.age if form_vals is defined else '' }}"
+                     placeholder="e.g., 42" />
+            </div>
+
+            <div class="field">
+              <label>BMI</label>
+              <input type="number" name="bmi" min="10" max="80" step="0.1" required
+                     value="{{ form_vals.bmi if form_vals is defined else '' }}"
+                     placeholder="e.g., 27.5" />
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Exercise Level</label>
+            <select name="exercise" required>
+              {% set ex = form_vals.exercise if form_vals is defined else '' %}
+              <option value="" {% if ex == '' %}selected{% endif %}>Select…</option>
+              <option value="0" {% if ex == '0' %}selected{% endif %}>0 — Low</option>
+              <option value="1" {% if ex == '1' %}selected{% endif %}>1 — Medium</option>
+              <option value="2" {% if ex == '2' %}selected{% endif %}>2 — High</option>
+            </select>
+            <small class="help">Tip: If unsure, choose “Low”.</small>
+          </div>
+
+          <div class="row">
+            <div class="field">
+              <label>Systolic BP (top number)</label>
+              <input type="number" name="sys_bp" min="60" max="260" step="1" required
+                     value="{{ form_vals.sys_bp if form_vals is defined else '' }}"
+                     placeholder="e.g., 120" />
+            </div>
+
+            <div class="field">
+              <label>Diastolic BP (bottom number)</label>
+              <input type="number" name="dia_bp" min="30" max="160" step="1" required
+                     value="{{ form_vals.dia_bp if form_vals is defined else '' }}"
+                     placeholder="e.g., 80" />
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Heart Rate (bpm)</label>
+            <input type="number" name="heart_rate" min="30" max="220" step="1" required
+                   value="{{ form_vals.heart_rate if form_vals is defined else '' }}"
+                   placeholder="e.g., 72" />
+          </div>
+
+          <label class="check">
+            <input type="checkbox" required />
+            <span>I understand this tool provides a risk estimate for awareness only and is not medical advice. Do not enter personal identifiers.</span>
+          </label>
+
+          <div class="actions">
+            <button type="submit" class="btn primary">Predict</button>
+            <button type="button" class="btn ghost" id="clearBtn">Clear</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- RESULT CARD -->
+      <section class="card">
+        <h2 class="card-title">Result</h2>
+
+        {% if prediction %}
+          {% set risk_class = 'high' if prediction == 'High Risk' else 'low' %}
+          {% if prediction not in ['High Risk','Low Risk'] %}
+            {% set risk_class = 'moderate' %}
+          {% endif %}
+
+          <div class="result-card {{ risk_class }}">
+            <div class="result-head">
+              <div>
+                <div class="result-title">{{ prediction }}</div>
+                <div class="result-sub">
+                  Confidence: <strong>{{ probability }}%</strong>
+                </div>
+              </div>
+              <div class="pill {{ risk_class }}">{{ risk_class|title }}</div>
+            </div>
+
+            <div class="meter">
+              <div class="meter-fill" style="width: {{ probability }}%"></div>
+            </div>
+            <div class="meter-caption">
+              High Risk Probability: <span class="meter-number">{{ probability }}%</span>
+            </div>
+
+            <div class="disclaimer">
+              Important: This is an estimated risk score based on the inputs provided. This tool is for awareness only and is not medical advice.
+              If you experience symptoms or consistently high blood pressure, consult a licensed healthcare professional.
+            </div>
+          </div>
+        {% else %}
+          <div class="empty">
+            Submit the form to see your risk prediction and confidence score.
+          </div>
+        {% endif %}
+
+        <div class="footer-note">
+          <span class="dot"></span> Model runs on your deployed Flask app + trained model file.
+        </div>
+      </section>
+    </main>
   </div>
+
+  <script>
+    // Clears the form inputs without reloading the page
+    document.getElementById("clearBtn").addEventListener("click", () => {
+      const form = document.getElementById("riskForm");
+      form.reset();
+      // Optional: scroll to top of form
+      form.querySelector("input, select").focus();
+    });
+  </script>
 </body>
 </html>
