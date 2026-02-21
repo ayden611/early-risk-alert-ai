@@ -1,56 +1,88 @@
-```html id="t7m4x2"
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Prediction History</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Early Risk Alert AI</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
+
 <body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">ERA</div>
+      <div>
+        <div class="title">Early Risk Alert AI</div>
+        <div class="subtitle">Preventive risk insight based on measurable inputs.</div>
+      </div>
+    </div>
+    <div class="tag">Demo ML App</div>
+  </header>
 
-<div class="container">
-    <h1>Recent Predictions</h1>
+  <main class="wrap">
+    <section class="card">
+      <h2>Enter your health indicators</h2>
+      <p class="muted">This tool estimates risk for awareness only (not medical advice).</p>
 
-    <p>
-        <a href="{{ url_for('home') }}">← Back to App</a>
-    </p>
+      {% if error %}
+        <div class="alert">{{ error }}</div>
+      {% endif %}
 
-    {% if history and history|length > 0 %}
-        <table border="1" cellpadding="8">
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Age</th>
-                    <th>BMI</th>
-                    <th>Exercise</th>
-                    <th>Blood Pressure</th>
-                    <th>Heart Rate</th>
-                    <th>Risk Class</th>
-                    <th>Probability</th>
-                    <th>Confidence</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for row in history %}
-                <tr>
-                    <td>{{ row.created_at }}</td>
-                    <td>{{ row.age }}</td>
-                    <td>{{ row.bmi }}</td>
-                    <td>{{ row.exercise_level }}</td>
-                    <td>{{ row.systolic_bp }}/{{ row.diastolic_bp }}</td>
-                    <td>{{ row.heart_rate }}</td>
-                    <td>{{ row.risk_class }}</td>
-                    <td>{{ row.probability }}%</td>
-                    <td>{{ row.confidence }}%</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    {% else %}
-        <p>No predictions yet.</p>
-    {% endif %}
+      <form id="predictForm" method="POST" class="form">
+        <div class="grid">
+          <div class="field">
+            <label>Age</label>
+            <input name="age" type="number" step="1" value="{{ form.age }}" required>
+          </div>
 
-</div>
+          <div class="field">
+            <label>BMI</label>
+            <input name="bmi" type="number" step="0.1" value="{{ form.bmi }}" required>
+          </div>
+
+          <div class="field">
+            <label>Exercise Level</label>
+            <select name="exercise_level">
+              <option value="Low" {% if form.exercise_level == "Low" %}selected{% endif %}>Low</option>
+              <option value="Moderate" {% if form.exercise_level == "Moderate" %}selected{% endif %}>Moderate</option>
+              <option value="High" {% if form.exercise_level == "High" %}selected{% endif %}>High</option>
+            </select>
+            <div class="hint">Tip: If unsure, choose "Low".</div>
+          </div>
+
+          <div class="field">
+            <label>Systolic BP (top number)</label>
+            <input name="systolic_bp" type="number" step="1" value="{{ form.systolic_bp }}" required>
+          </div>
+
+          <div class="field">
+            <label>Diastolic BP (bottom number)</label>
+            <input name="diastolic_bp" type="number" step="1" value="{{ form.diastolic_bp }}" required>
+          </div>
+
+          <div class="field">
+            <label>Heart Rate (bpm)</label>
+            <input name="heart_rate" type="number" step="1" value="{{ form.heart_rate }}" required>
+          </div>
+        </div>
+
+        <label class="check">
+          <input name="ack" type="checkbox" {% if form.ack %}checked{% endif %}>
+          I understand this tool provides a risk estimate for awareness only and is not medical advice. Do not enter personal identifiers.
+        </label>
+
+        <div class="actions">
+          <button id="predictBtn" type="submit" class="btn primary">
+            <span class="btn-text">Predict</span>
+            <span class="spinner" aria-hidden="true"></span>
+          </button>
+
+          <button type="button" class="btn" onclick="window.location='{{ url_for('home') }}'">Clear</button>
+          <a class="btn link" href="{{ url_for('history') }}">View recent predictions</a>
+        </div>
+      </form>
+    </section>
+  </main>
 
 </body>
 </html>
