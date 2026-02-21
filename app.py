@@ -1,3 +1,4 @@
+```python
 import os
 from datetime import datetime
 from flask import Flask, render_template, request, redirect, url_for, flash
@@ -8,7 +9,7 @@ app = Flask(__name__)
 app.secret_key = "dev-secret-key"
 
 # =========================
-# MODEL
+# MODEL LOAD
 # =========================
 model = None
 model_error = None
@@ -19,7 +20,7 @@ except Exception as e:
     model_error = str(e)
 
 # =========================
-# DATABASE
+# DATABASE SETUP
 # =========================
 DATABASE_URL = os.environ.get("DATABASE_URL", "").strip()
 
@@ -31,10 +32,15 @@ if DATABASE_URL:
 else:
     engine = create_engine("sqlite:///local.db")
 
+# =========================
+# FORCE CLEAN TABLE (DEV SAFE)
+# =========================
 def init_db():
     with engine.begin() as conn:
+        conn.execute(text("DROP TABLE IF EXISTS predictions"))
+
         conn.execute(text("""
-            CREATE TABLE IF NOT EXISTS predictions (
+            CREATE TABLE predictions (
                 id SERIAL PRIMARY KEY,
                 created_at TIMESTAMP,
                 age FLOAT,
@@ -54,7 +60,7 @@ except:
     pass
 
 # =========================
-# HELPERS
+# PREDICTION HELPER
 # =========================
 def predict_probability(age, bmi, exercise_level, systolic_bp, diastolic_bp, heart_rate):
     if model is None:
@@ -90,8 +96,12 @@ def home():
             with engine.begin() as conn:
                 conn.execute(text("""
                     INSERT INTO predictions
-                    (created_at, age, bmi, exercise_level, systolic_bp, diastolic_bp, heart_rate, risk_label, probability)
-                    VALUES (:created_at, :age, :bmi, :exercise_level, :systolic_bp, :diastolic_bp, :heart_rate, :risk_label, :probability)
+                    (created_at, age, bmi, exercise_level,
+                     systolic_bp, diastolic_bp,
+                     heart_rate, risk_label, probability)
+                    VALUES (:created_at, :age, :bmi, :exercise_level,
+                            :systolic_bp, :diastolic_bp,
+                            :heart_rate, :risk_label, :probability)
                 """), {
                     "created_at": datetime.utcnow(),
                     "age": age,
@@ -130,7 +140,7 @@ def history():
                 LIMIT 50
             """))
             rows = result.mappings().all()
-    except Exception as e:
+    except:
         rows = []
 
     return render_template("history.html", rows=rows)
@@ -154,6 +164,6 @@ def health():
         "db_connected": True
     }
 
-# =========================
 if __name__ == "__main__":
     app.run(debug=True)
+```
