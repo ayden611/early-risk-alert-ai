@@ -1,77 +1,136 @@
-```html
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Early Risk Alert AI</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Early Risk Alert AI</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
 
-<div class="container">
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">ERA</div>
+      <div class="brand-text">
+        <h1>Early Risk Alert AI</h1>
+        <p>Preventive risk insight based on measurable inputs.</p>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <span class="pill">Demo ML App</span>
+    </div>
+  </header>
 
-    <h1>Early Risk Alert AI</h1>
-    <p>Preventive risk insight based on measurable inputs.</p>
+  <main class="page">
+    <section class="card">
+      <h2>Enter your health indicators</h2>
+      <p class="muted">This tool estimates risk for awareness only (not medical advice).</p>
 
-    <div class="card">
-        <h2>Enter your health indicators</h2>
+      {% if error %}
+        <div class="alert alert-error">
+          <strong>Oops:</strong> {{ error }}
+        </div>
+      {% endif %}
 
-        <form method="POST" action="/">
+      <form method="POST" class="form">
+        <div class="grid">
 
-            <label>Age</label>
-            <input type="number" step="0.1" name="age" required>
+          <div class="field">
+            <label for="age">Age</label>
+            <input id="age" name="age" type="number" step="1" min="0"
+              value="{{ form.age if form is defined and form.age is not none else '' }}"
+              required>
+          </div>
 
-            <label>BMI</label>
-            <input type="number" step="0.1" name="bmi" required>
+          <div class="field">
+            <label for="bmi">BMI</label>
+            <input id="bmi" name="bmi" type="number" step="0.1" min="0"
+              value="{{ form.bmi if form is defined and form.bmi is not none else '' }}"
+              required>
+          </div>
 
-            <label>Exercise Level</label>
-            <select name="exercise_level" required>
-                <option value="">Select</option>
-                <option value="0 - Low">0 - Low</option>
-                <option value="1 - Moderate">1 - Moderate</option>
-                <option value="2 - High">2 - High</option>
+          <div class="field">
+            <label for="exercise_level">Exercise Level</label>
+            <select id="exercise_level" name="exercise_level" required>
+              <option value="" {% if not (form is defined and form.exercise_level) %}selected{% endif %}>Select…</option>
+              <option value="low" {% if form is defined and form.exercise_level == 'low' %}selected{% endif %}>Low</option>
+              <option value="moderate" {% if form is defined and form.exercise_level == 'moderate' %}selected{% endif %}>Moderate</option>
+              <option value="high" {% if form is defined and form.exercise_level == 'high' %}selected{% endif %}>High</option>
             </select>
+            <div class="hint">Tip: If unsure, choose “Low”.</div>
+          </div>
 
-            <label>Systolic BP (top number)</label>
-            <input type="number" step="0.1" name="systolic_bp" required>
+          <div class="field">
+            <label for="systolic_bp">Systolic BP (top number)</label>
+            <input id="systolic_bp" name="systolic_bp" type="number" step="1" min="0"
+              value="{{ form.systolic_bp if form is defined and form.systolic_bp is not none else '' }}"
+              required>
+          </div>
 
-            <label>Diastolic BP (bottom number)</label>
-            <input type="number" step="0.1" name="diastolic_bp" required>
+          <div class="field">
+            <label for="diastolic_bp">Diastolic BP (bottom number)</label>
+            <input id="diastolic_bp" name="diastolic_bp" type="number" step="1" min="0"
+              value="{{ form.diastolic_bp if form is defined and form.diastolic_bp is not none else '' }}"
+              required>
+          </div>
 
-            <label>Heart Rate (bpm)</label>
-            <input type="number" step="0.1" name="heart_rate" required>
+          <div class="field">
+            <label for="heart_rate">Heart Rate (bpm)</label>
+            <input id="heart_rate" name="heart_rate" type="number" step="1" min="0"
+              value="{{ form.heart_rate if form is defined and form.heart_rate is not none else '' }}"
+              required>
+          </div>
 
-            <div class="checkbox">
-                <input type="checkbox" name="ack" required>
-                <label>I understand this tool provides a risk estimate for awareness only and is not medical advice.</label>
+        </div>
+
+        <div class="checkbox-row">
+          <input id="ack" name="ack" type="checkbox" value="1"
+            {% if form is defined and form.ack %}checked{% endif %}>
+          <label for="ack">
+            I understand this tool provides a risk estimate for awareness only and is not medical advice.
+            Do not enter personal identifiers.
+          </label>
+        </div>
+
+        <div class="actions">
+          <button class="btn primary" type="submit">Predict</button>
+          <a class="btn" href="/">Clear</a>
+          <a class="btn link" href="{{ url_for('history') }}">View recent predictions</a>
+        </div>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2>Result</h2>
+
+      {% if result %}
+        <div class="result-card {% if result.risk_class == 'low' %}low{% elif result.risk_class == 'moderate' %}moderate{% else %}high{% endif %}">
+          <div class="result-title">{{ result.risk_label }}</div>
+
+          <div class="confidence">
+            <div>Confidence: <span class="meter-number">{{ result.confidence }}%</span></div>
+            <div class="meter">
+              <div class="meter-fill" style="width: {{ result.confidence }}%;"></div>
             </div>
+          </div>
 
-            <button type="submit">Predict</button>
+          <div class="details">
+            <div><strong>Risk Probability:</strong> {{ result.probability }}%</div>
+            <div><strong>Risk Class:</strong> {{ result.risk_class }}</div>
+          </div>
 
-        </form>
-    </div>
+          <p class="disclaimer">
+            Important: This is an estimated risk score based on the inputs provided. This tool is for awareness only and is not medical advice.
+            If you experience symptoms or consistently high blood pressure, consult a licensed healthcare professional.
+          </p>
+        </div>
+      {% else %}
+        <p class="muted">Submit the form to see your risk prediction and confidence score.</p>
+        <p class="muted">Model runs on your deployed Flask app + trained model file.</p>
+      {% endif %}
+    </section>
 
-    <div class="card">
-
-        <h2>Result</h2>
-
-        {% if result %}
-            <div class="result {{ result.risk_class }}">
-                <h3>{{ result.risk_label }}</h3>
-                <p>Confidence: {{ result.confidence }}%</p>
-                <p>Risk Probability: {{ result.probability }}%</p>
-            </div>
-
-            <div style="margin-top: 15px;">
-                <a href="/history">View recent predictions</a>
-            </div>
-        {% else %}
-            <p>Submit the form to see your risk prediction and confidence score.</p>
-        {% endif %}
-
-    </div>
-
-</div>
+  </main>
 
 </body>
 </html>
-```
