@@ -55,6 +55,7 @@ class Prediction(db.Model):
     probability = db.Column(db.Float)
 
 with app.app_context():
+    db.drop_all()
     db.create_all()
 
 # --------------------------------
