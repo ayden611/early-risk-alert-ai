@@ -1,120 +1,77 @@
 ```html
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html>
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Early Risk Alert AI</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>Early Risk Alert AI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-
 <body>
-  <div class="topbar">
-    <div class="brand">
-      <div class="logo">ERA</div>
-      <div>
-        <div class="title">Early Risk Alert AI</div>
-        <div class="subtitle">Preventive risk insight based on measurable inputs.</div>
-      </div>
-    </div>
-    <div class="pill">Demo ML App</div>
-  </div>
 
-  <div class="wrap">
-    <div class="grid">
-      <!-- LEFT: FORM -->
-      <div class="card">
+<div class="container">
+
+    <h1>Early Risk Alert AI</h1>
+    <p>Preventive risk insight based on measurable inputs.</p>
+
+    <div class="card">
         <h2>Enter your health indicators</h2>
-        <p class="muted">This tool estimates risk for awareness only (not medical advice).</p>
 
         <form method="POST" action="/">
-          <div class="row">
-            <div class="field">
-              <label>Age</label>
-              <input type="number" step="1" name="age" required value="{{ form.age if form else '' }}">
-            </div>
 
-            <div class="field">
-              <label>BMI</label>
-              <input type="number" step="0.1" name="bmi" required value="{{ form.bmi if form else '' }}">
-            </div>
-          </div>
+            <label>Age</label>
+            <input type="number" step="0.1" name="age" required>
 
-          <div class="field">
+            <label>BMI</label>
+            <input type="number" step="0.1" name="bmi" required>
+
             <label>Exercise Level</label>
             <select name="exercise_level" required>
-              <option value="" disabled {{ 'selected' if not form or not form.exercise_level else '' }}>Select…</option>
-              <option value="0 - Low" {{ 'selected' if form and form.exercise_level == '0 - Low' else '' }}>0 - Low</option>
-              <option value="1 - Moderate" {{ 'selected' if form and form.exercise_level == '1 - Moderate' else '' }}>1 - Moderate</option>
-              <option value="2 - High" {{ 'selected' if form and form.exercise_level == '2 - High' else '' }}>2 - High</option>
+                <option value="">Select</option>
+                <option value="0 - Low">0 - Low</option>
+                <option value="1 - Moderate">1 - Moderate</option>
+                <option value="2 - High">2 - High</option>
             </select>
-            <div class="hint">Tip: If unsure, choose “Low”.</div>
-          </div>
 
-          <div class="row">
-            <div class="field">
-              <label>Systolic BP (top number)</label>
-              <input type="number" step="1" name="systolic_bp" required value="{{ form.systolic_bp if form else '' }}">
-            </div>
+            <label>Systolic BP (top number)</label>
+            <input type="number" step="0.1" name="systolic_bp" required>
 
-            <div class="field">
-              <label>Diastolic BP (bottom number)</label>
-              <input type="number" step="1" name="diastolic_bp" required value="{{ form.diastolic_bp if form else '' }}">
-            </div>
-          </div>
+            <label>Diastolic BP (bottom number)</label>
+            <input type="number" step="0.1" name="diastolic_bp" required>
 
-          <div class="field">
             <label>Heart Rate (bpm)</label>
-            <input type="number" step="1" name="heart_rate" required value="{{ form.heart_rate if form else '' }}">
-          </div>
+            <input type="number" step="0.1" name="heart_rate" required>
 
-          <label class="checkbox">
-            <input type="checkbox" name="ack" required {{ 'checked' if form and form.ack else '' }}>
-            <span>I understand this tool provides a risk estimate for awareness only and is not medical advice. Do not enter personal identifiers.</span>
-          </label>
+            <div class="checkbox">
+                <input type="checkbox" name="ack" required>
+                <label>I understand this tool provides a risk estimate for awareness only and is not medical advice.</label>
+            </div>
 
-          <div class="btnrow">
-            <button class="btn primary" type="submit">Predict</button>
-            <a class="btn" href="/">Clear</a>
-          </div>
+            <button type="submit">Predict</button>
 
-          <a class="link" href="/history">View recent predictions</a>
         </form>
-      </div>
+    </div>
 
-      <!-- RIGHT: RESULT -->
-      <div class="card">
+    <div class="card">
+
         <h2>Result</h2>
 
-        {% if error %}
-          <div class="result-card high">
-            <div class="result-title">Error</div>
-            <div class="confidence">{{ error }}</div>
-          </div>
-        {% elif result %}
-          <div class="result-card {{ result.risk_class }}">
-            <div class="result-title">{{ result.risk_label }}</div>
-
-            <div class="confidence">
-              <div>Confidence: <span class="meter-number">{{ result.confidence }}%</span></div>
-              <div class="meter">
-                <div class="meter-fill" style="width: {{ result.confidence }}%;"></div>
-              </div>
+        {% if result %}
+            <div class="result {{ result.risk_class }}">
+                <h3>{{ result.risk_label }}</h3>
+                <p>Confidence: {{ result.confidence }}%</p>
+                <p>Risk Probability: {{ result.probability }}%</p>
             </div>
 
-            <div class="disclaimer">
-              This estimate is generated by a machine learning model for educational purposes only.
-              It is not a diagnosis or medical advice.
+            <div style="margin-top: 15px;">
+                <a href="/history">View recent predictions</a>
             </div>
-          </div>
         {% else %}
-          <div class="empty">
-            Your prediction result will appear here after submission.
-          </div>
+            <p>Submit the form to see your risk prediction and confidence score.</p>
         {% endif %}
-      </div>
+
     </div>
-  </div>
+
+</div>
+
 </body>
 </html>
 ```
