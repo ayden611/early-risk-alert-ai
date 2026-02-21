@@ -1,63 +1,53 @@
 ```html
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html>
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Recent Predictions</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>Prediction History</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-
 <body>
-  <div class="topbar">
-    <div class="brand">
-      <div class="logo">ERA</div>
-      <div>
-        <div class="title">Recent Predictions</div>
-        <div class="subtitle">Last 30 submissions</div>
-      </div>
-    </div>
-    <a class="btn" href="/">Back</a>
-  </div>
 
-  <div class="wrap">
+<div class="container">
+
+    <h1>Recent Predictions</h1>
+
     <div class="card">
-      {% if history and history|length > 0 %}
-        <table class="table">
-          <thead>
-            <tr>
-              <th>Time</th>
-              <th>Risk</th>
-              <th>Confidence</th>
-              <th>High Risk Prob</th>
-              <th>Age</th>
-              <th>BMI</th>
-              <th>SBP/DBP</th>
-              <th>HR</th>
-              <th>Exercise</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for h in history %}
-            <tr>
-              <td>{{ h.created_at }}</td>
-              <td>{{ h.risk_label }}</td>
-              <td>{{ h.confidence }}%</td>
-              <td>{{ h.probability }}%</td>
-              <td>{{ h.age }}</td>
-              <td>{{ h.bmi }}</td>
-              <td>{{ h.systolic_bp }}/{{ h.diastolic_bp }}</td>
-              <td>{{ h.heart_rate }}</td>
-              <td>{{ h.exercise_level }}</td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      {% else %}
-        <div class="muted">No history yet. Submit a prediction first.</div>
-      {% endif %}
+
+        {% if history and history|length > 0 %}
+
+            <table>
+                <tr>
+                    <th>Date</th>
+                    <th>Risk</th>
+                    <th>Confidence</th>
+                    <th>Age</th>
+                    <th>BMI</th>
+                </tr>
+
+                {% for row in history %}
+                <tr>
+                    <td>{{ row.created_at }}</td>
+                    <td>{{ row.risk_label }}</td>
+                    <td>{{ row.confidence }}%</td>
+                    <td>{{ row.age }}</td>
+                    <td>{{ row.bmi }}</td>
+                </tr>
+                {% endfor %}
+
+            </table>
+
+        {% else %}
+            <p>No predictions yet.</p>
+        {% endif %}
+
+        <div style="margin-top: 20px;">
+            <a href="/">Back to Home</a>
+        </div>
+
     </div>
-  </div>
+
+</div>
+
 </body>
 </html>
 ```
