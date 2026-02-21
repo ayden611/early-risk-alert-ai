@@ -1,32 +1,28 @@
 import os
 from datetime import datetime
-from types import SimpleNamespace
+import csv
+import io
 
 import joblib
 import numpy as np
 from flask import (
-    Flask, render_template, request, redirect,
-    url_for, session, flash
+    Flask, render_template, request,
+    redirect, url_for, session,
+    flash, send_file
 )
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import text, inspect
 
-
-# ----------------------------
-# App setup
-# ----------------------------
+# --------------------------------
+# App Setup
+# --------------------------------
 app = Flask(__name__)
-
-# Secrets / Auth
-app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-change-me")
+app.secret_key = os.environ.get("SECRET_KEY", "dev-secret")
 
 ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "admin")
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "password")
 
-# Database
 DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///predictions.db")
 
-# Render Postgres sometimes gives postgres:// (SQLAlchemy wants postgresql://)
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
@@ -35,68 +31,35 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)
 
+# --------------------------------
 # Model
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-MODEL_PATH = os.path.join(BASE_DIR, "demo_model.pkl")
+# --------------------------------
+MODEL_PATH = os.path.join(os.path.dirname(__file__), "demo_model.pkl")
 model = joblib.load(MODEL_PATH)
 
-
-# ----------------------------
-# DB Model
-# ----------------------------
+# --------------------------------
+# Database Model
+# --------------------------------
 class Prediction(db.Model):
-    __tablename__ = "predictions"
-
     id = db.Column(db.Integer, primary_key=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    age = db.Column(db.Float, nullable=False)
-    bmi = db.Column(db.Float, nullable=False)
-    exercise_level = db.Column(db.String(20), nullable=False)
+    age = db.Column(db.Float)
+    bmi = db.Column(db.Float)
+    exercise_level = db.Column(db.String(20))
+    systolic_bp = db.Column(db.Float)
+    diastolic_bp = db.Column(db.Float)
+    heart_rate = db.Column(db.Float)
 
-    systolic_bp = db.Column(db.Float, nullable=False)
-    diastolic_bp = db.Column(db.Float, nullable=False)
-    heart_rate = db.Column(db.Float, nullable=False)
-
-    risk_label = db.Column(db.String(20), nullable=False)
-    probability = db.Column(db.Float, nullable=False)  # 0..1
-
-
-def _ensure_schema():
-    """
-    Creates tables if missing and adds missing columns if your DB existed already
-    with an older schema (common on Render).
-    """
-    db.create_all()
-
-    try:
-        insp = inspect(db.engine)
-        cols = {c["name"] for c in insp.get_columns("predictions")}
-
-        # If the table exists but a column is missing, add it safely.
-        alter_stmts = []
-        if "exercise_level" not in cols:
-            alter_stmts.append("ALTER TABLE predictions ADD COLUMN IF NOT EXISTS exercise_level VARCHAR(20);")
-        if "risk_label" not in cols:
-            alter_stmts.append("ALTER TABLE predictions ADD COLUMN IF NOT EXISTS risk_label VARCHAR(20);")
-        if "probability" not in cols:
-            alter_stmts.append("ALTER TABLE predictions ADD COLUMN IF NOT EXISTS probability DOUBLE PRECISION;")
-
-        if alter_stmts:
-            with db.engine.begin() as conn:
-                for stmt in alter_stmts:
-                    conn.execute(text(stmt))
-    except Exception:
-        pass
-
+    risk_label = db.Column(db.String(20))
+    probability = db.Column(db.Float)
 
 with app.app_context():
-    _ensure_schema()
+    db.create_all()
 
-
-# ----------------------------
-# Helpers
-# ----------------------------
+# --------------------------------
+# Auth Helper
+# --------------------------------
 def login_required(fn):
     def wrapper(*args, **kwargs):
         if not session.get("logged_in"):
@@ -105,104 +68,91 @@ def login_required(fn):
     wrapper.__name__ = fn.__name__
     return wrapper
 
-
-def exercise_to_num(level: str) -> float:
-    level = (level or "").strip().lower()
-    if level == "low":
-        return 0.0
-    if level == "moderate":
-        return 1.0
-    if level == "high":
-        return 2.0
-    return 0.0
-
-
-def make_form_ns(**kwargs):
-    defaults = dict(
-        age="",
-        bmi="",
-        exercise_level="Low",
-        systolic_bp="",
-        diastolic_bp="",
-        heart_rate="",
-        acknowledged=False,
-    )
-    defaults.update(kwargs)
-    return SimpleNamespace(**defaults)
-
-
-# ----------------------------
+# --------------------------------
 # Routes
-# ----------------------------
+# --------------------------------
 @app.route("/health")
 def health():
     return {"status": "ok"}, 200
 
-
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        username = request.form.get("username", "")
-        password = request.form.get("password", "")
-
-        if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+        if (
+            request.form.get("username") == ADMIN_USERNAME and
+            request.form.get("password") == ADMIN_PASSWORD
+        ):
             session["logged_in"] = True
             return redirect(url_for("home"))
-
-        flash("Invalid username or password.")
+        flash("Invalid credentials")
         return redirect(url_for("login"))
 
     return render_template("login.html")
-
 
 @app.route("/logout")
 def logout():
     session.clear()
     return redirect(url_for("login"))
 
-
+# --------------------------------
+# Main Prediction Page
+# --------------------------------
 @app.route("/", methods=["GET", "POST"])
 @login_required
 def home():
+
+    form = {
+        "age": "",
+        "bmi": "",
+        "exercise_level": "Low",
+        "systolic_bp": "",
+        "diastolic_bp": "",
+        "heart_rate": "",
+        "ack": False
+    }
+
     prediction = None
     probability_pct = None
 
-    form = make_form_ns()
-
     if request.method == "POST":
         try:
-            acknowledged = request.form.get("acknowledged") == "on"
+            age = float(request.form["age"])
+            bmi = float(request.form["bmi"])
+            exercise_level = request.form["exercise_level"]
+            systolic_bp = float(request.form["systolic_bp"])
+            diastolic_bp = float(request.form["diastolic_bp"])
+            heart_rate = float(request.form["heart_rate"])
+            ack = request.form.get("ack") == "on"
 
-            age = float(request.form.get("age", "0"))
-            bmi = float(request.form.get("bmi", "0"))
-            exercise_level = request.form.get("exercise_level", "Low")
-            systolic_bp = float(request.form.get("systolic_bp", "0"))
-            diastolic_bp = float(request.form.get("diastolic_bp", "0"))
-            heart_rate = float(request.form.get("heart_rate", "0"))
+            form.update({
+                "age": age,
+                "bmi": bmi,
+                "exercise_level": exercise_level,
+                "systolic_bp": systolic_bp,
+                "diastolic_bp": diastolic_bp,
+                "heart_rate": heart_rate,
+                "ack": ack
+            })
 
-            form = make_form_ns(
-                age=age,
-                bmi=bmi,
-                exercise_level=exercise_level,
-                systolic_bp=systolic_bp,
-                diastolic_bp=diastolic_bp,
-                heart_rate=heart_rate,
-                acknowledged=acknowledged,
-            )
+            if not ack:
+                flash("Please acknowledge the disclaimer.")
+                return render_template("index.html",
+                                       form=form,
+                                       prediction=None,
+                                       probability_pct=None)
 
-            if not acknowledged:
-                flash("Please acknowledge the disclaimer checkbox before predicting.")
-                return render_template("index.html", form=form, prediction=None, probability=None)
+            ex_map = {"Low": 0, "Moderate": 1, "High": 2}
+            ex_val = ex_map.get(exercise_level, 0)
 
-            ex_num = exercise_to_num(exercise_level)
-
-            X = np.array([[age, bmi, ex_num, systolic_bp, diastolic_bp, heart_rate]], dtype=float)
+            X = np.array([[age, bmi, ex_val,
+                           systolic_bp, diastolic_bp,
+                           heart_rate]])
 
             pred = int(model.predict(X)[0])
             prob_high = float(model.predict_proba(X)[0][1])
 
             prediction = "High" if pred == 1 else "Low"
-            probability_pct = round(prob_high * 100.0, 1)
+            probability_pct = round(prob_high * 100, 1)
 
             row = Prediction(
                 age=age,
@@ -212,38 +162,84 @@ def home():
                 diastolic_bp=diastolic_bp,
                 heart_rate=heart_rate,
                 risk_label=prediction,
-                probability=prob_high,
+                probability=prob_high
             )
+
             db.session.add(row)
             db.session.commit()
 
         except Exception as e:
             db.session.rollback()
-            flash(f"Error: {e}")
+            flash(str(e))
 
-    return render_template(
-        "index.html",
-        form=form,
-        prediction=prediction,
-        probability=probability_pct,
-    )
+    return render_template("index.html",
+                           form=form,
+                           prediction=prediction,
+                           probability_pct=probability_pct)
 
-
-@app.route("/history", methods=["GET"])
+# --------------------------------
+# History
+# --------------------------------
+@app.route("/history")
 @login_required
 def history():
-    rows = Prediction.query.order_by(Prediction.created_at.desc()).limit(50).all()
+    rows = Prediction.query.order_by(
+        Prediction.created_at.desc()
+    ).all()
     return render_template("history.html", rows=rows)
 
-
-@app.route("/history/clear", methods=["POST"])
+@app.route("/clear_history", methods=["POST"])
 @login_required
 def clear_history():
-    try:
-        Prediction.query.delete()
-        db.session.commit()
-        flash("History cleared.")
-    except Exception as e:
-        db.session.rollback()
-        flash(f"Could not clear history: {e}")
+    Prediction.query.delete()
+    db.session.commit()
     return redirect(url_for("history"))
+
+@app.route("/delete_row/<int:row_id>", methods=["POST"])
+@login_required
+def delete_row(row_id):
+    row = Prediction.query.get_or_404(row_id)
+    db.session.delete(row)
+    db.session.commit()
+    return redirect(url_for("history"))
+
+# --------------------------------
+# CSV Download
+# --------------------------------
+@app.route("/download_history_csv")
+@login_required
+def download_history_csv():
+    rows = Prediction.query.order_by(
+        Prediction.created_at.desc()
+    ).all()
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+
+    writer.writerow([
+        "Time", "Age", "BMI", "Exercise",
+        "Systolic", "Diastolic", "Heart Rate",
+        "Risk", "Probability"
+    ])
+
+    for r in rows:
+        writer.writerow([
+            r.created_at,
+            r.age,
+            r.bmi,
+            r.exercise_level,
+            r.systolic_bp,
+            r.diastolic_bp,
+            r.heart_rate,
+            r.risk_label,
+            round(r.probability * 100, 1)
+        ])
+
+    output.seek(0)
+
+    return send_file(
+        io.BytesIO(output.getvalue().encode()),
+        mimetype="text/csv",
+        as_attachment=True,
+        download_name="prediction_history.csv"
+    )
