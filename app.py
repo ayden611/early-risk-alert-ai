@@ -1,306 +1,310 @@
 import os
-import math
-from datetime import datetime, date
+from datetime import datetime
 
 from flask import Flask, render_template, request, redirect, url_for, flash
 from sqlalchemy import create_engine, text
 import joblib
 
-
-# ============================================================
+# =========================
 # APP SETUP
-# ============================================================
+# =========================
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "dev-secret-key")
 
+# =========================
+# MODEL SETUP
+# =========================
+MODEL_PATH = os.environ.get("MODEL_PATH", "demo_model.pkl")
 
-# ============================================================
+model = None
+model_load_error = None
+try:
+    model = joblib.load(MODEL_PATH)
+except Exception as e:
+    model = None
+    model_load_error = str(e)
+
+# =========================
 # DATABASE SETUP
-# ============================================================
+# =========================
 DATABASE_URL = os.environ.get("DATABASE_URL", "").strip()
 
 engine = None
-if DATABASE_URL:
-    # Render Postgres often provides postgres:// which SQLAlchemy wants as postgresql://
-    if DATABASE_URL.startswith("postgres://"):
-        DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
-    engine = create_engine(DATABASE_URL, pool_pre_ping=True)
-else:
-    # Local/dev fallback if DATABASE_URL is missing
-    engine = create_engine("sqlite:///local.db", connect_args={"check_same_thread": False})
+db_error = None
+
+try:
+    if DATABASE_URL:
+        # Render Postgres sometimes uses postgres:// but SQLAlchemy wants postgresql://
+        if DATABASE_URL.startswith("postgres://"):
+            DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+        engine = create_engine(DATABASE_URL, pool_pre_ping=True)
+    else:
+        # local/dev fallback
+        engine = create_engine(
+            "sqlite:///local.db",
+            connect_args={"check_same_thread": False}
+        )
+except Exception as e:
+    engine = None
+    db_error = str(e)
 
 
 def init_db():
     """Create table if it doesn't exist."""
     if not engine:
         return
-
-    # Works on Postgres. For sqlite, SERIAL isn't valid, but sqlite ignores type-ish.
-    # If you want perfect sqlite support, we can add sqlite-specific DDL later.
     ddl = """
     CREATE TABLE IF NOT EXISTS predictions (
-        id SERIAL PRIMARY KEY,
-        created_at TIMESTAMPTZ DEFAULT NOW(),
-        age FLOAT,
-        bmi FLOAT,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        created_at TEXT NOT NULL,
+        age REAL,
+        bmi REAL,
         exercise_level TEXT,
-        systolic_bp FLOAT,
-        diastolic_bp FLOAT,
-        heart_rate FLOAT,
+        systolic_bp REAL,
+        diastolic_bp REAL,
+        heart_rate REAL,
         risk_label TEXT,
-        risk_class TEXT,
-        probability FLOAT,
-        confidence FLOAT
-    );
+        probability REAL
+    )
     """
+    # Postgres doesn't support AUTOINCREMENT; but this DDL is fine for SQLite.
+    # For Postgres, we’ll use a compatible table creation:
+    if DATABASE_URL and DATABASE_URL.startswith("postgresql://"):
+        ddl = """
+        CREATE TABLE IF NOT EXISTS predictions (
+            id SERIAL PRIMARY KEY,
+            created_at TIMESTAMP NOT NULL,
+            age DOUBLE PRECISION,
+            bmi DOUBLE PRECISION,
+            exercise_level TEXT,
+            systolic_bp DOUBLE PRECISION,
+            diastolic_bp DOUBLE PRECISION,
+            heart_rate DOUBLE PRECISION,
+            risk_label TEXT,
+            probability DOUBLE PRECISION
+        )
+        """
     with engine.begin() as conn:
         conn.execute(text(ddl))
 
 
-init_db()
-
-
-# ============================================================
-# LOAD MODEL
-# ============================================================
-MODEL_PATH = os.environ.get("MODEL_PATH", "demo_model.pkl")
-model = None
+# Initialize DB on startup
 try:
-    model = joblib.load(MODEL_PATH)
-except Exception:
-    model = None
+    init_db()
+except Exception as e:
+    db_error = str(e)
 
 
-# ============================================================
+# =========================
 # HELPERS
-# ============================================================
+# =========================
 def to_float(value, default=None):
     try:
         if value is None:
             return default
-        if isinstance(value, str) and value.strip() == "":
+        v = str(value).strip()
+        if v == "":
             return default
-        return float(value)
+        return float(v)
     except Exception:
         return default
 
 
-def clamp(x, lo=0.0, hi=1.0):
+def clamp(x, lo, hi):
+    if x is None:
+        return None
     return max(lo, min(hi, x))
 
 
-def sigmoid(z):
-    # safe-ish sigmoid
-    if z is None:
-        return 0.5
-    z = max(-60.0, min(60.0, float(z)))
-    return 1.0 / (1.0 + math.exp(-z))
-
-
-def normalize_exercise(ex):
+def predict_probability(age, bmi, exercise_level, systolic_bp, diastolic_bp, heart_rate):
     """
-    Accepts: low / moderate / high (case-insensitive)
-    Stores the text version in DB, but also returns numeric encoding for model if needed.
+    Uses the trained sklearn pipeline (StandardScaler + LogisticRegression)
+    saved in demo_model.pkl.
     """
-    if not ex:
-        return ("low", 0.0)
-    ex_clean = str(ex).strip().lower()
-    if ex_clean in ("low", "l"):
-        return ("low", 0.0)
-    if ex_clean in ("moderate", "medium", "mid", "m"):
-        return ("moderate", 1.0)
-    if ex_clean in ("high", "h"):
-        return ("high", 2.0)
-    # default fallback
-    return (ex_clean, 0.0)
+    if model is None:
+        raise RuntimeError(f"Model not loaded: {model_load_error}")
+
+    # exercise_level is stored as Low/Moderate/High in UI.
+    # Our training file may have mapped it to numeric at training time,
+    # BUT the final model pipeline expects numeric features.
+    # We'll map here to be safe.
+    ex_map = {"low": 0, "moderate": 1, "high": 2}
+    ex_val = ex_map.get(str(exercise_level).strip().lower(), 0)
+
+    X = [[age, bmi, ex_val, systolic_bp, diastolic_bp, heart_rate]]
+    proba = model.predict_proba(X)[0][1]  # probability of class 1 (high risk)
+    return float(proba)
 
 
-def format_pct(p):
-    """
-    p is expected 0..1 float.
-    Returns a string like '23.4%' or '<0.1%' (so low risk doesn't look like 0.0%).
-    """
-    if p is None:
-        return "—"
-    p = clamp(float(p), 0.0, 1.0)
-    pct = p * 100.0
-    if 0.0 < pct < 0.1:
-        return "<0.1%"
-    return f"{pct:.1f}%"
+def risk_label_from_proba(p):
+    # Simple threshold; you can tune later
+    return "High" if p >= 0.5 else "Low"
 
 
-def predict_probability(features_dict):
-    """
-    Robust inference:
-    - If model has predict_proba -> use it
-    - Else decision_function -> sigmoid
-    - Else predict -> 0/1
-    """
-    if not model:
-        return 0.5
-
-    # Many sklearn pipelines accept dict-like via DataFrame.
-    # Without pandas dependency, try array fallback.
-    # We'll try dict->list in a stable order that matches our app fields.
-    feature_order = ["age", "bmi", "exercise_level_num", "systolic_bp", "diastolic_bp", "heart_rate"]
-    X_row = [[features_dict.get(k) for k in feature_order]]
-
-    # Try predict_proba
-    if hasattr(model, "predict_proba"):
-        try:
-            proba = model.predict_proba(X_row)[0][1]
-            return clamp(float(proba), 0.0, 1.0)
-        except Exception:
-            pass
-
-    # Try decision_function
-    if hasattr(model, "decision_function"):
-        try:
-            score = model.decision_function(X_row)
-            if isinstance(score, (list, tuple)):
-                score = score[0]
-            return clamp(sigmoid(score), 0.0, 1.0)
-        except Exception:
-            pass
-
-    # Fallback to predict
-    try:
-        pred = model.predict(X_row)[0]
-        return 1.0 if int(pred) == 1 else 0.0
-    except Exception:
-        return 0.5
-
-
-def compute_result(age, bmi, exercise_level_text, exercise_level_num, systolic_bp, diastolic_bp, heart_rate):
-    features = {
-        "age": age,
-        "bmi": bmi,
-        "exercise_level_num": exercise_level_num,
-        "systolic_bp": systolic_bp,
-        "diastolic_bp": diastolic_bp,
-        "heart_rate": heart_rate,
-    }
-
-    proba = predict_probability(features)
-
-    # Risk threshold (can tune later)
-    risk_class = "high" if proba >= 0.5 else "low"
-    risk_label = "High Risk" if risk_class == "high" else "Low Risk"
-
-    # Confidence: distance from 0.5 scaled to 0..1
-    confidence = clamp(abs(proba - 0.5) * 2.0, 0.0, 1.0)
-
-    return {
-        "risk_label": risk_label,
-        "risk_class": risk_class,
-        "probability": proba,          # raw 0..1
-        "confidence": confidence,      # raw 0..1
-        "probability_str": format_pct(proba),
-        "confidence_str": format_pct(confidence),
-    }
-
-
-# ============================================================
+# =========================
 # ROUTES
-# ============================================================
+# =========================
 @app.route("/", methods=["GET", "POST"])
 def home():
-    result = None
-    error = None
-
-    # default form values
-    form = {
-        "age": "",
-        "bmi": "",
-        "exercise_level": "low",
-        "systolic_bp": "",
-        "diastolic_bp": "",
-        "heart_rate": "",
-        "ack": False,
-    }
-
     if request.method == "POST":
-        form["age"] = request.form.get("age", "").strip()
-        form["bmi"] = request.form.get("bmi", "").strip()
-        form["exercise_level"] = request.form.get("exercise_level", "low").strip()
-        form["systolic_bp"] = request.form.get("systolic_bp", "").strip()
-        form["diastolic_bp"] = request.form.get("diastolic_bp", "").strip()
-        form["heart_rate"] = request.form.get("heart_rate", "").strip()
-        form["ack"] = bool(request.form.get("ack"))
+        # Checkbox acknowledgment
+        agree = request.form.get("agree")
+        if not agree:
+            flash("Please confirm the awareness-only disclaimer checkbox.")
+            return redirect(url_for("home"))
+
+        age = clamp(to_float(request.form.get("age"), None), 0, 120)
+        bmi = clamp(to_float(request.form.get("bmi"), None), 5, 80)
+        exercise_level = request.form.get("exercise_level", "Low")
+
+        systolic_bp = clamp(to_float(request.form.get("systolic_bp"), None), 50, 300)
+        diastolic_bp = clamp(to_float(request.form.get("diastolic_bp"), None), 30, 200)
+        heart_rate = clamp(to_float(request.form.get("heart_rate"), None), 30, 220)
+
+        # Basic validation
+        missing = [x is None for x in [age, bmi, systolic_bp, diastolic_bp, heart_rate]]
+        if any(missing):
+            flash("Please fill out all fields with valid numbers.")
+            return redirect(url_for("home"))
 
         try:
-            age = to_float(form["age"])
-            bmi = to_float(form["bmi"])
-            systolic_bp = to_float(form["systolic_bp"])
-            diastolic_bp = to_float(form["diastolic_bp"])
-            heart_rate = to_float(form["heart_rate"])
+            proba = predict_probability(age, bmi, exercise_level, systolic_bp, diastolic_bp, heart_rate)
+            label = risk_label_from_proba(proba)
+        except Exception as e:
+            flash(f"Prediction error: {e}")
+            return redirect(url_for("home"))
 
-            ex_text, ex_num = normalize_exercise(form["exercise_level"])
-
-            # Basic validation
-            if not form["ack"]:
-                raise ValueError("Please check the acknowledgement box.")
-            if None in (age, bmi, systolic_bp, diastolic_bp, heart_rate):
-                raise ValueError("Missing one or more values.")
-            if age <= 0 or bmi <= 0 or systolic_bp <= 0 or diastolic_bp <= 0 or heart_rate <= 0:
-                raise ValueError("Values must be greater than 0.")
-
-            result = compute_result(age, bmi, ex_text, ex_num, systolic_bp, diastolic_bp, heart_rate)
-
-            # Save to DB
+        # Save to DB (best effort)
+        try:
             if engine:
                 with engine.begin() as conn:
-                    conn.execute(
-                        text("""
-                            INSERT INTO predictions
-                            (age, bmi, exercise_level, systolic_bp, diastolic_bp, heart_rate,
-                             risk_label, risk_class, probability, confidence)
-                            VALUES
-                            (:age, :bmi, :exercise_level, :systolic_bp, :diastolic_bp, :heart_rate,
-                             :risk_label, :risk_class, :probability, :confidence)
-                        """),
-                        {
-                            "age": age,
-                            "bmi": bmi,
-                            "exercise_level": ex_text,
-                            "systolic_bp": systolic_bp,
-                            "diastolic_bp": diastolic_bp,
-                            "heart_rate": heart_rate,
-                            "risk_label": result["risk_label"],
-                            "risk_class": result["risk_class"],
-                            "probability": float(result["probability"]),
-                            "confidence": float(result["confidence"]),
-                        },
-                    )
+                    if DATABASE_URL and DATABASE_URL.startswith("postgresql://"):
+                        conn.execute(
+                            text("""
+                                INSERT INTO predictions
+                                (created_at, age, bmi, exercise_level, systolic_bp, diastolic_bp, heart_rate, risk_label, probability)
+                                VALUES (:created_at, :age, :bmi, :exercise_level, :systolic_bp, :diastolic_bp, :heart_rate, :risk_label, :probability)
+                            """),
+                            {
+                                "created_at": datetime.utcnow(),
+                                "age": age,
+                                "bmi": bmi,
+                                "exercise_level": str(exercise_level),
+                                "systolic_bp": systolic_bp,
+                                "diastolic_bp": diastolic_bp,
+                                "heart_rate": heart_rate,
+                                "risk_label": label,
+                                "probability": proba,
+                            }
+                        )
+                    else:
+                        conn.execute(
+                            text("""
+                                INSERT INTO predictions
+                                (created_at, age, bmi, exercise_level, systolic_bp, diastolic_bp, heart_rate, risk_label, probability)
+                                VALUES (:created_at, :age, :bmi, :exercise_level, :systolic_bp, :diastolic_bp, :heart_rate, :risk_label, :probability)
+                            """),
+                            {
+                                "created_at": datetime.utcnow().isoformat(),
+                                "age": age,
+                                "bmi": bmi,
+                                "exercise_level": str(exercise_level),
+                                "systolic_bp": systolic_bp,
+                                "diastolic_bp": diastolic_bp,
+                                "heart_rate": heart_rate,
+                                "risk_label": label,
+                                "probability": proba,
+                            }
+                        )
+        except Exception as e:
+            # Don’t kill the app if DB fails; just show message
+            flash(f"Note: Could not save history (DB issue): {e}")
 
-        except Exception:
-            error = "Oops: Invalid input. Please check your values."
+        # Render result on the home page
+        return render_template(
+            "index.html",
+            result={
+                "label": label,
+                "probability": round(proba * 100, 1),
+            }
+        )
 
-    return render_template("index.html", result=result, error=error, form=form)
+    return render_template("index.html")
 
 
-@app.route("/history", methods=["GET"])
+@app.route("/history")
 def history():
-    if not engine:
-        return render_template("history.html", history=[], filters={})
+    """
+    Robust history route:
+    - If DB is missing/broken, show empty list and an error message.
+    - Always send a list of dicts to the template.
+    """
+    rows = []
+    error = None
 
-    # Filters from query params
-    risk_class = request.args.get("risk_class", "").strip().lower()  # low/high
-    min_prob = request.args.get("min_prob", "").strip()              # percent like 10
-    max_prob = request.args.get("max_prob", "").strip()              # percent like 50
-    date_from = request.args.get("date_from", "").strip()            # YYYY-MM-DD
-    date_to = request.args.get("date_to", "").strip()                # YYYY-MM-DD
+    try:
+        if not engine:
+            raise RuntimeError(db_error or "Database engine not available.")
 
-    where = []
-    params = {}
+        with engine.connect() as conn:
+            # Works for both sqlite and postgres
+            result = conn.execute(text("""
+                SELECT created_at, age, bmi, exercise_level, systolic_bp, diastolic_bp, heart_rate, risk_label, probability
+                FROM predictions
+                ORDER BY created_at DESC
+                LIMIT 50
+            """))
 
-    if risk_class in ("low", "high"):
-        where.append("risk_class = :risk_class")
-        params["risk_class"] = risk_class
+            for r in result.mappings():
+                rows.append({
+                    "created_at": str(r.get("created_at")),
+                    "age": r.get("age"),
+                    "bmi": r.get("bmi"),
+                    "exercise_level": r.get("exercise_level"),
+                    "systolic_bp": r.get("systolic_bp"),
+                    "diastolic_bp": r.get("diastolic_bp"),
+                    "heart_rate": r.get("heart_rate"),
+                    "risk_label": r.get("risk_label"),
+                    "probability": r.get("probability"),
+                })
 
-    min_prob_f = to_float(min_prob)
-    if min_prob_f is not None:
-        where.append("probability >= :min_p")
-        params["min_p"] = clamp(min_prob_f / 100.0, 0.0, 1.0)
+    except Exception as e:
+        error = str(e)
 
-    max_prob
+    return render_template("history.html", rows=rows, error=error)
+
+
+@app.route("/clear-history", methods=["POST"])
+def clear_history():
+    try:
+        if not engine:
+            raise RuntimeError(db_error or "Database engine not available.")
+        with engine.begin() as conn:
+            conn.execute(text("DELETE FROM predictions"))
+        flash("History cleared.")
+    except Exception as e:
+        flash(f"Could not clear history: {e}")
+    return redirect(url_for("history"))
+
+
+@app.route("/health")
+def health():
+    """
+    Health check endpoint so Render / you can confirm status quickly.
+    """
+    return {
+        "ok": True,
+        "model_loaded": model is not None,
+        "model_path": MODEL_PATH,
+        "model_error": model_load_error,
+        "db_engine": bool(engine),
+        "db_error": db_error,
+        "has_database_url": bool(os.environ.get("DATABASE_URL")),
+    }, 200
+
+
+# =========================
+# LOCAL RUN (optional)
+# =========================
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000, debug=True)
