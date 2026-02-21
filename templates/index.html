@@ -1,4 +1,3 @@
-```html
 <!doctype html>
 <html lang="en">
 <head>
@@ -9,7 +8,7 @@
 </head>
 
 <body>
-  <header class="topbar">
+  <div class="topbar">
     <div class="brand">
       <div class="logo">ERA</div>
       <div>
@@ -18,113 +17,109 @@
       </div>
     </div>
     <div class="tag">Demo ML App</div>
-  </header>
+  </div>
 
-  <main class="wrap">
-    <section class="card">
+  <div class="container">
+    <div class="card">
       <h2>Enter your health indicators</h2>
       <p class="muted">This tool estimates risk for awareness only (not medical advice).</p>
 
       {% if error %}
-        <div class="alert">{{ error }}</div>
+        <div class="alert alert-error">{{ error }}</div>
       {% endif %}
 
-      <form id="predictForm" method="POST" class="form">
+      <form id="predictForm" method="POST">
         <div class="grid">
           <div class="field">
             <label>Age</label>
-            <input name="age" type="number" step="1" value="{{ form.age }}" required>
+            <input name="age" value="{{ form.age }}" inputmode="decimal" required />
           </div>
 
           <div class="field">
             <label>BMI</label>
-            <input name="bmi" type="number" step="0.1" value="{{ form.bmi }}" required>
+            <input name="bmi" value="{{ form.bmi }}" inputmode="decimal" required />
           </div>
 
           <div class="field">
             <label>Exercise Level</label>
             <select name="exercise_level">
-              <option value="Low" {% if form.exercise_level == "Low" %}selected{% endif %}>Low</option>
-              <option value="Moderate" {% if form.exercise_level == "Moderate" %}selected{% endif %}>Moderate</option>
-              <option value="High" {% if form.exercise_level == "High" %}selected{% endif %}>High</option>
+              <option value="low" {% if form.exercise_level == "low" %}selected{% endif %}>Low</option>
+              <option value="moderate" {% if form.exercise_level == "moderate" %}selected{% endif %}>Moderate</option>
+              <option value="high" {% if form.exercise_level == "high" %}selected{% endif %}>High</option>
             </select>
-            <div class="hint">Tip: If unsure, choose "Low".</div>
+            <div class="hint">Tip: if unsure, choose “Low”.</div>
           </div>
 
           <div class="field">
             <label>Systolic BP (top number)</label>
-            <input name="systolic_bp" type="number" step="1" value="{{ form.systolic_bp }}" required>
+            <input name="systolic_bp" value="{{ form.systolic_bp }}" inputmode="decimal" required />
           </div>
 
           <div class="field">
             <label>Diastolic BP (bottom number)</label>
-            <input name="diastolic_bp" type="number" step="1" value="{{ form.diastolic_bp }}" required>
+            <input name="diastolic_bp" value="{{ form.diastolic_bp }}" inputmode="decimal" required />
           </div>
 
           <div class="field">
             <label>Heart Rate (bpm)</label>
-            <input name="heart_rate" type="number" step="1" value="{{ form.heart_rate }}" required>
+            <input name="heart_rate" value="{{ form.heart_rate }}" inputmode="decimal" required />
           </div>
         </div>
 
-        <label class="check">
-          <input name="ack" type="checkbox" {% if form.ack %}checked{% endif %}>
-          I understand this tool provides a risk estimate for awareness only and is not medical advice. Do not enter personal identifiers.
+        <label class="checkrow">
+          <input type="checkbox" name="ack" {% if form.ack %}checked{% endif %} />
+          <span>I understand this tool provides a risk estimate for awareness only and is not medical advice. Do not enter personal identifiers.</span>
         </label>
 
         <div class="actions">
-          <button id="predictBtn" type="submit" class="btn primary">
-            <span class="btn-text">Predict</span>
+          <button id="predictBtn" class="btn" type="submit">
+            <span class="btntext">Predict</span>
             <span class="spinner" aria-hidden="true"></span>
           </button>
 
-          <button type="button" class="btn" onclick="window.location='{{ url_for('home') }}'">Clear</button>
-          <a class="btn link" href="{{ url_for('history') }}">View recent predictions</a>
+          <a class="btn btn2" href="{{ url_for('home') }}">Clear</a>
+          <a class="btn btn2" href="{{ url_for('history') }}">View recent predictions</a>
         </div>
       </form>
-    </section>
+    </div>
 
-    <section class="card">
-      <h2>Result</h2>
+    {% if result %}
+      <div class="result-card {{ result.risk_class }}">
+        <div class="result-title">Result</div>
 
-      {% if result %}
-        <div class="result-card {{ result.risk_class }}">
-          <div class="result-title">{{ result.risk_label }}</div>
-
-          <div class="confidence">
-            <div><strong>Confidence:</strong> {{ "%.1f"|format(result.confidence * 100) }}%</div>
-            <div class="meter">
-              <div class="meter-fill" style="width: {{ result.confidence * 100 }}%"></div>
-            </div>
-          </div>
-
-          <div class="prob">
-            <div><strong>Risk Probability:</strong> {{ "%.1f"|format(result.probability * 100) }}%</div>
-            <div><strong>Risk Class:</strong> {{ result.risk_class }}</div>
-          </div>
-
-          <p class="disclaimer">
-            Important: This is an estimated risk score based on the inputs provided. This tool is for awareness only and is not medical advice.
-            If you experience symptoms or consistently high blood pressure, consult a licensed healthcare professional.
-          </p>
+        <div class="result-main">
+          <div class="risk-label">{{ result.risk_label }}</div>
+          <div class="confidence">Confidence: <b>{{ result.confidence_str }}</b></div>
         </div>
-      {% else %}
-        <p class="muted">Submit the form to see your risk prediction and confidence score.</p>
-        <p class="muted">Model runs on your deployed Flask app + trained model file.</p>
-      {% endif %}
-    </section>
-  </main>
+
+        <div class="meter">
+          <div class="meter-fill" style="width: {{ result.probability * 100 }}%"></div>
+        </div>
+
+        <div class="result-details">
+          <div>Risk Probability: <b>{{ result.probability_str }}</b></div>
+          <div>Risk Class: <b>{{ result.risk_class }}</b></div>
+        </div>
+
+        <div class="disclaimer">
+          Important: This is an estimated risk score based on the inputs provided. This tool is for awareness only and is not medical advice.
+          If you experience symptoms or consistently high blood pressure, consult a licensed healthcare professional.
+        </div>
+      </div>
+    {% endif %}
+  </div>
 
   <script>
     // Loading animation on Predict
     const form = document.getElementById("predictForm");
     const btn = document.getElementById("predictBtn");
+    const btnText = btn.querySelector(".btntext");
 
     form.addEventListener("submit", () => {
-      btn.classList.add("loading");
       btn.disabled = true;
+      btn.classList.add("loading");
+      btnText.textContent = "Predicting...";
     });
   </script>
 </body>
 </html>
-```
