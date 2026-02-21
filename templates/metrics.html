@@ -2,30 +2,56 @@
 {% block content %}
 
 <div class="card">
-  <h1>Model Metrics</h1>
-  <p class="muted">These metrics are generated during training and saved in <code>model_metrics.json</code>.</p>
+  <div class="row">
+    <h1>Metrics</h1>
+    <div class="muted">Last 30 days (simple dashboard)</div>
+  </div>
 
-  {% if metrics %}
-    <div class="metrics">
-      <div class="metric">
-        <div class="muted">ROC AUC</div>
-        <div class="big">{{ metrics.get("roc_auc", "N/A") }}</div>
-      </div>
-      <div class="metric">
-        <div class="muted">Train rows</div>
-        <div class="big">{{ metrics.get("train_rows", "N/A") }}</div>
-      </div>
-      <div class="metric">
-        <div class="muted">Test rows</div>
-        <div class="big">{{ metrics.get("test_rows", "N/A") }}</div>
-      </div>
+  <div class="kpis">
+    <div class="kpi">
+      <div class="kpi-title">Total Predictions</div>
+      <div class="kpi-val">{{ total }}</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-title">High Risk</div>
+      <div class="kpi-val">{{ high }}</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-title">Low Risk</div>
+      <div class="kpi-val">{{ low }}</div>
+    </div>
+  </div>
+
+  <div class="charts">
+    <div class="chart-card">
+      <h3>Predictions per Day</h3>
+      <canvas id="countChart"></canvas>
     </div>
 
-    <h2>Classification report</h2>
-    <pre class="pre">{{ metrics.get("classification_report", "") }}</pre>
-  {% else %}
-    <div class="muted">No metrics found. Run <code>python3 train_model.py</code> and push <code>model_metrics.json</code>.</div>
-  {% endif %}
+    <div class="chart-card">
+      <h3>Avg Probability % per Day</h3>
+      <canvas id="probChart"></canvas>
+    </div>
+  </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const labels = {{ labels|tojson }};
+  const counts = {{ counts|tojson }};
+  const avgProbs = {{ avg_probs|tojson }};
+
+  new Chart(document.getElementById("countChart"), {
+    type: "line",
+    data: { labels, datasets: [{ label: "Predictions", data: counts }] },
+    options: { responsive: true }
+  });
+
+  new Chart(document.getElementById("probChart"), {
+    type: "line",
+    data: { labels, datasets: [{ label: "Avg Probability (%)", data: avgProbs }] },
+    options: { responsive: true }
+  });
+</script>
 
 {% endblock %}
