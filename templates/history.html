@@ -2,74 +2,54 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Prediction History - Early Risk Alert AI</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <meta charset="UTF-8">
+    <title>Prediction History - Early Risk Alert AI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-
 <body>
-  <div class="page">
-    <header class="topbar">
-      <div class="brand">
-        <div class="logo">ERA</div>
-        <div class="brand-text">
-          <div class="title">Early Risk Alert AI</div>
-          <div class="subtitle">Recent predictions</div>
-        </div>
-      </div>
 
-      <nav class="nav">
-        <a class="nav-link" href="{{ url_for('index') }}">← Back to app</a>
-      </nav>
-    </header>
+<div class="container">
+    <h1>Recent Predictions</h1>
 
-    <main class="content">
-      <h1 class="h1">Prediction History</h1>
-      <p class="muted">Showing the most recent predictions stored in your database.</p>
+    <a href="{{ url_for('home') }}" class="nav-link">← Back to App</a>
 
-      {% if history and history|length > 0 %}
-        <div class="table-wrap">
-          <table class="table">
+    {% if history and history|length > 0 %}
+        <table>
             <thead>
-              <tr>
-                <th>Date</th>
-                <th>Age</th>
-                <th>BMI</th>
-                <th>Exercise</th>
-                <th>Systolic</th>
-                <th>Diastolic</th>
-                <th>Heart Rate</th>
-                <th>Risk Class</th>
-                <th>Probability</th>
-                <th>Confidence</th>
-              </tr>
+                <tr>
+                    <th>Date</th>
+                    <th>Age</th>
+                    <th>BMI</th>
+                    <th>Exercise</th>
+                    <th>BP</th>
+                    <th>Heart Rate</th>
+                    <th>Risk</th>
+                    <th>Probability</th>
+                    <th>Confidence</th>
+                </tr>
             </thead>
             <tbody>
-              {% for row in history %}
-              <tr>
-                <td>{{ row.created_at }}</td>
-                <td>{{ row.age }}</td>
-                <td>{{ row.bmi }}</td>
-                <td>{{ row.exercise_level }}</td>
-                <td>{{ row.systolic_bp }}</td>
-                <td>{{ row.diastolic_bp }}</td>
-                <td>{{ row.heart_rate }}</td>
-                <td>{{ row.risk_label }}</td>
-                <td>{{ row.probability }}%</td>
-                <td>{{ row.confidence }}%</td>
-              </tr>
-              {% endfor %}
+                {% for row in history %}
+                <tr>
+                    <td>{{ row.created_at }}</td>
+                    <td>{{ row.age }}</td>
+                    <td>{{ row.bmi }}</td>
+                    <td>{{ row.exercise_level }}</td>
+                    <td>{{ row.systolic_bp }}/{{ row.diastolic_bp }}</td>
+                    <td>{{ row.heart_rate }}</td>
+                    <td>{{ row.risk_class }}</td>
+                    <td>{{ row.probability }}%</td>
+                    <td>{{ row.confidence }}%</td>
+                </tr>
+                {% endfor %}
             </tbody>
-          </table>
-        </div>
-      {% else %}
-        <div class="card empty">
-          <p>No predictions found yet. Submit a prediction from the main app first.</p>
-        </div>
-      {% endif %}
-    </main>
-  </div>
+        </table>
+    {% else %}
+        <p>No predictions found yet.</p>
+    {% endif %}
+
+</div>
+
 </body>
 </html>
 ```
