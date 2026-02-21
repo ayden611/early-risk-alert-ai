@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="card">
+  <h1>Model Metrics</h1>
+  <p class="muted">These metrics are generated during training and saved in <code>model_metrics.json</code>.</p>
+
+  {% if metrics %}
+    <div class="metrics">
+      <div class="metric">
+        <div class="muted">ROC AUC</div>
+        <div class="big">{{ metrics.get("roc_auc", "N/A") }}</div>
+      </div>
+      <div class="metric">
+        <div class="muted">Train rows</div>
+        <div class="big">{{ metrics.get("train_rows", "N/A") }}</div>
+      </div>
+      <div class="metric">
+        <div class="muted">Test rows</div>
+        <div class="big">{{ metrics.get("test_rows", "N/A") }}</div>
+      </div>
+    </div>
+
+    <h2>Classification report</h2>
+    <pre class="pre">{{ metrics.get("classification_report", "") }}</pre>
+  {% else %}
+    <div class="muted">No metrics found. Run <code>python3 train_model.py</code> and push <code>model_metrics.json</code>.</div>
+  {% endif %}
+</div>
+
+{% endblock %}
