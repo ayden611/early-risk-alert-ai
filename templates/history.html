@@ -2,119 +2,72 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Prediction History</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-
 <body>
-  <div class="topbar">
-    <div class="brand">
-      <div class="logo">ERA</div>
-      <div>
-        <div class="title">Recent Predictions</div>
-        <div class="subtitle">Filter and review your latest results.</div>
-      </div>
-    </div>
-    <div class="actions">
-      <a class="btn btn2" href="{{ url_for('home') }}">Back to app</a>
-    </div>
-  </div>
-
   <div class="container">
-    {% with messages = get_flashed_messages(with_categories=true) %}
+    <h1>Recent Predictions</h1>
+
+    {% with messages = get_flashed_messages() %}
       {% if messages %}
-        {% for cat, msg in messages %}
-          <div class="alert {% if cat == 'success' %}alert-ok{% else %}alert-error{% endif %}">{{ msg }}</div>
-        {% endfor %}
+        <div class="flash">
+          {% for msg in messages %}
+            <p>{{ msg }}</p>
+          {% endfor %}
+        </div>
       {% endif %}
     {% endwith %}
 
-    <div class="card">
-      <h2>Filters</h2>
+    {% if error %}
+      <div class="error">
+        <strong>History unavailable:</strong> {{ error }}
+      </div>
+    {% endif %}
 
-      <form method="GET" class="filtergrid">
-        <div class="field">
-          <label>Risk Class</label>
-          <select name="risk_class">
-            <option value="" {% if not filters.risk_class %}selected{% endif %}>Any</option>
-            <option value="low" {% if filters.risk_class == "low" %}selected{% endif %}>Low</option>
-            <option value="high" {% if filters.risk_class == "high" %}selected{% endif %}>High</option>
-          </select>
-        </div>
-
-        <div class="field">
-          <label>Min Probability (%)</label>
-          <input name="min_prob" value="{{ filters.min_prob }}" placeholder="e.g. 10" inputmode="decimal" />
-        </div>
-
-        <div class="field">
-          <label>Max Probability (%)</label>
-          <input name="max_prob" value="{{ filters.max_prob }}" placeholder="e.g. 80" inputmode="decimal" />
-        </div>
-
-        <div class="field">
-          <label>Date From</label>
-          <input type="date" name="date_from" value="{{ filters.date_from }}" />
-        </div>
-
-        <div class="field">
-          <label>Date To</label>
-          <input type="date" name="date_to" value="{{ filters.date_to }}" />
-        </div>
-
-        <div class="filter-actions">
-          <button class="btn" type="submit">Apply Filters</button>
-          <a class="btn btn2" href="{{ url_for('history') }}">Reset</a>
-        </div>
-      </form>
-
-      <form method="POST" action="{{ url_for('clear_history') }}"
-            onsubmit="return confirm('Clear ALL history? This cannot be undone.');">
-        <button class="btn danger" type="submit">Clear History</button>
-      </form>
+    <div style="margin: 12px 0;">
+      <a href="{{ url_for('home') }}">← Back</a>
     </div>
 
-    <div class="card">
-      <h2>Results</h2>
+    <form action="{{ url_for('clear_history') }}" method="POST" style="margin-bottom: 12px;">
+      <button type="submit">Clear history</button>
+    </form>
 
-      {% if history and history|length > 0 %}
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Age</th>
-                <th>BMI</th>
-                <th>Exercise</th>
-                <th>Blood Pressure</th>
-                <th>Heart Rate</th>
-                <th>Risk Class</th>
-                <th>Probability</th>
-                <th>Confidence</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for row in history %}
-                <tr>
-                  <td>{{ row.created_at }}</td>
-                  <td>{{ row.age }}</td>
-                  <td>{{ row.bmi }}</td>
-                  <td>{{ row.exercise_level }}</td>
-                  <td>{{ row.systolic_bp }}/{{ row.diastolic_bp }}</td>
-                  <td>{{ row.heart_rate }}</td>
-                  <td class="{{ row.risk_class }}">{{ row.risk_class }}</td>
-                  <td>{{ row.probability_str }}</td>
-                  <td>{{ row.confidence_str }}</td>
-                </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      {% else %}
-        <p class="muted">No predictions found (or filters removed all rows).</p>
-      {% endif %}
-    </div>
+    {% if rows and rows|length > 0 %}
+      <table border="1" cellpadding="8" cellspacing="0">
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Age</th>
+            <th>BMI</th>
+            <th>Exercise</th>
+            <th>Systolic</th>
+            <th>Diastolic</th>
+            <th>Heart Rate</th>
+            <th>Risk</th>
+            <th>Probability</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in rows %}
+            <tr>
+              <td>{{ r.created_at }}</td>
+              <td>{{ r.age }}</td>
+              <td>{{ r.bmi }}</td>
+              <td>{{ r.exercise_level }}</td>
+              <td>{{ r.systolic_bp }}</td>
+              <td>{{ r.diastolic_bp }}</td>
+              <td>{{ r.heart_rate }}</td>
+              <td>{{ r.risk_label }}</td>
+              <td>{{ r.probability }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p>No saved predictions yet.</p>
+    {% endif %}
   </div>
 </body>
 </html>
