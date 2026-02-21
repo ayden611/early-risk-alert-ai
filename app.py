@@ -1,4 +1,3 @@
-```python
 import os
 from datetime import datetime
 from flask import Flask, render_template, request, redirect, url_for, flash
@@ -166,4 +165,3 @@ def health():
 
 if __name__ == "__main__":
     app.run(debug=True)
-```
