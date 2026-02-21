@@ -14,7 +14,7 @@ from sklearn.metrics import classification_report, roc_auc_score
 # ============================================================
 
 # Update path if needed
-df = pd.read_csv("data/cardiovascular_disease.csv")
+df = pd.read_csv("data/health_data.csv")
 
 # Expected columns:
 # age, bmi, exercise_level, systolic_bp, diastolic_bp, heart_rate, target
