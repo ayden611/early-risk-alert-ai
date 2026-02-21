@@ -16,12 +16,12 @@
           <div class="brand-sub">Preventive risk insight based on measurable inputs</div>
         </div>
       </div>
-
-      <div class="nav">
-        <a class="navlink" href="{{ url_for('home') }}">Predict</a>
-        <a class="navlink" href="{{ url_for('history') }}">History</a>
-        <a class="navlink" href="{{ url_for('logout') }}">Logout</a>
-      </div>
+<div class="nav">
+  <a class="navlink" href="{{ url_for('home') }}">Predict</a>
+  <a class="navlink" href="{{ url_for('history') }}">History</a>
+  <a class="navlink" href="{{ url_for('metrics') }}">Metrics</a>
+  <a class="navlink" href="{{ url_for('logout') }}">Logout</a>
+</div>
     </div>
 
     {% with messages = get_flashed_messages() %}
