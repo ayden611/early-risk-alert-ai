@@ -1,280 +1,218 @@
 import os
-import json
+from functools import wraps
 from datetime import datetime
 
 import joblib
 import numpy as np
-from flask import (
-    Flask, render_template, request, redirect, url_for,
-    flash, session, make_response
-)
+from flask import Flask, render_template, request, redirect, url_for, session, flash
+
 from sqlalchemy import create_engine, text
 
-# -----------------------------
-# App setup
-# -----------------------------
-app = Flask(__name__)
-app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-change-me")
 
-# Simple auth (set these in Render ENV)
-ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "admin")
-ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "changeme")
+# ---------------------------
+# Config
+# ---------------------------
+APP_DIR = os.path.dirname(os.path.abspath(__file__))
+MODEL_PATH = os.path.join(APP_DIR, "demo_model.pkl")
 
-# Model + metrics files
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-MODEL_PATH = os.path.join(BASE_DIR, "demo_model.pkl")
-METRICS_PATH = os.path.join(BASE_DIR, "model_metrics.json")
+DATABASE_URL = os.getenv("DATABASE_URL", "").strip()
+SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-change-me")
 
-model = joblib.load(MODEL_PATH)
+ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "password")  # set in Render env vars
 
-model_metrics = {}
-if os.path.exists(METRICS_PATH):
-    try:
-        with open(METRICS_PATH, "r") as f:
-            model_metrics = json.load(f)
-    except Exception:
-        model_metrics = {}
-
-# -----------------------------
-# Database (Postgres on Render)
-# -----------------------------
-DATABASE_URL = os.environ.get("DATABASE_URL")
-if not DATABASE_URL:
-    DATABASE_URL = "sqlite:///local.db"
-
+# Render Postgres sometimes provides postgres:// (SQLAlchemy wants postgresql://)
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
-engine = create_engine(DATABASE_URL, pool_pre_ping=True)
+# Fallback (local dev) if DATABASE_URL not set
+if not DATABASE_URL:
+    DATABASE_URL = "sqlite:///predictions.db"
 
+engine = create_engine(DATABASE_URL, future=True, pool_pre_ping=True)
+
+
+# ---------------------------
+# App
+# ---------------------------
+app = Flask(__name__, template_folder="templates", static_folder="static")
+app.secret_key = SECRET_KEY
+
+model = joblib.load(MODEL_PATH)
+
+
+# ---------------------------
+# DB setup
+# ---------------------------
 def init_db():
+    # Works for Postgres + SQLite
     with engine.begin() as conn:
         conn.execute(text("""
             CREATE TABLE IF NOT EXISTS predictions (
-                id SERIAL PRIMARY KEY,
+                id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
                 created_at TIMESTAMP NOT NULL,
-                age FLOAT,
-                bmi FLOAT,
-                exercise_level TEXT,
-                systolic_bp FLOAT,
-                diastolic_bp FLOAT,
-                heart_rate FLOAT,
-                risk_label TEXT,
-                probability FLOAT
+                age REAL NOT NULL,
+                bmi REAL NOT NULL,
+                exercise_level TEXT NOT NULL,
+                systolic_bp REAL NOT NULL,
+                diastolic_bp REAL NOT NULL,
+                heart_rate REAL NOT NULL,
+                risk_label TEXT NOT NULL,
+                probability REAL NOT NULL
             )
         """))
 
-init_db()
 
-# -----------------------------
-# Helpers
-# -----------------------------
-def is_logged_in() -> bool:
-    return bool(session.get("logged_in"))
+# SQLite doesn't support GENERATED ALWAYS AS IDENTITY exactly.
+# If SQLite is used, the above may fail. We retry with SQLite-friendly SQL.
+def init_db_sqlite_safe():
+    if DATABASE_URL.startswith("sqlite:///"):
+        with engine.begin() as conn:
+            conn.execute(text("""
+                CREATE TABLE IF NOT EXISTS predictions (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    created_at TEXT NOT NULL,
+                    age REAL NOT NULL,
+                    bmi REAL NOT NULL,
+                    exercise_level TEXT NOT NULL,
+                    systolic_bp REAL NOT NULL,
+                    diastolic_bp REAL NOT NULL,
+                    heart_rate REAL NOT NULL,
+                    risk_label TEXT NOT NULL,
+                    probability REAL NOT NULL
+                )
+            """))
 
-def require_login():
-    if not is_logged_in():
-        return redirect(url_for("login"))
-    return None
 
-def _to_float(name: str) -> float:
-    return float(request.form[name])
+try:
+    init_db()
+except Exception:
+    init_db_sqlite_safe()
 
-def _exercise_to_num(exercise_str: str) -> float:
-    mapping = {"Low": 0.0, "Moderate": 1.0, "High": 2.0}
-    return mapping.get(exercise_str, 0.0)
 
-def _predict(age, bmi, exercise_level_str, systolic_bp, diastolic_bp, heart_rate):
-    ex_num = _exercise_to_num(exercise_level_str)
-    X = np.array([[age, bmi, ex_num, systolic_bp, diastolic_bp, heart_rate]], dtype=float)
-    pred = int(model.predict(X)[0])
-    proba_high = float(model.predict_proba(X)[0][1])
-    label = "High" if pred == 1 else "Low"
-    return label, proba_high
+# ---------------------------
+# Auth helpers
+# ---------------------------
+def login_required(fn):
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        if not session.get("logged_in"):
+            return redirect(url_for("login"))
+        return fn(*args, **kwargs)
+    return wrapper
 
-# -----------------------------
+
+# ---------------------------
 # Routes
-# -----------------------------
-@app.get("/login")
+# ---------------------------
+@app.route("/login", methods=["GET", "POST"])
 def login():
+    if request.method == "POST":
+        u = request.form.get("username", "").strip()
+        p = request.form.get("password", "").strip()
+
+        if u == ADMIN_USERNAME and p == ADMIN_PASSWORD:
+            session["logged_in"] = True
+            return redirect(url_for("home"))
+
+        flash("Invalid login.")
+        return redirect(url_for("login"))
+
     return render_template("login.html")
 
-@app.post("/login")
-def login_post():
-    username = request.form.get("username", "")
-    password = request.form.get("password", "")
 
-    if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
-        session["logged_in"] = True
-        return redirect(url_for("home"))
-
-    flash("Invalid login.")
-    return redirect(url_for("login"))
-
-@app.get("/logout")
+@app.route("/logout")
 def logout():
     session.clear()
     return redirect(url_for("login"))
 
-@app.route("/", methods=["GET", "POST"])
-def home():
-    gate = require_login()
-    if gate:
-        return gate
 
+@app.route("/", methods=["GET", "POST"])
+@login_required
+def home():
     prediction = None
     probability_pct = None
-
-    form_defaults = {
-        "age": "",
-        "bmi": "",
-        "exercise_level": "Low",
-        "systolic_bp": "",
-        "diastolic_bp": "",
-        "heart_rate": "",
-        "ack": False
-    }
+    error = None
 
     if request.method == "POST":
-        ack = request.form.get("ack") == "on"
-        if not ack:
-            flash("Please check the acknowledgement box before predicting.")
-            return render_template("index.html", prediction=None, probability_pct=None, form=form_defaults)
-
         try:
-            age = _to_float("age")
-            bmi = _to_float("bmi")
-            exercise_level = request.form.get("exercise_level", "Low")
-            systolic_bp = _to_float("systolic_bp")
-            diastolic_bp = _to_float("diastolic_bp")
-            heart_rate = _to_float("heart_rate")
+            age = float(request.form["age"])
+            bmi = float(request.form["bmi"])
+            exercise_level = request.form["exercise_level"].strip()  # Low/Moderate/High
+            systolic_bp = float(request.form["systolic_bp"])
+            diastolic_bp = float(request.form["diastolic_bp"])
+            heart_rate = float(request.form["heart_rate"])
 
-            label, proba_high = _predict(age, bmi, exercise_level, systolic_bp, diastolic_bp, heart_rate)
+            # Map exercise text -> number (keep consistent with training)
+            ex_map = {"Low": 0, "Moderate": 1, "High": 2}
+            ex_val = ex_map.get(exercise_level, 0)
 
-            prediction = label
-            probability_pct = round(proba_high * 100.0, 1)
+            X = np.array([[age, bmi, ex_val, systolic_bp, diastolic_bp, heart_rate]], dtype=float)
 
+            pred = int(model.predict(X)[0])
+            prob_high = float(model.predict_proba(X)[0][1])  # class 1 = High risk
+
+            prediction = "High" if pred == 1 else "Low"
+            probability_pct = round(prob_high * 100, 1)
+
+            # Save to DB
             with engine.begin() as conn:
                 conn.execute(
                     text("""
-                        INSERT INTO predictions (
-                            created_at, age, bmi, exercise_level,
-                            systolic_bp, diastolic_bp, heart_rate,
-                            risk_label, probability
-                        ) VALUES (
-                            :created_at, :age, :bmi, :exercise_level,
-                            :systolic_bp, :diastolic_bp, :heart_rate,
-                            :risk_label, :probability
-                        )
+                        INSERT INTO predictions
+                        (created_at, age, bmi, exercise_level, systolic_bp, diastolic_bp, heart_rate, risk_label, probability)
+                        VALUES (:created_at, :age, :bmi, :exercise_level, :systolic_bp, :diastolic_bp, :heart_rate, :risk_label, :probability)
                     """),
-                    {
-                        "created_at": datetime.utcnow(),
-                        "age": age,
-                        "bmi": bmi,
-                        "exercise_level": exercise_level,
-                        "systolic_bp": systolic_bp,
-                        "diastolic_bp": diastolic_bp,
-                        "heart_rate": heart_rate,
-                        "risk_label": label,
-                        "probability": float(proba_high),
-                    }
+                    dict(
+                        created_at=datetime.utcnow(),
+                        age=age,
+                        bmi=bmi,
+                        exercise_level=exercise_level,
+                        systolic_bp=systolic_bp,
+                        diastolic_bp=diastolic_bp,
+                        heart_rate=heart_rate,
+                        risk_label=prediction,
+                        probability=prob_high,  # store 0..1
+                    )
                 )
 
-            form_defaults.update({
-                "age": age,
-                "bmi": bmi,
-                "exercise_level": exercise_level,
-                "systolic_bp": systolic_bp,
-                "diastolic_bp": diastolic_bp,
-                "heart_rate": heart_rate,
-                "ack": True
-            })
-
         except Exception as e:
-            flash(f"Input error: {e}")
+            error = f"Input error: {e}"
 
     return render_template(
         "index.html",
         prediction=prediction,
-        probability_pct=probability_pct,
-        form=form_defaults
+        probability=probability_pct,
+        error=error
     )
 
-@app.get("/history")
-def history():
-    gate = require_login()
-    if gate:
-        return gate
 
+@app.route("/history")
+@login_required
+def history():
     with engine.begin() as conn:
         rows = conn.execute(
             text("""
-                SELECT id, created_at, age, bmi, exercise_level,
-                       systolic_bp, diastolic_bp, heart_rate,
-                       risk_label, probability
+                SELECT created_at, age, bmi, exercise_level, systolic_bp, diastolic_bp, heart_rate, risk_label, probability
                 FROM predictions
                 ORDER BY created_at DESC
                 LIMIT 200
             """)
-        ).fetchall()
+        ).mappings().all()
 
-    return render_template("history.html", rows=rows)
-
-@app.post("/history/clear")
-def clear_history():
-    gate = require_login()
-    if gate:
-        return gate
-
-    with engine.begin() as conn:
-        conn.execute(text("DELETE FROM predictions"))
-    flash("History cleared.")
-    return redirect(url_for("history"))
-
-@app.post("/history/delete/<int:row_id>")
-def delete_row(row_id: int):
-    gate = require_login()
-    if gate:
-        return gate
-
-    with engine.begin() as conn:
-        conn.execute(text("DELETE FROM predictions WHERE id = :id"), {"id": row_id})
-    flash("Deleted one record.")
-    return redirect(url_for("history"))
-
-@app.get("/download/history.csv")
-def download_history_csv():
-    gate = require_login()
-    if gate:
-        return gate
-
-    with engine.begin() as conn:
-        rows = conn.execute(
-            text("""
-                SELECT created_at, age, bmi, exercise_level,
-                       systolic_bp, diastolic_bp, heart_rate,
-                       risk_label, probability
-                FROM predictions
-                ORDER BY created_at DESC
-            """)
-        ).fetchall()
-
-    header = "created_at,age,bmi,exercise_level,systolic_bp,diastolic_bp,heart_rate,risk_label,probability\n"
-    lines = [header]
+    # Convert prob to percent for display
+    history_rows = []
     for r in rows:
-        created_at = r[0].isoformat() if r[0] else ""
-        line = f"{created_at},{r[1]},{r[2]},{r[3]},{r[4]},{r[5]},{r[6]},{r[7]},{r[8]}\n"
-        lines.append(line)
+        history_rows.append({
+            "created_at": str(r["created_at"]),
+            "age": float(r["age"]),
+            "bmi": float(r["bmi"]),
+            "exercise_level": r["exercise_level"],
+            "systolic_bp": float(r["systolic_bp"]),
+            "diastolic_bp": float(r["diastolic_bp"]),
+            "heart_rate": float(r["heart_rate"]),
+            "risk_label": r["risk_label"],
+            "probability_pct": round(float(r["probability"]) * 100, 1),
+        })
 
-    csv_data = "".join(lines)
-    resp = make_response(csv_data)
-    resp.headers["Content-Type"] = "text/csv"
-    resp.headers["Content-Disposition"] = "attachment; filename=prediction_history.csv"
-    return resp
-
-@app.get("/metrics")
-def metrics():
-    gate = require_login()
-    if gate:
-        return gate
-    return render_template("metrics.html", metrics=model_metrics)
+    return render_template("history.html", rows=history_rows)
