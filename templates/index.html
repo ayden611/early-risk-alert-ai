@@ -1,54 +1,70 @@
-<!doctype html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <title>Early Risk Alert AI</title>
-</head>
-<body>
-    <h1>Early Risk Alert AI</h1>
+{% extends "base.html" %}
+{% block content %}
 
-    {% with messages = get_flashed_messages() %}
-        {% if messages %}
-            {% for msg in messages %}
-                <p style="color:red;">{{ msg }}</p>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
+<div class="card">
+  <h1>Enter your health indicators</h1>
+  <p class="muted">This tool estimates risk for awareness only (not medical advice).</p>
 
-    <form method="POST">
-        <label>Age:</label><br>
-        <input name="age" type="number" step="any" required><br><br>
+  <form method="POST" class="grid">
+    <div>
+      <label>Age</label>
+      <input name="age" type="number" step="any" required value="{{ form.age }}">
+    </div>
 
-        <label>BMI:</label><br>
-        <input name="bmi" type="number" step="any" required><br><br>
+    <div>
+      <label>BMI</label>
+      <input name="bmi" type="number" step="any" required value="{{ form.bmi }}">
+    </div>
 
-        <label>Exercise Level:</label><br>
-        <select name="exercise_level">
-            <option>Low</option>
-            <option>Moderate</option>
-            <option>High</option>
-        </select><br><br>
+    <div>
+      <label>Exercise Level</label>
+      <select name="exercise_level">
+        <option {% if form.exercise_level == "Low" %}selected{% endif %}>Low</option>
+        <option {% if form.exercise_level == "Moderate" %}selected{% endif %}>Moderate</option>
+        <option {% if form.exercise_level == "High" %}selected{% endif %}>High</option>
+      </select>
+      <div class="hint">Tip: if unsure, choose “Low”.</div>
+    </div>
 
-        <label>Systolic BP:</label><br>
-        <input name="systolic_bp" type="number" step="any" required><br><br>
+    <div>
+      <label>Systolic BP (top number)</label>
+      <input name="systolic_bp" type="number" step="any" required value="{{ form.systolic_bp }}">
+    </div>
 
-        <label>Diastolic BP:</label><br>
-        <input name="diastolic_bp" type="number" step="any" required><br><br>
+    <div>
+      <label>Diastolic BP (bottom number)</label>
+      <input name="diastolic_bp" type="number" step="any" required value="{{ form.diastolic_bp }}">
+    </div>
 
-        <label>Heart Rate:</label><br>
-        <input name="heart_rate" type="number" step="any" required><br><br>
+    <div>
+      <label>Heart Rate (bpm)</label>
+      <input name="heart_rate" type="number" step="any" required value="{{ form.heart_rate }}">
+    </div>
 
-        <button type="submit">Predict</button>
-    </form>
+    <div class="full">
+      <label class="check">
+        <input name="ack" type="checkbox" {% if form.ack %}checked{% endif %}>
+        <span>I understand this tool provides a risk estimate for awareness only and is not medical advice.</span>
+      </label>
+    </div>
 
-    {% if result %}
-        <hr>
-        <h2>Result</h2>
-        <p>Risk Level: <strong>{{ result.label }}</strong></p>
-        <p>Probability: {{ result.probability }}%</p>
-    {% endif %}
+    <div class="full actions">
+      <button class="btn primary" type="submit">Predict</button>
+      <a class="btn" href="{{ url_for('history') }}">View recent predictions</a>
+    </div>
+  </form>
+</div>
 
-    <hr>
-    <a href="{{ url_for('history') }}">View History</a>
-</body>
-</html>
+{% if prediction %}
+  <div class="card">
+    <h2>Result</h2>
+    <div class="result">
+      <div class="pill {{ 'bad' if prediction=='High' else 'good' }}">
+        Risk Level: {{ prediction }}
+      </div>
+      <div class="muted">Probability (High Risk): <b>{{ probability_pct }}%</b></div>
+    </div>
+  </div>
+{% endif %}
+
+{% endblock %}
