@@ -3,7 +3,7 @@ from datetime import datetime
 from .extensions import db
 
 class Prediction(db.Model):
-    __tablename__ = "predictions"
+    __tablename__ = "predictions_v2"
 
     id = db.Column(db.Integer, primary_key=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
