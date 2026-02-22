@@ -1,40 +1,20 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>{{ title if title else "Early Risk Alert AI" }}</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <meta charset="UTF-8">
+    <title>Early Risk Alert AI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-  <div class="shell">
-    <div class="topbar">
-      <div class="brand">
-        <div class="logo">ERA</div>
-        <div>
-          <div class="brand-title">Early Risk Alert AI</div>
-          <div class="brand-sub">Preventive risk insight based on measurable inputs</div>
-        </div>
-      </div>
-<div class="nav">
-  <a class="navlink" href="{{ url_for('web.home') }}">Predict</a>
-  <a class="navlink" href="{{ url_for('web.history') }}">History</a>
-  <a class="navlink" href="{{ url_for('metrics') }}">Metrics</a>
-  <a class="navlink" href="{{ url_for('logout') }}">Logout</a>
-</div>
-    </div>
 
-    {% with messages = get_flashed_messages() %}
-      {% if messages %}
-        <div class="flash">
-          {% for msg in messages %}
-            <div class="flash-item">{{ msg }}</div>
-          {% endfor %}
-        </div>
-      {% endif %}
-    {% endwith %}
+<nav style="padding:15px; background:#111; color:white;">
+    <a href="{{ url_for('web.home') }}" style="color:white; margin-right:20px;">Predict</a>
+    <a href="{{ url_for('web.history') }}" style="color:white;">History</a>
+</nav>
 
+<div style="padding:30px;">
     {% block content %}{% endblock %}
-  </div>
+</div>
+
 </body>
 </html>
