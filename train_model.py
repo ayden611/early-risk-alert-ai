@@ -140,6 +140,8 @@ def main():
 
     # Must have at least 2 classes
     counts = y.value_counts()
+    print("Class counts:", counts.to_dict())
+    
     if counts.shape[0] < 2:
         raise ValueError(
             f"Your dataset only has ONE class after cleaning (counts={counts.to_dict()}). "
