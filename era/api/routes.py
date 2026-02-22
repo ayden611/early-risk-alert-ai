@@ -2,7 +2,10 @@ from flask import Blueprint, request, jsonify
 
 from era.extensions import db
 from era.models import Prediction
-from era.services.predict_risk import predict_risk
+
+# IMPORTANT:
+# You deleted the services/ folder, so import predict_risk from the root predict.py file.
+from predict import predict_risk
 
 api_bp = Blueprint("api", __name__)
 
@@ -31,31 +34,13 @@ def _exercise(value):
     raise ValueError("'exercise_level' must be Low, Moderate, or High")
 
 
-@bp.get("/health")
+@api_bp.get("/health")
 def health():
     return jsonify({"ok": True}), 200
 
 
-@bp.post("/predict")
+@api_bp.post("/predict")
 def api_predict():
-    """
-    JSON in:
-      {
-        "age": 42,
-        "bmi": 28.0,
-        "exercise_level": "Low",
-        "systolic_bp": 170,
-        "diastolic_bp": 90,
-        "heart_rate": 100
-      }
-
-    JSON out:
-      {
-        "risk": "High",
-        "probability": 0.94,
-        "probability_pct": 94.0
-      }
-    """
     data = request.get_json(silent=True) or {}
 
     try:
@@ -66,10 +51,10 @@ def api_predict():
         diastolic_bp = _num(data.get("diastolic_bp"), "diastolic_bp")
         heart_rate = _num(data.get("heart_rate"), "heart_rate")
     except ValueError as e:
-        return jsonify({"error": "validation_error", "message": str(e)}), 400
+        return jsonify({"error": "validation", "message": str(e)}), 400
 
-    # Predict (service should return: (risk_label_str, probability_float_0_to_1))
-    risk_label, prob = predict_risk(
+    # Run model
+    risk_label, probability = predict_risk(
         age=age,
         bmi=bmi,
         exercise_level=exercise_level,
@@ -78,8 +63,8 @@ def api_predict():
         heart_rate=heart_rate,
     )
 
-    # Save to DB
-    row = Prediction(
+    # Save to DB (if your model + DB table exists)
+    pred = Prediction(
         age=age,
         bmi=bmi,
         exercise_level=exercise_level,
@@ -87,15 +72,14 @@ def api_predict():
         diastolic_bp=diastolic_bp,
         heart_rate=heart_rate,
         risk_label=risk_label,
-        probability=float(prob),
+        probability=probability,
     )
-    db.session.add(row)
+    db.session.add(pred)
     db.session.commit()
 
     return jsonify(
         {
-            "risk": risk_label,
-            "probability": float(prob),
-            "probability_pct": round(float(prob) * 100, 1),
+            "risk_label": risk_label,
+            "probability": probability,
         }
     ), 200
