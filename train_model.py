@@ -1,6 +1,7 @@
 import json
 import os
 from dataclasses import asdict, dataclass
+from typing import Optional, List, Dict, Any, Tuple
 
 import joblib
 import numpy as np
@@ -11,11 +12,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.calibration import CalibratedClassifierCV
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
-from sklearn.metrics import (
-    classification_report,
-    confusion_matrix,
-    roc_auc_score,
-)
+from sklearn.metrics import classification_report, confusion_matrix, roc_auc_score
 
 # --------- CONFIG ----------
 CSV_PATH = os.path.join("data", "health_data.csv")
@@ -25,27 +22,24 @@ METRICS_OUT = "metrics.json"
 RANDOM_STATE = 42
 TEST_SIZE = 0.2
 
-# We train on these "standard" features (your app form uses these)
 FEATURES = ["age", "bmi", "exercise_level", "systolic_bp", "diastolic_bp", "heart_rate"]
-
-# Target column candidates
 TARGET_CANDIDATES = ["target", "risk", "label", "high_risk", "cardio"]
 
 
-def _normalize_cols(df: pd.DataFrame) -> pd.DataFrame:
+def normalize_cols(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
     df.columns = [c.strip().lower().replace(" ", "_") for c in df.columns]
     return df
 
 
-def _first_existing(df: pd.DataFrame, candidates: list[str]) -> str | None:
+def first_existing(df: pd.DataFrame, candidates: List[str]) -> Optional[str]:
     for c in candidates:
         if c in df.columns:
             return c
     return None
 
 
-def _to_numeric(df: pd.DataFrame, cols: list[str]) -> pd.DataFrame:
+def to_numeric(df: pd.DataFrame, cols: List[str]) -> pd.DataFrame:
     df = df.copy()
     for c in cols:
         if c in df.columns:
@@ -53,22 +47,17 @@ def _to_numeric(df: pd.DataFrame, cols: list[str]) -> pd.DataFrame:
     return df
 
 
-def _build_exercise_level(df: pd.DataFrame) -> pd.DataFrame:
+def build_exercise_level(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Ensures df has numeric exercise_level (0=Low,1=Moderate,2=High).
-    Accepts strings like Low/Moderate/High OR numeric already.
+    Ensure numeric exercise_level (0=Low,1=Moderate,2=High).
+    Accepts strings or numeric.
     """
     df = df.copy()
 
-    # If exercise_level missing, try to create from common alternatives
     if "exercise_level" not in df.columns:
-        alt = _first_existing(df, ["exercise", "activity", "activity_level"])
-        if alt is not None:
-            df["exercise_level"] = df[alt]
-        else:
-            df["exercise_level"] = np.nan
+        alt = first_existing(df, ["exercise", "activity", "activity_level"])
+        df["exercise_level"] = df[alt] if alt else np.nan
 
-    # If it's object/text, map it
     if df["exercise_level"].dtype == "object":
         s = df["exercise_level"].astype(str).str.lower().str.strip()
         mapping = {
@@ -78,8 +67,8 @@ def _build_exercise_level(df: pd.DataFrame) -> pd.DataFrame:
         }
         df["exercise_level"] = s.map(mapping)
 
-    # Coerce numeric and fill missing with median (or 1 if all missing)
     df["exercise_level"] = pd.to_numeric(df["exercise_level"], errors="coerce")
+
     if df["exercise_level"].notna().any():
         df["exercise_level"] = df["exercise_level"].fillna(df["exercise_level"].median())
     else:
@@ -88,42 +77,32 @@ def _build_exercise_level(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def _pick_target(df: pd.DataFrame) -> str:
-    t = _first_existing(df, TARGET_CANDIDATES)
-    if t is None:
+def pick_target(df: pd.DataFrame) -> str:
+    t = first_existing(df, TARGET_CANDIDATES)
+    if not t:
         raise ValueError(
-            f"Could not find a target column. Tried: {TARGET_CANDIDATES}. "
-            f"Available columns: {list(df.columns)}"
+            "Could not find target column. Tried: {}. Available: {}".format(
+                TARGET_CANDIDATES, list(df.columns)
+            )
         )
     return t
 
 
-def _clean_dataframe(df: pd.DataFrame) -> tuple[pd.DataFrame, str]:
-    df = _normalize_cols(df)
+def clean_dataframe(df: pd.DataFrame) -> Tuple[pd.DataFrame, str]:
+    df = normalize_cols(df)
+    df = build_exercise_level(df)
 
-    # Build / normalize exercise_level
-    df = _build_exercise_level(df)
+    target_col = pick_target(df)
 
-    # Pick target
-    target_col = _pick_target(df)
+    df = to_numeric(df, FEATURES + [target_col])
+    df = df[FEATURES + [target_col]].dropna()
 
-    # Ensure numeric on core columns
-    df = _to_numeric(df, FEATURES + [target_col])
-
-    # Drop rows missing required cols
-    keep_cols = FEATURES + [target_col]
-    df = df[keep_cols].dropna()
-
-    # Ensure target is 0/1 int
-    # If target contains {0,1} or {1,2} or floats -> coerce and binarize if needed.
     y = df[target_col].astype(float)
-
-    # If y looks like >1 labels (e.g., 1/2), convert to 0/1 by thresholding at median
     unique_vals = sorted(pd.unique(y))
+
     if set(unique_vals).issubset({0.0, 1.0}):
         y_bin = y.astype(int)
     else:
-        # common case: cardio dataset uses 0/1 already, but this keeps it robust
         y_bin = (y >= np.median(y)).astype(int)
 
     df[target_col] = y_bin.astype(int)
@@ -136,26 +115,47 @@ class TrainMetrics:
     model_out: str
     metrics_out: str
     target_name: str
-    target_counts: dict
-    features_used: list
-    roc_auc: float | None
-    confusion_matrix: list
-    classification_report: dict
+    target_counts: Dict[str, int]
+    features_used: List[str]
+    roc_auc: Optional[float]
+    confusion_matrix: List[List[int]]
+    classification_report: Dict[str, Any]
+
+
+def make_calibrated_model(base_pipeline, y_train: pd.Series):
+    """
+    Works with both sklearn APIs:
+    - Newer: CalibratedClassifierCV(estimator=..., ...)
+    - Older: CalibratedClassifierCV(base_estimator=..., ...)
+    Also avoids calibration when class counts are too small.
+    """
+    if y_train.nunique() != 2:
+        return base_pipeline
+
+    min_class = int(y_train.value_counts().min())
+    if min_class < 2:
+        return base_pipeline
+
+    cv = 3 if min_class >= 3 else 2
+
+    # Try newer param name first, then fallback.
+    try:
+        return CalibratedClassifierCV(estimator=base_pipeline, method="sigmoid", cv=cv)
+    except TypeError:
+        return CalibratedClassifierCV(base_estimator=base_pipeline, method="sigmoid", cv=cv)
 
 
 def main() -> None:
     if not os.path.exists(CSV_PATH):
-        raise FileNotFoundError(f"CSV not found at: {CSV_PATH}")
+        raise FileNotFoundError("CSV not found at: {}".format(CSV_PATH))
 
     df_raw = pd.read_csv(CSV_PATH)
-    df, target_col = _clean_dataframe(df_raw)
+    df, target_col = clean_dataframe(df_raw)
 
     X = df[FEATURES]
     y = df[target_col].astype(int)
 
-    # Stratify only if both classes exist
     stratify = y if y.nunique() == 2 else None
-
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=TEST_SIZE, random_state=RANDOM_STATE, stratify=stratify
     )
@@ -167,22 +167,9 @@ def main() -> None:
         ]
     )
 
-    # ---- Calibration (SAFE + version compatible) ----
-    # CalibratedClassifierCV in your sklearn expects `estimator=`, not `base_estimator=`.
-    # Also: calibration CV needs enough samples per class.
-    min_class = int(y_train.value_counts().min()) if y_train.nunique() == 2 else 0
-
-    if y_train.nunique() == 2 and min_class >= 3:
-        model = CalibratedClassifierCV(estimator=base_pipeline, method="sigmoid", cv=3)
-    elif y_train.nunique() == 2 and min_class >= 2:
-        model = CalibratedClassifierCV(estimator=base_pipeline, method="sigmoid", cv=2)
-    else:
-        # If only one class or too few samples, skip calibration
-        model = base_pipeline
-
+    model = make_calibrated_model(base_pipeline, y_train)
     model.fit(X_train, y_train)
 
-    # ---- Evaluate ----
     y_pred = model.predict(X_test)
 
     roc = None
@@ -196,7 +183,6 @@ def main() -> None:
     cm = confusion_matrix(y_test, y_pred).tolist()
     report = classification_report(y_test, y_pred, output_dict=True, zero_division=0)
 
-    # ---- Save model ----
     joblib.dump(model, MODEL_OUT)
 
     metrics = TrainMetrics(
@@ -204,7 +190,7 @@ def main() -> None:
         model_out=MODEL_OUT,
         metrics_out=METRICS_OUT,
         target_name=target_col,
-        target_counts=y.value_counts().to_dict(),
+        target_counts={str(k): int(v) for k, v in y.value_counts().to_dict().items()},
         features_used=FEATURES,
         roc_auc=roc,
         confusion_matrix=cm,
@@ -224,3 +210,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+PY
