@@ -1,73 +1,44 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Prediction History</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
-  <div class="container">
-    <h1>Recent Predictions</h1>
+{% extends "base.html" %}
+{% block title %}History | Early Risk Alert AI{% endblock %}
 
-    {% with messages = get_flashed_messages() %}
-      {% if messages %}
-        <div class="flash">
-          {% for msg in messages %}
-            <p>{{ msg }}</p>
-          {% endfor %}
-        </div>
-      {% endif %}
-    {% endwith %}
+{% block content %}
+<section class="card">
+  <h1>Prediction History</h1>
+  <p class="muted">Last 50 predictions saved.</p>
 
-    {% if error %}
-      <div class="error">
-        <strong>History unavailable:</strong> {{ error }}
-      </div>
-    {% endif %}
-
-    <div style="margin: 12px 0;">
-      <a href="{{ url_for('home') }}">← Back</a>
-    </div>
-
-    <form action="{{ url_for('clear_history') }}" method="POST" style="margin-bottom: 12px;">
-      <button type="submit">Clear history</button>
-    </form>
-
-    {% if rows and rows|length > 0 %}
-      <table border="1" cellpadding="8" cellspacing="0">
-        <thead>
-          <tr>
-            <th>Time</th>
-            <th>Age</th>
-            <th>BMI</th>
-            <th>Exercise</th>
-            <th>Systolic</th>
-            <th>Diastolic</th>
-            <th>Heart Rate</th>
-            <th>Risk</th>
-            <th>Probability</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for r in rows %}
-            <tr>
-              <td>{{ r.created_at }}</td>
-              <td>{{ r.age }}</td>
-              <td>{{ r.bmi }}</td>
-              <td>{{ r.exercise_level }}</td>
-              <td>{{ r.systolic_bp }}</td>
-              <td>{{ r.diastolic_bp }}</td>
-              <td>{{ r.heart_rate }}</td>
-              <td>{{ r.risk_label }}</td>
-              <td>{{ r.probability }}</td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    {% else %}
-      <p>No saved predictions yet.</p>
-    {% endif %}
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Time</th>
+          <th>Age</th>
+          <th>BMI</th>
+          <th>Exercise</th>
+          <th>Sys</th>
+          <th>Dia</th>
+          <th>HR</th>
+          <th>Risk</th>
+          <th>Prob</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in rows %}
+        <tr>
+          <td class="muted small">{{ r.created_at }}</td>
+          <td>{{ r.age }}</td>
+          <td>{{ r.bmi }}</td>
+          <td>{{ r.exercise_level }}</td>
+          <td>{{ r.systolic_bp }}</td>
+          <td>{{ r.diastolic_bp }}</td>
+          <td>{{ r.heart_rate }}</td>
+          <td><strong>{{ r.risk_label }}</strong></td>
+          <td>{{ (r.probability * 100) | round(2) }}%</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="9" class="muted">No history yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
   </div>
-</body>
-</html>
+</section>
+{% endblock %}

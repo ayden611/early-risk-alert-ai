@@ -1,54 +1,71 @@
-<!doctype html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <title>Early Risk Alert AI</title>
-</head>
-<body>
-    <h1>Early Risk Alert AI</h1>
+{% extends "base.html" %}
+{% block title %}Predict | Early Risk Alert AI{% endblock %}
 
-    {% with messages = get_flashed_messages() %}
-        {% if messages %}
-            {% for msg in messages %}
-                <p style="color:red;">{{ msg }}</p>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
+{% block content %}
+<section class="card">
+  <h1>Predict Risk</h1>
+  <p class="muted">
+    Use either mode:
+    <strong>Server Submit</strong> (renders result) or
+    <strong>Instant (JS)</strong> (calls API, no reload).
+  </p>
 
-    <form method="POST">
-        <label>Age:</label><br>
-        <input name="age" type="number" step="any" required><br><br>
+  <div class="mode-row">
+    <button type="button" class="btn" id="btnServer">Server Submit</button>
+    <button type="button" class="btn" id="btnInstant">Instant (JS)</button>
+  </div>
 
-        <label>BMI:</label><br>
-        <input name="bmi" type="number" step="any" required><br><br>
+  <form id="riskForm" method="POST" action="{{ url_for('web.web_predict') }}">
+    <div class="grid">
+      <label>Age
+        <input name="age" type="number" step="any" required />
+      </label>
 
-        <label>Exercise Level:</label><br>
-        <select name="exercise_level">
-            <option>Low</option>
-            <option>Moderate</option>
-            <option>High</option>
-        </select><br><br>
+      <label>BMI
+        <input name="bmi" type="number" step="any" required />
+      </label>
 
-        <label>Systolic BP:</label><br>
-        <input name="systolic_bp" type="number" step="any" required><br><br>
+      <label>Exercise Level (Low / Moderate / High)
+        <select name="exercise_level" required>
+          <option value="Low">Low</option>
+          <option value="Moderate">Moderate</option>
+          <option value="High">High</option>
+        </select>
+      </label>
 
-        <label>Diastolic BP:</label><br>
-        <input name="diastolic_bp" type="number" step="any" required><br><br>
+      <label>Systolic BP
+        <input name="systolic_bp" type="number" step="any" required />
+      </label>
 
-        <label>Heart Rate:</label><br>
-        <input name="heart_rate" type="number" step="any" required><br><br>
+      <label>Diastolic BP
+        <input name="diastolic_bp" type="number" step="any" required />
+      </label>
 
-        <button type="submit">Predict</button>
-    </form>
+      <label>Heart Rate
+        <input name="heart_rate" type="number" step="any" required />
+      </label>
+    </div>
 
+    <button class="btn primary" type="submit" id="submitBtn">Run Prediction</button>
+  </form>
+</section>
+
+<section class="card" id="resultCard">
+  <h2>Result</h2>
+  <div class="result">
+    <div><span class="muted">Risk:</span> <strong id="riskLabel">
+      {% if result %}{{ result }}{% else %}—{% endif %}
+    </strong></div>
+    <div><span class="muted">Probability:</span> <strong id="riskProb">
+      {% if probability is not none %}{{ (probability * 100) | round(2) }}%{% else %}—{% endif %}
+    </strong></div>
+  </div>
+  <p class="muted small" id="resultNote">
     {% if result %}
-        <hr>
-        <h2>Result</h2>
-        <p>Risk Level: <strong>{{ result.label }}</strong></p>
-        <p>Probability: {{ result.probability }}%</p>
+      Rendered by server route (/predict).
+    {% else %}
+      Choose a mode above.
     {% endif %}
-
-    <hr>
-    <a href="{{ url_for('history') }}">View History</a>
-</body>
-</html>
+  </p>
+</section>
+{% endblock %}

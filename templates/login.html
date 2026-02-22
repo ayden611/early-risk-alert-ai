@@ -1,0 +1,39 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Login - Early Risk Alert AI</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="shell">
+    <div class="card center">
+      <h1>Login</h1>
+      <p class="muted">Enter your admin credentials.</p>
+
+      {% with messages = get_flashed_messages() %}
+        {% if messages %}
+          <div class="flash">
+            {% for msg in messages %}
+              <div class="flash-item">{{ msg }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+
+      <form method="POST" action="{{ url_for('login') }}" class="form">
+        <label>Username</label>
+        <input name="username" required />
+
+        <label>Password</label>
+        <input name="password" type="password" required />
+
+        <button class="btn primary" type="submit">Sign in</button>
+      </form>
+
+      <p class="tiny muted">Set ADMIN_USERNAME / ADMIN_PASSWORD / SECRET_KEY in Render Environment.</p>
+    </div>
+  </div>
+</body>
+</html>
