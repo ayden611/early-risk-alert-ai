@@ -1,20 +1,36 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Early Risk Alert AI</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block title %}Early Risk Alert AI{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
+  <nav class="nav">
+    <div class="nav-inner">
+      <a class="brand" href="{{ url_for('web.home') }}">Early Risk Alert AI</a>
+      <div class="links">
+        <a href="{{ url_for('web.home') }}">Predict</a>
+        <a href="{{ url_for('web.history') }}">History</a>
+      </div>
+    </div>
+  </nav>
 
-<nav style="padding:15px; background:#111; color:white;">
-    <a href="{{ url_for('web.home') }}" style="color:white; margin-right:20px;">Predict</a>
-    <a href="{{ url_for('web.history') }}" style="color:white;">History</a>
-</nav>
+  <main class="container">
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div class="flash">
+          {% for msg in messages %}
+            <div class="flash-item">{{ msg }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
 
-<div style="padding:30px;">
     {% block content %}{% endblock %}
-</div>
+  </main>
 
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
 </body>
 </html>
