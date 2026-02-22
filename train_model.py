@@ -151,9 +151,15 @@ def main():
     )
 
     base = Pipeline([
-        ("scaler", StandardScaler()),
-        ("clf", LogisticRegression(max_iter=2000))
-    ])
+    ("scaler", StandardScaler()),
+    ("clf", LogisticRegression(
+        max_iter=2000,
+        class_weight="balanced",
+        solver="liblinear"
+    ))
+])
+```
+
 
     # --- KEY FIX: choose a safe CV for calibration ---
     min_class_train = int(y_train.value_counts().min())
