@@ -27,8 +27,10 @@ def _first_existing(df: pd.DataFrame, candidates: list[str]) -> str | None:
             return c
     return None
 
+from typing import Optional
+from typing import Optional
 
-def _build_exercise_level(df: pd.DataFrame) -> pd.DataFrame:
+def _first_existing(df: pd.DataFrame, candidates: list[str]) -> Optional[str]:
     df = df.copy()
     col = _first_existing(df, ["exercise_level", "exercise", "activity", "activity_level"])
     if not col:
