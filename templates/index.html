@@ -1,29 +1,71 @@
 {% extends "base.html" %}
+{% block title %}Predict | Early Risk Alert AI{% endblock %}
 
 {% block content %}
+<section class="card">
+  <h1>Predict Risk</h1>
+  <p class="muted">
+    Use either mode:
+    <strong>Server Submit</strong> (renders result) or
+    <strong>Instant (JS)</strong> (calls API, no reload).
+  </p>
 
-<h1>Early Risk Alert AI</h1>
+  <div class="mode-row">
+    <button type="button" class="btn" id="btnServer">Server Submit</button>
+    <button type="button" class="btn" id="btnInstant">Instant (JS)</button>
+  </div>
 
-<form method="POST" action="/api/v1/predict">
-    <label>Age:</label><br>
-    <input name="age" type="number" required><br><br>
+  <form id="riskForm" method="POST" action="{{ url_for('web.web_predict') }}">
+    <div class="grid">
+      <label>Age
+        <input name="age" type="number" step="any" required />
+      </label>
 
-    <label>BMI:</label><br>
-    <input name="bmi" type="number" step="any" required><br><br>
+      <label>BMI
+        <input name="bmi" type="number" step="any" required />
+      </label>
 
-    <label>Exercise Level (0=Low,1=Moderate,2=High):</label><br>
-    <input name="exercise_level" type="number" min="0" max="2" required><br><br>
+      <label>Exercise Level (Low / Moderate / High)
+        <select name="exercise_level" required>
+          <option value="Low">Low</option>
+          <option value="Moderate">Moderate</option>
+          <option value="High">High</option>
+        </select>
+      </label>
 
-    <label>Systolic BP:</label><br>
-    <input name="systolic_bp" type="number" required><br><br>
+      <label>Systolic BP
+        <input name="systolic_bp" type="number" step="any" required />
+      </label>
 
-    <label>Diastolic BP:</label><br>
-    <input name="diastolic_bp" type="number" required><br><br>
+      <label>Diastolic BP
+        <input name="diastolic_bp" type="number" step="any" required />
+      </label>
 
-    <label>Heart Rate:</label><br>
-    <input name="heart_rate" type="number" required><br><br>
+      <label>Heart Rate
+        <input name="heart_rate" type="number" step="any" required />
+      </label>
+    </div>
 
-    <button type="submit">Predict Risk</button>
-</form>
+    <button class="btn primary" type="submit" id="submitBtn">Run Prediction</button>
+  </form>
+</section>
 
+<section class="card" id="resultCard">
+  <h2>Result</h2>
+  <div class="result">
+    <div><span class="muted">Risk:</span> <strong id="riskLabel">
+      {% if result %}{{ result }}{% else %}—{% endif %}
+    </strong></div>
+    <div><span class="muted">Probability:</span> <strong id="riskProb">
+      {% if probability is not none %}{{ (probability * 100) | round(2) }}%{% else %}—{% endif %}
+    </strong></div>
+  </div>
+  <p class="muted small" id="resultNote">
+    {% if result %}
+      Rendered by server route (/predict).
+    {% else %}
+      Choose a mode above.
+    {% endif %}
+  </p>
+</section>
 {% endblock %}
