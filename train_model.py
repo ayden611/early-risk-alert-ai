@@ -20,6 +20,7 @@ def main():
         raise FileNotFoundError(f"CSV not found: {CSV_PATH}")
 
     df = pd.read_csv(CSV_PATH)
+    print("Columns in dataset:", df.columns.tolist())
 
     # Normalize columns
     df.columns = [c.strip().lower().replace(" ", "_") for c in df.columns]
