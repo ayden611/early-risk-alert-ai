@@ -158,7 +158,6 @@ def main():
         solver="liblinear"
     ))
 ])
-```
 
 
     # --- KEY FIX: choose a safe CV for calibration ---
