@@ -6,5 +6,5 @@ web_bp = Blueprint("web", __name__)
 def home():
     return render_template("index.html")
 @web_bp.get("/history")
-def history()
+def history():
     return render_template("history.html")
