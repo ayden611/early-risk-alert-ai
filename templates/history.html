@@ -1,94 +1,9 @@
 {% extends "base.html" %}
+
 {% block content %}
 
-<div class="card">
-  <div class="row">
-    <h1>Recent Predictions</h1>
+<h1>Prediction History</h1>
 
-    <div class="row-actions">
-      <a class="btn" href="{{ url_for('download_history_csv') }}">Download CSV</a>
-
-      <form method="POST" action="{{ url_for('clear_history') }}" onsubmit="return confirm('Clear all history?');">
-        <button class="btn danger" type="submit">Clear history</button>
-      </form>
-    </div>
-  </div>
-
-  <!-- (2) Filter controls -->
-  <div class="filters">
-    <a class="chip {{ 'active' if risk=='All' else '' }}" href="{{ url_for('history', risk='All', per_page=per_page) }}">All</a>
-    <a class="chip {{ 'active' if risk=='High' else '' }}" href="{{ url_for('history', risk='High', per_page=per_page) }}">High</a>
-    <a class="chip {{ 'active' if risk=='Low' else '' }}" href="{{ url_for('history', risk='Low', per_page=per_page) }}">Low</a>
-  </div>
-
-  <div class="table-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th>Time (UTC)</th>
-          <th>Age</th>
-          <th>BMI</th>
-          <th>Exercise</th>
-          <th>Systolic</th>
-          <th>Diastolic</th>
-          <th>Heart Rate</th>
-          <th>Risk</th>
-          <th>Probability</th>
-          <th></th>
-        </tr>
-      </thead>
-
-      <tbody>
-        {% for r in rows %}
-        <tr>
-          <td>{{ r.created_at }}</td>
-          <td>{{ r.age }}</td>
-          <td>{{ r.bmi }}</td>
-          <td>{{ r.exercise_level }}</td>
-          <td>{{ r.systolic_bp }}</td>
-          <td>{{ r.diastolic_bp }}</td>
-          <td>{{ r.heart_rate }}</td>
-          <td>
-            <span class="pill {{ 'bad' if r.risk_label=='High' else 'good' }}">{{ r.risk_label }}</span>
-          </td>
-          <td>{{ ((r.probability or 0) * 100) | round(1) }}%</td>
-          <td>
-            <form method="POST"
-                  action="{{ url_for('delete_row', row_id=r.id, risk=risk) }}"
-                  onsubmit="return confirm('Delete this row?');">
-              <button class="btn tiny danger" type="submit">Delete</button>
-            </form>
-          </td>
-        </tr>
-        {% endfor %}
-
-        {% if not rows %}
-        <tr><td colspan="10" class="muted">No predictions yet.</td></tr>
-        {% endif %}
-      </tbody>
-    </table>
-  </div>
-
-  <!-- (3) Pagination -->
-  <div class="pager">
-    <div class="muted">
-      Total: {{ total }} • Page {{ page }} of {{ pages }}
-    </div>
-
-    <div class="pager-actions">
-      {% if page > 1 %}
-        <a class="btn" href="{{ url_for('history', risk=risk, page=page-1, per_page=per_page) }}">Prev</a>
-      {% else %}
-        <span class="btn disabled">Prev</span>
-      {% endif %}
-
-      {% if page < pages %}
-        <a class="btn" href="{{ url_for('history', risk=risk, page=page+1, per_page=per_page) }}">Next</a>
-      {% else %}
-        <span class="btn disabled">Next</span>
-      {% endif %}
-    </div>
-  </div>
-</div>
+<p>Your prediction history will appear here once connected.</p>
 
 {% endblock %}
