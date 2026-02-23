@@ -1,1 +1,1 @@
-from predict import app(
+from predict import app
