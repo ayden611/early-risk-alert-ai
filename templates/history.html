@@ -15,17 +15,28 @@
       <th>Probability</th>
     </tr>
 
-    {% for r in records %}
-    <tr>
-      <td>{{ r.timestamp.strftime("%Y-%m-%d %H:%M") }}</td>
-      <td>{{ r.age }}</td>
-      <td>{{ r.bmi }}</td>
-      <td>{{ r.exercise_level }}</td>
-      <td>{{ r.label }}</td>
-      <td>{{ (r.probability * 100) | round(2) }}%</td>
-    </tr>
-    {% endfor %}
+    {% if rows and rows|length > 0 %}
+      {% for r in rows %}
+      <tr>
+        <td>
+          {% if r.created_at %}
+            {{ r.created_at.strftime("%Y-%m-%d %H:%M") }}
+          {% else %}
+            —
+          {% endif %}
+        </td>
+        <td>{{ r.age }}</td>
+        <td>{{ r.bmi }}</td>
+        <td>{{ r.exercise_level }}</td>
+        <td>{{ r.risk_label }}</td>
+        <td>{{ (r.prob_high * 100) | round(2) }}%</td>
+      </tr>
+      {% endfor %}
+    {% else %}
+      <tr>
+        <td colspan="6" class="muted">No history yet.</td>
+      </tr>
+    {% endif %}
   </table>
-
 </section>
 {% endblock %}
