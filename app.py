@@ -3,23 +3,19 @@ from datetime import datetime
 
 from flask import Flask, render_template, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
-
-# Your predictor (you already have predict.py)
-from predict import predict_risk
-
+import numpy as np
+import joblib
 
 # ----------------------------
-# App + Config
+# App Setup
 # ----------------------------
+
 app = Flask(__name__)
 
-# Secret key (needed if you ever use sessions/flash; harmless to have)
-app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-secret-key")
+app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "dev")
 
-# Render provides DATABASE_URL. Locally we fallback to sqlite.
-db_url = (os.environ.get("DATABASE_URL") or "").strip()
-if db_url.startswith("postgres://"):
-    # SQLAlchemy expects postgresql://
+db_url = os.getenv("DATABASE_URL")
+if db_url and db_url.startswith("postgres://"):
     db_url = db_url.replace("postgres://", "postgresql://", 1)
 
 if not db_url:
@@ -30,78 +26,64 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)
 
+# ----------------------------
+# Load Model
+# ----------------------------
+
+MODEL_PATH = "demo_model.pkl"
+
+if os.path.exists(MODEL_PATH):
+    model = joblib.load(MODEL_PATH)
+else:
+    model = None
 
 # ----------------------------
-# DB Model
+# Database Model
 # ----------------------------
+
 class Prediction(db.Model):
-    __tablename__ = "prediction"
-
     id = db.Column(db.Integer, primary_key=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     age = db.Column(db.Float, nullable=False)
     bmi = db.Column(db.Float, nullable=False)
-    exercise_level = db.Column(db.String(32), nullable=False)
-
+    exercise_level = db.Column(db.Integer, nullable=False)
     systolic_bp = db.Column(db.Float, nullable=False)
     diastolic_bp = db.Column(db.Float, nullable=False)
     heart_rate = db.Column(db.Float, nullable=False)
 
     risk_label = db.Column(db.String(32), nullable=False)
-    prob_high = db.Column(db.Float, nullable=False)  # 0..1
-
+    prob_high = db.Column(db.Float, nullable=False)
 
 with app.app_context():
     db.create_all()
 
-
 # ----------------------------
 # Helpers
 # ----------------------------
-def normalize_exercise(val: str) -> str:
-    v = (val or "").strip().lower()
-    if v in ("low", "l"):
-        return "Low"
-    if v in ("moderate", "mod", "m", "medium"):
-        return "Moderate"
-    if v in ("high", "h"):
-        return "High"
-    # fallback
-    return "Low"
 
+def normalize_exercise(level):
+    mapping = {"low": 0, "moderate": 1, "high": 2}
+    return mapping.get(level.lower(), 0)
+
+def predict_risk(age, bmi, exercise_level, systolic_bp, diastolic_bp, heart_rate):
+    if model is None:
+        return "Model Not Loaded", 0.0
+
+    data = np.array([[age, bmi, exercise_level, systolic_bp, diastolic_bp, heart_rate]])
+    pred = int(model.predict(data)[0])
+    prob = float(model.predict_proba(data)[0][1])
+
+    label = "High Risk" if pred == 1 else "Low Risk"
+    return label, prob
 
 # ----------------------------
 # Routes
 # ----------------------------
-@app.get("/health")
+
+@app.route("/health")
 def health():
     return jsonify(status="ok")
-
-
-@app.get("/debug")
-def debug():
-    """
-    Proves what DB you're connected to + how many rows exist.
-    """
-    try:
-        count = db.session.query(Prediction).count()
-    except Exception as e:
-        return jsonify(error=str(e)), 500
-
-    # Don’t leak full credentials; show a safe version
-    safe_db = app.config["SQLALCHEMY_DATABASE_URI"]
-    if "@" in safe_db and "://" in safe_db:
-        # redact password between :// and @ crudely
-        # e.g. postgresql://user:pass@host/db -> postgresql://user:***@host/db
-        prefix, rest = safe_db.split("://", 1)
-        if "@" in rest and ":" in rest.split("@")[0]:
-            user_part, host_part = rest.split("@", 1)
-            user = user_part.split(":", 1)[0]
-            safe_db = f"{prefix}://{user}:***@{host_part}"
-
-    return jsonify(db_uri=safe_db, count=count)
-
 
 @app.route("/", methods=["GET", "POST"])
 def home():
@@ -111,39 +93,33 @@ def home():
 
     if request.method == "POST":
         try:
-            age = float(request.form.get("age", "0") or "0")
-            bmi = float(request.form.get("bmi", "0") or "0")
-            exercise_level = normalize_exercise(request.form.get("exercise_level", "Low"))
+            age = float(request.form.get("age", 0))
+            bmi = float(request.form.get("bmi", 0))
+            exercise = normalize_exercise(request.form.get("exercise_level", "low"))
+            systolic = float(request.form.get("systolic_bp", 0))
+            diastolic = float(request.form.get("diastolic_bp", 0))
+            heart_rate = float(request.form.get("heart_rate", 0))
 
-            systolic_bp = float(request.form.get("systolic_bp", "0") or "0")
-            diastolic_bp = float(request.form.get("diastolic_bp", "0") or "0")
-            heart_rate = float(request.form.get("heart_rate", "0") or "0")
-
-            label, prob_high = predict_risk(
-                age=age,
-                bmi=bmi,
-                exercise_level=exercise_level,
-                systolic_bp=systolic_bp,
-                diastolic_bp=diastolic_bp,
-                heart_rate=heart_rate,
+            label, prob = predict_risk(
+                age, bmi, exercise, systolic, diastolic, heart_rate
             )
 
-            # Save to DB
             row = Prediction(
                 age=age,
                 bmi=bmi,
-                exercise_level=exercise_level,
-                systolic_bp=systolic_bp,
-                diastolic_bp=diastolic_bp,
+                exercise_level=exercise,
+                systolic_bp=systolic,
+                diastolic_bp=diastolic,
                 heart_rate=heart_rate,
-                risk_label=str(label),
-                prob_high=float(prob_high),
+                risk_label=label,
+                prob_high=prob,
             )
+
             db.session.add(row)
             db.session.commit()
 
-            prediction = str(label)
-            probability = round(float(prob_high) * 100.0, 2)
+            prediction = label
+            probability = round(prob * 100, 2)
 
         except Exception as e:
             db.session.rollback()
@@ -156,61 +132,14 @@ def home():
         error=error,
     )
 
-
-@app.get("/history")
+@app.route("/history")
 def history():
-    rows = (
-        Prediction.query.order_by(Prediction.created_at.desc())
-        .limit(200)
-        .all()
-    )
-    # IMPORTANT: history.html in your repo used "records" earlier, not "rows"
-    return render_template("history.html", records=rows)
+    rows = Prediction.query.order_by(Prediction.created_at.desc()).all()
+    return render_template("history.html", rows=rows)
 
+# ----------------------------
+# Local Run
+# ----------------------------
 
-# Instant(JS) endpoint (optional, but keeps your UI working if you use it)
-@app.post("/api/predict")
-def api_predict():
-    try:
-        data = request.get_json(force=True) or {}
-
-        age = float(data.get("age", 0) or 0)
-        bmi = float(data.get("bmi", 0) or 0)
-        exercise_level = normalize_exercise(data.get("exercise_level", "Low"))
-
-        systolic_bp = float(data.get("systolic_bp", 0) or 0)
-        diastolic_bp = float(data.get("diastolic_bp", 0) or 0)
-        heart_rate = float(data.get("heart_rate", 0) or 0)
-
-        label, prob_high = predict_risk(
-            age=age,
-            bmi=bmi,
-            exercise_level=exercise_level,
-            systolic_bp=systolic_bp,
-            diastolic_bp=diastolic_bp,
-            heart_rate=heart_rate,
-        )
-
-        # Save to DB
-        row = Prediction(
-            age=age,
-            bmi=bmi,
-            exercise_level=exercise_level,
-            systolic_bp=systolic_bp,
-            diastolic_bp=diastolic_bp,
-            heart_rate=heart_rate,
-            risk_label=str(label),
-            prob_high=float(prob_high),
-        )
-        db.session.add(row)
-        db.session.commit()
-
-        return jsonify(
-            risk=str(label),
-            prob_high=float(prob_high),
-            probability=round(float(prob_high) * 100.0, 2),
-        )
-
-    except Exception as e:
-        db.session.rollback()
-        return jsonify(error=f"{type(e).__name__}: {e}"), 500`
+if __name__ == "__main__":
+    app.run(debug=True)
