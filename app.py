@@ -47,11 +47,16 @@ class Prediction(db.Model):
 
     risk_label = db.Column(db.String(32), nullable=False)
     prob_high = db.Column(db.Float, nullable=False)
-
-
+    # ---------- DB INIT ----------
+# Always create tables if missing.
+# Only DROP + recreate when RESET_DB=1 (use this once to fix schema mismatch).
 with app.app_context():
-    db.drop_all()
+    if os.getenv("RESET_DB", "0") == "1":
+        db.drop_all()
     db.create_all()
+
+
+
 
 
 # ---------------- ROUTES ----------------
