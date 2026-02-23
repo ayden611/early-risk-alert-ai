@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 set -e
-git add .
-git commit -m "${1:-Update}" || true
+
+MSG="${1:-Update}"
+
+git status
+git add -A
+git commit -m "$MSG" || true
 git pull origin main --rebase
-git push
+git push origin main
+
+echo "✅ Synced: $MSG"
