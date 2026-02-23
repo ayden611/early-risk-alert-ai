@@ -30,6 +30,6 @@ def home():
         )
 
         prediction = label
-        probability = round(prob_high * 100, 2)
+        probability = round(prob_high, 6) 
 
     return render_template("index.html", prediction=prediction, probability=probability)
