@@ -1,44 +1,31 @@
 {% extends "base.html" %}
-{% block title %}History | Early Risk Alert AI{% endblock %}
+{% block title %}History{% endblock %}
 
 {% block content %}
 <section class="card">
-  <h1>Prediction History</h1>
-  <p class="muted">Last 50 predictions saved.</p>
+  <h2>Prediction History</h2>
 
-  <div class="table-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th>Time</th>
-          <th>Age</th>
-          <th>BMI</th>
-          <th>Exercise</th>
-          <th>Sys</th>
-          <th>Dia</th>
-          <th>HR</th>
-          <th>Risk</th>
-          <th>Prob</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for r in rows %}
-        <tr>
-          <td class="muted small">{{ r.created_at }}</td>
-          <td>{{ r.age }}</td>
-          <td>{{ r.bmi }}</td>
-          <td>{{ r.exercise_level }}</td>
-          <td>{{ r.systolic_bp }}</td>
-          <td>{{ r.diastolic_bp }}</td>
-          <td>{{ r.heart_rate }}</td>
-          <td><strong>{{ r.risk_label }}</strong></td>
-          <td>{{ (r.probability * 100) | round(2) }}%</td>
-        </tr>
-        {% else %}
-        <tr><td colspan="9" class="muted">No history yet.</td></tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
+  <table style="width:100%; margin-top:20px;">
+    <tr>
+      <th>Date</th>
+      <th>Age</th>
+      <th>BMI</th>
+      <th>Exercise</th>
+      <th>Result</th>
+      <th>Probability</th>
+    </tr>
+
+    {% for r in records %}
+    <tr>
+      <td>{{ r.timestamp.strftime("%Y-%m-%d %H:%M") }}</td>
+      <td>{{ r.age }}</td>
+      <td>{{ r.bmi }}</td>
+      <td>{{ r.exercise_level }}</td>
+      <td>{{ r.label }}</td>
+      <td>{{ (r.probability * 100) | round(2) }}%</td>
+    </tr>
+    {% endfor %}
+  </table>
+
 </section>
 {% endblock %}
