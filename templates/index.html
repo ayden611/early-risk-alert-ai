@@ -57,7 +57,11 @@
       {% if result %}{{ result }}{% else %}—{% endif %}
     </strong></div>
     <div><span class="muted">Probability:</span> <strong id="riskProb">
-      {% if probability is not none %}{{ (probability * 100) | round(2) }}%{% else %}—{% endif %}
+      {% if probability is not none %}
+  {{ probability | round(2) }}%
+{% else %}
+  —
+{% endif %}
     </strong></div>
   </div>
   <p class="muted small" id="resultNote">
