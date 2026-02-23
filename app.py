@@ -6,16 +6,22 @@ from flask_sqlalchemy import SQLAlchemy
 
 from predict import predict_risk
 
+
+# -----------------------------
+# APP INIT
+# -----------------------------
 app = Flask(__name__)
 
-# ---------- DATABASE CONFIG ----------
-# Render Postgres provides DATABASE_URL. Locally we fallback to sqlite.
+# -----------------------------
+# DATABASE CONFIG
+# -----------------------------
 db_url = os.getenv("DATABASE_URL", "").strip()
 
-# Render sometimes uses postgres:// which SQLAlchemy wants as postgresql://
+# Render sometimes uses postgres:// but SQLAlchemy wants postgresql://
 if db_url.startswith("postgres://"):
     db_url = db_url.replace("postgres://", "postgresql://", 1)
 
+# Fallback to SQLite locally
 if not db_url:
     db_url = "sqlite:///local.db"
 
@@ -24,7 +30,10 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)
 
-# ---------- MODEL ----------
+
+# -----------------------------
+# MODEL
+# -----------------------------
 class Prediction(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
@@ -37,13 +46,17 @@ class Prediction(db.Model):
     heart_rate = db.Column(db.Float, nullable=False)
 
     risk_label = db.Column(db.String(32), nullable=False)
-    prob_high = db.Column(db.Float, nullable=False)  # 0..1
+    prob_high = db.Column(db.Float, nullable=False)
 
 
-# Create tables at startup (prevents "table doesn't exist" crashes)
+# Create tables at startup (SAFE location)
 with app.app_context():
     db.create_all()
 
+
+# -----------------------------
+# ROUTES
+# -----------------------------
 
 @app.get("/health")
 def health():
@@ -75,7 +88,6 @@ def home():
         prediction = label
         probability = round(prob_high * 100, 2)
 
-        # Save to DB
         row = Prediction(
             age=age,
             bmi=bmi,
@@ -86,21 +98,31 @@ def home():
             risk_label=label,
             prob_high=float(prob_high),
         )
+
         db.session.add(row)
         db.session.commit()
 
-    return render_template("index.html", prediction=prediction, probability=probability)
+    return render_template(
+        "index.html",
+        prediction=prediction,
+        probability=probability,
+    )
 
 
 @app.get("/history")
 def history():
-    # If something goes wrong, show the error text (TEMP for debugging)
-    try:
-        rows = (
-            Prediction.query.order_by(Prediction.created_at.desc())
-            .limit(200)
-            .all()
-        )
-        return render_template("history.html", rows=rows)
-    except Exception as e:
-        return f"History error: {e}", 500
+    records = (
+        Prediction.query
+        .order_by(Prediction.created_at.desc())
+        .limit(200)
+        .all()
+    )
+
+    return render_template("history.html", records=records)
+
+
+# -----------------------------
+# RUN LOCAL
+# -----------------------------
+if __name__ == "__main__":
+    app.run(debug=True)
