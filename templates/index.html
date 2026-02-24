@@ -1,58 +1,40 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Early Risk Alert AI</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
+{% extends "base.html" %}
+{% block content %}
 
-<div class="container">
-    <h1>Early Risk Alert AI</h1>
+<h1>Server Submit (Reload)</h1>
 
-    <form method="POST">
-        <h2>Server Submit (Reload)</h2>
+<form action="/predict" method="POST" class="form">
+  <label>Age</label>
+  <input name="age" type="number" required value="{{ form_data.age if form_data else '' }}">
 
-        <label>Age</label>
-        <input type="number" name="age" step="any" required>
+  <label>BMI</label>
+  <input name="bmi" type="number" step="0.1" required value="{{ form_data.bmi if form_data else '' }}">
 
-        <label>BMI</label>
-        <input type="number" name="bmi" step="any" required>
+  <label>Exercise Level</label>
+  <select name="exercise_level" required>
+    {% set chosen = form_data.exercise_level if form_data else "Low" %}
+    <option value="Low" {{ "selected" if chosen=="Low" else "" }}>Low</option>
+    <option value="Medium" {{ "selected" if chosen=="Medium" else "" }}>Medium</option>
+    <option value="High" {{ "selected" if chosen=="High" else "" }}>High</option>
+  </select>
 
-        <label>Exercise Level</label>
-        <select name="exercise_level">
-            <option value="0">Low</option>
-            <option value="1">Moderate</option>
-            <option value="2">High</option>
-        </select>
+  <label>Systolic BP</label>
+  <input name="systolic_bp" type="number" required value="{{ form_data.systolic_bp if form_data else '' }}">
 
-        <label>Systolic BP</label>
-        <input type="number" name="systolic_bp" step="any" required>
+  <label>Diastolic BP</label>
+  <input name="diastolic_bp" type="number" required value="{{ form_data.diastolic_bp if form_data else '' }}">
 
-        <label>Diastolic BP</label>
-        <input type="number" name="diastolic_bp" step="any" required>
+  <label>Heart Rate</label>
+  <input name="heart_rate" type="number" required value="{{ form_data.heart_rate if form_data else '' }}">
 
-        <label>Heart Rate</label>
-        <input type="number" name="heart_rate" step="any" required>
+  <button type="submit">Run Prediction</button>
+</form>
 
-        <button type="submit">Run Prediction</button>
-    </form>
+{% if result %}
+  <div class="result">
+    <p><strong>Risk:</strong> {{ result }}</p>
+    <p><strong>Probability:</strong> {{ probability }}%</p>
+  </div>
+{% endif %}
 
-    {% if result %}
-        <div class="result">
-            <h3>Risk: {{ result }}</h3>
-            <h3>Probability: {{ probability }}%</h3>
-        </div>
-    {% endif %}
-
-    {% if error %}
-        <div class="error">
-            <p>{{ error }}</p>
-        </div>
-    {% endif %}
-
-    <br>
-    <a href="{{ url_for('history') }}">View History</a>
-</div>
-
-</body>
-</html>
+{% endblock %}
