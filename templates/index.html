@@ -2,91 +2,57 @@
 <html>
 <head>
     <title>Early Risk Alert AI</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <style>
-        body { font-family: Arial; background:#0f172a; color:white; padding:40px; }
-        .card { background:#1e293b; padding:25px; border-radius:12px; max-width:700px; margin:auto; }
-        input, select { width:100%; padding:8px; margin:6px 0; }
-        button { padding:10px; margin-top:10px; width:100%; cursor:pointer; }
-        .result { margin-top:20px; padding:15px; background:#0b1220; border-radius:8px; }
-        hr { margin:25px 0; }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
 
-<div class="card">
-    <h2>Early Risk Alert AI</h2>
+<div class="container">
+    <h1>Early Risk Alert AI</h1>
 
-    <h3>Server Submit (Reload)</h3>
-    <form method="POST" action="/">
-        <input name="age" placeholder="Age" required>
-        <input name="bmi" placeholder="BMI" required>
+    <form method="POST">
+        <h2>Server Submit (Reload)</h2>
 
+        <label>Age</label>
+        <input type="number" name="age" step="any" required>
+
+        <label>BMI</label>
+        <input type="number" name="bmi" step="any" required>
+
+        <label>Exercise Level</label>
         <select name="exercise_level">
             <option value="0">Low</option>
             <option value="1">Moderate</option>
             <option value="2">High</option>
         </select>
 
-        <input name="systolic_bp" placeholder="Systolic BP" required>
-        <input name="diastolic_bp" placeholder="Diastolic BP" required>
-        <input name="heart_rate" placeholder="Heart Rate" required>
+        <label>Systolic BP</label>
+        <input type="number" name="systolic_bp" step="any" required>
 
-        <button type="submit">Run Prediction (Server)</button>
+        <label>Diastolic BP</label>
+        <input type="number" name="diastolic_bp" step="any" required>
+
+        <label>Heart Rate</label>
+        <input type="number" name="heart_rate" step="any" required>
+
+        <button type="submit">Run Prediction</button>
     </form>
 
-    <hr>
+    {% if result %}
+        <div class="result">
+            <h3>Risk: {{ result }}</h3>
+            <h3>Probability: {{ probability }}%</h3>
+        </div>
+    {% endif %}
 
-    <h3>Instant JS (No Reload)</h3>
+    {% if error %}
+        <div class="error">
+            <p>{{ error }}</p>
+        </div>
+    {% endif %}
 
-    <input id="age" placeholder="Age">
-    <input id="bmi" placeholder="BMI">
-
-    <select id="exercise_level">
-        <option value="0">Low</option>
-        <option value="1">Moderate</option>
-        <option value="2">High</option>
-    </select>
-
-    <input id="systolic_bp" placeholder="Systolic BP">
-    <input id="diastolic_bp" placeholder="Diastolic BP">
-    <input id="heart_rate" placeholder="Heart Rate">
-
-    <button id="instantBtn">Run Prediction (Instant)</button>
-
-    <div class="result" id="resultBox">
-        {% if prediction %}
-            <strong>Risk:</strong> {{ prediction }}<br>
-            <strong>Probability:</strong> {{ probability }}%
-        {% endif %}
-    </div>
+    <br>
+    <a href="{{ url_for('history') }}">View History</a>
 </div>
-
-<script>
-document.getElementById("instantBtn").addEventListener("click", async function() {
-
-    const payload = {
-        age: document.getElementById("age").value,
-        bmi: document.getElementById("bmi").value,
-        exercise_level: document.getElementById("exercise_level").value,
-        systolic_bp: document.getElementById("systolic_bp").value,
-        diastolic_bp: document.getElementById("diastolic_bp").value,
-        heart_rate: document.getElementById("heart_rate").value
-    };
-
-    const res = await fetch("/api/predict", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-    });
-
-    const data = await res.json();
-
-    document.getElementById("resultBox").innerHTML =
-        "<strong>Risk:</strong> " + data.prediction +
-        "<br><strong>Probability:</strong> " + data.probability + "%";
-});
-</script>
 
 </body>
 </html>
