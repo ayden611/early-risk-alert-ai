@@ -2,34 +2,24 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>{% block title %}Early Risk Alert AI{% endblock %}</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Early Risk Alert AI</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
+
 <body>
-  <nav class="nav">
-    <div class="nav-inner">
-      <a class="brand" href="{{ url_for('index') }}">Early Risk Alert AI</a>
-      <div class="links">
-        <a href="{{ url_for('index') }}">Predict</a>
-      </div>
+  <nav class="navbar">
+    <div class="brand">
+      <a href="{{ url_for('home') }}">Early Risk Alert AI</a>
+    </div>
+    <div class="nav-links">
+      <a href="{{ url_for('home') }}">Predict</a>
+      <a href="{{ url_for('history') }}">History</a>
     </div>
   </nav>
 
   <main class="container">
-    {% with messages = get_flashed_messages() %}
-      {% if messages %}
-        <div class="flash">
-          {% for msg in messages %}
-            <div class="flash-item">{{ msg }}</div>
-          {% endfor %}
-        </div>
-      {% endif %}
-    {% endwith %}
-
     {% block content %}{% endblock %}
   </main>
-
-  <script src="{{ url_for('static', filename='app.js') }}"></script>
 </body>
 </html>
