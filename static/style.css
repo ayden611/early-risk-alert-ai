@@ -1,9 +1,36 @@
-body { font-family: system-ui, -apple-system, Arial; margin: 0; }
-.navbar { display:flex; justify-content:space-between; padding:12px 16px; background:#111; }
-.navbar a { color:#fff; text-decoration:none; margin-right:12px; }
-.container { padding:16px; }
-.form { display:grid; gap:8px; max-width:360px; }
-input, select, button { padding:8px; }
-.result { margin-top:16px; padding:12px; border:1px solid #ddd; }
-.table { width:100%; border-collapse:collapse; margin-top:12px; }
-.table th, .table td { border:1px solid #ddd; padding:8px; }
+.kpis{
+  display:grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap:12px;
+  margin:16px 0;
+}
+.kpi{
+  padding:14px;
+  border:1px solid #ddd;
+  border-radius:14px;
+  background: rgba(0,0,0,0.03);
+}
+.kpi-title{
+  font-size:13px;
+  opacity:0.7;
+}
+.kpi-val{
+  font-size:28px;
+  font-weight:800;
+  margin-top:6px;
+}
+.charts{
+  display:grid;
+  grid-template-columns: 1fr;
+  gap:12px;
+  margin: 16px 0;
+}
+.chart-card{
+  padding:14px;
+  border:1px solid #ddd;
+  border-radius:14px;
+  background: rgba(0,0,0,0.02);
+}
+.chart-card h3{
+  margin: 0 0 10px;
+}
