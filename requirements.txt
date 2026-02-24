@@ -10,3 +10,4 @@ Flask-SQLAlchemy==3.1.1
 flask-cors
 flask-limiter
 flask-jwt-extended
+Flask-Migrate==4.0.7
