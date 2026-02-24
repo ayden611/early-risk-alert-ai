@@ -4,7 +4,7 @@ import datetime as dt
 import numpy as np
 import joblib
 
-from flask import Flask, request, redirect, url_for, render_template_string
+from flask import Flask, request, render_template_string, url_for
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text
 
@@ -31,13 +31,12 @@ db = SQLAlchemy(app)
 MODEL_PATH = "demo_model.pkl"
 model = joblib.load(MODEL_PATH) if os.path.exists(MODEL_PATH) else None
 
-FEATURES = ["age", "bmi", "exercise_level", "sys_bp", "dia_bp", "heart_rate"]
-
 # ----------------------------
-# DB Model (SQLAlchemy)
+# DB Model
 # ----------------------------
 class Prediction(db.Model):
     __tablename__ = "prediction"
+
     id = db.Column(db.Integer, primary_key=True)
     created_at = db.Column(db.DateTime, nullable=False, default=dt.datetime.utcnow)
 
@@ -45,8 +44,16 @@ class Prediction(db.Model):
     bmi = db.Column(db.Float, nullable=False)
     exercise_level = db.Column(db.Float, nullable=False)
 
-    sys_bp = db.Column(db.Float, nullable=False)
-    dia_bp = db.Column(db.Float, nullable=False)
+    # IMPORTANT:
+    # Existing DB may have systolic_bp/diastolic_bp (NOT NULL)
+    # Your newer code may use sys_bp/dia_bp
+    # So we store BOTH to always satisfy the DB.
+    systolic_bp = db.Column(db.Float, nullable=True)
+    diastolic_bp = db.Column(db.Float, nullable=True)
+
+    sys_bp = db.Column(db.Float, nullable=True)
+    dia_bp = db.Column(db.Float, nullable=True)
+
     heart_rate = db.Column(db.Float, nullable=False)
 
     label = db.Column(db.String(32), nullable=False)
@@ -55,28 +62,28 @@ class Prediction(db.Model):
 
 def _ensure_db_schema():
     """
-    Fixes your exact error:
-    psycopg2.errors.UndefinedColumn: column "sys_bp" ... does not exist
-
-    We handle it by:
-    - creating the table if missing
-    - adding any missing columns if the table already exists
+    Makes sure the table exists and adds any missing columns.
+    This fixes BOTH styles:
+      - systolic_bp / diastolic_bp
+      - sys_bp / dia_bp
     """
-    # 1) create table if it doesn't exist (works for sqlite + postgres)
     db.create_all()
 
-    # 2) add columns if missing (Postgres supports IF NOT EXISTS; SQLite will ignore failures)
-    # We'll try Postgres-safe ALTERs; if SQLite throws on IF NOT EXISTS, we ignore.
     alters = [
+        # core columns
         "ALTER TABLE prediction ADD COLUMN IF NOT EXISTS created_at TIMESTAMP",
         "ALTER TABLE prediction ADD COLUMN IF NOT EXISTS age DOUBLE PRECISION",
         "ALTER TABLE prediction ADD COLUMN IF NOT EXISTS bmi DOUBLE PRECISION",
         "ALTER TABLE prediction ADD COLUMN IF NOT EXISTS exercise_level DOUBLE PRECISION",
-        "ALTER TABLE prediction ADD COLUMN IF NOT EXISTS sys_bp DOUBLE PRECISION",
-        "ALTER TABLE prediction ADD COLUMN IF NOT EXISTS dia_bp DOUBLE PRECISION",
         "ALTER TABLE prediction ADD COLUMN IF NOT EXISTS heart_rate DOUBLE PRECISION",
         "ALTER TABLE prediction ADD COLUMN IF NOT EXISTS label VARCHAR(32)",
         "ALTER TABLE prediction ADD COLUMN IF NOT EXISTS probability DOUBLE PRECISION",
+
+        # BOTH naming styles
+        "ALTER TABLE prediction ADD COLUMN IF NOT EXISTS systolic_bp DOUBLE PRECISION",
+        "ALTER TABLE prediction ADD COLUMN IF NOT EXISTS diastolic_bp DOUBLE PRECISION",
+        "ALTER TABLE prediction ADD COLUMN IF NOT EXISTS sys_bp DOUBLE PRECISION",
+        "ALTER TABLE prediction ADD COLUMN IF NOT EXISTS dia_bp DOUBLE PRECISION",
     ]
 
     try:
@@ -85,14 +92,12 @@ def _ensure_db_schema():
                 try:
                     conn.execute(text(sql))
                 except Exception:
-                    # SQLite may not support IF NOT EXISTS in older versions;
-                    # ignoring here is safe because create_all already created the table for SQLite.
+                    # ignore dialect differences (sqlite / older engines)
                     pass
     except Exception:
         pass
 
 
-# Run schema fix at startup
 with app.app_context():
     _ensure_db_schema()
 
@@ -106,47 +111,42 @@ def _to_float(v, default=0.0):
         return default
 
 
-def _predict(payload: dict):
-    """
-    Returns: (label_str, prob_high_float)
-    """
+def _parse_exercise(v):
+    if v is None:
+        return 0.0
+    s = str(v).strip().lower()
+    if s in ("low", "l"):
+        return 0.0
+    if s in ("moderate", "med", "m"):
+        return 1.0
+    if s in ("high", "h"):
+        return 2.0
+    return _to_float(v, 0.0)
+
+
+def _predict(form):
     if model is None:
-        # If model isn't present, return a safe message
         return "Model not loaded", 0.0
 
-    age = _to_float(payload.get("age"))
-    bmi = _to_float(payload.get("bmi"))
+    age = _to_float(form.get("age"))
+    bmi = _to_float(form.get("bmi"))
+    ex = _parse_exercise(form.get("exercise_level"))
 
-    ex = payload.get("exercise_level", "0")
-    # allow "Low/Moderate/High" or "0/1/2"
-    if isinstance(ex, str):
-        ex_s = ex.strip().lower()
-        if ex_s in ("low", "l"):
-            ex_val = 0.0
-        elif ex_s in ("moderate", "med", "m"):
-            ex_val = 1.0
-        elif ex_s in ("high", "h"):
-            ex_val = 2.0
-        else:
-            ex_val = _to_float(ex)
-    else:
-        ex_val = _to_float(ex)
+    sys_bp = _to_float(form.get("sys_bp"))
+    dia_bp = _to_float(form.get("dia_bp"))
+    heart_rate = _to_float(form.get("heart_rate"))
 
-    sys_bp = _to_float(payload.get("sys_bp"))
-    dia_bp = _to_float(payload.get("dia_bp"))
-    heart_rate = _to_float(payload.get("heart_rate"))
-
-    X = np.array([[age, bmi, ex_val, sys_bp, dia_bp, heart_rate]], dtype=float)
+    X = np.array([[age, bmi, ex, sys_bp, dia_bp, heart_rate]], dtype=float)
 
     pred = int(model.predict(X)[0])
-    prob_high = float(model.predict_proba(X)[0][1])  # class 1 = High Risk
+    prob_high = float(model.predict_proba(X)[0][1])
 
     label = "High Risk" if pred == 1 else "Low Risk"
     return label, prob_high
 
 
 # ----------------------------
-# Inline HTML (SERVER SUBMIT ONLY)
+# Inline UI (SERVER SUBMIT ONLY)
 # ----------------------------
 PAGE = """
 <!doctype html>
@@ -157,49 +157,46 @@ PAGE = """
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     :root{
-      --bg:#0b1220;
-      --card:#121b2e;
-      --muted:#8ea0c6;
-      --text:#e9eefc;
-      --border:rgba(255,255,255,.10);
+      --bg:#0b1220; --text:#e9eefc; --muted:#8ea0c6;
+      --border:rgba(255,255,255,.12);
     }
     *{box-sizing:border-box}
     body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial}
     .shell{max-width:980px;margin:28px auto;padding:0 16px}
-    .top{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
     a{color:#b9c8ff;text-decoration:none}
+    .top{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
     .card{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:14px;padding:16px}
     .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
     label{font-size:13px;color:var(--muted)}
     input,select{width:100%;padding:12px;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,.06);color:var(--text)}
-    button{width:100%;padding:12px;border-radius:12px;border:1px solid var(--border);background:rgba(255,255,255,.10);color:var(--text);font-weight:700;cursor:pointer}
-    .result{margin-top:14px;padding:12px;border-radius:12px;border:1px solid var(--border);background:rgba(0,0,0,.18)}
-    .small{font-size:13px;color:var(--muted)}
+    button{width:100%;padding:12px;border-radius:12px;border:1px solid var(--border);background:rgba(255,255,255,.12);color:var(--text);font-weight:800;cursor:pointer}
+    .result{margin-top:14px;padding:12px;border-radius:12px;border:1px solid var(--border);background:rgba(0,0,0,.22)}
     .mono{white-space:pre-wrap;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:#ffb9b9}
-    @media (max-width:720px){.grid{grid-template-columns:1fr}}
+    @media(max-width:720px){.grid{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
   <div class="shell">
     <div class="top">
       <div>
-        <div style="font-size:18px;font-weight:800">Early Risk Alert AI</div>
-        <div class="small">Server Submit posts to <b>/</b> and saves to Postgres.</div>
+        <div style="font-size:18px;font-weight:900">Early Risk Alert AI</div>
+        <div style="font-size:13px;color:var(--muted)">Server Submit posts to <b>/</b> and saves to Postgres.</div>
       </div>
       <div><a href="{{ url_for('history') }}">History</a></div>
     </div>
 
     <div class="card">
-      <div style="font-size:16px;font-weight:800;margin-bottom:10px">Server Submit (Reload)</div>
+      <div style="font-size:16px;font-weight:900;margin-bottom:10px">Server Submit (Reload)</div>
+
       <form method="POST" action="/">
         <div class="grid">
           <div>
             <label>Age</label>
-            <input name="age" type="number" step="0.1" required value="{{ form.age or '' }}">
+            <input name="age" type="number" step="0.1" required value="{{ form.age }}">
           </div>
           <div>
             <label>BMI</label>
-            <input name="bmi" type="number" step="0.1" required value="{{ form.bmi or '' }}">
+            <input name="bmi" type="number" step="0.1" required value="{{ form.bmi }}">
           </div>
           <div>
             <label>Exercise Level</label>
@@ -211,17 +208,18 @@ PAGE = """
           </div>
           <div>
             <label>Systolic BP</label>
-            <input name="sys_bp" type="number" step="0.1" required value="{{ form.sys_bp or '' }}">
+            <input name="sys_bp" type="number" step="0.1" required value="{{ form.sys_bp }}">
           </div>
           <div>
             <label>Diastolic BP</label>
-            <input name="dia_bp" type="number" step="0.1" required value="{{ form.dia_bp or '' }}">
+            <input name="dia_bp" type="number" step="0.1" required value="{{ form.dia_bp }}">
           </div>
           <div>
             <label>Heart Rate</label>
-            <input name="heart_rate" type="number" step="0.1" required value="{{ form.heart_rate or '' }}">
+            <input name="heart_rate" type="number" step="0.1" required value="{{ form.heart_rate }}">
           </div>
         </div>
+
         <div style="margin-top:12px">
           <button type="submit">Run Prediction (Server)</button>
         </div>
@@ -231,7 +229,7 @@ PAGE = """
         <div><b>Risk:</b> {{ result.label }}</div>
         <div><b>Probability:</b> {{ result.prob }}%</div>
         {% if result.error %}
-          <div class="mono" style="margin-top:8px">{{ result.error }}</div>
+          <div class="mono" style="margin-top:10px">{{ result.error }}</div>
         {% endif %}
       </div>
     </div>
@@ -245,15 +243,10 @@ HISTORY_PAGE = """
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>History - Early Risk Alert AI</title>
+  <title>History</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    :root{
-      --bg:#0b1220;
-      --muted:#8ea0c6;
-      --text:#e9eefc;
-      --border:rgba(255,255,255,.10);
-    }
+    :root{--bg:#0b1220;--text:#e9eefc;--muted:#8ea0c6;--border:rgba(255,255,255,.12)}
     *{box-sizing:border-box}
     body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial}
     .shell{max-width:980px;margin:28px auto;padding:0 16px}
@@ -268,7 +261,7 @@ HISTORY_PAGE = """
 <body>
   <div class="shell">
     <div class="top">
-      <div style="font-size:18px;font-weight:800">Prediction History</div>
+      <div style="font-size:18px;font-weight:900">Prediction History</div>
       <div><a href="{{ url_for('home') }}">Back</a></div>
     </div>
 
@@ -276,15 +269,7 @@ HISTORY_PAGE = """
       <table>
         <thead>
           <tr>
-            <th>Date</th>
-            <th>Age</th>
-            <th>BMI</th>
-            <th>Exercise</th>
-            <th>Sys</th>
-            <th>Dia</th>
-            <th>HR</th>
-            <th>Result</th>
-            <th>Prob</th>
+            <th>Date</th><th>Age</th><th>BMI</th><th>Ex</th><th>Sys</th><th>Dia</th><th>HR</th><th>Result</th><th>Prob</th>
           </tr>
         </thead>
         <tbody>
@@ -294,8 +279,8 @@ HISTORY_PAGE = """
             <td>{{ "%.1f"|format(r.age) }}</td>
             <td>{{ "%.1f"|format(r.bmi) }}</td>
             <td>{{ "%.0f"|format(r.exercise_level) }}</td>
-            <td>{{ "%.0f"|format(r.sys_bp) }}</td>
-            <td>{{ "%.0f"|format(r.dia_bp) }}</td>
+            <td>{{ "%.0f"|format((r.systolic_bp if r.systolic_bp is not none else r.sys_bp) or 0) }}</td>
+            <td>{{ "%.0f"|format((r.diastolic_bp if r.diastolic_bp is not none else r.dia_bp) or 0) }}</td>
             <td>{{ "%.0f"|format(r.heart_rate) }}</td>
             <td>{{ r.label }}</td>
             <td>{{ "%.2f"|format(r.probability * 100) }}%</td>
@@ -308,7 +293,6 @@ HISTORY_PAGE = """
 </body>
 </html>
 """
-
 
 # ----------------------------
 # Routes
@@ -336,30 +320,37 @@ def home():
         }
 
         try:
+            # make sure schema is good
+            _ensure_db_schema()
+
             label, prob_high = _predict(form)
+
+            sys_bp = _to_float(form["sys_bp"])
+            dia_bp = _to_float(form["dia_bp"])
 
             p = Prediction(
                 created_at=dt.datetime.utcnow(),
                 age=_to_float(form["age"]),
                 bmi=_to_float(form["bmi"]),
-                exercise_level=_to_float(form["exercise_level"]),
-                sys_bp=_to_float(form["sys_bp"]),
-                dia_bp=_to_float(form["dia_bp"]),
+                exercise_level=_parse_exercise(form["exercise_level"]),
                 heart_rate=_to_float(form["heart_rate"]),
                 label=label,
                 probability=prob_high,
+
+                # WRITE BOTH NAMING STYLES (this fixes your error)
+                systolic_bp=sys_bp,
+                diastolic_bp=dia_bp,
+                sys_bp=sys_bp,
+                dia_bp=dia_bp,
             )
+
             db.session.add(p)
             db.session.commit()
 
             result["label"] = label
             result["prob"] = f"{prob_high * 100:.2f}"
+
         except Exception as e:
-            # If schema still mismatched, try ensuring schema again once
-            try:
-                _ensure_db_schema()
-            except Exception:
-                pass
             result["label"] = "Error"
             result["prob"] = "0"
             result["error"] = str(e)
@@ -373,6 +364,5 @@ def history():
     return render_template_string(HISTORY_PAGE, rows=rows)
 
 
-# Render expects `app` object for gunicorn "app:app"
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.getenv("PORT", "5000")))
