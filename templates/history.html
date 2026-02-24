@@ -1,11 +1,10 @@
 {% extends "base.html" %}
-{% block title %}History{% endblock %}
-
 {% block content %}
-<section class="card">
-  <h2>Prediction History</h2>
 
-  <table style="width:100%; margin-top:20px;">
+<h1>Prediction History</h1>
+
+<table class="table">
+  <thead>
     <tr>
       <th>Date</th>
       <th>Age</th>
@@ -14,29 +13,23 @@
       <th>Result</th>
       <th>Probability</th>
     </tr>
-
-    {% if rows and rows|length > 0 %}
-      {% for r in rows %}
-      <tr>
-        <td>
-          {% if r.created_at %}
-            {{ r.created_at.strftime("%Y-%m-%d %H:%M") }}
-          {% else %}
-            —
-          {% endif %}
-        </td>
-        <td>{{ r.age }}</td>
-        <td>{{ r.bmi }}</td>
-        <td>{{ r.exercise_level }}</td>
-        <td>{{ r.risk_label }}</td>
-        <td>{{ (r.prob_high * 100) | round(2) }}%</td>
-      </tr>
+  </thead>
+  <tbody>
+    {% if predictions and predictions|length > 0 %}
+      {% for p in predictions %}
+        <tr>
+          <td>{{ p.created_at.strftime("%Y-%m-%d %H:%M:%S") }}</td>
+          <td>{{ p.age }}</td>
+          <td>{{ "%.1f"|format(p.bmi) }}</td>
+          <td>{{ exercise_label.get(p.exercise_level, p.exercise_level) }}</td>
+          <td>{{ p.risk_label }}</td>
+          <td>{{ "%.2f"|format(p.probability * 100) }}%</td>
+        </tr>
       {% endfor %}
     {% else %}
-      <tr>
-        <td colspan="6" class="muted">No history yet.</td>
-      </tr>
+      <tr><td colspan="6">No history yet.</td></tr>
     {% endif %}
-  </table>
-</section>
+  </tbody>
+</table>
+
 {% endblock %}
