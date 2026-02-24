@@ -1,75 +1,92 @@
-{% extends "base.html" %}
-{% block title %}Predict | Early Risk Alert AI{% endblock %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Early Risk Alert AI</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+        body { font-family: Arial; background:#0f172a; color:white; padding:40px; }
+        .card { background:#1e293b; padding:25px; border-radius:12px; max-width:700px; margin:auto; }
+        input, select { width:100%; padding:8px; margin:6px 0; }
+        button { padding:10px; margin-top:10px; width:100%; cursor:pointer; }
+        .result { margin-top:20px; padding:15px; background:#0b1220; border-radius:8px; }
+        hr { margin:25px 0; }
+    </style>
+</head>
+<body>
 
-{% block content %}
-<section class="card">
-  <h1>Predict Risk</h1>
-  <p class="muted">
-    Use either mode:
-    <strong>Server Submit</strong> (renders result) or
-    <strong>Instant (JS)</strong> (calls API, no reload).
-  </p>
+<div class="card">
+    <h2>Early Risk Alert AI</h2>
 
-  <div class="mode-row">
-    <button type="button" class="btn" id="btnServer">Server Submit</button>
-    <button type="button" class="btn" id="btnInstant">Instant (JS)</button>
-  </div>
+    <h3>Server Submit (Reload)</h3>
+    <form method="POST" action="/">
+        <input name="age" placeholder="Age" required>
+        <input name="bmi" placeholder="BMI" required>
 
-  <form id="riskForm" method="POST" action="{{ url_for('home') }}">
-    <div class="grid">
-      <label>Age
-        <input name="age" type="number" step="any" required />
-      </label>
-
-      <label>BMI
-        <input name="bmi" type="number" step="any" required />
-      </label>
-
-      <label>Exercise Level (Low / Moderate / High)
-        <select name="exercise_level" required>
-          <option value="Low">Low</option>
-          <option value="Moderate">Moderate</option>
-          <option value="High">High</option>
+        <select name="exercise_level">
+            <option value="0">Low</option>
+            <option value="1">Moderate</option>
+            <option value="2">High</option>
         </select>
-      </label>
 
-      <label>Systolic BP
-        <input name="systolic_bp" type="number" step="any" required />
-      </label>
+        <input name="systolic_bp" placeholder="Systolic BP" required>
+        <input name="diastolic_bp" placeholder="Diastolic BP" required>
+        <input name="heart_rate" placeholder="Heart Rate" required>
 
-      <label>Diastolic BP
-        <input name="diastolic_bp" type="number" step="any" required />
-      </label>
+        <button type="submit">Run Prediction (Server)</button>
+    </form>
 
-      <label>Heart Rate
-        <input name="heart_rate" type="number" step="any" required />
-      </label>
+    <hr>
+
+    <h3>Instant JS (No Reload)</h3>
+
+    <input id="age" placeholder="Age">
+    <input id="bmi" placeholder="BMI">
+
+    <select id="exercise_level">
+        <option value="0">Low</option>
+        <option value="1">Moderate</option>
+        <option value="2">High</option>
+    </select>
+
+    <input id="systolic_bp" placeholder="Systolic BP">
+    <input id="diastolic_bp" placeholder="Diastolic BP">
+    <input id="heart_rate" placeholder="Heart Rate">
+
+    <button id="instantBtn">Run Prediction (Instant)</button>
+
+    <div class="result" id="resultBox">
+        {% if prediction %}
+            <strong>Risk:</strong> {{ prediction }}<br>
+            <strong>Probability:</strong> {{ probability }}%
+        {% endif %}
     </div>
+</div>
 
-    <button class="btn primary" type="submit" id="submitBtn">Run Prediction</button>
-  </form>
-</section>
+<script>
+document.getElementById("instantBtn").addEventListener("click", async function() {
 
-<section class="card" id="resultCard">
-  <h2>Result</h2>
-  <div class="result">
-    <div><span class="muted">Risk:</span> <strong id="riskLabel">
-      {% if result %}{{ result }}{% else %}—{% endif %}
-    </strong></div>
-    <div><span class="muted">Probability:</span> <strong id="riskProb">
-      {% if probability is not none %}
-  {{ probability | round(2) }}%
-{% else %}
-  —
-{% endif %}
-    </strong></div>
-  </div>
-  <p class="muted small" id="resultNote">
-    {% if result %}
-      Rendered by server route (/predict).
-    {% else %}
-      Choose a mode above.
-    {% endif %}
-  </p>
-</section>
-{% endblock %}
+    const payload = {
+        age: document.getElementById("age").value,
+        bmi: document.getElementById("bmi").value,
+        exercise_level: document.getElementById("exercise_level").value,
+        systolic_bp: document.getElementById("systolic_bp").value,
+        diastolic_bp: document.getElementById("diastolic_bp").value,
+        heart_rate: document.getElementById("heart_rate").value
+    };
+
+    const res = await fetch("/api/predict", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+
+    document.getElementById("resultBox").innerHTML =
+        "<strong>Risk:</strong> " + data.prediction +
+        "<br><strong>Probability:</strong> " + data.probability + "%";
+});
+</script>
+
+</body>
+</html>
