@@ -3,6 +3,33 @@
 
 <h1>Prediction History</h1>
 
+<div class="kpis">
+  <div class="kpi">
+    <div class="kpi-title">Total Predictions</div>
+    <div class="kpi-val">{{ kpis.total }}</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-title">High Risk %</div>
+    <div class="kpi-val">{{ kpis.high_pct }}%</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-title">Avg Probability</div>
+    <div class="kpi-val">{{ kpis.avg_prob }}%</div>
+  </div>
+</div>
+
+<div class="charts">
+  <div class="chart-card">
+    <h3>Probability Trend</h3>
+    <canvas id="probChart"></canvas>
+  </div>
+
+  <div class="chart-card">
+    <h3>Risk Split</h3>
+    <canvas id="riskChart"></canvas>
+  </div>
+</div>
+
 <table class="table">
   <thead>
     <tr>
@@ -17,19 +44,59 @@
   <tbody>
     {% if predictions and predictions|length > 0 %}
       {% for p in predictions %}
-        <tr>
-          <td>{{ p.created_at.strftime("%Y-%m-%d %H:%M:%S") }}</td>
-          <td>{{ p.age }}</td>
-          <td>{{ "%.1f"|format(p.bmi) }}</td>
-          <td>{{ exercise_label.get(p.exercise_level, p.exercise_level) }}</td>
-          <td>{{ p.risk_label }}</td>
-          <td>{{ "%.2f"|format(p.probability * 100) }}%</td>
-        </tr>
+      <tr>
+        <td>{{ p.created_at }}</td>
+        <td>{{ "%.1f"|format(p.age) }}</td>
+        <td>{{ "%.1f"|format(p.bmi) }}</td>
+        <td>{{ exercise_label(p.exercise_level) }}</td>
+        <td>{{ p.risk_label }}</td>
+        <td>{{ "%.2f"|format(p.probability * 100) }}%</td>
+      </tr>
       {% endfor %}
     {% else %}
       <tr><td colspan="6">No history yet.</td></tr>
     {% endif %}
   </tbody>
 </table>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const labels = {{ chart_labels|tojson }};
+  const probs = {{ chart_probs|tojson }};
+
+  const ctx1 = document.getElementById("probChart");
+  new Chart(ctx1, {
+    type: "line",
+    data: {
+      labels,
+      datasets: [{
+        label: "Probability (%)",
+        data: probs,
+        tension: 0.25
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: { min: 0, max: 100 }
+      }
+    }
+  });
+
+  const highCount = {{ high_count|tojson }};
+  const lowCount  = {{ low_count|tojson }};
+
+  const ctx2 = document.getElementById("riskChart");
+  new Chart(ctx2, {
+    type: "doughnut",
+    data: {
+      labels: ["High Risk", "Low Risk"],
+      datasets: [{
+        data: [highCount, lowCount]
+      }]
+    },
+    options: { responsive: true }
+  });
+</script>
 
 {% endblock %}
