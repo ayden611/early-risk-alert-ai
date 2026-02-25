@@ -7,11 +7,23 @@ import numpy as np
 import datetime as dt
 
 from flask import (
-    Flask, render_template, request, redirect, url_for, flash, jsonify, Response
+    Flask,
+    render_template,
+    request,
+    redirect,
+    url_for,
+    flash,
+    jsonify,
+    Response,
 )
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import (
-    LoginManager, UserMixin, login_user, logout_user, login_required, current_user
+    LoginManager,
+    UserMixin,
+    login_user,
+    logout_user,
+    login_required,
+    current_user,
 )
 
 # ----------------------------
@@ -39,15 +51,18 @@ login_manager.login_view = "login"
 ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "change-me")  # set this in Render env vars
 
+
 class User(UserMixin):
     def __init__(self, user_id: str):
         self.id = user_id
+
 
 @login_manager.user_loader
 def load_user(user_id):
     if user_id == ADMIN_USERNAME:
         return User(user_id)
     return None
+
 
 # ----------------------------
 # Model load
@@ -60,17 +75,20 @@ model = joblib.load(MODEL_PATH) if os.path.exists(MODEL_PATH) else None
 # ----------------------------
 EXERCISE_MAP = {"Low": 1, "Medium": 2, "High": 3}
 
+
 def safe_float(v, default=None):
     try:
         return float(v)
     except Exception:
         return default
 
+
 def safe_int(v, default=None):
     try:
         return int(float(v))
     except Exception:
         return default
+
 
 def exercise_to_numeric(v):
     """
@@ -91,6 +109,7 @@ def exercise_to_numeric(v):
     iv = safe_int(s)
     return iv if iv in (1, 2, 3) else None
 
+
 def exercise_to_label(v):
     inv = {1: "Low", 2: "Medium", 3: "High"}
     try:
@@ -99,8 +118,10 @@ def exercise_to_label(v):
     except Exception:
         return "Unknown"
 
+
 def build_features(age, bmi, exercise_level, sys_bp, dia_bp, hr):
     return np.array([[age, bmi, exercise_level, sys_bp, dia_bp, hr]], dtype=float)
+
 
 def predict_internal(age, bmi, exercise_level, sys_bp, dia_bp, hr):
     if model is None:
@@ -110,6 +131,7 @@ def predict_internal(age, bmi, exercise_level, sys_bp, dia_bp, hr):
     prob_high = float(model.predict_proba(X)[0][1])
     risk_label = "High Risk" if pred == 1 else "Low Risk"
     return risk_label, prob_high
+
 
 # ----------------------------
 # DB Model
@@ -134,6 +156,7 @@ class Prediction(db.Model):
 with app.app_context():
     db.create_all()
 
+
 # ----------------------------
 # Routes
 # ----------------------------
@@ -150,20 +173,26 @@ def home():
         dia_bp = safe_float(request.form.get("diastolic_bp"))
         heart_rate = safe_float(request.form.get("heart_rate"))
 
-        missing = [k for k, v in {
-            "age": age,
-            "bmi": bmi,
-            "exercise_level": exercise_level,
-            "systolic_bp": sys_bp,
-            "diastolic_bp": dia_bp,
-            "heart_rate": heart_rate
-        }.items() if v is None]
+        missing = [
+            k
+            for k, v in {
+                "age": age,
+                "bmi": bmi,
+                "exercise_level": exercise_level,
+                "systolic_bp": sys_bp,
+                "diastolic_bp": dia_bp,
+                "heart_rate": heart_rate,
+            }.items()
+            if v is None
+        ]
 
         if missing:
             flash(f"Missing/invalid: {', '.join(missing)}", "error")
             return redirect(url_for("home"))
 
-        risk_label, prob_high = predict_internal(age, bmi, exercise_level, sys_bp, dia_bp, heart_rate)
+        risk_label, prob_high = predict_internal(
+            age, bmi, exercise_level, sys_bp, dia_bp, heart_rate
+        )
 
         # Save to DB
         p = Prediction(
@@ -183,7 +212,9 @@ def home():
         prediction = risk_label
         probability_pct = round(prob_high * 100, 2)
 
-    return render_template("index.html", prediction=prediction, probability=probability_pct)
+    return render_template(
+        "index.html", prediction=prediction, probability=probability_pct
+    )
 
 
 @app.route("/history")
@@ -203,7 +234,9 @@ def history():
 
     # KPIs
     if total > 0:
-        high_count = Prediction.query.filter(Prediction.risk_label == "High Risk").count()
+        high_count = Prediction.query.filter(
+            Prediction.risk_label == "High Risk"
+        ).count()
         high_pct = (high_count / total) * 100.0
         avg_prob = db.session.query(db.func.avg(Prediction.probability)).scalar() or 0.0
     else:
@@ -249,22 +282,33 @@ def export_csv():
 
     output = io.StringIO()
     writer = csv.writer(output)
-    writer.writerow([
-        "created_at", "age", "bmi", "exercise_level", "systolic_bp",
-        "diastolic_bp", "heart_rate", "risk_label", "probability_high_risk"
-    ])
+    writer.writerow(
+        [
+            "created_at",
+            "age",
+            "bmi",
+            "exercise_level",
+            "systolic_bp",
+            "diastolic_bp",
+            "heart_rate",
+            "risk_label",
+            "probability_high_risk",
+        ]
+    )
     for p in q:
-        writer.writerow([
-            p.created_at.isoformat(),
-            p.age,
-            p.bmi,
-            exercise_to_label(p.exercise_level),
-            p.systolic_bp,
-            p.diastolic_bp,
-            p.heart_rate,
-            p.risk_label,
-            round(p.probability, 6),
-        ])
+        writer.writerow(
+            [
+                p.created_at.isoformat(),
+                p.age,
+                p.bmi,
+                exercise_to_label(p.exercise_level),
+                p.systolic_bp,
+                p.diastolic_bp,
+                p.heart_rate,
+                p.risk_label,
+                round(p.probability, 6),
+            ]
+        )
 
     output.seek(0)
     return Response(
@@ -303,20 +347,26 @@ def api_predict():
     dia_bp = safe_float(data.get("diastolic_bp"))
     hr = safe_float(data.get("heart_rate"))
 
-    missing = [k for k, v in {
-        "age": age,
-        "bmi": bmi,
-        "exercise_level": exercise_level,
-        "systolic_bp": sys_bp,
-        "diastolic_bp": dia_bp,
-        "heart_rate": hr
-    }.items() if v is None]
+    missing = [
+        k
+        for k, v in {
+            "age": age,
+            "bmi": bmi,
+            "exercise_level": exercise_level,
+            "systolic_bp": sys_bp,
+            "diastolic_bp": dia_bp,
+            "heart_rate": hr,
+        }.items()
+        if v is None
+    ]
 
     if missing:
         return jsonify({"error": "Missing/invalid fields", "fields": missing}), 400
 
     try:
-        risk_label, prob_high = predict_internal(age, bmi, exercise_level, sys_bp, dia_bp, hr)
+        risk_label, prob_high = predict_internal(
+            age, bmi, exercise_level, sys_bp, dia_bp, hr
+        )
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -335,11 +385,13 @@ def api_predict():
     db.session.add(p)
     db.session.commit()
 
-    return jsonify({
-        "risk_label": risk_label,
-        "probability_high_risk": round(prob_high, 6),
-        "probability_high_risk_pct": round(prob_high * 100.0, 2),
-    })
+    return jsonify(
+        {
+            "risk_label": risk_label,
+            "probability_high_risk": round(prob_high, 6),
+            "probability_high_risk_pct": round(prob_high * 100.0, 2),
+        }
+    )
 
 
 @app.route("/login", methods=["GET", "POST"])
