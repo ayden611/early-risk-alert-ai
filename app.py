@@ -458,6 +458,7 @@ def logout():
 def health():
     return {"ok": True}
 
+
 @app.get("/healthz")
 def healthz():
     db_ok = True
