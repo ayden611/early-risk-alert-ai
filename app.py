@@ -98,7 +98,7 @@ CLIENT_ID_COOKIE = "client_id"
 CLIENT_ID_HEADER = "X-Client-Id"
 
 USER_TOKEN_HEADER = "X-User-Token"  # mobile stores this after upgrade
-API_KEY_HEADER = "X-API-Key"        # simple gate for /api/*
+API_KEY_HEADER = "X-API-Key"  # simple gate for /api/*
 API_KEYS = {k.strip() for k in os.getenv("API_KEYS", "").split(",") if k.strip()}
 
 
@@ -107,7 +107,9 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(255), unique=True, nullable=False)
     verified = db.Column(db.Boolean, default=False)
-    user_token = db.Column(db.String(64), unique=True, nullable=False)  # returned to app
+    user_token = db.Column(
+        db.String(64), unique=True, nullable=False
+    )  # returned to app
     verify_code = db.Column(db.String(12), nullable=True)
     verify_expires_at = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, default=dt.datetime.utcnow)
@@ -117,6 +119,7 @@ class ClientIdentity(db.Model):
     """
     Links anonymous client_id to a user account after upgrade.
     """
+
     __tablename__ = "client_identity"
     client_id = db.Column(db.String(64), primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("user_account.id"), nullable=True)
@@ -128,7 +131,9 @@ class Prediction(db.Model):
     id = db.Column(db.Integer, primary_key=True)
 
     client_id = db.Column(db.String(64), index=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("user_account.id"), index=True, nullable=True)
+    user_id = db.Column(
+        db.Integer, db.ForeignKey("user_account.id"), index=True, nullable=True
+    )
 
     created_at = db.Column(db.DateTime, default=dt.datetime.utcnow)
 
@@ -253,7 +258,7 @@ def set_cookie_and_log(response):
                 g.client_id,
                 max_age=60 * 60 * 24 * 365 * 2,
                 httponly=True,
-                secure=True,   # keep True in production (HTTPS)
+                secure=True,  # keep True in production (HTTPS)
                 samesite="Lax",
             )
 
@@ -317,7 +322,11 @@ def predict():
 @app.get("/history")
 def history():
     key, val = current_owner_filter()
-    q = Prediction.query.filter(getattr(Prediction, key) == val).order_by(Prediction.id.desc()).limit(200)
+    q = (
+        Prediction.query.filter(getattr(Prediction, key) == val)
+        .order_by(Prediction.id.desc())
+        .limit(200)
+    )
     rows = q.all()
     return render_template("history.html", rows=rows)
 
