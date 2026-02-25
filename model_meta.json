@@ -1,0 +1,6 @@
+{
+  "version": "1.0.0",
+  "trained_at": "2026-02-25",
+  "features": ["age", "bmi", "exercise", "sys_bp", "dia_bp", "heart_rate"],
+  "notes": "Baseline logistic regression pipeline"
+}
