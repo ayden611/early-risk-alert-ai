@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+  <div class="card">
+    <h1>Login</h1>
+    <p class="muted">History + Export are protected.</p>
+
+    <form method="POST" class="form">
+      <label>Username
+        <input name="username" required>
+      </label>
+
+      <label>Password
+        <input name="password" type="password" required>
+      </label>
+
+      <button class="btn" type="submit">Login</button>
+    </form>
+
+    <p class="muted">
+      Set <code>ADMIN_USERNAME</code> and <code>ADMIN_PASSWORD</code> as Render Environment Variables.
+    </p>
+  </div>
+{% endblock %}

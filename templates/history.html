@@ -1,102 +1,116 @@
 {% extends "base.html" %}
 {% block content %}
+  <div class="card">
+    <h1>Prediction History</h1>
 
-<h1>Prediction History</h1>
+    <div class="kpis">
+      <div class="kpi">
+        <div class="kpi-title">Total Predictions</div>
+        <div class="kpi-val">{{ total }}</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-title">High Risk %</div>
+        <div class="kpi-val">{{ high_pct }}%</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-title">Avg High-Risk Prob</div>
+        <div class="kpi-val">{{ avg_prob }}%</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-title">Last 24 hours</div>
+        <div class="kpi-val">{{ last_24h }}</div>
+      </div>
+    </div>
 
-<div class="kpis">
-  <div class="kpi">
-    <div class="kpi-title">Total Predictions</div>
-    <div class="kpi-val">{{ kpis.total }}</div>
+    <div class="charts">
+      <div class="chart-card">
+        <h3>Risk Split</h3>
+        <canvas id="riskSplit"></canvas>
+      </div>
+      <div class="chart-card">
+        <h3>Probability Trend (Last 30)</h3>
+        <canvas id="probTrend"></canvas>
+      </div>
+    </div>
+
+    <div class="filters">
+      <div class="muted">Page {{ page }} / {{ pages }}</div>
+      <div class="muted">Per page: {{ per_page }}</div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Age</th>
+            <th>BMI</th>
+            <th>Exercise</th>
+            <th>Result</th>
+            <th>Probability</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in rows %}
+          <tr>
+            <td>{{ r.created_at.strftime("%Y-%m-%d %H:%M:%S") }}</td>
+            <td>{{ "%.0f"|format(r.age) }}</td>
+            <td>{{ "%.1f"|format(r.bmi) }}</td>
+            <td>{{ exercise_to_label(r.exercise_level) }}</td>
+            <td>
+              <span class="tag {{ 'bad' if r.risk_label=='High Risk' else 'good' }}">
+                {{ r.risk_label }}
+              </span>
+            </td>
+            <td>{{ "%.2f"|format(r.probability * 100) }}%</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pager">
+      <div>
+        {% if page > 1 %}
+          <a class="btn" href="{{ url_for('history', page=page-1, per_page=per_page) }}">Prev</a>
+        {% else %}
+          <span class="btn disabled">Prev</span>
+        {% endif %}
+      </div>
+
+      <div>
+        {% if page < pages %}
+          <a class="btn" href="{{ url_for('history', page=page+1, per_page=per_page) }}">Next</a>
+        {% else %}
+          <span class="btn disabled">Next</span>
+        {% endif %}
+      </div>
+    </div>
   </div>
-  <div class="kpi">
-    <div class="kpi-title">High Risk %</div>
-    <div class="kpi-val">{{ kpis.high_pct }}%</div>
-  </div>
-  <div class="kpi">
-    <div class="kpi-title">Avg Probability</div>
-    <div class="kpi-val">{{ kpis.avg_prob }}%</div>
-  </div>
-</div>
 
-<div class="charts">
-  <div class="chart-card">
-    <h3>Probability Trend</h3>
-    <canvas id="probChart"></canvas>
-  </div>
+  <script>
+    const riskSplit = {{ risk_split_json | safe }};
+    const trendLabels = {{ trend_labels_json | safe }};
+    const trendProbs = {{ trend_probs_json | safe }};
 
-  <div class="chart-card">
-    <h3>Risk Split</h3>
-    <canvas id="riskChart"></canvas>
-  </div>
-</div>
+    // Risk split bar
+    new Chart(document.getElementById('riskSplit'), {
+      type: 'bar',
+      data: {
+        labels: Object.keys(riskSplit),
+        datasets: [{ label: 'Count', data: Object.values(riskSplit) }]
+      },
+      options: { responsive: true, maintainAspectRatio: false }
+    });
 
-<table class="table">
-  <thead>
-    <tr>
-      <th>Date</th>
-      <th>Age</th>
-      <th>BMI</th>
-      <th>Exercise</th>
-      <th>Result</th>
-      <th>Probability</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% if predictions and predictions|length > 0 %}
-      {% for p in predictions %}
-      <tr>
-        <td>{{ p.created_at }}</td>
-        <td>{{ "%.1f"|format(p.age) }}</td>
-        <td>{{ "%.1f"|format(p.bmi) }}</td>
-        <td>{{ exercise_label(p.exercise_level) }}</td>
-        <td>{{ p.risk_label }}</td>
-        <td>{{ "%.2f"|format(p.probability * 100) }}%</td>
-      </tr>
-      {% endfor %}
-    {% else %}
-      <tr><td colspan="6">No history yet.</td></tr>
-    {% endif %}
-  </tbody>
-</table>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-  const labels = {{ chart_labels|tojson }};
-  const probs = {{ chart_probs|tojson }};
-
-  const ctx1 = document.getElementById("probChart");
-  new Chart(ctx1, {
-    type: "line",
-    data: {
-      labels,
-      datasets: [{
-        label: "Probability (%)",
-        data: probs,
-        tension: 0.25
-      }]
-    },
-    options: {
-      responsive: true,
-      scales: {
-        y: { min: 0, max: 100 }
-      }
-    }
-  });
-
-  const highCount = {{ high_count|tojson }};
-  const lowCount  = {{ low_count|tojson }};
-
-  const ctx2 = document.getElementById("riskChart");
-  new Chart(ctx2, {
-    type: "doughnut",
-    data: {
-      labels: ["High Risk", "Low Risk"],
-      datasets: [{
-        data: [highCount, lowCount]
-      }]
-    },
-    options: { responsive: true }
-  });
-</script>
-
+    // Probability trend line
+    new Chart(document.getElementById('probTrend'), {
+      type: 'line',
+      data: {
+        labels: trendLabels,
+        datasets: [{ label: 'High-Risk Probability (%)', data: trendProbs, tension: 0.25 }]
+      },
+      options: { responsive: true, maintainAspectRatio: false }
+    });
+  </script>
 {% endblock %}
