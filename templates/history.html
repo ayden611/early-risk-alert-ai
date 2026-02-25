@@ -1,3 +1,978 @@
+```bash id="k3p8qm"
+bash -lc 'set -euo pipefail
+
+echo "===> Creating folders..."
+mkdir -p templates static .github/workflows tests
+
+echo "===> Writing Dockerfile..."
+cat > Dockerfile <<'"'"'DOCKER'"'"'
+FROM python:3.11-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PORT=10000
+
+WORKDIR /app
+
+# system deps (optional but safe)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt /app/requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . /app
+
+# Render sets PORT automatically; we respect it
+CMD ["sh", "-c", "gunicorn app:app --bind 0.0.0.0:${PORT} --workers 2 --threads 4 --timeout 120"]
+DOCKER
+
+echo "===> Writing .dockerignore..."
+cat > .dockerignore <<'"'"'DIGNORE'"'"'
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+.venv/
+venv/
+dist/
+build/
+*.db
+.DS_Store
+.pytest_cache/
+DIGNORE
+
+echo "===> Writing GitHub Actions CI workflow..."
+cat > .github/workflows/ci.yml <<'"'"'CI'"'"'
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest flake8
+
+      - name: Lint
+        run: |
+          flake8 app.py tests --max-line-length=100
+
+      - name: Tests
+        env:
+          SECRET_KEY: test
+          DATABASE_URL: sqlite:///test.db
+        run: |
+          pytest -q
+CI
+
+echo "===> Ensuring requirements include needed prod libs..."
+python - <<'"'"'PY'"'"'
+import re, pathlib
+
+req = pathlib.Path("requirements.txt")
+text = req.read_text() if req.exists() else ""
+
+def ensure(pkg_line):
+    global text
+    pkg = pkg_line.split("==")[0].strip()
+    if re.search(rf"(?im)^{re.escape(pkg)}([=<>!~].*)?$", text.strip()):
+        return
+    if text and not text.endswith("\n"):
+        text += "\n"
+    text += pkg_line.strip() + "\n"
+
+# Keep your existing pins, but ensure these exist
+ensure("Flask==3.1.0")
+ensure("gunicorn==21.2.0")
+ensure("SQLAlchemy==2.0.46")
+ensure("psycopg2-binary")
+ensure("joblib==1.4.2")
+ensure("numpy==2.2.2")
+ensure("scikit-learn==1.5.2")
+ensure("Flask-SQLAlchemy==3.1.1")
+ensure("Flask-Login==0.6.3")
+ensure("Werkzeug==3.1.3")
+
+req.write_text(text)
+print("Updated requirements.txt")
+PY
+
+echo "===> Writing/overwriting templates: base.html, login.html, register.html, index.html, history.html..."
+
+cat > templates/base.html <<'"'"'HTML'"'"'
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>{{ title or "Early Risk Alert AI" }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="shell">
+    <div class="topbar">
+      <div class="brand">
+        <div class="logo">AI</div>
+        <div>
+          <div class="brand-title">Early Risk Alert AI</div>
+          <div class="brand-sub">Cardiovascular risk estimation demo</div>
+        </div>
+      </div>
+
+      <div class="nav">
+        {% if current_user.is_authenticated %}
+          <a class="navlink" href="{{ url_for('home') }}">Predict</a>
+          <a class="navlink" href="{{ url_for('history') }}">History</a>
+          <a class="navlink" href="{{ url_for('export_csv') }}">Export CSV</a>
+          <a class="navlink" href="{{ url_for('logout') }}">Logout</a>
+        {% else %}
+          <a class="navlink" href="{{ url_for('login') }}">Login</a>
+          <a class="navlink" href="{{ url_for('register') }}">Register</a>
+        {% endif %}
+      </div>
+    </div>
+
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div class="flash">
+          {% for m in messages %}
+            <div class="flash-item">{{ m }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+  </div>
+</body>
+</html>
+HTML
+
+cat > templates/login.html <<'"'"'HTML'"'"'
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+  <h1>Login</h1>
+  <form method="post">
+    <label>Email</label>
+    <input name="email" type="email" required />
+    <label>Password</label>
+    <input name="password" type="password" required />
+    <button class="btn" type="submit">Login</button>
+  </form>
+  <p class="muted">No account? <a href="{{ url_for('register') }}">Register</a></p>
+</div>
+{% endblock %}
+HTML
+
+cat > templates/register.html <<'"'"'HTML'"'"'
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+  <h1>Register</h1>
+  <form method="post">
+    <label>Email</label>
+    <input name="email" type="email" required />
+    <label>Password</label>
+    <input name="password" type="password" minlength="8" required />
+    <button class="btn" type="submit">Create account</button>
+  </form>
+  <p class="muted">Already have an account? <a href="{{ url_for('login') }}">Login</a></p>
+</div>
+{% endblock %}
+HTML
+
+cat > templates/index.html <<'"'"'HTML'"'"'
+{% extends "base.html" %}
+{% block content %}
+<div class="grid2">
+  <div class="card">
+    <h1>Run Prediction</h1>
+
+    <form method="post" action="{{ url_for('home') }}">
+      <div class="form-grid">
+        <div>
+          <label>Age</label>
+          <input name="age" type="number" step="1" min="0" required />
+        </div>
+        <div>
+          <label>BMI</label>
+          <input name="bmi" type="number" step="0.1" min="0" required />
+        </div>
+        <div>
+          <label>Exercise Level</label>
+          <select name="exercise_level">
+            <option value="Low">Low</option>
+            <option value="Medium">Medium</option>
+            <option value="High">High</option>
+          </select>
+        </div>
+        <div>
+          <label>Systolic BP</label>
+          <input name="systolic_bp" type="number" step="1" min="0" required />
+        </div>
+        <div>
+          <label>Diastolic BP</label>
+          <input name="diastolic_bp" type="number" step="1" min="0" required />
+        </div>
+        <div>
+          <label>Heart Rate</label>
+          <input name="heart_rate" type="number" step="1" min="0" required />
+        </div>
+      </div>
+
+      <button class="btn wide" type="submit">Run Prediction</button>
+    </form>
+
+    {% if prediction %}
+      <div class="result {{ 'bad' if prediction=='High Risk' else 'good' }}">
+        <div class="result-title">{{ prediction }}</div>
+        <div class="muted">Probability: {{ probability }}%</div>
+
+        {% if ci_low is not none %}
+          <div class="muted">95% CI (bootstrap): {{ ci_low }}% – {{ ci_high }}%</div>
+        {% endif %}
+        {% if model_version %}
+          <div class="muted">Model: {{ model_version }}</div>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <h2>API</h2>
+    <p class="muted">POST <code>/api/predict</code> with JSON body:</p>
+    <pre class="code">{
+  "age": 50,
+  "bmi": 25.0,
+  "exercise_level": "Low",
+  "systolic_bp": 120,
+  "diastolic_bp": 80,
+  "heart_rate": 70
+}</pre>
+
+    {% if feature_importance %}
+      <h2 style="margin-top:16px;">Feature Importance</h2>
+      <p class="muted">Logistic Regression | absolute coefficient magnitude</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Feature</th><th>Importance</th></tr></thead>
+          <tbody>
+            {% for f, v in feature_importance %}
+              <tr><td>{{ f }}</td><td>{{ "%.4f"|format(v) }}</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+HTML
+
+cat > templates/history.html <<'"'"'HTML'"'"'
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+  <h1>Prediction History</h1>
+
+  <div class="kpis">
+    <div class="kpi">
+      <div class="kpi-title">Total Predictions</div>
+      <div class="kpi-val">{{ kpi_total }}</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-title">High Risk %</div>
+      <div class="kpi-val">{{ kpi_high_pct }}%</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-title">Avg High-Risk Prob</div>
+      <div class="kpi-val">{{ kpi_avg_high_prob }}%</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-title">Last 24 hours</div>
+      <div class="kpi-val">{{ kpi_24h }}</div>
+    </div>
+  </div>
+
+  <div class="charts">
+    <div class="chart-card">
+      <h3>Risk Split</h3>
+      <div class="bars">
+        <div class="bar">
+          <div class="bar-label">Low Risk</div>
+          <div class="bar-fill" style="width: {{ split_low_pct }}%"></div>
+          <div class="bar-num">{{ split_low }}</div>
+        </div>
+        <div class="bar">
+          <div class="bar-label">High Risk</div>
+          <div class="bar-fill" style="width: {{ split_high_pct }}%"></div>
+          <div class="bar-num">{{ split_high }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <h3>Probability Trend (Last 30)</h3>
+      <div class="trend">
+        {% for p in trend_points %}
+          <div class="dot" style="left: {{ p.x }}%; bottom: {{ p.y }}%;" title="{{ p.label }}"></div>
+        {% endfor %}
+        <div class="trend-axis muted">High-Risk Probability (%)</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="table-head">
+    <div class="muted">Page {{ page }} / {{ total_pages }}</div>
+    <form method="get" class="pager-form">
+      <label class="muted">Per page:</label>
+      <select name="per_page" onchange="this.form.submit()">
+        {% for n in [5,10,20,50] %}
+          <option value="{{ n }}" {% if per_page==n %}selected{% endif %}>{{ n }}</option>
+        {% endfor %}
+      </select>
+      <input type="hidden" name="page" value="{{ page }}">
+    </form>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th><th>Age</th><th>BMI</th><th>Exercise</th><th>Result</th><th>Probability</th><th>Model</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in rows %}
+          <tr>
+            <td>{{ r.created_at }}</td>
+            <td>{{ r.age }}</td>
+            <td>{{ "%.1f"|format(r.bmi) }}</td>
+            <td>{{ r.exercise_level_display }}</td>
+            <td><span class="pill {{ 'bad' if r.risk_label=='High Risk' else 'good' }}">{{ r.risk_label }}</span></td>
+            <td>{{ "%.2f"|format(r.probability*100) }}%</td>
+            <td>{{ r.model_version or "-" }}</td>
+          </tr>
+        {% endfor %}
+        {% if not rows %}
+          <tr><td colspan="7" class="muted">No history yet.</td></tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="pager">
+    {% if page > 1 %}
+      <a class="btn" href="{{ url_for('history', page=page-1, per_page=per_page) }}">Prev</a>
+    {% else %}
+      <span class="btn disabled">Prev</span>
+    {% endif %}
+
+    {% if page < total_pages %}
+      <a class="btn" href="{{ url_for('history', page=page+1, per_page=per_page) }}">Next</a>
+    {% else %}
+      <span class="btn disabled">Next</span>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+HTML
+
+echo "===> Writing a clean production CSS..."
+cat > static/style.css <<'"'"'CSS'"'"'
+:root{
+  --bg:#0b1220;
+  --card:#121b2e;
+  --muted:#8ea0c6;
+  --text:#e9eefc;
+  --border:rgba(255,255,255,.10);
+  --good:#2e7d32;
+  --bad:#c62828;
+  --accent:#3ea6ff;
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+}
+.shell{max-width:1100px;margin:28px auto;padding:0 16px}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px}
+.brand{display:flex;gap:12px;align-items:center}
+.logo{width:44px;height:44px;border-radius:12px;background:rgba(255,255,255,.10);display:grid;place-items:center;font-weight:800}
+.brand-title{font-weight:800}
+.brand-sub{color:var(--muted);font-size:12px;margin-top:2px}
+.nav{display:flex;gap:14px;flex-wrap:wrap;justify-content:flex-end}
+.navlink{color:var(--text);text-decoration:none;opacity:.9}
+.navlink:hover{opacity:1;text-decoration:underline}
+
+.flash{margin:0 0 14px}
+.flash-item{padding:10px 12px;border:1px solid var(--border);border-radius:12px;background:rgba(255,255,255,.06)}
+
+.card{
+  background:rgba(255,255,255,.04);
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:16px;
+}
+h1{margin:0 0 10px;font-size:28px}
+h2{margin:0 0 8px;font-size:18px}
+h3{margin:0 0 10px;font-size:15px;color:var(--muted);font-weight:700}
+
+label{display:block;margin:10px 0 6px;color:var(--muted);font-size:13px}
+input,select{
+  width:100%;
+  padding:10px 12px;
+  border-radius:12px;
+  border:1px solid var(--border);
+  background:rgba(0,0,0,.18);
+  color:var(--text);
+  outline:none;
+}
+.btn{
+  display:inline-block;
+  padding:10px 12px;
+  border-radius:12px;
+  border:1px solid var(--border);
+  background:rgba(255,255,255,.08);
+  color:var(--text);
+  text-decoration:none;
+  cursor:pointer;
+}
+.btn:hover{background:rgba(255,255,255,.12)}
+.btn.wide{width:100%;margin-top:14px}
+.btn.disabled{opacity:.45;pointer-events:none}
+
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width: 900px){.grid2{grid-template-columns:1fr}}
+
+.result{margin-top:14px;padding:12px;border-radius:14px;border:1px solid var(--border);background:rgba(255,255,255,.04)}
+.result-title{font-size:22px;font-weight:900;margin-bottom:4px}
+.result.good{border-color:rgba(46,125,50,.5)}
+.result.bad{border-color:rgba(198,40,40,.5)}
+.muted{color:var(--muted);font-size:13px}
+
+.code{background:rgba(0,0,0,.22);border:1px solid var(--border);border-radius:14px;padding:12px;overflow:auto}
+.table-wrap{overflow:auto;border-radius:14px;border:1px solid var(--border);margin-top:10px}
+table{width:100%;border-collapse:collapse;min-width:680px}
+th,td{padding:10px 10px;border-bottom:1px solid rgba(255,255,255,.06);text-align:left}
+th{color:var(--muted);font-weight:700;font-size:12px}
+.pill{padding:4px 10px;border-radius:999px;font-size:12px;border:1px solid var(--border)}
+.pill.good{background:rgba(46,125,50,.18)}
+.pill.bad{background:rgba(198,40,40,.18)}
+
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:14px 0}
+@media (max-width: 900px){.kpis{grid-template-columns:repeat(2,1fr)}}
+.kpi{padding:14px;border:1px solid var(--border);border-radius:14px;background:rgba(255,255,255,.03)}
+.kpi-title{font-size:13px;color:var(--muted)}
+.kpi-val{font-size:26px;font-weight:900;margin-top:4px}
+
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+@media (max-width: 900px){.charts{grid-template-columns:1fr}}
+.chart-card{padding:14px;border:1px solid var(--border);border-radius:14px;background:rgba(255,255,255,.03)}
+
+.bars{display:grid;gap:10px}
+.bar{position:relative;padding:10px;border-radius:12px;border:1px solid rgba(255,255,255,.06)}
+.bar-label{font-size:12px;color:var(--muted);margin-bottom:6px}
+.bar-fill{height:10px;border-radius:999px;background:var(--accent);opacity:.85}
+.bar-num{margin-top:6px;font-size:12px;color:var(--muted)}
+
+.trend{position:relative;height:180px;border-radius:14px;border:1px solid rgba(255,255,255,.06);background:rgba(0,0,0,.10);overflow:hidden}
+.dot{position:absolute;width:8px;height:8px;border-radius:50%;background:var(--accent);transform:translate(-50%,50%)}
+.trend-axis{position:absolute;left:10px;top:10px}
+
+.table-head{display:flex;align-items:center;justify-content:space-between;margin-top:12px}
+.pager{display:flex;align-items:center;justify-content:space-between;margin-top:12px}
+.pager-form{display:flex;align-items:center;gap:8px}
+CSS
+
+echo "===> Writing production-ready app.py (auth + CI + Docker + versioning + importance + bootstrap CI)..."
+cat > app.py <<'"'"'PY'"'"'
+import os
+import json
+import math
+import hashlib
+import datetime as dt
+from dataclasses import dataclass
+
+import numpy as np
+import joblib
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, Response
+from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager, login_user, login_required, logout_user, UserMixin, current_user
+from werkzeug.security import generate_password_hash, check_password_hash
+
+app = Flask(__name__)
+app.secret_key = os.getenv("SECRET_KEY", "dev-secret")
+
+DATABASE_URL = os.getenv("DATABASE_URL")
+if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
+app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URL or "sqlite:///local.db"
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+db = SQLAlchemy(app)
+
+login_manager = LoginManager()
+login_manager.login_view = "login"
+login_manager.init_app(app)
+
+MODEL_PATH = os.getenv("MODEL_PATH", "demo_model.pkl")
+MODEL_META_PATH = os.getenv("MODEL_META_PATH", "model_meta.json")
+
+model = joblib.load(MODEL_PATH) if os.path.exists(MODEL_PATH) else None
+
+def _file_sha256(path: str) -> str | None:
+    if not os.path.exists(path):
+        return None
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(8192), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+def load_model_meta() -> dict:
+    if os.path.exists(MODEL_META_PATH):
+        try:
+            return json.load(open(MODEL_META_PATH, "r"))
+        except Exception:
+            pass
+    sha = _file_sha256(MODEL_PATH) or "unknown"
+    meta = {
+        "model_name": "demo_model",
+        "model_version": f"sha:{sha[:12]}",
+        "created_at_utc": dt.datetime.utcnow().isoformat() + "Z",
+        "features": ["age", "bmi", "exercise_level", "systolic_bp", "diastolic_bp", "heart_rate"],
+    }
+    try:
+        with open(MODEL_META_PATH, "w") as f:
+            json.dump(meta, f, indent=2)
+    except Exception:
+        pass
+    return meta
+
+MODEL_META = load_model_meta()
+FEATURES = MODEL_META.get("features") or ["age", "bmi", "exercise_level", "systolic_bp", "diastolic_bp", "heart_rate"]
+MODEL_VERSION = MODEL_META.get("model_version") or "unknown"
+
+EXERCISE_MAP = {"Low": 0, "Medium": 1, "High": 2}
+EXERCISE_MAP_INV = {v: k for k, v in EXERCISE_MAP.items()}
+
+class User(db.Model, UserMixin):
+    __tablename__ = "user"
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(255), unique=True, nullable=False, index=True)
+    password_hash = db.Column(db.String(255), nullable=False)
+    created_at = db.Column(db.DateTime, default=dt.datetime.utcnow, nullable=False)
+
+    def set_password(self, pw: str) -> None:
+        self.password_hash = generate_password_hash(pw)
+
+    def check_password(self, pw: str) -> bool:
+        return check_password_hash(self.password_hash, pw)
+
+class Prediction(db.Model):
+    __tablename__ = "prediction"
+
+    id = db.Column(db.Integer, primary_key=True)
+    created_at = db.Column(db.DateTime, default=dt.datetime.utcnow, nullable=False)
+
+    age = db.Column(db.Float, nullable=False)
+    bmi = db.Column(db.Float, nullable=False)
+    exercise_level = db.Column(db.Integer, nullable=False)  # 0/1/2
+    systolic_bp = db.Column(db.Float, nullable=False)
+    diastolic_bp = db.Column(db.Float, nullable=False)
+    heart_rate = db.Column(db.Float, nullable=False)
+
+    risk_label = db.Column(db.String(50), nullable=False)
+    probability = db.Column(db.Float, nullable=False)  # 0..1
+
+    model_version = db.Column(db.String(64), nullable=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
+
+@login_manager.user_loader
+def load_user(user_id: str):
+    return db.session.get(User, int(user_id))
+
+with app.app_context():
+    db.create_all()
+
+def to_float(x, default=None):
+    try:
+        return float(x)
+    except Exception:
+        return default
+
+def normalize_inputs(payload: dict) -> dict:
+    age = to_float(payload.get("age"))
+    bmi = to_float(payload.get("bmi"))
+    systolic_bp = to_float(payload.get("systolic_bp"))
+    diastolic_bp = to_float(payload.get("diastolic_bp"))
+    heart_rate = to_float(payload.get("heart_rate"))
+
+    ex = payload.get("exercise_level")
+    if isinstance(ex, str):
+        ex = ex.strip().title()
+        exercise_level = EXERCISE_MAP.get(ex)
+    else:
+        exercise_level = int(ex) if ex is not None else None
+
+    if None in (age, bmi, exercise_level, systolic_bp, diastolic_bp, heart_rate):
+        raise ValueError("Missing/invalid input(s).")
+
+    return dict(
+        age=float(age),
+        bmi=float(bmi),
+        exercise_level=int(exercise_level),
+        systolic_bp=float(systolic_bp),
+        diastolic_bp=float(diastolic_bp),
+        heart_rate=float(heart_rate),
+    )
+
+def model_predict_proba(X: np.ndarray) -> float:
+    if model is None:
+        score = 0.0
+        score += (X[0,0] / 100.0) * 0.8
+        score += (X[0,1] / 50.0) * 0.7
+        score += (X[0,3] / 200.0) * 0.8
+        score += (X[0,4] / 120.0) * 0.6
+        score += (X[0,5] / 200.0) * 0.3
+        score += (X[0,2] / 2.0) * -0.2
+        p = 1 / (1 + math.exp(- (score - 1.2)))
+        return float(np.clip(p, 0, 1))
+
+    proba = model.predict_proba(X)[0][1]
+    return float(proba)
+
+def bootstrap_ci(payload: dict, n=150) -> tuple[float, float]:
+    base = np.array([[payload["age"], payload["bmi"], payload["exercise_level"],
+                      payload["systolic_bp"], payload["diastolic_bp"], payload["heart_rate"]]], dtype=float)
+    ps = []
+    rng = np.random.default_rng(7)
+    for _ in range(n):
+        jitter = np.array([[0.5, 0.2, 0.0, 1.0, 1.0, 1.0]])
+        x = base + rng.normal(0, jitter)
+        x[0,2] = base[0,2]
+        ps.append(model_predict_proba(x))
+    lo = float(np.percentile(ps, 2.5))
+    hi = float(np.percentile(ps, 97.5))
+    return lo, hi
+
+def get_feature_importance():
+    if model is None:
+        return None
+    clf = model
+    try:
+        if hasattr(model, "named_steps"):
+            clf = list(model.named_steps.values())[-1]
+    except Exception:
+        clf = model
+
+    if hasattr(clf, "coef_"):
+        coefs = np.abs(clf.coef_).ravel().tolist()
+        items = list(zip(FEATURES, coefs))
+        items.sort(key=lambda x: x[1], reverse=True)
+        return items[:10]
+    return None
+
+def risk_label_from_prob(p: float) -> str:
+    return "High Risk" if p >= 0.5 else "Low Risk"
+
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    if current_user.is_authenticated:
+        return redirect(url_for("home"))
+
+    if request.method == "POST":
+        email = (request.form.get("email") or "").strip().lower()
+        pw = request.form.get("password") or ""
+        if not email or not pw:
+            flash("Email and password required.")
+            return redirect(url_for("register"))
+        if len(pw) < 8:
+            flash("Password must be at least 8 characters.")
+            return redirect(url_for("register"))
+
+        existing = User.query.filter_by(email=email).first()
+        if existing:
+            flash("Account already exists. Please login.")
+            return redirect(url_for("login"))
+
+        u = User(email=email)
+        u.set_password(pw)
+        db.session.add(u)
+        db.session.commit()
+        login_user(u)
+        return redirect(url_for("home"))
+
+    return render_template("register.html", title="Register")
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if current_user.is_authenticated:
+        return redirect(url_for("home"))
+
+    if request.method == "POST":
+        email = (request.form.get("email") or "").strip().lower()
+        pw = request.form.get("password") or ""
+        u = User.query.filter_by(email=email).first()
+        if not u or not u.check_password(pw):
+            flash("Invalid login.")
+            return redirect(url_for("login"))
+        login_user(u)
+        return redirect(url_for("home"))
+
+    return render_template("login.html", title="Login")
+
+@app.route("/logout")
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for("login"))
+
+@app.route("/", methods=["GET", "POST"])
+@login_required
+def home():
+    prediction = None
+    probability = None
+    ci_low = None
+    ci_high = None
+    feature_importance = get_feature_importance()
+
+    if request.method == "POST":
+        form_payload = dict(request.form)
+        try:
+            payload = normalize_inputs(form_payload)
+            X = np.array([[payload["age"], payload["bmi"], payload["exercise_level"],
+                           payload["systolic_bp"], payload["diastolic_bp"], payload["heart_rate"]]], dtype=float)
+            p = model_predict_proba(X)
+            label = risk_label_from_prob(p)
+
+            lo, hi = bootstrap_ci(payload, n=150)
+
+            rec = Prediction(
+                created_at=dt.datetime.utcnow(),
+                age=payload["age"],
+                bmi=payload["bmi"],
+                exercise_level=payload["exercise_level"],
+                systolic_bp=payload["systolic_bp"],
+                diastolic_bp=payload["diastolic_bp"],
+                heart_rate=payload["heart_rate"],
+                risk_label=label,
+                probability=p,
+                model_version=MODEL_VERSION,
+                user_id=current_user.id,
+            )
+            db.session.add(rec)
+            db.session.commit()
+
+            prediction = label
+            probability = round(p * 100, 2)
+            ci_low = round(lo * 100, 2)
+            ci_high = round(hi * 100, 2)
+
+        except Exception as e:
+            flash(f"Error: {e}")
+
+    return render_template(
+        "index.html",
+        title="Predict",
+        prediction=prediction,
+        probability=probability,
+        ci_low=ci_low,
+        ci_high=ci_high,
+        model_version=MODEL_VERSION,
+        feature_importance=feature_importance,
+    )
+
+@dataclass
+class TrendPoint:
+    x: float
+    y: float
+    label: str
+
+@app.route("/history")
+@login_required
+def history():
+    page = int(request.args.get("page", 1))
+    per_page = int(request.args.get("per_page", 10))
+    per_page = max(5, min(per_page, 50))
+
+    q = Prediction.query.filter_by(user_id=current_user.id).order_by(Prediction.created_at.desc())
+    total = q.count()
+    total_pages = max(1, math.ceil(total / per_page))
+    page = max(1, min(page, total_pages))
+
+    rows = q.offset((page - 1) * per_page).limit(per_page).all()
+
+    all_rows = Prediction.query.filter_by(user_id=current_user.id).all()
+    kpi_total = len(all_rows)
+    high_rows = [r for r in all_rows if r.risk_label == "High Risk"]
+    kpi_high_pct = round((len(high_rows) / kpi_total) * 100, 1) if kpi_total else 0.0
+    kpi_avg_high_prob = round((np.mean([r.probability for r in high_rows]) * 100), 1) if high_rows else 0.0
+
+    since = dt.datetime.utcnow() - dt.timedelta(hours=24)
+    kpi_24h = Prediction.query.filter(
+        Prediction.user_id == current_user.id,
+        Prediction.created_at >= since
+    ).count()
+
+    split_low = kpi_total - len(high_rows)
+    split_high = len(high_rows)
+    split_low_pct = round((split_low / kpi_total) * 100, 1) if kpi_total else 0.0
+    split_high_pct = round((split_high / kpi_total) * 100, 1) if kpi_total else 0.0
+
+    last30 = Prediction.query.filter_by(user_id=current_user.id).order_by(Prediction.created_at.desc()).limit(30).all()
+    last30 = list(reversed(last30))
+    trend_points: list[TrendPoint] = []
+    if last30:
+        for i, r in enumerate(last30):
+            x = 0 if len(last30) == 1 else (i / (len(last30) - 1)) * 100
+            y = float(np.clip(r.probability * 100, 0, 100))
+            trend_points.append(TrendPoint(x=x, y=y, label=f"{r.created_at} | {y:.1f}%"))
+
+    for r in rows:
+        r.exercise_level_display = EXERCISE_MAP_INV.get(int(r.exercise_level), str(r.exercise_level))
+
+    return render_template(
+        "history.html",
+        title="History",
+        rows=rows,
+        page=page,
+        per_page=per_page,
+        total_pages=total_pages,
+        kpi_total=kpi_total,
+        kpi_high_pct=kpi_high_pct,
+        kpi_avg_high_prob=kpi_avg_high_prob,
+        kpi_24h=kpi_24h,
+        split_low=split_low,
+        split_high=split_high,
+        split_low_pct=split_low_pct,
+        split_high_pct=split_high_pct,
+        trend_points=trend_points,
+    )
+
+@app.route("/export.csv")
+@login_required
+def export_csv():
+    q = Prediction.query.filter_by(user_id=current_user.id).order_by(Prediction.created_at.desc()).all()
+
+    def gen():
+        yield "created_at,age,bmi,exercise_level,systolic_bp,diastolic_bp,heart_rate,risk_label,probability,model_version\n"
+        for r in q:
+            yield (
+                f"{r.created_at},{r.age},{r.bmi},{EXERCISE_MAP_INV.get(int(r.exercise_level), r.exercise_level)},"
+                f"{r.systolic_bp},{r.diastolic_bp},{r.heart_rate},{r.risk_label},{r.probability},{r.model_version or ''}\n"
+            )
+
+    return Response(gen(), mimetype="text/csv", headers={"Content-Disposition": "attachment; filename=predictions.csv"})
+
+@app.route("/api/predict", methods=["POST"])
+@login_required
+def api_predict():
+    data = request.get_json(force=True, silent=False) or {}
+    payload = normalize_inputs(data)
+    X = np.array([[payload["age"], payload["bmi"], payload["exercise_level"],
+                   payload["systolic_bp"], payload["diastolic_bp"], payload["heart_rate"]]], dtype=float)
+    p = model_predict_proba(X)
+    label = risk_label_from_prob(p)
+    lo, hi = bootstrap_ci(payload, n=150)
+
+    rec = Prediction(
+        created_at=dt.datetime.utcnow(),
+        age=payload["age"],
+        bmi=payload["bmi"],
+        exercise_level=payload["exercise_level"],
+        systolic_bp=payload["systolic_bp"],
+        diastolic_bp=payload["diastolic_bp"],
+        heart_rate=payload["heart_rate"],
+        risk_label=label,
+        probability=p,
+        model_version=MODEL_VERSION,
+        user_id=current_user.id,
+    )
+    db.session.add(rec)
+    db.session.commit()
+
+    return jsonify({
+        "risk_label": label,
+        "probability": p,
+        "ci_low": lo,
+        "ci_high": hi,
+        "model_version": MODEL_VERSION,
+        "id": rec.id,
+    })
+
+@app.get("/healthz")
+def healthz():
+    return {"ok": True}
+PY
+
+echo "===> Writing minimal tests..."
+cat > tests/test_app.py <<'"'"'PY'"'"'
+import os
+import json
+
+os.environ["DATABASE_URL"] = "sqlite:///test.db"
+os.environ["SECRET_KEY"] = "test"
+
+from app import app
+
+def test_register_login_predict():
+    client = app.test_client()
+
+    r = client.post("/register", data={"email":"test@example.com","password":"password123"}, follow_redirects=True)
+    assert r.status_code == 200
+
+    r = client.get("/")
+    assert r.status_code == 200
+
+    payload = {
+        "age": 50, "bmi": 25.0, "exercise_level": "Low",
+        "systolic_bp": 120, "diastolic_bp": 80, "heart_rate": 70
+    }
+    r = client.post("/api/predict", data=json.dumps(payload), content_type="application/json")
+    assert r.status_code == 200
+    data = r.get_json()
+    assert "risk_label" in data and "probability" in data and "model_version" in data
+PY
+
+echo "===> Done writing files."
+echo ""
+echo "NEXT STEPS:"
+echo "1) Run locally:"
+echo "   pip install -r requirements.txt"
+echo "   flask --app app run"
+echo ""
+echo "2) Commit + push:"
+echo "   git add ."
+echo "   git commit -m \"Prod: auth+CI+Docker+versioning+CI+importance\""
+echo "   git pull origin main --rebase"
+echo "   git push"
+echo ""
+echo "3) Render: redeploy. For Docker on Render, set Docker as runtime or keep web service; this Dockerfile also works anywhere."
+'
+```
 {% extends "base.html" %}
 {% block content %}
   <div class="card">
