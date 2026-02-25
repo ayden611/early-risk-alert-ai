@@ -8,3 +8,4 @@ Flask-SQLAlchemy==3.1.1
 Flask-Login==0.6.3
 scikit-learn==1.5.2
 black
+pytest
