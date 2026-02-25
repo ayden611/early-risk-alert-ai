@@ -1,0 +1,41 @@
+version: "3.9"
+
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      # App config
+      FLASK_ENV: production
+      PORT: 8000
+
+      # DB config (compose -> Postgres service)
+      DATABASE_URL: postgresql+psycopg2://risk:risk@db:5432/riskdb
+
+      # Optional
+      LOG_LEVEL: INFO
+      MODEL_PATH: demo_model.pkl
+      MODEL_META_PATH: model_meta.json
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: risk
+      POSTGRES_PASSWORD: risk
+      POSTGRES_DB: riskdb
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U risk -d riskdb"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    restart: unless-stopped
+
+volumes:
+  pgdata:
