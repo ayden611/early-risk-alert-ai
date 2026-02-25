@@ -7,7 +7,7 @@ import numpy as np
 import datetime as dt
 import time
 import logging
-from SQlalchemy import text
+from sqlachemy import text
 
 from flask import (
     Flask,
