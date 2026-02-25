@@ -1,13 +1,8 @@
 import os
-import csv
-import io
-import json
-import joblib
-import numpy as np
+import uuid
 import datetime as dt
-import time
-import logging
-from sqlalchemy import text
+import numpy as np
+import joblib
 
 from flask import (
     Flask,
@@ -15,27 +10,20 @@ from flask import (
     request,
     redirect,
     url_for,
-    flash,
     jsonify,
-    Response,
+    g,
 )
 from flask_sqlalchemy import SQLAlchemy
-from flask_login import (
-    LoginManager,
-    UserMixin,
-    login_user,
-    logout_user,
-    login_required,
-    current_user,
-)
+from sqlalchemy import text
 
 # ----------------------------
-# App + DB setup
+# App Config
 # ----------------------------
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "dev-secret")
 
 DATABASE_URL = os.getenv("DATABASE_URL")
+
 if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
@@ -43,444 +31,179 @@ app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URL or "sqlite:///local.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)
-# ============================
-# Production foundation
-# ============================
-
-LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
-
-logging.basicConfig(
-    level=LOG_LEVEL,
-    format="%(asctime)s %(levelname)s %(name)s %(message)s",
-)
-
-logger = logging.getLogger("early-risk-alert-ai")
-
-START_TIME = time.time()
-
-MODEL_META_PATH = os.getenv("MODEL_META_PATH", "model_meta.json")
-
-
-def _load_model_meta():
-    try:
-        with open(MODEL_META_PATH, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except Exception:
-        return {}
-
-
-logger.info("App booting")
-logger.info("LOG_LEVEL=%s", LOG_LEVEL)
-logger.info("DATABASE_URL set? %s", bool(os.getenv("DATABASE_URL")))
 
 # ----------------------------
-# Auth (Flask-Login)
-# ----------------------------
-login_manager = LoginManager()
-login_manager.init_app(app)
-login_manager.login_view = "login"
-
-ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
-ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "change-me")  # set this in Render env vars
-
-
-class User(UserMixin):
-    def __init__(self, user_id: str):
-        self.id = user_id
-
-
-@login_manager.user_loader
-def load_user(user_id):
-    if user_id == ADMIN_USERNAME:
-        return User(user_id)
-    return None
-
-
-# ----------------------------
-# Model load
+# Load Model
 # ----------------------------
 MODEL_PATH = "demo_model.pkl"
-model = joblib.load(MODEL_PATH) if os.path.exists(MODEL_PATH) else None
+model = joblib.load(MODEL_PATH)
 
 # ----------------------------
-# Helpers
+# Anonymous User System
 # ----------------------------
-EXERCISE_MAP = {"Low": 1, "Medium": 2, "High": 3}
+CLIENT_ID_COOKIE = "client_id"
+CLIENT_ID_HEADER = "X-Client-Id"
 
 
-def safe_float(v, default=None):
-    try:
-        return float(v)
-    except Exception:
-        return default
+def get_or_create_client_id():
+    header_id = request.headers.get(CLIENT_ID_HEADER)
+    if header_id:
+        return header_id
+
+    cookie_id = request.cookies.get(CLIENT_ID_COOKIE)
+    if cookie_id:
+        return cookie_id
+
+    return str(uuid.uuid4())
 
 
-def safe_int(v, default=None):
-    try:
-        return int(float(v))
-    except Exception:
-        return default
+@app.before_request
+def attach_client():
+    g.client_id = get_or_create_client_id()
 
 
-def exercise_to_numeric(v):
-    """
-    Accepts:
-      - "Low"/"Medium"/"High"
-      - "1"/"2"/"3"
-      - 1/2/3
-    Returns int 1..3 or None
-    """
-    if v is None:
-        return None
-    if isinstance(v, (int, float)):
-        iv = int(v)
-        return iv if iv in (1, 2, 3) else None
-    s = str(v).strip()
-    if s in EXERCISE_MAP:
-        return EXERCISE_MAP[s]
-    iv = safe_int(s)
-    return iv if iv in (1, 2, 3) else None
-
-
-def exercise_to_label(v):
-    inv = {1: "Low", 2: "Medium", 3: "High"}
-    try:
-        iv = int(v)
-        return inv.get(iv, "Unknown")
-    except Exception:
-        return "Unknown"
-
-
-def build_features(age, bmi, exercise_level, sys_bp, dia_bp, hr):
-    return np.array([[age, bmi, exercise_level, sys_bp, dia_bp, hr]], dtype=float)
-
-
-def predict_internal(age, bmi, exercise_level, sys_bp, dia_bp, hr):
-    if model is None:
-        raise RuntimeError("Model file demo_model.pkl not found on server.")
-    X = build_features(age, bmi, exercise_level, sys_bp, dia_bp, hr)
-    pred = int(model.predict(X)[0])
-    prob_high = float(model.predict_proba(X)[0][1])
-    risk_label = "High Risk" if pred == 1 else "Low Risk"
-    return risk_label, prob_high
+@app.after_request
+def set_client_cookie(response):
+    if not request.headers.get(CLIENT_ID_HEADER):
+        if not request.cookies.get(CLIENT_ID_COOKIE):
+            response.set_cookie(
+                CLIENT_ID_COOKIE,
+                g.client_id,
+                max_age=60 * 60 * 24 * 365 * 2,
+                httponly=True,
+                secure=True,
+                samesite="Lax",
+            )
+    return response
 
 
 # ----------------------------
-# DB Model
+# Database Model
 # ----------------------------
 class Prediction(db.Model):
-    __tablename__ = "prediction"
-
     id = db.Column(db.Integer, primary_key=True)
-    created_at = db.Column(db.DateTime, default=dt.datetime.utcnow, nullable=False)
+    client_id = db.Column(db.String(64), index=True)
+    created_at = db.Column(db.DateTime, default=dt.datetime.utcnow)
 
-    age = db.Column(db.Float, nullable=False)
-    bmi = db.Column(db.Float, nullable=False)
-    exercise_level = db.Column(db.Integer, nullable=False)  # 1..3
-    systolic_bp = db.Column(db.Float, nullable=False)
-    diastolic_bp = db.Column(db.Float, nullable=False)
-    heart_rate = db.Column(db.Float, nullable=False)
+    age = db.Column(db.Integer)
+    bmi = db.Column(db.Float)
+    exercise_level = db.Column(db.String(20))
+    systolic_bp = db.Column(db.Integer)
+    diastolic_bp = db.Column(db.Integer)
+    heart_rate = db.Column(db.Integer)
 
-    risk_label = db.Column(db.String(50), nullable=False)
-    probability = db.Column(db.Float, nullable=False)  # probability of High Risk 0..1
+    risk_label = db.Column(db.String(20))
+    probability = db.Column(db.Float)
 
 
 with app.app_context():
     db.create_all()
 
-
 # ----------------------------
 # Routes
 # ----------------------------
-@app.route("/", methods=["GET", "POST"])
+@app.route("/")
 def home():
-    prediction = None
-    probability_pct = None
+    return render_template("index.html")
 
-    if request.method == "POST":
-        age = safe_float(request.form.get("age"))
-        bmi = safe_float(request.form.get("bmi"))
-        exercise_level = exercise_to_numeric(request.form.get("exercise_level"))
-        sys_bp = safe_float(request.form.get("systolic_bp"))
-        dia_bp = safe_float(request.form.get("diastolic_bp"))
-        heart_rate = safe_float(request.form.get("heart_rate"))
 
-        missing = [
-            k
-            for k, v in {
-                "age": age,
-                "bmi": bmi,
-                "exercise_level": exercise_level,
-                "systolic_bp": sys_bp,
-                "diastolic_bp": dia_bp,
-                "heart_rate": heart_rate,
-            }.items()
-            if v is None
-        ]
+@app.route("/predict", methods=["POST"])
+def predict():
+    age = int(request.form["age"])
+    bmi = float(request.form["bmi"])
+    exercise = request.form["exercise_level"]
+    systolic = int(request.form["systolic_bp"])
+    diastolic = int(request.form["diastolic_bp"])
+    heart_rate = int(request.form["heart_rate"])
 
-        if missing:
-            flash(f"Missing/invalid: {', '.join(missing)}", "error")
-            return redirect(url_for("home"))
+    exercise_map = {"Low": 0, "Moderate": 1, "High": 2}
+    exercise_val = exercise_map.get(exercise, 0)
 
-        risk_label, prob_high = predict_internal(
-            age, bmi, exercise_level, sys_bp, dia_bp, heart_rate
-        )
+    data = np.array([[age, bmi, exercise_val, systolic, diastolic, heart_rate]])
 
-        # Save to DB
-        p = Prediction(
-            created_at=dt.datetime.utcnow(),
-            age=age,
-            bmi=bmi,
-            exercise_level=exercise_level,
-            systolic_bp=sys_bp,
-            diastolic_bp=dia_bp,
-            heart_rate=heart_rate,
-            risk_label=risk_label,
-            probability=prob_high,
-        )
-        db.session.add(p)
-        db.session.commit()
+    pred = int(model.predict(data)[0])
+    prob = float(model.predict_proba(data)[0][1])
 
-        prediction = risk_label
-        probability_pct = round(prob_high * 100, 2)
+    risk_label = "High Risk" if pred == 1 else "Low Risk"
 
-    return render_template(
-        "index.html", prediction=prediction, probability=probability_pct
+    record = Prediction(
+        client_id=g.client_id,
+        age=age,
+        bmi=bmi,
+        exercise_level=exercise,
+        systolic_bp=systolic,
+        diastolic_bp=diastolic,
+        heart_rate=heart_rate,
+        risk_label=risk_label,
+        probability=round(prob * 100, 2),
     )
+
+    db.session.add(record)
+    db.session.commit()
+
+    return redirect(url_for("history"))
 
 
 @app.route("/history")
-@login_required
 def history():
-    # Pagination
-    page = safe_int(request.args.get("page", 1), 1)
-    per_page = safe_int(request.args.get("per_page", 10), 10)
-    per_page = max(5, min(per_page, 50))
-
-    q = Prediction.query.order_by(Prediction.created_at.desc())
-    total = q.count()
-    pages = max(1, (total + per_page - 1) // per_page)
-    page = max(1, min(page, pages))
-
-    rows = q.offset((page - 1) * per_page).limit(per_page).all()
-
-    # KPIs
-    if total > 0:
-        high_count = Prediction.query.filter(
-            Prediction.risk_label == "High Risk"
-        ).count()
-        high_pct = (high_count / total) * 100.0
-        avg_prob = db.session.query(db.func.avg(Prediction.probability)).scalar() or 0.0
-    else:
-        high_count = 0
-        high_pct = 0.0
-        avg_prob = 0.0
-
-    since = dt.datetime.utcnow() - dt.timedelta(hours=24)
-    last_24h = Prediction.query.filter(Prediction.created_at >= since).count()
-
-    # Charts
-    # 1) Risk split
-    low_count = Prediction.query.filter(Prediction.risk_label == "Low Risk").count()
-    risk_split = {"Low Risk": low_count, "High Risk": high_count}
-
-    # 2) Probability trend (last 30)
-    last30 = Prediction.query.order_by(Prediction.created_at.desc()).limit(30).all()
-    last30 = list(reversed(last30))
-    trend_labels = [p.created_at.strftime("%m-%d %H:%M") for p in last30]
-    trend_probs = [round(p.probability * 100.0, 2) for p in last30]
-
-    return render_template(
-        "history.html",
-        rows=rows,
-        total=total,
-        high_pct=round(high_pct, 1),
-        avg_prob=round(avg_prob * 100.0, 1),
-        last_24h=last_24h,
-        page=page,
-        pages=pages,
-        per_page=per_page,
-        risk_split_json=json.dumps(risk_split),
-        trend_labels_json=json.dumps(trend_labels),
-        trend_probs_json=json.dumps(trend_probs),
-        exercise_to_label=exercise_to_label,
+    rows = (
+        Prediction.query.filter_by(client_id=g.client_id)
+        .order_by(Prediction.id.desc())
+        .all()
     )
-
-
-@app.route("/export.csv")
-@login_required
-def export_csv():
-    q = Prediction.query.order_by(Prediction.created_at.desc()).all()
-
-    output = io.StringIO()
-    writer = csv.writer(output)
-    writer.writerow(
-        [
-            "created_at",
-            "age",
-            "bmi",
-            "exercise_level",
-            "systolic_bp",
-            "diastolic_bp",
-            "heart_rate",
-            "risk_label",
-            "probability_high_risk",
-        ]
-    )
-    for p in q:
-        writer.writerow(
-            [
-                p.created_at.isoformat(),
-                p.age,
-                p.bmi,
-                exercise_to_label(p.exercise_level),
-                p.systolic_bp,
-                p.diastolic_bp,
-                p.heart_rate,
-                p.risk_label,
-                round(p.probability, 6),
-            ]
-        )
-
-    output.seek(0)
-    return Response(
-        output.getvalue(),
-        mimetype="text/csv",
-        headers={"Content-Disposition": "attachment; filename=predictions.csv"},
-    )
+    return render_template("history.html", rows=rows)
 
 
 @app.route("/api/predict", methods=["POST"])
 def api_predict():
-    """
-    JSON API:
-    POST /api/predict
-    {
-      "age": 50,
-      "bmi": 25.0,
-      "exercise_level": "Low" or 1,
-      "systolic_bp": 120,
-      "diastolic_bp": 80,
-      "heart_rate": 70
-    }
-    Returns:
-    {
-      "risk_label": "High Risk"|"Low Risk",
-      "probability_high_risk": 0.1234,
-      "probability_high_risk_pct": 12.34
-    }
-    """
-    data = request.get_json(silent=True) or {}
+    payload = request.get_json()
 
-    age = safe_float(data.get("age"))
-    bmi = safe_float(data.get("bmi"))
-    exercise_level = exercise_to_numeric(data.get("exercise_level"))
-    sys_bp = safe_float(data.get("systolic_bp"))
-    dia_bp = safe_float(data.get("diastolic_bp"))
-    hr = safe_float(data.get("heart_rate"))
+    age = payload["age"]
+    bmi = payload["bmi"]
+    exercise = payload["exercise_level"]
+    systolic = payload["systolic_bp"]
+    diastolic = payload["diastolic_bp"]
+    heart_rate = payload["heart_rate"]
 
-    missing = [
-        k
-        for k, v in {
-            "age": age,
-            "bmi": bmi,
-            "exercise_level": exercise_level,
-            "systolic_bp": sys_bp,
-            "diastolic_bp": dia_bp,
-            "heart_rate": hr,
-        }.items()
-        if v is None
-    ]
+    exercise_map = {"Low": 0, "Moderate": 1, "High": 2}
+    exercise_val = exercise_map.get(exercise, 0)
 
-    if missing:
-        return jsonify({"error": "Missing/invalid fields", "fields": missing}), 400
+    data = np.array([[age, bmi, exercise_val, systolic, diastolic, heart_rate]])
 
-    try:
-        risk_label, prob_high = predict_internal(
-            age, bmi, exercise_level, sys_bp, dia_bp, hr
-        )
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    pred = int(model.predict(data)[0])
+    prob = float(model.predict_proba(data)[0][1])
+    risk_label = "High Risk" if pred == 1 else "Low Risk"
 
-    # Optional: save API predictions too (comment out if you don't want that)
-    p = Prediction(
-        created_at=dt.datetime.utcnow(),
+    record = Prediction(
+        client_id=g.client_id,
         age=age,
         bmi=bmi,
-        exercise_level=exercise_level,
-        systolic_bp=sys_bp,
-        diastolic_bp=dia_bp,
-        heart_rate=hr,
+        exercise_level=exercise,
+        systolic_bp=systolic,
+        diastolic_bp=diastolic,
+        heart_rate=heart_rate,
         risk_label=risk_label,
-        probability=prob_high,
+        probability=round(prob * 100, 2),
     )
-    db.session.add(p)
+
+    db.session.add(record)
     db.session.commit()
 
     return jsonify(
         {
             "risk_label": risk_label,
-            "probability_high_risk": round(prob_high, 6),
-            "probability_high_risk_pct": round(prob_high * 100.0, 2),
+            "probability": round(prob * 100, 2),
         }
     )
 
 
-@app.route("/login", methods=["GET", "POST"])
-def login():
-    if current_user.is_authenticated:
-        return redirect(url_for("history"))
-
-    if request.method == "POST":
-        username = (request.form.get("username") or "").strip()
-        password = (request.form.get("password") or "").strip()
-
-        if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
-            login_user(User(ADMIN_USERNAME))
-            return redirect(url_for("history"))
-
-        flash("Invalid login.", "error")
-        return redirect(url_for("login"))
-
-    return render_template("login.html")
-
-
-@app.route("/logout")
-@login_required
-def logout():
-    logout_user()
-    flash("Logged out.", "ok")
-    return redirect(url_for("home"))
-
-
-# Health check
 @app.route("/health")
 def health():
-    return {"ok": True}
+    return {"status": "ok"}, 200
 
 
-@app.get("/healthz")
-def healthz():
-    db_ok = True
-    db_error = None
-
-    try:
-        db.session.execute(text("SELECT 1"))
-    except Exception as e:
-        db_ok = False
-        db_error = str(e)
-
-    meta = _load_model_meta()
-
-    return {
-        "status": "ok" if db_ok else "degraded",
-        "db_ok": db_ok,
-        "db_error": db_error,
-        "model_loaded": model is not None,
-        "model_meta": {
-            "version": meta.get("version"),
-            "trained_at": meta.get("trained_at"),
-            "features": meta.get("features"),
-        },
-        "uptime_seconds": round(time.time() - START_TIME, 2),
-    }, (200 if db_ok else 503)
+# ----------------------------
+# Run (for local only)
+# ----------------------------
+if __name__ == "__main__":
+    app.run(debug=True)
