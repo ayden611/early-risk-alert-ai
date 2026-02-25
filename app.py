@@ -44,6 +44,7 @@ model = joblib.load(MODEL_PATH) if os.path.exists(MODEL_PATH) else None
 # DB Model
 # ======================
 
+
 class Prediction(db.Model):
     __tablename__ = "prediction"
 
@@ -70,17 +71,16 @@ with app.app_context():
 # Health
 # ======================
 
+
 @app.route("/healthz")
 def healthz():
-    return jsonify({
-        "status": "ok",
-        "db_ok": True,
-        "model_loaded": model is not None
-    })
+    return jsonify({"status": "ok", "db_ok": True, "model_loaded": model is not None})
+
 
 # ======================
 # Predict
 # ======================
+
 
 @app.route("/api/predict", methods=["POST"])
 def predict():
@@ -99,7 +99,9 @@ def predict():
         heart_rate = float(data["heart_rate"])
 
         if model:
-            input_data = np.array([[age, bmi, 1, systolic_bp, diastolic_bp, heart_rate]])
+            input_data = np.array(
+                [[age, bmi, 1, systolic_bp, diastolic_bp, heart_rate]]
+            )
             pred = int(model.predict(input_data)[0])
             prob = float(model.predict_proba(input_data)[0][1])
             risk_label = "High Risk" if pred == 1 else "Low Risk"
@@ -124,17 +126,12 @@ def predict():
         db.session.add(prediction)
         db.session.commit()
 
-        return jsonify({
-            "risk_label": risk_label,
-            "probability": round(prob * 100, 2)
-        })
+        return jsonify({"risk_label": risk_label, "probability": round(prob * 100, 2)})
 
     except Exception as e:
         logger.error(traceback.format_exc())
-        return jsonify({
-            "error": "Server Error",
-            "details": str(e)
-        }), 500
+        return jsonify({"error": "Server Error", "details": str(e)}), 500
+
 
 # ======================
 # Run
