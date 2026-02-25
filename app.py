@@ -87,6 +87,7 @@ def require_api_key(f):
 # DB Models
 # ==============================
 
+
 class Prediction(db.Model):
     __tablename__ = "prediction"
 
@@ -109,6 +110,7 @@ class Prediction(db.Model):
 # ==============================
 # Ensure Schema Safe
 # ==============================
+
 
 def ensure_db_schema():
     with app.app_context():
@@ -135,6 +137,7 @@ model = joblib.load(MODEL_PATH) if os.path.exists(MODEL_PATH) else None
 # Health Endpoint
 # ==============================
 
+
 @app.route("/healthz")
 def healthz():
     db_ok = True
@@ -143,17 +146,22 @@ def healthz():
     except Exception:
         db_ok = False
 
-    return jsonify({
-        "status": "ok",
-        "db_ok": db_ok,
-        "model_loaded": model is not None,
-        "uptime_seconds": int((dt.datetime.utcnow() - dt.datetime.utcnow()).total_seconds())
-    })
+    return jsonify(
+        {
+            "status": "ok",
+            "db_ok": db_ok,
+            "model_loaded": model is not None,
+            "uptime_seconds": int(
+                (dt.datetime.utcnow() - dt.datetime.utcnow()).total_seconds()
+            ),
+        }
+    )
 
 
 # ==============================
 # Prediction Endpoint
 # ==============================
+
 
 @app.route("/api/predict", methods=["POST"])
 @require_api_key
@@ -205,16 +213,10 @@ def predict():
     db.session.commit()
 
     log_event(
-        "prediction_created",
-        client_id=client_id,
-        risk=risk_label,
-        probability=prob
+        "prediction_created", client_id=client_id, risk=risk_label, probability=prob
     )
 
-    return jsonify({
-        "risk_label": risk_label,
-        "probability": round(prob * 100, 2)
-    })
+    return jsonify({"risk_label": risk_label, "probability": round(prob * 100, 2)})
 
 
 # ==============================
