@@ -5,6 +5,9 @@ import json
 import joblib
 import numpy as np
 import datetime as dt
+import time
+import logging
+from SQlalchemy import text
 
 from flask import (
     Flask,
@@ -40,6 +43,35 @@ app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URL or "sqlite:///local.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)
+# ============================
+# Production foundation
+# ============================
+
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
+
+logging.basicConfig(
+    level=LOG_LEVEL,
+    format="%(asctime)s %(levelname)s %(name)s %(message)s",
+)
+
+logger = logging.getLogger("early-risk-alert-ai")
+
+START_TIME = time.time()
+
+MODEL_META_PATH = os.getenv("MODEL_META_PATH", "model_meta.json")
+
+
+def _load_model_meta():
+    try:
+        with open(MODEL_META_PATH, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+
+logger.info("App booting")
+logger.info("LOG_LEVEL=%s", LOG_LEVEL)
+logger.info("DATABASE_URL set? %s", bool(os.getenv("DATABASE_URL")))
 
 # ----------------------------
 # Auth (Flask-Login)
@@ -425,3 +457,29 @@ def logout():
 @app.route("/health")
 def health():
     return {"ok": True}
+
+@app.get("/healthz")
+def healthz():
+    db_ok = True
+    db_error = None
+
+    try:
+        db.session.execute(text("SELECT 1"))
+    except Exception as e:
+        db_ok = False
+        db_error = str(e)
+
+    meta = _load_model_meta()
+
+    return {
+        "status": "ok" if db_ok else "degraded",
+        "db_ok": db_ok,
+        "db_error": db_error,
+        "model_loaded": model is not None,
+        "model_meta": {
+            "version": meta.get("version"),
+            "trained_at": meta.get("trained_at"),
+            "features": meta.get("features"),
+        },
+        "uptime_seconds": round(time.time() - START_TIME, 2),
+    }, (200 if db_ok else 503)
