@@ -2,8 +2,12 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash
 from era.extensions import db
 from era.models import Prediction
 from predict import predict_risk  # <-- your root predict.py
+from flask import jsonify
 
 web_bp = Blueprint("web", __name__)
+@web_bp.get("/healthz")
+def healthz():
+    return jsonify({"status": "ok"})
 
 def _num(form, key, label):
     v = form.get(key, "").strip()
