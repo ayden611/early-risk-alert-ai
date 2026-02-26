@@ -1,81 +1,52 @@
 import os
+import time
 import json
 import secrets
-import hashlib
+import logging
 from datetime import datetime, timezone
+from collections import defaultdict, deque
 
 import numpy as np
 import joblib
-from flask import Flask, request, jsonify, render_template_string, abort
+from flask import Flask, request, jsonify, render_template, g
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import text
 
-# =========================
-# App + Config
-# =========================
+# ----------------------------
+# App setup
+# ----------------------------
 app = Flask(__name__)
 
-# --- Secrets / env ---
-app.secret_key = os.getenv("SECRET_KEY", "dev")
+# Secret key (Flask sessions, flash, etc.)
+app.secret_key = os.getenv("SECRET_KEY", "dev-secret-change-me")
 
-DATABASE_URL = os.getenv("DATABASE_URL", "").strip()
-if DATABASE_URL.startswith("postgres://"):
+# DB (Render provides DATABASE_URL)
+DATABASE_URL = os.getenv("DATABASE_URL")
+if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
 app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URL or "sqlite:///local.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
-MODEL_PATH = os.getenv("MODEL_PATH", "demo_model.pkl")
-
-# Gate API with X-API-Key header? (for consumer apps, you can leave false)
-REQUIRE_API_KEY_FOR_API = (
-    os.getenv("REQUIRE_API_KEY_FOR_API", "false").strip().lower() in ("1", "true", "yes", "y")
-)
-
-# Optional static allowlist of keys in env (comma-separated).
-# Example: API_KEYS=era_xxx,era_yyy
-API_KEYS_ENV = [k.strip() for k in os.getenv("API_KEYS", "").split(",") if k.strip()]
-
-# Admin credentials (only used for /keys/* endpoints)
-ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "")
-ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "")
-
 db = SQLAlchemy(app)
 
-# =========================
-# DB Models
-# =========================
-class APIKey(db.Model):
-    __tablename__ = "api_key"
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(120), nullable=False)
-    key_hash = db.Column(db.String(128), nullable=False, unique=True, index=True)
-    is_active = db.Column(db.Boolean, default=True, nullable=False)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+# ----------------------------
+# Logging
+# ----------------------------
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
+logging.basicConfig(level=LOG_LEVEL, format="%(message)s")
+logger = logging.getLogger("early-risk-alert-ai")
 
-class Prediction(db.Model):
-    __tablename__ = "prediction"
-    id = db.Column(db.Integer, primary_key=True)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
-    # anonymous tracking
-    client_id = db.Column(db.String(120), nullable=True)
-    user_id = db.Column(db.String(120), nullable=True)
+def log_event(**fields):
+    # structured JSON logs (Render-friendly)
+    fields.setdefault("ts", datetime.now(timezone.utc).isoformat())
+    logger.info(json.dumps(fields, default=str))
 
-    # inputs
-    age = db.Column(db.Float, nullable=False)
-    bmi = db.Column(db.Float, nullable=False)
-    exercise_level = db.Column(db.String(32), nullable=False)   # TEXT so it won't crash on "Moderate"
-    systolic_bp = db.Column(db.Float, nullable=False)
-    diastolic_bp = db.Column(db.Float, nullable=False)
-    heart_rate = db.Column(db.Float, nullable=False)
 
-    # outputs
-    risk_label = db.Column(db.String(32), nullable=False)
-    probability = db.Column(db.Float, nullable=False)
-
-# =========================
-# Model Load
-# =========================
+# ----------------------------
+# Model load
+# ----------------------------
+MODEL_PATH = os.getenv("MODEL_PATH", "demo_model.pkl")
 model = None
 model_error = None
 try:
@@ -84,449 +55,419 @@ try:
     else:
         model_error = f"MODEL_PATH not found: {MODEL_PATH}"
 except Exception as e:
-    model_error = f"Failed to load model: {e}"
+    model_error = f"Model load error: {e}"
 
-# =========================
-# Helpers
-# =========================
-def sha256_hex(s: str) -> str:
-    return hashlib.sha256(s.encode("utf-8")).hexdigest()
+# ----------------------------
+# API key + behavior flags
+# ----------------------------
+# API_KEYS can be a comma-separated list: "key1,key2,key3"
+API_KEYS_RAW = os.getenv("API_KEYS", "").strip()
+API_KEYS = {k.strip() for k in API_KEYS_RAW.split(",") if k.strip()}
 
-def normalize_exercise_level(v):
-    """
-    Accepts: "Low/Moderate/High", "0/1/2", numbers, etc.
-    Returns: (label_str, numeric_float_for_model)
-    """
-    if v is None:
-        return ("Moderate", 1.0)
+REQUIRE_API_KEY_FOR_API = os.getenv("REQUIRE_API_KEY_FOR_API", "true").lower() in (
+    "1",
+    "true",
+    "yes",
+    "y",
+)
+ALLOW_ANONYMOUS_SAVES = os.getenv("ALLOW_ANONYMOUS_SAVES", "true").lower() in (
+    "1",
+    "true",
+    "yes",
+    "y",
+)
+SAVE_PREDICTIONS = os.getenv("SAVE_PREDICTIONS", "true").lower() in (
+    "1",
+    "true",
+    "yes",
+    "y",
+)
 
-    # numeric?
-    try:
-        if isinstance(v, (int, float)) or (isinstance(v, str) and v.strip().replace(".", "", 1).isdigit()):
-            n = float(v)
-            if n <= 0:
-                return ("Low", 0.0)
-            if n >= 2:
-                return ("High", 2.0)
-            # 1-ish
-            return ("Moderate", 1.0)
-    except Exception:
-        pass
+# Rate limiting (simple in-memory token bucket-ish window)
+RATE_LIMIT_PER_MIN = int(
+    os.getenv("RATE_LIMIT_PER_MIN", "60")
+)  # requests per minute per client
+_rl_window = defaultdict(lambda: deque())  # client_id -> deque[timestamps]
 
-    s = str(v).strip().lower()
-    mapping = {
-        "low": ("Low", 0.0),
-        "l": ("Low", 0.0),
-        "0": ("Low", 0.0),
-        "sedentary": ("Low", 0.0),
+# Basic metrics
+_metrics = {
+    "requests_total": 0,
+    "predict_total": 0,
+    "predict_4xx": 0,
+    "predict_5xx": 0,
+    "last_predict_ms": 0,
+    "avg_predict_ms": 0,
+}
+_predict_times = deque(maxlen=200)  # rolling window
 
-        "moderate": ("Moderate", 1.0),
-        "mod": ("Moderate", 1.0),
-        "m": ("Moderate", 1.0),
-        "1": ("Moderate", 1.0),
-        "medium": ("Moderate", 1.0),
+# ----------------------------
+# DB Models
+# ----------------------------
+class Prediction(db.Model):
+    __tablename__ = "prediction"
 
-        "high": ("High", 2.0),
-        "h": ("High", 2.0),
-        "2": ("High", 2.0),
-        "active": ("High", 2.0),
-    }
-    return mapping.get(s, ("Moderate", 1.0))
+    id = db.Column(db.Integer, primary_key=True)
+    created_at = db.Column(
+        db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False
+    )
 
-def get_request_api_key() -> str | None:
-    # Accept either header
-    return request.headers.get("X-API-Key") or request.headers.get("Authorization", "").replace("Bearer", "").strip() or None
+    client_id = db.Column(db.String(120), nullable=True)
+    age = db.Column(db.Float, nullable=True)
+    bmi = db.Column(db.Float, nullable=True)
+    exercise_level = db.Column(db.String(32), nullable=True)
 
-def api_key_is_valid(raw_key: str) -> bool:
-    if not raw_key:
-        return False
+    # Keep both names to match older schema versions
+    systolic_bp = db.Column(db.Float, nullable=True)
+    sys_bp = db.Column(db.Float, nullable=True)
 
-    # 1) env allowlist (direct compare)
-    if API_KEYS_ENV and raw_key in API_KEYS_ENV:
-        return True
+    diastolic_bp = db.Column(db.Float, nullable=True)
+    dia_bp = db.Column(db.Float, nullable=True)
 
-    # 2) DB allowlist (hash compare)
-    key_hash = sha256_hex(raw_key)
-    row = APIKey.query.filter_by(key_hash=key_hash, is_active=True).first()
-    return row is not None
+    heart_rate = db.Column(db.Float, nullable=True)
 
-def require_api_key_if_enabled():
-    if not REQUIRE_API_KEY_FOR_API:
-        return
-    raw = get_request_api_key()
-    if not raw or not api_key_is_valid(raw):
-        return jsonify({"error": "unauthorized", "message": "Valid X-API-Key required"}), 401
+    risk_label = db.Column(db.String(32), nullable=True)
+    probability = db.Column(db.Float, nullable=True)
 
-def require_admin_basic_auth():
-    # If admin creds not set, lock down key mgmt completely
-    if not ADMIN_USERNAME or not ADMIN_PASSWORD:
-        return jsonify({"error": "admin_not_configured", "message": "Set ADMIN_USERNAME and ADMIN_PASSWORD"}), 403
 
-    auth = request.authorization
-    if not auth or auth.username != ADMIN_USERNAME or auth.password != ADMIN_PASSWORD:
-        resp = jsonify({"error": "auth_required", "message": "Basic auth required"})
-        resp.status_code = 401
-        resp.headers["WWW-Authenticate"] = 'Basic realm="Admin"'
-        return resp
-    return None
+# Optional: request log table (lightweight analytics)
+class ApiRequestLog(db.Model):
+    __tablename__ = "api_request_log"
 
-def safe_float(x, field_name: str):
-    try:
-        return float(x)
-    except Exception:
-        raise ValueError(f"Invalid {field_name}: must be a number")
+    id = db.Column(db.Integer, primary_key=True)
+    created_at = db.Column(
+        db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False
+    )
+    request_id = db.Column(db.String(64), nullable=True)
+    client_id = db.Column(db.String(120), nullable=True)
+    path = db.Column(db.String(200), nullable=True)
+    method = db.Column(db.String(16), nullable=True)
+    status = db.Column(db.Integer, nullable=True)
+    duration_ms = db.Column(db.Integer, nullable=True)
+    ip = db.Column(db.String(64), nullable=True)
 
-# =========================
-# DB Init (creates tables if missing)
-# =========================
+
 with app.app_context():
     db.create_all()
 
-# =========================
-# Routes
-# =========================
+# ----------------------------
+# Helpers
+# ----------------------------
+def normalize_exercise_level(x):
+    if x is None:
+        return None
+    if isinstance(x, (int, float)):
+        # allow numeric encoding if user sends it
+        if x <= 0:
+            return "Low"
+        if x == 1:
+            return "Moderate"
+        return "High"
+    s = str(x).strip().lower()
+    if s in ("low", "l", "0"):
+        return "Low"
+    if s in ("moderate", "mod", "m", "1", "medium"):
+        return "Moderate"
+    if s in ("high", "h", "2"):
+        return "High"
+    return str(x).strip()
+
+
+def exercise_to_numeric(level_str):
+    # match your training pipeline expectations (0,1,2)
+    lvl = (level_str or "").strip().lower()
+    if lvl == "low":
+        return 0.0
+    if lvl == "moderate":
+        return 1.0
+    if lvl == "high":
+        return 2.0
+    # unknown -> treat as moderate
+    return 1.0
+
+
+def get_client_id():
+    # Prefer header; fallback to "anonymous"
+    return (request.headers.get("X-Client-Id") or "").strip() or "anonymous"
+
+
+def require_api_key_if_enabled():
+    if not REQUIRE_API_KEY_FOR_API:
+        return None
+    provided = (request.headers.get("X-API-Key") or "").strip()
+    if not provided:
+        return ("auth_required", "X-API-Key header required"), 401
+    if API_KEYS and provided not in API_KEYS:
+        return ("auth_invalid", "Invalid API key"), 403
+    return None
+
+
+def rate_limit_check(client_id):
+    now = time.time()
+    window = _rl_window[client_id]
+    # drop timestamps older than 60s
+    while window and (now - window[0]) > 60:
+        window.popleft()
+    if len(window) >= RATE_LIMIT_PER_MIN:
+        return True
+    window.append(now)
+    return False
+
+
+def json_error(code, message, status=400, **extra):
+    payload = {"error": code, "message": message, **extra}
+    return jsonify(payload), status
+
+
+def record_metrics_predict(ms, status_code):
+    _metrics["predict_total"] += 1
+    _metrics["last_predict_ms"] = int(ms)
+    _predict_times.append(ms)
+    _metrics["avg_predict_ms"] = int(sum(_predict_times) / len(_predict_times))
+
+    if 400 <= status_code < 500:
+        _metrics["predict_4xx"] += 1
+    if status_code >= 500:
+        _metrics["predict_5xx"] += 1
+
+
+def save_api_request_log(status, duration_ms):
+    try:
+        log = ApiRequestLog(
+            request_id=getattr(g, "request_id", None),
+            client_id=get_client_id(),
+            path=request.path,
+            method=request.method,
+            status=status,
+            duration_ms=int(duration_ms),
+            ip=request.headers.get("X-Forwarded-For", request.remote_addr),
+        )
+        db.session.add(log)
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        log_event(level="WARN", msg="api_request_log_failed", err=str(e))
+
+
+# ----------------------------
+# Request lifecycle hooks
+# ----------------------------
+@app.before_request
+def _before():
+    g.request_start = time.time()
+    g.request_id = request.headers.get("X-Request-Id") or secrets.token_hex(8)
+    _metrics["requests_total"] += 1
+
+
+@app.after_request
+def _after(resp):
+    # security headers (basic hardening)
+    resp.headers["X-Content-Type-Options"] = "nosniff"
+    resp.headers["X-Frame-Options"] = "DENY"
+    resp.headers["Referrer-Policy"] = "no-referrer"
+    resp.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
+
+    # request logging
+    dur_ms = (time.time() - getattr(g, "request_start", time.time())) * 1000
+    log_event(
+        level="INFO",
+        msg="request_end",
+        request_id=getattr(g, "request_id", None),
+        method=request.method,
+        path=request.path,
+        status=resp.status_code,
+        duration_ms=int(dur_ms),
+        client_id=get_client_id(),
+    )
+
+    # lightweight analytics
+    if request.path.startswith("/api/"):
+        save_api_request_log(resp.status_code, dur_ms)
+
+    resp.headers["X-Request-Id"] = getattr(g, "request_id", "")
+    return resp
+
+
+# ----------------------------
+# Routes (UI optional)
+# ----------------------------
+@app.route("/", methods=["GET"])
+def home():
+    # If you have templates, keep using them. Otherwise show a simple message.
+    try:
+        return render_template("index.html")
+    except Exception:
+        return "Early Risk Alert AI is running. Use /healthz and /api/v1/predict", 200
+
+
+# ----------------------------
+# Health + Metrics
+# ----------------------------
 @app.route("/healthz", methods=["GET"])
 def healthz():
     db_ok = True
     db_error = None
     try:
-        db.session.execute(text("SELECT 1"))
+        # simple query to validate DB connection
+        db.session.execute(db.text("SELECT 1"))
     except Exception as e:
         db_ok = False
         db_error = str(e)
 
-    return jsonify({
-        "status": "ok",
-        "model_loaded": model is not None,
-        "model_error": model_error,
-        "db_ok": db_ok,
-        "db_error": db_error,
-        "require_api_key_for_api": REQUIRE_API_KEY_FOR_API,
-        "uptime_seconds": 0
-    })
+    return (
+        jsonify(
+            {
+                "status": "ok" if (db_ok and model is not None) else "degraded",
+                "model_loaded": model is not None,
+                "model_error": model_error,
+                "db_ok": db_ok,
+                "db_error": db_error,
+                "uptime_seconds": int(
+                    time.time() - getattr(app, "_started_at", time.time())
+                ),
+                "version": "v1",
+            }
+        ),
+        200,
+    )
 
-@app.route("/", methods=["GET", "POST"])
-def home():
-    # Simple UI without templates (one-file app)
-    result = None
-    err = None
 
-    if request.method == "POST":
-        try:
-            age = safe_float(request.form.get("age"), "age")
-            bmi = safe_float(request.form.get("bmi"), "bmi")
-            ex_label, ex_num = normalize_exercise_level(request.form.get("exercise_level"))
-            sys_bp = safe_float(request.form.get("systolic_bp"), "systolic_bp")
-            dia_bp = safe_float(request.form.get("diastolic_bp"), "diastolic_bp")
-            hr = safe_float(request.form.get("heart_rate"), "heart_rate")
+@app.route("/metrics", methods=["GET"])
+def metrics():
+    # basic JSON metrics (good enough for Render logs / external checks)
+    return (
+        jsonify(
+            {
+                **_metrics,
+                "rate_limit_per_min": RATE_LIMIT_PER_MIN,
+                "require_api_key_for_api": REQUIRE_API_KEY_FOR_API,
+                "model_loaded": model is not None,
+                "db_using": "postgres" if DATABASE_URL else "sqlite",
+            }
+        ),
+        200,
+    )
 
-            if model is None:
-                raise RuntimeError(model_error or "Model not loaded")
 
-            X = np.array([[age, bmi, ex_num, sys_bp, dia_bp, hr]], dtype=float)
-            pred = int(model.predict(X)[0])
-            prob_high = float(model.predict_proba(X)[0][1]) if hasattr(model, "predict_proba") else (1.0 if pred == 1 else 0.0)
+app._started_at = time.time()
 
-            risk_label = "High Risk" if pred == 1 else "Low Risk"
-            probability = round(prob_high * 100.0, 2)
+# ----------------------------
+# Predict API (v1) + backward compatible route
+# ----------------------------
+def _predict_impl():
+    # auth
+    auth_err = require_api_key_if_enabled()
+    if auth_err:
+        return json_error(auth_err[0][0], auth_err[0][1], auth_err[1])
 
-            # anonymous save
-            client_id = request.headers.get("X-Client-Id") or request.form.get("client_id") or None
-            row = Prediction(
-                client_id=client_id,
-                user_id=None,
-                age=age,
-                bmi=bmi,
-                exercise_level=ex_label,
-                systolic_bp=sys_bp,
-                diastolic_bp=dia_bp,
-                heart_rate=hr,
-                risk_label=risk_label,
-                probability=probability
-            )
-            db.session.add(row)
-            db.session.commit()
+    client_id = get_client_id()
 
-            result = {"risk_label": risk_label, "probability": probability, "exercise_level": ex_label}
-        except Exception as e:
-            err = str(e)
+    # rate limit
+    if rate_limit_check(client_id):
+        return json_error("rate_limited", "Too many requests. Try again in a minute.", 429)
 
-    html = """
-    <!doctype html>
-    <html>
-    <head>
-      <meta charset="utf-8"/>
-      <meta name="viewport" content="width=device-width, initial-scale=1"/>
-      <title>Early Risk Alert AI</title>
-      <style>
-        body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;margin:0;background:#0b1220;color:#e9eefc}
-        .wrap{max-width:920px;margin:32px auto;padding:0 16px}
-        .card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:16px}
-        label{display:block;font-size:13px;color:#8ea0c6;margin:10px 0 6px}
-        input,select{width:100%;padding:10px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:#121b2e;color:#e9eefc}
-        .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
-        .btn{margin-top:14px;padding:12px 14px;border-radius:12px;border:0;background:#2b6cff;color:white;font-weight:700;cursor:pointer}
-        .row{display:flex;gap:10px;align-items:center;justify-content:space-between}
-        .muted{color:#8ea0c6}
-        .pill{padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.08)}
-        a{color:#9bb7ff;text-decoration:none}
-        .err{color:#ffb4b4}
-      </style>
-    </head>
-    <body>
-      <div class="wrap">
-        <div class="row">
-          <h2 style="margin:0">Early Risk Alert AI</h2>
-          <div class="row">
-            <a class="pill" href="/history">History</a>
-            <a class="pill" href="/healthz">Health</a>
-          </div>
-        </div>
-
-        <div class="card" style="margin-top:14px">
-          <form method="post">
-            <div class="grid">
-              <div>
-                <label>Age</label>
-                <input name="age" placeholder="45" required>
-              </div>
-              <div>
-                <label>BMI</label>
-                <input name="bmi" placeholder="27.5" required>
-              </div>
-              <div>
-                <label>Exercise Level</label>
-                <select name="exercise_level">
-                  <option>Low</option>
-                  <option selected>Moderate</option>
-                  <option>High</option>
-                </select>
-              </div>
-              <div>
-                <label>Systolic BP</label>
-                <input name="systolic_bp" placeholder="130" required>
-              </div>
-              <div>
-                <label>Diastolic BP</label>
-                <input name="diastolic_bp" placeholder="85" required>
-              </div>
-              <div>
-                <label>Heart Rate</label>
-                <input name="heart_rate" placeholder="72" required>
-              </div>
-            </div>
-
-            <label class="muted">Client ID (optional, for anonymous tracking)</label>
-            <input name="client_id" placeholder="test-client-1">
-
-            <button class="btn" type="submit">Predict Risk</button>
-          </form>
-
-          {% if err %}
-            <p class="err"><b>Error:</b> {{err}}</p>
-          {% endif %}
-
-          {% if result %}
-            <div class="card" style="margin-top:14px">
-              <div class="row">
-                <div>
-                  <div class="muted">Risk Label</div>
-                  <div style="font-size:22px;font-weight:800">{{result.risk_label}}</div>
-                </div>
-                <div>
-                  <div class="muted">Probability (High Risk)</div>
-                  <div style="font-size:22px;font-weight:800">{{result.probability}}%</div>
-                </div>
-                <div>
-                  <div class="muted">Exercise</div>
-                  <div style="font-size:22px;font-weight:800">{{result.exercise_level}}</div>
-                </div>
-              </div>
-            </div>
-          {% endif %}
-        </div>
-
-        <p class="muted" style="margin-top:14px">
-          API endpoint: <span class="pill">POST /api/predict</span>
-          {% if require_key %}<span class="pill">X-API-Key required</span>{% else %}<span class="pill">anonymous allowed</span>{% endif %}
-        </p>
-      </div>
-    </body>
-    </html>
-    """
-    return render_template_string(html, result=result, err=err, require_key=REQUIRE_API_KEY_FOR_API)
-
-@app.route("/history", methods=["GET"])
-def history():
-    rows = Prediction.query.order_by(Prediction.id.desc()).limit(50).all()
-    html = """
-    <!doctype html>
-    <html>
-    <head>
-      <meta charset="utf-8"/>
-      <meta name="viewport" content="width=device-width, initial-scale=1"/>
-      <title>History - Early Risk Alert AI</title>
-      <style>
-        body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;margin:0;background:#0b1220;color:#e9eefc}
-        .wrap{max-width:920px;margin:32px auto;padding:0 16px}
-        .card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:16px}
-        table{width:100%;border-collapse:collapse}
-        th,td{padding:10px;border-bottom:1px solid rgba(255,255,255,.08);font-size:14px}
-        th{text-align:left;color:#8ea0c6;font-weight:600}
-        a{color:#9bb7ff;text-decoration:none}
-        .pill{padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.08)}
-        .row{display:flex;gap:10px;align-items:center;justify-content:space-between}
-      </style>
-    </head>
-    <body>
-      <div class="wrap">
-        <div class="row">
-          <h2 style="margin:0">Prediction History</h2>
-          <a class="pill" href="/">Back</a>
-        </div>
-        <div class="card" style="margin-top:14px">
-          <table>
-            <thead>
-              <tr>
-                <th>Time (UTC)</th>
-                <th>Client</th>
-                <th>Risk</th>
-                <th>Prob%</th>
-                <th>Age</th>
-                <th>BMI</th>
-                <th>Ex</th>
-                <th>BP</th>
-                <th>HR</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for r in rows %}
-              <tr>
-                <td>{{r.created_at}}</td>
-                <td>{{r.client_id or "-"}}</td>
-                <td>{{r.risk_label}}</td>
-                <td>{{"%.2f"|format(r.probability)}}</td>
-                <td>{{r.age}}</td>
-                <td>{{r.bmi}}</td>
-                <td>{{r.exercise_level}}</td>
-                <td>{{r.systolic_bp}}/{{r.diastolic_bp}}</td>
-                <td>{{r.heart_rate}}</td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </body>
-    </html>
-    """
-    return render_template_string(html, rows=rows)
-
-@app.route("/api/predict", methods=["POST"])
-def api_predict():
-    gate = require_api_key_if_enabled()
-    if gate is not None:
-        return gate
-
+    # model available?
     if model is None:
-        return jsonify({"error": "model_not_loaded", "message": model_error or "Model not loaded"}), 500
+        return json_error(
+            "model_unavailable",
+            "Model is not loaded on the server.",
+            503,
+            detail=model_error,
+        )
 
+    # parse JSON
     payload = request.get_json(silent=True) or {}
     try:
-        age = safe_float(payload.get("age"), "age")
-        bmi = safe_float(payload.get("bmi"), "bmi")
-        ex_label, ex_num = normalize_exercise_level(payload.get("exercise_level"))
-        sys_bp = safe_float(payload.get("systolic_bp"), "systolic_bp")
-        dia_bp = safe_float(payload.get("diastolic_bp"), "diastolic_bp")
-        hr = safe_float(payload.get("heart_rate"), "heart_rate")
-
-        X = np.array([[age, bmi, ex_num, sys_bp, dia_bp, hr]], dtype=float)
-        pred = int(model.predict(X)[0])
-        prob_high = float(model.predict_proba(X)[0][1]) if hasattr(model, "predict_proba") else (1.0 if pred == 1 else 0.0)
-
-        risk_label = "High Risk" if pred == 1 else "Low Risk"
-        probability = round(prob_high * 100.0, 2)
-
-        client_id = request.headers.get("X-Client-Id") or payload.get("client_id") or None
-
-        row = Prediction(
-            client_id=client_id,
-            user_id=None,
-            age=age,
-            bmi=bmi,
-            exercise_level=ex_label,
-            systolic_bp=sys_bp,
-            diastolic_bp=dia_bp,
-            heart_rate=hr,
-            risk_label=risk_label,
-            probability=probability
+        age = float(payload.get("age"))
+        bmi = float(payload.get("bmi"))
+        exercise_level = normalize_exercise_level(payload.get("exercise_level"))
+        systolic_bp = float(payload.get("systolic_bp"))
+        diastolic_bp = float(payload.get("diastolic_bp"))
+        heart_rate = float(payload.get("heart_rate"))
+    except Exception:
+        return json_error(
+            "bad_request",
+            "Expected numeric: age,bmi,systolic_bp,diastolic_bp,heart_rate and string: exercise_level",
+            400,
         )
-        db.session.add(row)
-        db.session.commit()
 
-        return jsonify({
-            "client_id": client_id,
-            "probability": probability,
-            "risk_label": risk_label
-        })
+    # feature vector (match your training order)
+    ex_num = exercise_to_numeric(exercise_level)
+    X = np.array([[age, bmi, ex_num, systolic_bp, diastolic_bp, heart_rate]], dtype=float)
+
+    start = time.time()
+    try:
+        pred = int(model.predict(X)[0])
+        prob_high = float(model.predict_proba(X)[0][1])
+        risk_label = "High Risk" if pred == 1 else "Low Risk"
+        probability = round(prob_high * 100, 2)
+
+        # save prediction (optional)
+        if SAVE_PREDICTIONS and (ALLOW_ANONYMOUS_SAVES or client_id != "anonymous"):
+            p = Prediction(
+                client_id=client_id,
+                age=age,
+                bmi=bmi,
+                exercise_level=exercise_level,
+                systolic_bp=systolic_bp,
+                sys_bp=systolic_bp,
+                diastolic_bp=diastolic_bp,
+                dia_bp=diastolic_bp,
+                heart_rate=heart_rate,
+                risk_label=risk_label,
+                probability=probability,
+            )
+            db.session.add(p)
+            db.session.commit()
+
+        ms = (time.time() - start) * 1000
+        record_metrics_predict(ms, 200)
+
+        return (
+            jsonify(
+                {
+                    "client_id": client_id,
+                    "probability": probability,
+                    "risk_label": risk_label,
+                }
+            ),
+            200,
+        )
+
     except Exception as e:
-        return jsonify({"error": "bad_request", "message": str(e)}), 400
+        db.session.rollback()
+        ms = (time.time() - start) * 1000
+        record_metrics_predict(ms, 500)
+        log_event(level="ERROR", msg="predict_failed", err=str(e), client_id=client_id)
+        return json_error("server_error", "Prediction failed.", 500)
 
-@app.route("/keys/create", methods=["POST"])
-def keys_create():
-    # Admin-only endpoint to create a DB-backed API key.
-    # Use Basic Auth: -u ADMIN_USERNAME:ADMIN_PASSWORD
-    auth_resp = require_admin_basic_auth()
-    if auth_resp is not None:
-        return auth_resp
 
-    payload = request.get_json(silent=True) or {}
-    name = (payload.get("name") or "default").strip()
+@app.route("/api/v1/predict", methods=["POST"])
+def api_v1_predict():
+    return _predict_impl()
 
-    raw_key = "era_" + secrets.token_hex(32)
-    key_hash = sha256_hex(raw_key)
 
-    # store hash only
-    row = APIKey(name=name, key_hash=key_hash, is_active=True)
-    db.session.add(row)
-    db.session.commit()
+# Backward compatible route (keeps your old curl commands working)
+@app.route("/api/predict", methods=["POST"])
+def api_predict_legacy():
+    return _predict_impl()
 
-    return jsonify({
-        "name": name,
-        "api_key": raw_key,     # returned ONCE; store it safely
-        "created_at": row.created_at.isoformat()
-    }), 201
 
-@app.route("/keys/list", methods=["GET"])
-def keys_list():
-    auth_resp = require_admin_basic_auth()
-    if auth_resp is not None:
-        return auth_resp
+# ----------------------------
+# Friendly JSON 404/405 for API
+# ----------------------------
+@app.errorhandler(404)
+def not_found(e):
+    if request.path.startswith("/api/"):
+        return json_error("not_found", "API route not found.", 404)
+    return "Not Found", 404
 
-    rows = APIKey.query.order_by(APIKey.id.desc()).limit(50).all()
-    return jsonify([{
-        "id": r.id,
-        "name": r.name,
-        "is_active": r.is_active,
-        "created_at": r.created_at.isoformat()
-    } for r in rows])
 
-@app.route("/keys/deactivate/<int:key_id>", methods=["POST"])
-def keys_deactivate(key_id: int):
-    auth_resp = require_admin_basic_auth()
-    if auth_resp is not None:
-        return auth_resp
+@app.errorhandler(405)
+def method_not_allowed(e):
+    if request.path.startswith("/api/"):
+        return json_error("method_not_allowed", "Method not allowed for this endpoint.", 405)
+    return "Method Not Allowed", 405
 
-    row = APIKey.query.get(key_id)
-    if not row:
-        return jsonify({"error": "not_found"}), 404
-    row.is_active = False
-    db.session.commit()
-    return jsonify({"ok": True, "id": key_id})
 
-# =========================
-# Entry
-# =========================
 if __name__ == "__main__":
-    # Local dev only
-    app.run(host="0.0.0.0", port=int(os.getenv("PORT", "10000")), debug=True)
+    app.run(host="0.0.0.0", port=int(os.getenv("PORT", "5000")))
