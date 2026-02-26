@@ -651,6 +651,21 @@ def admin_stats():
 # ============================================================
 # Local run
 # ============================================================
+from flask import jsonify
+
+@app.get("/")
+def root():
+    return jsonify({
+        "status": "running",
+        "service": "early-risk-alert-ai-prod"
+    })
+
+@app.get("/healthz")
+def healthz():
+    return jsonify({
+        "status": "ok",
+        "model_loaded": model is not None
+    })
 if __name__ == "__main__":
     port = int(os.getenv("PORT", "5000"))
     app.run(host="0.0.0.0", port=port, debug=env_bool("FLASK_DEBUG", False))
