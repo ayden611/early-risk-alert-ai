@@ -22,7 +22,7 @@
       <td>{{ row.bmi }}</td>
       <td>{{ row.exercise_level }}</td>
       <td>{{ row.risk_label }}</td>
-      <td>{{ "%.2f"|format(row.probability) }}%</td>
+      <td>{{ (row.probability * 100) | round(2) }}%</td>
     </tr>
     {% endfor %}
   </tbody>
