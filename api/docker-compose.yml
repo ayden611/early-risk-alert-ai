@@ -1,0 +1,39 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: era
+      POSTGRES_USER: era
+      POSTGRES_PASSWORD: era
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  web:
+    build: .
+    environment:
+      PORT: 10000
+      FLASK_ENV: production
+      LOG_LEVEL: INFO
+      # local DB points to compose postgres
+      DATABASE_URL: postgresql://era:era@db:5432/era
+
+      # security
+      SECRET_KEY: dev-secret-change-me
+      JWT_SECRET: dev-jwt-secret-change-me
+      MAGIC_CODE_TTL_SECONDS: 600
+      ALLOW_ANONYMOUS_SAVES: "false"
+
+      # Optional: API keys (comma-separated) e.g. "abc123,def456"
+      API_KEYS: ""
+
+      # model
+      MODEL_PATH: demo_model.pkl
+    ports:
+      - "10000:10000"
+    depends_on:
+      - db
+
+volumes:
+  pgdata:
