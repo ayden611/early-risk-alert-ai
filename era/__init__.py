@@ -4,6 +4,7 @@ from .config import Config
 from .extensions import db
 from .api.routes import api_bp
 from .web.routes import web_bp
+from .auth import login_manager
 
 
 def create_app():
@@ -13,6 +14,7 @@ def create_app():
 
     app = Flask(__name__, template_folder=templates_dir, static_folder=static_dir)
     app.config.from_object(Config)
+    login_manager.init_app(app)
 
     db.init_app(app)
 
