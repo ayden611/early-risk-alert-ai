@@ -21,7 +21,7 @@
       <div class="nav">
         <a class="chip" href="{{ url_for('web.home') }}">Predict</a>
 
-        {% if current_user.is_authenticated %}
+        {% if current_user is defined and current_user.is_authenticated %}
           <a class="chip" href="{{ url_for('web.history') }}">History</a>
           <a class="chip" href="{{ url_for('web.export_csv') }}">Export CSV</a>
           <a class="chip" href="{{ url_for('web.logout') }}">Logout</a>
