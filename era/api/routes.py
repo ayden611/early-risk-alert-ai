@@ -124,7 +124,7 @@ def _decode_token(token: str):
     return jwt.decode(token, _jwt_secret(), algorithms=["HS256"])
 
 
-@bp.post("/auth/refresh")
+@api_bp.post("/auth/refresh")
 def auth_refresh():
     """
     Mobile flow:
