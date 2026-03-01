@@ -125,6 +125,22 @@ def _issue_refresh_token(user_id: str):
     }
     return jwt.encode(payload, _jwt_secret(), algorithm="HS256")
 
+@api_bp.post("/auth/login")
+def auth_login():
+    data = request.get_json(silent=True) or {}
+    user_id = data.get("user_id")
+
+    if not user_id:
+        return jsonify({"error": "user_id_required"}), 400
+
+    access_token = _issue_access_token(user_id)
+    refresh_token = _issue_refresh_token(user_id)
+
+    return jsonify({
+        "access_token": access_token,
+        "refresh_token": refresh_token
+    }), 200
+
 
 def _decode_token(token: str):
     return jwt.decode(token, _jwt_secret(), algorithms=["HS256"])
