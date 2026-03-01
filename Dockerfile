@@ -14,6 +14,6 @@ COPY . .
 
 EXPOSE 10000
 
-HEALTHCHECK CMD curl --fail http://localhost:10000/healthz || exit 1
+HEALTHCHECK CMD sh -c "curl -fsS http://localhost:${PORT:-10000}/healthz || exit 1"
 
-CMD ["gunicorn", "-c", "gunicorn.conf.py", "app:app"]
+CMD ["sh","-c","gunicorn wsgi:app --bind 0.0.0.0:${PORT:-10000}"]
