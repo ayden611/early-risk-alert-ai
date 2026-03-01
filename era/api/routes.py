@@ -1,26 +1,27 @@
 import os
 from datetime import datetime, timedelta, timezone
+
 import jwt
-from flask import Blueprint,request, jsonify, current_app
+from flask import Blueprint, request, jsonify
 
 from era.extensions import db
 from era.models import Prediction
 
 # IMPORTANT:
-# You deleted the services/ folder, so import predict_risk from the root predict.py file.
+# You deleted/moved services/, so import predict_risk from root predict.py file.
 from predict import predict_risk
-
-# make sure Blueprint is imported
 
 api_bp = Blueprint("api", __name__)
 
-@api_bp.get("/")
-def root():
-    return jsonify({"ok": True, "service": "early-risk-alert-mobile-api"}), 200
+
+# ----------------------------
+# Helpers
+# ----------------------------
+def _json_error(code: str, message: str, status: int = 400):
+    return jsonify({"error": code, "message": message}), status
 
 
-def _num(value, field):
-    """Parse a number safely; raise ValueError with a helpful message."""
+def _num(value, field: str) -> float:
     if value is None or value == "":
         raise ValueError(f"'{field}' is required")
     try:
@@ -29,8 +30,7 @@ def _num(value, field):
         raise ValueError(f"'{field}' must be a number")
 
 
-def _exercise(value):
-    """Normalize exercise level to one of: Low, Moderate, High"""
+def _exercise(value) -> str:
     if value is None or value == "":
         raise ValueError("'exercise_level' is required")
     v = str(value).strip().lower()
@@ -43,9 +43,75 @@ def _exercise(value):
     raise ValueError("'exercise_level' must be Low, Moderate, or High")
 
 
+def _jwt_secret() -> str:
+    return os.getenv("JWT_SECRET", "dev-secret-change-me")
+
+
+def _issue_access_token(user_id: str) -> str:
+    minutes = int(os.getenv("ACCESS_TOKEN_MINUTES", "30"))
+    now = datetime.now(timezone.utc)
+    payload = {
+        "sub": str(user_id),
+        "type": "access",
+        "iat": int(now.timestamp()),
+        "exp": int((now + timedelta(minutes=minutes)).timestamp()),
+    }
+    return jwt.encode(payload, _jwt_secret(), algorithm="HS256")
+
+
+def _issue_refresh_token(user_id: str) -> str:
+    days = int(os.getenv("REFRESH_TOKEN_DAYS", "14"))
+    now = datetime.now(timezone.utc)
+    payload = {
+        "sub": str(user_id),
+        "type": "refresh",
+        "iat": int(now.timestamp()),
+        "exp": int((now + timedelta(days=days)).timestamp()),
+    }
+    return jwt.encode(payload, _jwt_secret(), algorithm="HS256")
+
+
+def _decode_token(token: str) -> dict:
+    return jwt.decode(token, _jwt_secret(), algorithms=["HS256"])
+
+
+def _bearer_token() -> str | None:
+    h = request.headers.get("Authorization", "")
+    if h.lower().startswith("bearer "):
+        return h.split(" ", 1)[1].strip()
+    return None
+
+
+# ----------------------------
+# Routes
+# ----------------------------
+@api_bp.get("/")
+def root():
+    # Helps Render + quick sanity check
+    return jsonify({"ok": True, "service": "early-risk-alert-mobile-api"}), 200
+
+
 @api_bp.get("/health")
 def health():
-    return jsonify({"ok": True}), 200
+    # Optional DB check (won’t crash if DB is down)
+    db_ok = True
+    db_error = None
+    try:
+        db.session.execute(db.text("SELECT 1"))
+    except Exception as e:
+        db_ok = False
+        db_error = str(e)
+
+    return (
+        jsonify(
+            {
+                "ok": True,
+                "db_ok": db_ok,
+                "db_error": db_error,
+            }
+        ),
+        (200 if db_ok else 503),
+    )
 
 
 @api_bp.post("/predict")
@@ -60,121 +126,108 @@ def api_predict():
         diastolic_bp = _num(data.get("diastolic_bp"), "diastolic_bp")
         heart_rate = _num(data.get("heart_rate"), "heart_rate")
     except ValueError as e:
-        return jsonify({"error": "validation", "message": str(e)}), 400
+        return _json_error("validation", str(e), 400)
 
     # Run model
-    risk_label, probability = predict_risk(
-        age=age,
-        bmi=bmi,
-        exercise_level=exercise_level,
-        systolic_bp=systolic_bp,
-        diastolic_bp=diastolic_bp,
-        heart_rate=heart_rate,
+    try:
+        risk_label, probability = predict_risk(
+            age=age,
+            bmi=bmi,
+            exercise_level=exercise_level,
+            systolic_bp=systolic_bp,
+            diastolic_bp=diastolic_bp,
+            heart_rate=heart_rate,
+        )
+    except Exception as e:
+        return _json_error("model_error", f"Prediction failed: {e}", 500)
+
+    # Save to DB (safe: won’t break deploy if table isn’t ready)
+    try:
+        rec = Prediction(
+            age=age,
+            bmi=bmi,
+            exercise_level=exercise_level,
+            systolic_bp=systolic_bp,
+            diastolic_bp=diastolic_bp,
+            heart_rate=heart_rate,
+            risk_label=str(risk_label),
+            probability=float(probability),
+        )
+        db.session.add(rec)
+        db.session.commit()
+    except Exception:
+        # Don’t crash request if DB/table isn’t set up yet
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
+
+    return (
+        jsonify(
+            {
+                "risk_label": str(risk_label),
+                "probability": float(probability),
+            }
+        ),
+        200,
     )
 
-    # Save to DB (if your model + DB table exists)
-    pred = Prediction(
-        age=age,
-        bmi=bmi,
-        exercise_level=exercise_level,
-        systolic_bp=systolic_bp,
-        diastolic_bp=diastolic_bp,
-        heart_rate=heart_rate,
-        risk_label=risk_label,
-        probability=probability,
-    )
-    db.session.add(pred)
-    db.session.commit()
-
-    return jsonify(
-        {
-            "risk_label": risk_label,
-            "probability": probability,
-        }
-    ), 200
 
 # ----------------------------
-# Mobile auth: refresh token
+# Auth (simple JWT)
 # ----------------------------
-
-def _jwt_secret():
-    # Prefer config; fallback to env (won't break existing setups)
-    return current_app.config.get("JWT_SECRET") or os.getenv("JWT_SECRET", "dev-change-me")
-
-
-def _issue_access_token(user_id: str):
-    now = datetime.now(timezone.utc)
-    minutes = int(current_app.config.get("JWT_ACCESS_MINUTES", 30))
-    payload = {
-        "sub": str(user_id),
-        "type": "access",
-        "iat": int(now.timestamp()),
-        "exp": int((now + timedelta(minutes=minutes)).timestamp()),
-    }
-    return jwt.encode(payload, _jwt_secret(), algorithm="HS256")
-
-
-def _issue_refresh_token(user_id: str):
-    now = datetime.now(timezone.utc)
-    days = int(current_app.config.get("JWT_REFRESH_DAYS", 14))
-    payload = {
-        "sub": str(user_id),
-        "type": "refresh",
-        "iat": int(now.timestamp()),
-        "exp": int((now + timedelta(days=days)).timestamp()),
-    }
-    return jwt.encode(payload, _jwt_secret(), algorithm="HS256")
-
 @api_bp.post("/auth/login")
 def auth_login():
     data = request.get_json(silent=True) or {}
     user_id = data.get("user_id")
 
     if not user_id:
-        return jsonify({"error": "user_id_required"}), 400
+        return _json_error("user_id_required", "Provide {\"user_id\":\"123\"}", 400)
 
-    access_token = _issue_access_token(user_id)
-    refresh_token = _issue_refresh_token(user_id)
-
-    return jsonify({
-        "access_token": access_token,
-        "refresh_token": refresh_token
-    }), 200
-
-
-def _decode_token(token: str):
-    return jwt.decode(token, _jwt_secret(), algorithms=["HS256"])
+    return (
+        jsonify(
+            {
+                "access_token": _issue_access_token(str(user_id)),
+                "refresh_token": _issue_refresh_token(str(user_id)),
+                "token_type": "Bearer",
+            }
+        ),
+        200,
+    )
 
 
 @api_bp.post("/auth/refresh")
 def auth_refresh():
-    """
-    Mobile flow:
-    - app stores refresh_token (Keychain/Keystore)
-    - when access token expires -> call /auth/refresh -> get new access_token
-    """
     data = request.get_json(silent=True) or {}
-    refresh_token = data.get("refresh_token")
+    refresh_token = data.get("refresh_token") or _bearer_token()
 
     if not refresh_token:
-        return jsonify({"error": "missing_refresh_token"}), 400
+        return _json_error(
+            "refresh_token_required",
+            "Provide refresh_token in JSON or Authorization: Bearer <token>",
+            400,
+        )
 
     try:
         payload = _decode_token(refresh_token)
         if payload.get("type") != "refresh":
-            return jsonify({"error": "invalid_token_type"}), 401
+            return _json_error("invalid_token", "Not a refresh token", 401)
 
         user_id = payload.get("sub")
-        new_access = _issue_access_token(user_id)
+        if not user_id:
+            return _json_error("invalid_token", "Missing sub", 401)
 
-        rotate = str(current_app.config.get("JWT_ROTATE_REFRESH", "true")).lower() == "true"
-        if rotate:
-            new_refresh = _issue_refresh_token(user_id)
-            return jsonify({"access_token": new_access, "refresh_token": new_refresh}), 200
-
-        return jsonify({"access_token": new_access}), 200
+        return (
+            jsonify(
+                {
+                    "access_token": _issue_access_token(str(user_id)),
+                    "token_type": "Bearer",
+                }
+            ),
+            200,
+        )
 
     except jwt.ExpiredSignatureError:
-        return jsonify({"error": "refresh_expired"}), 401
-    except jwt.InvalidTokenError:
-        return jsonify({"error": "refresh_invalid"}), 401
+        return _json_error("expired_token", "Refresh token expired", 401)
+    except Exception as e:
+        return _json_error("invalid_token", f"Could not decode token: {e}", 401)
