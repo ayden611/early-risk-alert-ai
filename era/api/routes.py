@@ -1,7 +1,7 @@
 import os
 from datetime import datetime, timedelta, timezone
 import jwt
-from flask import request, jsonify, current_app
+from flask import Blueprint,request, jsonify, current_app
 
 from era.extensions import db
 from era.models import Prediction
