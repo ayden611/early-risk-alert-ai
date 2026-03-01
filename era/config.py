@@ -1,23 +1,25 @@
 import os
 
-class Config:
-    SECRET_KEY = os.environ.get("SECRET_KEY", "dev-secret-change-me")
-
-    DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///predictions.db")
-    if DATABASE_URL.startswith("postgres://"):
-        DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
-
-    SQLALCHEMY_DATABASE_URI = DATABASE_URL
+class BaseConfig:
+    SECRET_KEY = os.getenv("SECRET_KEY", "change-this-in-production")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    MAX_CONTENT_LENGTH = 2 * 1024 * 1024  # 2MB request limit
 
-    # JWT for mobile/API later
-    JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY", SECRET_KEY)
+    # CORS
+    ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "").split(",")
 
-    # Admin login (web)
-    ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "admin")
-    ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "password")
+    # Rate limiting
+    RATELIMIT_DEFAULT = "100 per hour"
 
-    # Probability smoothing (no retrain needed)
-    PROB_TEMP = float(os.environ.get("PROB_TEMP", "2.0"))
-    PROB_FLOOR = float(os.environ.get("PROB_FLOOR", "0.02"))
-    PROB_CEIL = float(os.environ.get("PROB_CEIL", "0.98"))
+    # Logging
+    LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
+
+
+class ProductionConfig(BaseConfig):
+    ENV = "production"
+    DEBUG = False
+
+
+class DevelopmentConfig(BaseConfig):
+    ENV = "development"
+    DEBUG = True
