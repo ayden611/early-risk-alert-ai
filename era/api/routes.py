@@ -1,4 +1,7 @@
-from flask import Blueprint, request, jsonify
+import os
+from datetime import datetime, timedelta, timezone
+import jwt
+from flask import request, jsonify, current_app
 
 from era.extensions import db
 from era.models import Prediction
@@ -83,3 +86,73 @@ def api_predict():
             "probability": probability,
         }
     ), 200
+
+# ----------------------------
+# Mobile auth: refresh token
+# ----------------------------
+
+def _jwt_secret():
+    # Prefer config; fallback to env (won't break existing setups)
+    return current_app.config.get("JWT_SECRET") or os.getenv("JWT_SECRET", "dev-change-me")
+
+
+def _issue_access_token(user_id: str):
+    now = datetime.now(timezone.utc)
+    minutes = int(current_app.config.get("JWT_ACCESS_MINUTES", 30))
+    payload = {
+        "sub": str(user_id),
+        "type": "access",
+        "iat": int(now.timestamp()),
+        "exp": int((now + timedelta(minutes=minutes)).timestamp()),
+    }
+    return jwt.encode(payload, _jwt_secret(), algorithm="HS256")
+
+
+def _issue_refresh_token(user_id: str):
+    now = datetime.now(timezone.utc)
+    days = int(current_app.config.get("JWT_REFRESH_DAYS", 14))
+    payload = {
+        "sub": str(user_id),
+        "type": "refresh",
+        "iat": int(now.timestamp()),
+        "exp": int((now + timedelta(days=days)).timestamp()),
+    }
+    return jwt.encode(payload, _jwt_secret(), algorithm="HS256")
+
+
+def _decode_token(token: str):
+    return jwt.decode(token, _jwt_secret(), algorithms=["HS256"])
+
+
+@bp.post("/auth/refresh")
+def auth_refresh():
+    """
+    Mobile flow:
+    - app stores refresh_token (Keychain/Keystore)
+    - when access token expires -> call /auth/refresh -> get new access_token
+    """
+    data = request.get_json(silent=True) or {}
+    refresh_token = data.get("refresh_token")
+
+    if not refresh_token:
+        return jsonify({"error": "missing_refresh_token"}), 400
+
+    try:
+        payload = _decode_token(refresh_token)
+        if payload.get("type") != "refresh":
+            return jsonify({"error": "invalid_token_type"}), 401
+
+        user_id = payload.get("sub")
+        new_access = _issue_access_token(user_id)
+
+        rotate = str(current_app.config.get("JWT_ROTATE_REFRESH", "true")).lower() == "true"
+        if rotate:
+            new_refresh = _issue_refresh_token(user_id)
+            return jsonify({"access_token": new_access, "refresh_token": new_refresh}), 200
+
+        return jsonify({"access_token": new_access}), 200
+
+    except jwt.ExpiredSignatureError:
+        return jsonify({"error": "refresh_expired"}), 401
+    except jwt.InvalidTokenError:
+        return jsonify({"error": "refresh_invalid"}), 401
