@@ -10,7 +10,13 @@ from era.models import Prediction
 # You deleted the services/ folder, so import predict_risk from the root predict.py file.
 from predict import predict_risk
 
+# make sure Blueprint is imported
+
 api_bp = Blueprint("api", __name__)
+
+@api_bp.get("/")
+def root():
+    return jsonify({"ok": True, "service": "early-risk-alert-mobile-api"}), 200
 
 
 def _num(value, field):
