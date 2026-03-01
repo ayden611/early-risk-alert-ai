@@ -1,24 +1,40 @@
 import os
+import time
+import secrets
 from datetime import datetime, timedelta, timezone
 
 import jwt
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 
 from era.extensions import db
-from era.models import Prediction
 
-# IMPORTANT:
-# You deleted/moved services/, so import predict_risk from root predict.py file.
-from predict import predict_risk
+# Optional DB model (we will try to save if it exists)
+try:
+    from era.models import Prediction  # type: ignore
+except Exception:
+    Prediction = None  # type: ignore
+
+# IMPORTANT: your project imports predict_risk from root predict.py
+from predict import predict_risk  # noqa: E402
+
 
 api_bp = Blueprint("api", __name__)
 
+# ----------------------------
+# In-memory magic codes (simple + stable)
+# ----------------------------
+_MAGIC_CODES = {}  # user_id -> {"code": "123456", "exp": epoch_seconds}
+MAGIC_CODE_TTL_SECONDS = 10 * 60  # 10 minutes
 
-# ----------------------------
-# Helpers
-# ----------------------------
-def _json_error(code: str, message: str, status: int = 400):
-    return jsonify({"error": code, "message": message}), status
+
+def _now_utc() -> datetime:
+    return datetime.now(timezone.utc)
+
+
+def _is_prod() -> bool:
+    # Render sets RENDER / you may set ENV=production
+    env = (os.getenv("ENV") or os.getenv("FLASK_ENV") or "").lower()
+    return env == "production" or bool(os.getenv("RENDER"))
 
 
 def _num(value, field: str) -> float:
@@ -31,8 +47,13 @@ def _num(value, field: str) -> float:
 
 
 def _exercise(value) -> str:
+    """
+    Normalize exercise_level to one of: Low, Moderate, High
+    Accepts: "low"/"0", "moderate"/"1"/"medium", "high"/"2"
+    """
     if value is None or value == "":
         raise ValueError("'exercise_level' is required")
+
     v = str(value).strip().lower()
     if v in ("low", "0"):
         return "Low"
@@ -43,77 +64,64 @@ def _exercise(value) -> str:
     raise ValueError("'exercise_level' must be Low, Moderate, or High")
 
 
-def _jwt_secret() -> str:
-    return os.getenv("JWT_SECRET", "dev-secret-change-me")
+def _auth_secret() -> str:
+    secret = current_app.config.get("SECRET_KEY") or os.getenv("SECRET_KEY")
+    if not secret:
+        # fallback (keeps app from crashing, but you SHOULD set SECRET_KEY in Render)
+        secret = "dev-secret-change-me"
+    return secret
 
 
-def _issue_access_token(user_id: str) -> str:
-    minutes = int(os.getenv("ACCESS_TOKEN_MINUTES", "30"))
-    now = datetime.now(timezone.utc)
+def _make_token(user_id: str) -> str:
     payload = {
         "sub": str(user_id),
-        "type": "access",
-        "iat": int(now.timestamp()),
-        "exp": int((now + timedelta(minutes=minutes)).timestamp()),
+        "iat": int(_now_utc().timestamp()),
+        "exp": int((_now_utc() + timedelta(days=30)).timestamp()),
     }
-    return jwt.encode(payload, _jwt_secret(), algorithm="HS256")
+    return jwt.encode(payload, _auth_secret(), algorithm="HS256")
 
 
-def _issue_refresh_token(user_id: str) -> str:
-    days = int(os.getenv("REFRESH_TOKEN_DAYS", "14"))
-    now = datetime.now(timezone.utc)
-    payload = {
-        "sub": str(user_id),
-        "type": "refresh",
-        "iat": int(now.timestamp()),
-        "exp": int((now + timedelta(days=days)).timestamp()),
-    }
-    return jwt.encode(payload, _jwt_secret(), algorithm="HS256")
-
-
-def _decode_token(token: str) -> dict:
-    return jwt.decode(token, _jwt_secret(), algorithms=["HS256"])
-
-
-def _bearer_token() -> str | None:
+def _get_bearer_token() -> str | None:
     h = request.headers.get("Authorization", "")
-    if h.lower().startswith("bearer "):
+    if h.startswith("Bearer "):
         return h.split(" ", 1)[1].strip()
     return None
 
 
+def _decode_token(token: str) -> dict:
+    return jwt.decode(token, _auth_secret(), algorithms=["HS256"])
+
+
 # ----------------------------
-# Routes
+# Basic routes
 # ----------------------------
 @api_bp.get("/")
-def root():
-    # Helps Render + quick sanity check
-    return jsonify({"ok": True, "service": "early-risk-alert-mobile-api"}), 200
+def api_root():
+    # Remember: this is mounted at /api/v1/
+    return jsonify(
+        {
+            "ok": True,
+            "service": "early-risk-alert-mobile-api",
+            "base_path": "/api/v1",
+            "endpoints": [
+                "GET  /api/v1/health",
+                "POST /api/v1/predict",
+                "POST /api/v1/auth/login",
+                "POST /api/v1/auth/verify",
+                "POST /api/v1/auth/refresh",
+            ],
+        }
+    ), 200
 
 
 @api_bp.get("/health")
 def health():
-    # Optional DB check (won’t crash if DB is down)
-    db_ok = True
-    db_error = None
-    try:
-        db.session.execute(db.text("SELECT 1"))
-    except Exception as e:
-        db_ok = False
-        db_error = str(e)
-
-    return (
-        jsonify(
-            {
-                "ok": True,
-                "db_ok": db_ok,
-                "db_error": db_error,
-            }
-        ),
-        (200 if db_ok else 503),
-    )
+    return jsonify({"ok": True}), 200
 
 
+# ----------------------------
+# Prediction
+# ----------------------------
 @api_bp.post("/predict")
 def api_predict():
     data = request.get_json(silent=True) or {}
@@ -126,108 +134,111 @@ def api_predict():
         diastolic_bp = _num(data.get("diastolic_bp"), "diastolic_bp")
         heart_rate = _num(data.get("heart_rate"), "heart_rate")
     except ValueError as e:
-        return _json_error("validation", str(e), 400)
+        return jsonify({"error": "validation", "message": str(e)}), 400
 
     # Run model
-    try:
-        risk_label, probability = predict_risk(
-            age=age,
-            bmi=bmi,
-            exercise_level=exercise_level,
-            systolic_bp=systolic_bp,
-            diastolic_bp=diastolic_bp,
-            heart_rate=heart_rate,
-        )
-    except Exception as e:
-        return _json_error("model_error", f"Prediction failed: {e}", 500)
-
-    # Save to DB (safe: won’t break deploy if table isn’t ready)
-    try:
-        rec = Prediction(
-            age=age,
-            bmi=bmi,
-            exercise_level=exercise_level,
-            systolic_bp=systolic_bp,
-            diastolic_bp=diastolic_bp,
-            heart_rate=heart_rate,
-            risk_label=str(risk_label),
-            probability=float(probability),
-        )
-        db.session.add(rec)
-        db.session.commit()
-    except Exception:
-        # Don’t crash request if DB/table isn’t set up yet
-        try:
-            db.session.rollback()
-        except Exception:
-            pass
-
-    return (
-        jsonify(
-            {
-                "risk_label": str(risk_label),
-                "probability": float(probability),
-            }
-        ),
-        200,
+    risk_label, probability = predict_risk(
+        age=age,
+        bmi=bmi,
+        exercise_level=exercise_level,
+        systolic_bp=systolic_bp,
+        diastolic_bp=diastolic_bp,
+        heart_rate=heart_rate,
     )
+
+    # Save to DB if Prediction model exists + table exists
+    if Prediction is not None:
+        try:
+            rec = Prediction(
+                age=age,
+                bmi=bmi,
+                exercise_level=exercise_level,
+                systolic_bp=systolic_bp,
+                diastolic_bp=diastolic_bp,
+                heart_rate=heart_rate,
+                risk_label=risk_label,
+                probability=probability,
+                created_at=_now_utc(),
+            )
+            db.session.add(rec)
+            db.session.commit()
+        except Exception:
+            # Don't crash API if DB/table/columns differ
+            db.session.rollback()
+
+    return jsonify({"risk_label": risk_label, "probability": probability}), 200
 
 
 # ----------------------------
-# Auth (simple JWT)
+# Auth (Magic code -> JWT)
 # ----------------------------
 @api_bp.post("/auth/login")
 def auth_login():
     data = request.get_json(silent=True) or {}
-    user_id = data.get("user_id")
-
+    user_id = str(data.get("user_id") or "").strip()
     if not user_id:
-        return _json_error("user_id_required", "Provide {\"user_id\":\"123\"}", 400)
+        return jsonify({"error": "validation", "message": "'user_id' is required"}), 400
 
-    return (
-        jsonify(
-            {
-                "access_token": _issue_access_token(str(user_id)),
-                "refresh_token": _issue_refresh_token(str(user_id)),
-                "token_type": "Bearer",
-            }
-        ),
-        200,
-    )
+    # 6-digit code
+    code = f"{secrets.randbelow(1_000_000):06d}"
+    exp = int(time.time()) + MAGIC_CODE_TTL_SECONDS
+    _MAGIC_CODES[user_id] = {"code": code, "exp": exp}
+
+    resp = {
+        "ok": True,
+        "sent": True,
+        "expires_in": MAGIC_CODE_TTL_SECONDS,
+    }
+
+    # For development/testing only so you can move forward fast
+    if not _is_prod():
+        resp["dev_code"] = code
+
+    return jsonify(resp), 200
+
+
+@api_bp.post("/auth/verify")
+def auth_verify():
+    data = request.get_json(silent=True) or {}
+    user_id = str(data.get("user_id") or "").strip()
+    code = str(data.get("code") or "").strip()
+
+    if not user_id or not code:
+        return jsonify(
+            {"error": "validation", "message": "'user_id' and 'code' are required"}
+        ), 400
+
+    entry = _MAGIC_CODES.get(user_id)
+    if not entry:
+        return jsonify({"error": "auth", "message": "No code requested"}), 401
+
+    if int(time.time()) > int(entry["exp"]):
+        _MAGIC_CODES.pop(user_id, None)
+        return jsonify({"error": "auth", "message": "Code expired"}), 401
+
+    if code != entry["code"]:
+        return jsonify({"error": "auth", "message": "Invalid code"}), 401
+
+    # Success -> issue JWT
+    _MAGIC_CODES.pop(user_id, None)
+    token = _make_token(user_id)
+
+    return jsonify({"ok": True, "token": token}), 200
 
 
 @api_bp.post("/auth/refresh")
 def auth_refresh():
-    data = request.get_json(silent=True) or {}
-    refresh_token = data.get("refresh_token") or _bearer_token()
-
-    if not refresh_token:
-        return _json_error(
-            "refresh_token_required",
-            "Provide refresh_token in JSON or Authorization: Bearer <token>",
-            400,
-        )
+    token = _get_bearer_token()
+    if not token:
+        return jsonify({"error": "auth", "message": "Missing Bearer token"}), 401
 
     try:
-        payload = _decode_token(refresh_token)
-        if payload.get("type") != "refresh":
-            return _json_error("invalid_token", "Not a refresh token", 401)
-
+        payload = _decode_token(token)
         user_id = payload.get("sub")
         if not user_id:
-            return _json_error("invalid_token", "Missing sub", 401)
+            return jsonify({"error": "auth", "message": "Invalid token"}), 401
+    except Exception:
+        return jsonify({"error": "auth", "message": "Invalid token"}), 401
 
-        return (
-            jsonify(
-                {
-                    "access_token": _issue_access_token(str(user_id)),
-                    "token_type": "Bearer",
-                }
-            ),
-            200,
-        )
-
-    except jwt.ExpiredSignatureError:
-        return _json_error("expired_token", "Refresh token expired", 401)
-    except Exception as e:
-        return _json_error("invalid_token", f"Could not decode token: {e}", 401)
+    new_token = _make_token(str(user_id))
+    return jsonify({"ok": True, "token": new_token}), 200
