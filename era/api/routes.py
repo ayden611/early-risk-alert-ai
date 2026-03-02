@@ -1,108 +1,93 @@
-# era/api/routes.py
 import os
+import time
+import json
 import secrets
 from datetime import datetime, timedelta, timezone
 
 import jwt
-from flask import Blueprint, current_app, jsonify, request
+from flask import Blueprint, request, jsonify, current_app
 
 from era.extensions import db
 
-# Optional DB model (save predictions if it exists)
+# DB model is optional (app still runs without it)
 try:
     from era.models import Prediction  # type: ignore
 except Exception:
     Prediction = None  # type: ignore
 
-# Your model function lives at the repo root predict.py (per your setup)
-try:
-    from predict import predict_risk  # type: ignore
-except Exception:
-    predict_risk = None  # type: ignore
+# Your prediction function (root-level predict.py)
+# IMPORTANT: this must exist at repo root as predict.py with predict_risk(...)
+from predict import predict_risk  # type: ignore
 
 
 api_bp = Blueprint("api", __name__)
 
-# ----------------------------
-# Simple in-memory auth store
-# NOTE: This works best with WEB_CONCURRENCY=1 on Render.
-# For multi-worker scaling, store codes in DB/Redis instead.
-# ----------------------------
-_AUTH_CODES: dict[str, dict] = {}  # user_id -> {"code": str, "exp": datetime}
-_REFRESH_ALLOW: dict[str, dict] = {}  # refresh_jti -> {"user_id": str, "exp": datetime}
 
-
-def _now() -> datetime:
+# ----------------------------
+# Helpers
+# ----------------------------
+def _now_utc() -> datetime:
     return datetime.now(timezone.utc)
 
 
-def _jwt_secret() -> str:
-    # Uses Flask SECRET_KEY if present, else env JWT_SECRET, else fallback (not recommended for prod)
-    return (
-        current_app.config.get("SECRET_KEY")
-        or os.getenv("JWT_SECRET")
-        or "dev-secret-change-me"
-    )
+def _json(data, code=200):
+    return jsonify(data), code
 
 
-def _jwt_alg() -> str:
-    return os.getenv("JWT_ALG", "HS256")
+def _get_jwt_secret() -> str:
+    # MUST be set on Render as env var (recommended), but fallback works locally
+    return os.getenv("JWT_SECRET", current_app.config.get("SECRET_KEY", "dev-secret-change-me"))
 
 
-def _json_error(kind: str, msg: str, status: int):
-    return jsonify({"error": kind, "message": msg}), status
-
-
-def _require_json() -> dict:
-    data = request.get_json(silent=True)
-    return data if isinstance(data, dict) else {}
-
-
-def _issue_tokens(user_id: str) -> dict:
-    secret = _jwt_secret()
-    alg = _jwt_alg()
-
-    access_exp = _now() + timedelta(minutes=int(os.getenv("ACCESS_TOKEN_MIN", "15")))
-    refresh_exp = _now() + timedelta(days=int(os.getenv("REFRESH_TOKEN_DAYS", "7")))
-
-    refresh_jti = secrets.token_urlsafe(16)
-
-    access_payload = {
+def _issue_token(user_id: str, minutes: int = 60) -> str:
+    payload = {
         "sub": user_id,
+        "iat": int(_now_utc().timestamp()),
+        "exp": int((_now_utc() + timedelta(minutes=minutes)).timestamp()),
         "type": "access",
-        "exp": int(access_exp.timestamp()),
-        "iat": int(_now().timestamp()),
     }
-    refresh_payload = {
-        "sub": user_id,
-        "type": "refresh",
-        "jti": refresh_jti,
-        "exp": int(refresh_exp.timestamp()),
-        "iat": int(_now().timestamp()),
-    }
-
-    access_token = jwt.encode(access_payload, secret, algorithm=alg)
-    refresh_token = jwt.encode(refresh_payload, secret, algorithm=alg)
-
-    # allow refresh token usage (basic allowlist)
-    _REFRESH_ALLOW[refresh_jti] = {"user_id": user_id, "exp": refresh_exp}
-
-    return {
-        "access_token": access_token,
-        "refresh_token": refresh_token,
-        "token_type": "Bearer",
-        "access_expires_in": int((access_exp - _now()).total_seconds()),
-    }
+    return jwt.encode(payload, _get_jwt_secret(), algorithm="HS256")
 
 
 def _decode_token(token: str) -> dict:
-    secret = _jwt_secret()
-    alg = _jwt_alg()
-    return jwt.decode(token, secret, algorithms=[alg])
+    return jwt.decode(token, _get_jwt_secret(), algorithms=["HS256"])
 
 
-def _exercise_norm(value):
-    if value is None:
+def _bearer_token() -> str | None:
+    h = request.headers.get("Authorization", "")
+    if not h.startswith("Bearer "):
+        return None
+    return h.split(" ", 1)[1].strip() or None
+
+
+def require_auth():
+    token = _bearer_token()
+    if not token:
+        return None, _json({"error": "auth", "message": "Missing Bearer token"}, 401)
+    try:
+        payload = _decode_token(token)
+        user_id = payload.get("sub")
+        if not user_id:
+            return None, _json({"error": "auth", "message": "Invalid token payload"}, 401)
+        return user_id, None
+    except jwt.ExpiredSignatureError:
+        return None, _json({"error": "auth", "message": "Token expired"}, 401)
+    except Exception:
+        return None, _json({"error": "auth", "message": "Invalid token"}, 401)
+
+
+def _num(value, field: str) -> float:
+    if value is None or value == "":
+        raise ValueError(f"'{field}' is required")
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        raise ValueError(f"'{field}' must be a number")
+
+
+def _exercise(value) -> str:
+    # Normalize exercise level to Low/Moderate/High for predict_risk
+    if value is None or value == "":
         raise ValueError("'exercise_level' is required")
     v = str(value).strip().lower()
     if v in ("low", "0"):
@@ -114,148 +99,138 @@ def _exercise_norm(value):
     raise ValueError("'exercise_level' must be Low, Moderate, or High")
 
 
-def _num(value, field):
-    if value is None or value == "":
-        raise ValueError(f"'{field}' is required")
-    try:
-        return float(value)
-    except (TypeError, ValueError):
-        raise ValueError(f"'{field}' must be a number")
+def _log_event(event: str, extra: dict | None = None):
+    # Simple structured logs to Render
+    payload = {"event": event, "ts": int(_now_utc().timestamp())}
+    if extra:
+        payload.update(extra)
+    current_app.logger.info(json.dumps(payload))
 
 
 # ----------------------------
-# Routes
+# Basic service endpoints
 # ----------------------------
-
 @api_bp.get("/")
-def api_root():
-    # This prevents 404s when you hit /api/v1/
-    return jsonify({"ok": True, "service": "early-risk-alert-mobile-api"}), 200
+def root():
+    return _json({"ok": True, "service": "early-risk-alert-api"})
 
 
 @api_bp.get("/health")
 def health():
-    return jsonify({"ok": True}), 200
+    db_ok = True
+    db_error = None
+    try:
+        db.session.execute(db.text("SELECT 1"))  # type: ignore[attr-defined]
+    except Exception as e:
+        db_ok = False
+        db_error = str(e)
+
+    return _json(
+        {
+            "ok": True,
+            "db_ok": db_ok,
+            "db_error": db_error,
+            "time_utc": _now_utc().isoformat(),
+        },
+        200 if db_ok else 503,
+    )
+
+
+# ----------------------------
+# Auth (simple OTP demo)
+# ----------------------------
+# In-memory OTP store (works on single instance; good for demo)
+# For real production, store in DB or Redis.
+_OTP = {}  # user_id -> {"code": "123456", "exp": epoch_seconds}
+
+
+def _otp_issue(user_id: str, ttl_seconds: int = 600) -> str:
+    code = f"{secrets.randbelow(1_000_000):06d}"
+    _OTP[user_id] = {"code": code, "exp": int(time.time()) + ttl_seconds}
+    return code
+
+
+def _otp_verify(user_id: str, code: str) -> bool:
+    rec = _OTP.get(user_id)
+    if not rec:
+        return False
+    if int(time.time()) > int(rec["exp"]):
+        return False
+    return str(rec["code"]) == str(code)
 
 
 @api_bp.post("/auth/login")
 def auth_login():
-    """
-    Body: {"user_id":"123"}
-    Creates a 6-digit code (expires in 10 min) and logs it in Render logs.
-    """
-    data = _require_json()
-    user_id = str(data.get("user_id") or "").strip()
+    data = request.get_json(silent=True) or {}
+    user_id = str(data.get("user_id", "")).strip()
     if not user_id:
-        return _json_error("validation", "'user_id' is required", 400)
+        return _json({"error": "validation", "message": "'user_id' is required"}, 400)
 
-    code = f"{secrets.randbelow(1_000_000):06d}"
-    exp = _now() + timedelta(seconds=int(os.getenv("AUTH_CODE_TTL_SEC", "600")))
+    # Issue OTP (demo). In real life you'd send SMS/email.
+    code = _otp_issue(user_id, ttl_seconds=600)
 
-    _AUTH_CODES[user_id] = {"code": code, "exp": exp}
+    _log_event("auth_login", {"user_id": user_id})
+    # We do NOT return the code to client in production.
+    # For demo/testing, you can optionally return it if DEMO_RETURN_OTP=1
+    if os.getenv("DEMO_RETURN_OTP", "0") == "1":
+        return _json({"ok": True, "sent": True, "expires_in": 600, "code": code})
 
-    # In real life you would send SMS/email.
-    # For now: log it so you can verify immediately.
-    current_app.logger.info("LOGIN_CODE user_id=%s code=%s exp=%s", user_id, code, exp)
-
-    return jsonify({"ok": True, "sent": True, "expires_in": int((exp - _now()).total_seconds())}), 200
+    return _json({"ok": True, "sent": True, "expires_in": 600})
 
 
 @api_bp.post("/auth/verify")
 def auth_verify():
-    """
-    Body: {"user_id":"123", "code":"123456"}
-    Verifies code, returns access + refresh tokens.
-    """
-    data = _require_json()
-    user_id = str(data.get("user_id") or "").strip()
-    code = str(data.get("code") or "").strip()
+    data = request.get_json(silent=True) or {}
+    user_id = str(data.get("user_id", "")).strip()
+    code = str(data.get("code", "")).strip()
 
     if not user_id or not code:
-        return _json_error("validation", "'user_id' and 'code' are required", 400)
+        return _json({"error": "validation", "message": "'user_id' and 'code' are required"}, 400)
 
-    rec = _AUTH_CODES.get(user_id)
-    if not rec:
-        return _json_error("auth", "No active code. Call /auth/login again.", 401)
+    if not _otp_verify(user_id, code):
+        # differentiate expired vs wrong for your logs
+        rec = _OTP.get(user_id)
+        if rec and int(time.time()) > int(rec["exp"]):
+            return _json({"error": "auth", "message": "Code expired"}, 401)
+        return _json({"error": "auth", "message": "Invalid code"}, 401)
 
-    if _now() > rec["exp"]:
-        _AUTH_CODES.pop(user_id, None)
-        return _json_error("auth", "Code expired", 401)
-
-    if code != rec["code"]:
-        return _json_error("auth", "Invalid code", 401)
-
-    # one-time use
-    _AUTH_CODES.pop(user_id, None)
-
-    tokens = _issue_tokens(user_id)
-    return jsonify({"ok": True, **tokens}), 200
+    token = _issue_token(user_id, minutes=int(os.getenv("ACCESS_TOKEN_MINUTES", "60")))
+    _log_event("auth_verify_ok", {"user_id": user_id})
+    return _json({"ok": True, "token": token, "token_type": "Bearer"})
 
 
 @api_bp.post("/auth/refresh")
 def auth_refresh():
-    """
-    Header: Authorization: Bearer <refresh_token>
-    Returns a new access token (and optionally a new refresh token if you want later).
-    """
-    auth = request.headers.get("Authorization", "")
-    if not auth.startswith("Bearer "):
-        return _json_error("auth", "Missing Bearer token", 401)
-
-    token = auth.split(" ", 1)[1].strip()
-    try:
-        payload = _decode_token(token)
-    except Exception:
-        return _json_error("auth", "Invalid token", 401)
-
-    if payload.get("type") != "refresh":
-        return _json_error("auth", "Wrong token type", 401)
-
-    user_id = str(payload.get("sub") or "").strip()
-    jti = str(payload.get("jti") or "").strip()
-    if not user_id or not jti:
-        return _json_error("auth", "Invalid refresh token payload", 401)
-
-    allow = _REFRESH_ALLOW.get(jti)
-    if not allow:
-        return _json_error("auth", "Refresh token revoked/unknown", 401)
-
-    if _now() > allow["exp"]:
-        _REFRESH_ALLOW.pop(jti, None)
-        return _json_error("auth", "Refresh token expired", 401)
-
-    tokens = _issue_tokens(user_id)
-    return jsonify({"ok": True, **tokens}), 200
+    # Refresh simply re-issues if current token valid (demo style)
+    user_id, err = require_auth()
+    if err:
+        return err
+    token = _issue_token(user_id, minutes=int(os.getenv("ACCESS_TOKEN_MINUTES", "60")))
+    return _json({"ok": True, "token": token, "token_type": "Bearer"})
 
 
+# ----------------------------
+# Predict (JWT protected)
+# ----------------------------
 @api_bp.post("/predict")
 def api_predict():
-    """
-    Body:
-    {
-      "age": 45,
-      "bmi": 27.5,
-      "exercise_level": "Moderate",
-      "systolic_bp": 130,
-      "diastolic_bp": 85,
-      "heart_rate": 72
-    }
-    """
-    if predict_risk is None:
-        return _json_error("server", "Model not available (predict_risk import failed)", 500)
+    user_id, err = require_auth()
+    if err:
+        return err
 
-    data = _require_json()
+    data = request.get_json(silent=True) or {}
 
     try:
         age = _num(data.get("age"), "age")
         bmi = _num(data.get("bmi"), "bmi")
-        exercise_level = _exercise_norm(data.get("exercise_level"))
+        exercise_level = _exercise(data.get("exercise_level"))
         systolic_bp = _num(data.get("systolic_bp"), "systolic_bp")
         diastolic_bp = _num(data.get("diastolic_bp"), "diastolic_bp")
         heart_rate = _num(data.get("heart_rate"), "heart_rate")
     except ValueError as e:
-        return _json_error("validation", str(e), 400)
+        return _json({"error": "validation", "message": str(e)}, 400)
 
+    # Run model
     risk_label, probability = predict_risk(
         age=age,
         bmi=bmi,
@@ -265,10 +240,12 @@ def api_predict():
         heart_rate=heart_rate,
     )
 
-    # Save if DB model exists
+    # Save (if DB model exists)
+    saved = False
     if Prediction is not None:
         try:
             pred = Prediction(
+                user_id=str(user_id),
                 age=age,
                 bmi=bmi,
                 exercise_level=exercise_level,
@@ -277,11 +254,66 @@ def api_predict():
                 heart_rate=heart_rate,
                 risk_label=risk_label,
                 probability=probability,
+                created_at=_now_utc(),
             )
             db.session.add(pred)
             db.session.commit()
-        except Exception:
+            saved = True
+        except Exception as e:
+            # Don’t break predict if DB fails
             db.session.rollback()
-            # don't fail prediction if DB save fails
+            _log_event("db_save_failed", {"error": str(e)})
 
-    return jsonify({"risk_label": risk_label, "probability": probability}), 200
+    _log_event(
+        "predict",
+        {"user_id": user_id, "risk_label": risk_label, "probability": probability, "saved": saved},
+    )
+
+    return _json(
+        {
+            "ok": True,
+            "risk_label": risk_label,
+            "probability": probability,
+            "saved": saved,
+        }
+    )
+
+
+# ----------------------------
+# History (JWT protected)
+# ----------------------------
+@api_bp.get("/history")
+def history():
+    user_id, err = require_auth()
+    if err:
+        return err
+
+    if Prediction is None:
+        return _json({"ok": True, "items": [], "note": "Prediction model/table not available"}, 200)
+
+    try:
+        q = (
+            db.session.query(Prediction)  # type: ignore
+            .filter(getattr(Prediction, "user_id") == str(user_id))  # type: ignore
+            .order_by(getattr(Prediction, "created_at").desc())  # type: ignore
+            .limit(int(os.getenv("HISTORY_LIMIT", "50")))
+        )
+        items = []
+        for p in q:
+            items.append(
+                {
+                    "id": getattr(p, "id", None),
+                    "created_at": getattr(p, "created_at", None).isoformat() if getattr(p, "created_at", None) else None,
+                    "age": getattr(p, "age", None),
+                    "bmi": getattr(p, "bmi", None),
+                    "exercise_level": getattr(p, "exercise_level", None),
+                    "systolic_bp": getattr(p, "systolic_bp", None),
+                    "diastolic_bp": getattr(p, "diastolic_bp", None),
+                    "heart_rate": getattr(p, "heart_rate", None),
+                    "risk_label": getattr(p, "risk_label", None),
+                    "probability": getattr(p, "probability", None),
+                }
+            )
+        return _json({"ok": True, "items": items})
+    except Exception as e:
+        return _json({"error": "server", "message": str(e)}, 500)
