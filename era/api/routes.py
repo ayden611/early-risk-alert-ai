@@ -6,6 +6,7 @@ import secrets
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional, Tuple
 from era.models import HealthEvent
+from era.extensions import db
 
 import jwt
 import numpy as np
