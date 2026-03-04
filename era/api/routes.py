@@ -5,6 +5,7 @@ import json
 import secrets
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional, Tuple
+from era.models import HealthEvent
 
 import jwt
 import numpy as np
