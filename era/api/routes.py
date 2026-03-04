@@ -1,10 +1,9 @@
 # era/api/routes.py
 import json
-import os
 import re
 import time
 from datetime import datetime, timezone
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from flask import Blueprint, Response, current_app, jsonify, request, stream_with_context
 from sqlalchemy import text
@@ -18,29 +17,23 @@ try:
 except Exception:
     HealthEvent = None  # type: ignore
 
-from flask import Blueprint, request, jsonify
-from werkzeug.exceptions import HTTPException
+# Optional reasoning engine (if present)
+try:
+    from era.ai.health_reasoning import generate_health_reasoning  # type: ignore
+except Exception:
+    generate_health_reasoning = None  # type: ignore
+
 
 api_bp = Blueprint("api", __name__)
 
+# ----------------------------
+# Error handler (JSON)
+# ----------------------------
 @api_bp.errorhandler(Exception)
 def _json_errors(e):
+    current_app.logger.exception("Unhandled error")
     if isinstance(e, HTTPException):
         return jsonify({"error": "http", "code": e.code, "message": e.description}), e.code
-    return jsonify({"error": "server", "message": str(e)}), 500
-
-from era.ai.health_reasoning import generate_health_reasoning
-
-@api_bp.get("/ai/health/reasoning")
-def ai_health_reasoning():
-    user_id = request.args.get("user_id")
-    if not user_id:
-        return jsonify({"error": "user_id required"}), 400
-
-    result = generate_health_reasoning(user_id)
-    return jsonify({"user_id": user_id, "ai_analysis": result}), 200
-
- e.description}), e.code
     return jsonify({"error": "server", "message": str(e)}), 500
 
 
@@ -48,17 +41,17 @@ def ai_health_reasoning():
 # Helpers
 # ----------------------------
 _BP_RE = re.compile(r"\b(?:bp|blood\s*pressure)\s*(\d{2,3})\s*(?:/|over)\s*(\d{2,3})\b", re.I)
-_HR_RE = re.compile(r"\b(?:hr|heart\s*rate)\s*(\d{2,3})\b", re.I)
-_BMI_RE = re.compile(r"\b(?:bmi)\s*(\d{1,2}(?:\.\d+)?)\b", re.I)
+_HR_RE = re.compile(r"\b(?:hr|heart\s*rate|pulse)\s*(\d{2,3})\b", re.I)
+_BMI_RE = re.compile(r"\b(?:bmi)\s*(\d{2,3}(?:\.\d+)?)\b", re.I)
 _AGE_RE = re.compile(r"\b(?:age)\s*(\d{1,3})\b", re.I)
-_EX_RE = re.compile(r"\b(?:exercise)\s*(low|moderate|high)\b", re.I)
+_EX_RE = re.compile(r"\b(?:exercise|activity)\s*(low|moderate|high)\b", re.I)
 
 
 def _now_utc() -> datetime:
     return datetime.now(timezone.utc)
 
 
-def _safe_float(x, default=None):
+def _safe_float(x: Any, default: Optional[float] = None) -> Optional[float]:
     try:
         if x is None:
             return default
@@ -67,39 +60,26 @@ def _safe_float(x, default=None):
         return default
 
 
-def _exercise_to_num(v: Any) -> float:
-    s = str(v or "").strip().lower()
+def _exercise_to_num(level: Any) -> Optional[int]:
+    if level is None:
+        return None
+    s = str(level).strip().lower()
     if s in ("0", "low"):
-        return 0.0
+        return 0
     if s in ("1", "moderate", "mod"):
-        return 1.0
+        return 1
     if s in ("2", "high"):
-        return 2.0
-    # if user passes numeric
-    f = _safe_float(v, None)
-    return float(f) if f is not None else 0.0
-
-
-def _first(payload: dict, keys, default=None):
-    for k in keys:
-        if k in payload and payload[k] is not None:
-            return payload[k]
-    return default
-
-
-def _coerce_inputs(payload: dict) -> Tuple[float, float, float, float, float, float]:
-    age = float(_first(payload, ["age"], 0) or 0)
-    bmi = float(_first(payload, ["bmi"], 0) or 0)
-    ex = _exercise_to_num(_first(payload, ["exercise_level", "exercise"], ""))
-    sbp = float(_first(payload, ["systolic_bp", "sys_bp", "sbp"], 0) or 0)
-    dbp = float(_first(payload, ["diastolic_bp", "dia_bp", "dbp"], 0) or 0)
-    hr = float(_first(payload, ["heart_rate", "hr"], 0) or 0)
-    return age, bmi, ex, sbp, dbp, hr
+        return 2
+    return None
 
 
 def _parse_transcript(transcript: str) -> Dict[str, Any]:
+    """
+    Parses a simple transcript like:
+    "BP 140 over 90 heart rate 88 bmi 27.5 age 45 exercise moderate"
+    """
     out: Dict[str, Any] = {}
-    t = (transcript or "").strip()
+    t = transcript or ""
 
     m = _BP_RE.search(t)
     if m:
@@ -125,252 +105,148 @@ def _parse_transcript(transcript: str) -> Dict[str, Any]:
     return out
 
 
-def _ensure_pipeline_tables():
-    """Creates lightweight tables if they don't exist (Postgres or SQLite)."""
-    dialect = db.engine.dialect.name
+def _coerce_inputs(payload: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Accepts either:
+      - systolic_bp or sbp
+      - diastolic_bp or dbp
+      - exercise_level or exercise
+    """
+    p = dict(payload or {})
 
-    if dialect == "postgresql":
-        db.session.execute(
-            text(
-                """
-                CREATE TABLE IF NOT EXISTS health_anomaly (
-                    id BIGSERIAL PRIMARY KEY,
-                    user_id TEXT NOT NULL,
-                    kind TEXT NOT NULL,
-                    severity INTEGER NOT NULL,
-                    details_json TEXT NOT NULL,
-                    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-                );
-                """
-            )
-        )
-        db.session.execute(
-            text(
-                """
-                CREATE TABLE IF NOT EXISTS health_event (
-                    id BIGSERIAL PRIMARY KEY,
-                    user_id TEXT NOT NULL,
-                    event_type TEXT NOT NULL,
-                    data_json TEXT NOT NULL,
-                    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-                );
-                """
-            )
-        )
-    else:
-        # sqlite
-        db.session.execute(
-            text(
-                """
-                CREATE TABLE IF NOT EXISTS health_anomaly (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    user_id TEXT NOT NULL,
-                    kind TEXT NOT NULL,
-                    severity INTEGER NOT NULL,
-                    details_json TEXT NOT NULL,
-                    created_at TEXT NOT NULL
-                );
-                """
-            )
-        )
-        db.session.execute(
-            text(
-                """
-                CREATE TABLE IF NOT EXISTS health_event (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    user_id TEXT NOT NULL,
-                    event_type TEXT NOT NULL,
-                    data_json TEXT NOT NULL,
-                    created_at TEXT NOT NULL
-                );
-                """
-            )
-        )
-    db.session.commit()
+    # Normalize keys
+    if "sbp" in p and "systolic_bp" not in p:
+        p["systolic_bp"] = p.get("sbp")
+    if "dbp" in p and "diastolic_bp" not in p:
+        p["diastolic_bp"] = p.get("dbp")
+    if "exercise" in p and "exercise_level" not in p:
+        p["exercise_level"] = p.get("exercise")
+
+    # Coerce numeric
+    for k in ("age", "bmi", "systolic_bp", "diastolic_bp", "heart_rate"):
+        if k in p:
+            p[k] = _safe_float(p.get(k))
+
+    return p
 
 
-def _insert_event(user_id: str, event_type: str, data: Dict[str, Any]) -> None:
-    """Save event either via ORM HealthEvent or fallback table."""
-    if HealthEvent is not None:
-        try:
-            ev = HealthEvent(user_id=user_id, event_type=event_type, data=data)  # type: ignore
-            db.session.add(ev)
-            db.session.commit()
-            return
-        except Exception:
-            db.session.rollback()
-
-    # fallback raw insert
-    created_at = _now_utc().isoformat()
+def _ensure_pipeline_tables() -> None:
+    """
+    Creates/patches the minimal tables needed for:
+      - health events
+      - storing JSON as text (data_json)
+    Works on Postgres.
+    """
+    # Create table if not exists
     db.session.execute(
         text(
             """
-            INSERT INTO health_event (user_id, event_type, data_json, created_at)
-            VALUES (:user_id, :event_type, :data_json, :created_at)
+            CREATE TABLE IF NOT EXISTS health_event (
+              id BIGSERIAL PRIMARY KEY,
+              user_id TEXT NOT NULL,
+              event_type TEXT NOT NULL,
+              created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+              data_json TEXT
+            );
             """
-        ),
-        {
-            "user_id": user_id,
-            "event_type": event_type,
-            "data_json": json.dumps(data),
-            "created_at": created_at,
-        },
+        )
     )
+    # Ensure column exists (fixes your UndefinedColumn: data_json)
+    db.session.execute(text("ALTER TABLE health_event ADD COLUMN IF NOT EXISTS data_json TEXT;"))
+    db.session.execute(text("CREATE INDEX IF NOT EXISTS ix_health_event_user_id_id ON health_event(user_id, id);"))
+    db.session.execute(text("CREATE INDEX IF NOT EXISTS ix_health_event_type ON health_event(event_type);"))
     db.session.commit()
 
 
-def _linear_slope(xs, ys) -> float:
-    # simple least squares slope, small n safe
-    n = len(xs)
-    if n < 2:
-        return 0.0
-    x_mean = sum(xs) / n
-    y_mean = sum(ys) / n
-    num = sum((xs[i] - x_mean) * (ys[i] - y_mean) for i in range(n))
-    den = sum((xs[i] - x_mean) ** 2 for i in range(n))
-    return float(num / den) if den else 0.0
+def _insert_event(user_id: str, event_type: str, data: Dict[str, Any]) -> int:
+    _ensure_pipeline_tables()
+    created_at = _now_utc()
 
-
-def _trend_alert(user_id: str) -> Optional[Tuple[str, int, Dict[str, Any]]]:
-    """
-    Trend alert if SBP or HR is rising fast over last N events.
-    Returns (kind, severity, details) or None.
-    """
-    # pull last 6 intake events
-    rows = db.session.execute(
-        text(
-            """
-            SELECT id, data, created_at
-            FROM health_event
-            WHERE user_id = :user_id AND event_type IN ('health_intake','voice_intake')
-            ORDER BY id DESC
-            LIMIT 6
-            """
-        ),
-        {"user_id": user_id},
-    ).fetchall()
-
-    if len(rows) < 4:
-        return None
-
-    rows = list(reversed(rows))  # oldest -> newest
-    xs = list(range(len(rows)))
-
-    sbps, hrs = [], []
-    for r in rows:
-        try:
-            d = json.loads(r[1] or "{}")
-        except Exception:
-            d = {}
-        sbps.append(float(d.get("systolic_bp", 0) or 0))
-        hrs.append(float(d.get("heart_rate", 0) or 0))
-
-    sbp_slope = _linear_slope(xs, sbps)  # per-event change
-    hr_slope = _linear_slope(xs, hrs)
-
-    # thresholds (tune later)
-    if sbp_slope >= 8:  # e.g., +8 mmHg each event
-        return (
-            "rapid_bp_rise",
-            2,
-            {"sbp_slope": sbp_slope, "last_sbp": sbps[-1], "n": len(rows)},
+    if HealthEvent is not None:
+        row = HealthEvent(  # type: ignore
+            user_id=user_id,
+            event_type=event_type,
+            created_at=created_at,
+            data_json=json.dumps(data),
         )
-    if hr_slope >= 6:
-        return (
-            "rapid_hr_rise",
-            2,
-            {"hr_slope": hr_slope, "last_hr": hrs[-1], "n": len(rows)},
-        )
-    return None
-
-
-def _rule_anomaly(age: float, bmi: float, sbp: float, dbp: float, hr: float) -> Optional[Tuple[str, int, Dict[str, Any]]]:
-    """
-    20-ish line real-time anomaly detection engine (rules-based).
-    Returns (kind, severity, details) or None.
-    """
-    severity, kind = 0, None
-
-    if sbp >= 180 or dbp >= 120:
-        severity, kind = 3, "hypertensive_crisis"
-    elif sbp >= 160 or dbp >= 100:
-        severity, kind = 2, "stage2_hypertension"
-    elif sbp >= 140 or dbp >= 90:
-        severity, kind = 1, "stage1_hypertension"
-
-    if hr >= 120:
-        severity, kind = max(severity, 2), kind or "tachycardia"
-    if hr <= 45 and hr > 0:
-        severity, kind = max(severity, 2), kind or "bradycardia"
-
-    if bmi >= 35:
-        severity, kind = max(severity, 1), kind or "bmi_high"
-
-    if severity <= 0 or not kind:
-        return None
-
-    details = {"age": age, "bmi": bmi, "sbp": sbp, "dbp": dbp, "hr": hr}
-    return kind, severity, details
-
-
-def _insert_anomaly(user_id: str, kind: str, severity: int, details: Dict[str, Any]) -> int:
-    """Insert anomaly and return anomaly id."""
-    created_at = _now_utc().isoformat()
-    details_json = json.dumps(details)
-
-    # Postgres can RETURNING id; SQLite can't (in same way), so handle both.
-    dialect = db.engine.dialect.name
-    if dialect == "postgresql":
-        row = db.session.execute(
+        db.session.add(row)
+        db.session.commit()
+        return int(getattr(row, "id"))
+    else:
+        res = db.session.execute(
             text(
                 """
-                INSERT INTO health_anomaly (user_id, kind, severity, details_json, created_at)
-                VALUES (:user_id, :kind, :severity, :details_json, NOW())
+                INSERT INTO health_event (user_id, event_type, created_at, data_json)
+                VALUES (:user_id, :event_type, :created_at, :data_json)
                 RETURNING id
                 """
             ),
             {
                 "user_id": user_id,
-                "kind": kind,
-                "severity": severity,
-                "details_json": details_json,
+                "event_type": event_type,
+                "created_at": created_at,
+                "data_json": json.dumps(data),
             },
-        ).fetchone()
+        )
+        new_id = int(res.scalar() or 0)
         db.session.commit()
-        return int(row[0]) if row else 0
+        return new_id
 
-    db.session.execute(
+
+def _fetch_events(user_id: str, event_types: List[str], after_id: int = 0, limit: int = 50) -> List[Dict[str, Any]]:
+    _ensure_pipeline_tables()
+    res = db.session.execute(
         text(
             """
-            INSERT INTO health_anomaly (user_id, kind, severity, details_json, created_at)
-            VALUES (:user_id, :kind, :severity, :details_json, :created_at)
+            SELECT id, user_id, event_type, created_at, data_json
+            FROM health_event
+            WHERE user_id = :user_id
+              AND event_type = ANY(:types)
+              AND id > :after_id
+            ORDER BY id ASC
+            LIMIT :limit
             """
         ),
-        {
-            "user_id": user_id,
-            "kind": kind,
-            "severity": severity,
-            "details_json": details_json,
-            "created_at": created_at,
-        },
+        {"user_id": user_id, "types": event_types, "after_id": after_id, "limit": limit},
     )
-    db.session.commit()
-    row = db.session.execute(text("SELECT last_insert_rowid()")).fetchone()
-    return int(row[0]) if row else 0
+    out: List[Dict[str, Any]] = []
+    for r in res.mappings():
+        payload = {}
+        try:
+            payload = json.loads(r["data_json"] or "{}")
+        except Exception:
+            payload = {"raw": r["data_json"]}
+        out.append(
+            {
+                "id": int(r["id"]),
+                "user_id": r["user_id"],
+                "event_type": r["event_type"],
+                "created_at": (r["created_at"].isoformat() if hasattr(r["created_at"], "isoformat") else str(r["created_at"])),
+                "data": payload,
+            }
+        )
+    return out
 
 
-def _maybe_create_anomalies(user_id: str, age: float, bmi: float, sbp: float, dbp: float, hr: float) -> None:
-    # rule-based anomaly
-    r = _rule_anomaly(age, bmi, sbp, dbp, hr)
-    if r:
-        kind, severity, details = r
-        _insert_anomaly(user_id, kind, severity, details)
-
-    # trend-based anomaly (optional)
-    t = _trend_alert(user_id)
-    if t:
-        kind, severity, details = t
-        _insert_anomaly(user_id, kind, severity, details)
+# ----------------------------
+# 20-line anomaly detection drop-in (clean + fast)
+# ----------------------------
+def detect_anomalies(v: Dict[str, Any]) -> List[Dict[str, Any]]:
+    sbp = _safe_float(v.get("systolic_bp"))
+    dbp = _safe_float(v.get("diastolic_bp"))
+    hr = _safe_float(v.get("heart_rate"))
+    bmi = _safe_float(v.get("bmi"))
+    out = []
+    if sbp is not None and dbp is not None:
+        if sbp >= 180 or dbp >= 120: out.append({"kind":"hypertensive_crisis","severity":3})
+        elif sbp >= 140 or dbp >= 90: out.append({"kind":"stage2_hypertension","severity":2})
+        elif sbp >= 130 or dbp >= 80: out.append({"kind":"stage1_hypertension","severity":1})
+        elif sbp < 90 or dbp < 60: out.append({"kind":"hypotension","severity":1})
+    if hr is not None:
+        if hr >= 120: out.append({"kind":"tachycardia","severity":2})
+        elif hr <= 45: out.append({"kind":"bradycardia","severity":2})
+    if bmi is not None and bmi >= 35: out.append({"kind":"very_high_bmi","severity":1})
+    return out
 
 
 # ----------------------------
@@ -378,194 +254,156 @@ def _maybe_create_anomalies(user_id: str, age: float, bmi: float, sbp: float, db
 # ----------------------------
 @api_bp.get("/healthz")
 def healthz():
+    db_ok = True
+    err = None
     try:
         db.session.execute(text("SELECT 1"))
-        db_ok = True
     except Exception as e:
         db_ok = False
-        return jsonify({"status": "degraded", "db_ok": False, "error": str(e)}), 503
-    return jsonify({"status": "ok", "db_ok": db_ok}), 200
+        err = str(e)
+
+    return jsonify(
+        {
+            "status": "ok" if db_ok else "degraded",
+            "db_ok": db_ok,
+            "db_error": err,
+        }
+    ), (200 if db_ok else 503)
 
 
-@api_bp.post("/demo/intake")
+# Typed intake
+@api_bp.post("/api/v1/demo/intake")
 def demo_intake():
-    _ensure_pipeline_tables()
-
     payload = request.get_json(silent=True) or {}
+    payload = _coerce_inputs(payload)
+
     user_id = str(payload.get("user_id") or "").strip()
     if not user_id:
-        return jsonify({"error": "validation", "message": "user_id is required"}), 400
+        return jsonify({"error": "user_id required"}), 400
 
-    try:
-        age, bmi, ex, sbp, dbp, hr = _coerce_inputs(payload)
-    except Exception:
-        return jsonify({"error": "validation", "message": "Invalid numeric input"}), 400
+    # Store intake
+    intake_id = _insert_event(user_id, "health_intake", payload)
 
-    # save event
-    _insert_event(
-        user_id,
-        "health_intake",
-        {
-            "age": age,
-            "bmi": bmi,
-            "exercise_level": ex,
-            "systolic_bp": sbp,
-            "diastolic_bp": dbp,
-            "heart_rate": hr,
-        },
-    )
+    # Detect anomalies + store them as events
+    anomalies = detect_anomalies(payload)
+    saved = []
+    for a in anomalies:
+        a_payload = {
+            "source_event_id": intake_id,
+            "details": {
+                "age": payload.get("age"),
+                "bmi": payload.get("bmi"),
+                "sbp": payload.get("systolic_bp"),
+                "dbp": payload.get("diastolic_bp"),
+                "hr": payload.get("heart_rate"),
+            },
+            **a,
+        }
+        aid = _insert_event(user_id, "anomaly", a_payload)
+        saved.append({**a_payload, "id": aid})
 
-    # anomalies
-    _maybe_create_anomalies(user_id, age, bmi, sbp, dbp, hr)
-
-    return jsonify({"ok": True, "user_id": user_id}), 200
+    return jsonify({"ok": True, "user_id": user_id, "intake_id": intake_id, "anomalies": saved}), 200
 
 
-@api_bp.post("/voice/intake")
+# Voice transcript intake (you send transcript text; app parses vitals)
+@api_bp.post("/api/v1/voice/intake")
 def voice_intake():
-    _ensure_pipeline_tables()
-
     payload = request.get_json(silent=True) or {}
     user_id = str(payload.get("user_id") or "").strip()
-    transcript = str(payload.get("transcript") or "").strip()
+    transcript = str(payload.get("transcript") or "")
 
     if not user_id:
-        return jsonify({"error": "validation", "message": "user_id is required"}), 400
-    if not transcript:
-        return jsonify({"error": "validation", "message": "transcript is required"}), 400
+        return jsonify({"error": "user_id required"}), 400
+    if not transcript.strip():
+        return jsonify({"error": "transcript required"}), 400
 
-    extracted = _parse_transcript(transcript)
-    # merge: explicit json fields override transcript, transcript fills missing
-    merged = dict(extracted)
-    for k, v in payload.items():
-        if k in ("user_id", "transcript"):
-            continue
-        if v is not None and v != "":
-            merged[k] = v
+    parsed = _parse_transcript(transcript)
+    merged = _coerce_inputs({**parsed, "user_id": user_id, "transcript": transcript})
 
-    try:
-        age, bmi, ex, sbp, dbp, hr = _coerce_inputs(merged)
-    except Exception:
-        return jsonify({"error": "validation", "message": "Invalid numeric input"}), 400
+    voice_id = _insert_event(user_id, "voice_intake", merged)
 
-    _insert_event(
-        user_id,
-        "voice_intake",
+    anomalies = detect_anomalies(merged)
+    saved = []
+    for a in anomalies:
+        a_payload = {
+            "source_event_id": voice_id,
+            "details": {
+                "age": merged.get("age"),
+                "bmi": merged.get("bmi"),
+                "sbp": merged.get("systolic_bp"),
+                "dbp": merged.get("diastolic_bp"),
+                "hr": merged.get("heart_rate"),
+            },
+            **a,
+        }
+        aid = _insert_event(user_id, "anomaly", a_payload)
+        saved.append({**a_payload, "id": aid})
+
+    return jsonify(
         {
-            "transcript": transcript,
-            "age": age,
-            "bmi": bmi,
-            "exercise_level": ex,
-            "systolic_bp": sbp,
-            "diastolic_bp": dbp,
-            "heart_rate": hr,
-        },
-    )
-
-    _maybe_create_anomalies(user_id, age, bmi, sbp, dbp, hr)
-
-    return jsonify({"ok": True, "user_id": user_id, "parsed": extracted}), 200
+            "ok": True,
+            "user_id": user_id,
+            "voice_id": voice_id,
+            "parsed": {k: merged.get(k) for k in ("age", "bmi", "exercise_level", "systolic_bp", "diastolic_bp", "heart_rate")},
+            "anomalies": saved,
+        }
+    ), 200
 
 
-@api_bp.get("/anomalies/latest")
-def latest_anomaly():
-    _ensure_pipeline_tables()
-
-    user_id = str(request.args.get("user_id") or "").strip()
-    if not user_id:
-        return jsonify({"error": "validation", "message": "user_id is required"}), 400
-
-    row = db.session.execute(
-        text(
-            """
-            SELECT id, user_id, kind, severity, details_json, created_at
-            FROM health_anomaly
-            WHERE user_id = :user_id
-            ORDER BY id DESC
-            LIMIT 1
-            """
-        ),
-        {"user_id": user_id},
-    ).fetchone()
-
-    if not row:
-        return jsonify({"ok": True, "anomaly": None}), 200
-
-    anomaly = {
-        "id": int(row[0]),
-        "user_id": row[1],
-        "kind": row[2],
-        "severity": int(row[3]),
-        "details": json.loads(row[4] or "{}"),
-        "created_at": str(row[5]),
-    }
-    return jsonify({"ok": True, "anomaly": anomaly}), 200
-
-
-@api_bp.get("/stream/anomalies")
+# SSE: stream anomaly events in real time
+@api_bp.get("/api/v1/stream/anomalies")
 def stream_anomalies():
-    """
-    SSE stream:
-      - Only streams NEW anomalies after connect (by using last_id baseline)
-      - Sends ping heartbeats
-    """
-    _ensure_pipeline_tables()
-
     user_id = str(request.args.get("user_id") or "").strip()
     if not user_id:
-        return jsonify({"error": "validation", "message": "user_id is required"}), 400
+        return jsonify({"error": "user_id required"}), 400
 
-    # baseline (do NOT replay history)
-    row = db.session.execute(
-        text("SELECT COALESCE(MAX(id), 0) FROM health_anomaly WHERE user_id = :user_id"),
-        {"user_id": user_id},
-    ).fetchone()
-    last_id = int(row[0] or 0)
+    retry_ms = 2000
 
     def gen():
-        nonlocal last_id
-        yield "retry: 2000\n\n"
-        last_ping = time.time()
+        last_id = 0
 
+        # Send a header retry directive
+        yield f"retry: {retry_ms}\n\n"
+
+        # On connect, send last few anomalies (optional)
+        try:
+            recent = _fetch_events(user_id, ["anomaly"], after_id=0, limit=5)
+            for ev in recent:
+                last_id = max(last_id, ev["id"])
+                yield "event: anomaly\n"
+                yield f"data: {json.dumps(ev)}\n\n"
+        except Exception as e:
+            yield "event: error\n"
+            yield f"data: {json.dumps({'message': str(e)})}\n\n"
+
+        # Poll loop
         while True:
-            # fetch NEW rows
-            rows = db.session.execute(
-                text(
-                    """
-                    SELECT id, kind, severity, details_json, created_at
-                    FROM health_anomaly
-                    WHERE user_id = :user_id AND id > :last_id
-                    ORDER BY id ASC
-                    """
-                ),
-                {"user_id": user_id, "last_id": last_id},
-            ).fetchall()
+            time.sleep(1.0)
+            try:
+                new_events = _fetch_events(user_id, ["anomaly"], after_id=last_id, limit=50)
+                for ev in new_events:
+                    last_id = max(last_id, ev["id"])
+                    yield "event: anomaly\n"
+                    yield f"data: {json.dumps(ev)}\n\n"
+                # keepalive ping
+                yield "event: ping\n"
+                yield f"data: {json.dumps({'ts': _now_utc().isoformat()})}\n\n"
+            except Exception as e:
+                yield "event: error\n"
+                yield f"data: {json.dumps({'message': str(e)})}\n\n"
 
-            for r in rows:
-                last_id = int(r[0])
-                data = {
-                    "id": last_id,
-                    "user_id": user_id,
-                    "kind": r[1],
-                    "severity": int(r[2]),
-                    "details": json.loads(r[3] or "{}"),
-                    "created_at": str(r[4]),
-                }
-                yield f"event: anomaly\ndata: {json.dumps(data)}\n\n"
+    return Response(stream_with_context(gen()), mimetype="text/event-stream")
 
-            # heartbeat
-            if time.time() - last_ping >= 2.0:
-                yield f"event: ping\ndata: {json.dumps({'ts': _now_utc().isoformat()})}\n\n"
-                last_ping = time.time()
 
-            time.sleep(0.5)
+# AI reasoning engine endpoint
+@api_bp.get("/api/v1/ai/health/reasoning")
+def ai_health_reasoning():
+    user_id = str(request.args.get("user_id") or "").strip()
+    if not user_id:
+        return jsonify({"error": "user_id required"}), 400
 
-    return Response(
-        stream_with_context(gen()),
-        mimetype="text/event-stream",
-        headers={
-            "Cache-Control": "no-cache",
-            "X-Accel-Buffering": "no",
-            "Connection": "keep-alive",
-        },
-    )
+    if generate_health_reasoning is None:
+        return jsonify({"error": "ai", "message": "generate_health_reasoning not available"}), 501
+
+    result = generate_health_reasoning(user_id)
+    return jsonify({"user_id": user_id, "ai_analysis": result}), 200
