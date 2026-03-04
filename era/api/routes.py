@@ -547,4 +547,37 @@ def voice_predict():
         **intel
     })
 
+from sqlalchemy import text
+import json
 
+@api_bp.get("/summary")
+def summary():
+    _ensure_pipeline_tables()  # from your event-pipeline block
+    user_id = request.args.get("user_id", "").strip()
+    if not user_id:
+        return jsonify({"error": "validation", "message": "user_id required"}), 400
+
+    # Pull latest generated summary (worker writes these)
+    row = db.session.execute(text("""
+        SELECT created_at, summary_text, model_version, meta_json
+        FROM health_summary
+        WHERE user_id = :user_id
+        ORDER BY created_at DESC
+        LIMIT 1
+    """), {"user_id": user_id}).fetchone()
+
+    if not row:
+        return jsonify({
+            "ok": True,
+            "user_id": user_id,
+            "summary": "No summary yet. Submit a reading to /api/v1/intake first."
+        }), 200
+
+    return jsonify({
+        "ok": True,
+        "user_id": user_id,
+        "created_at": row[0].isoformat() if hasattr(row[0], "isoformat") else str(row[0]),
+        "model_version": row[2],
+        "summary": row[1],
+        "meta": json.loads(row[3]) if row[3] else {}
+    }), 200
