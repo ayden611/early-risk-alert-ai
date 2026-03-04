@@ -607,27 +607,41 @@ def demo_intake():
     if not user_id:
         return jsonify({"error": "validation", "message": "user_id is required"}), 400
 
-    try:
-        age, bmi, ex, sbp, dbp, hr = _coerce_inputs(payload)
-        # --- Real-time anomaly detection (drop-in) ---
+    # ✅ FIX: keep try/except together, then run anomaly detection AFTER it
+try:
+    age, bmi, ex, sbp, dbp, hr = _coerce_inputs(payload)
+except Exception:
+    return jsonify({"error": "validation", "message": "Invalid numeric input"}), 400
+
+# --- Real-time anomaly detection (drop-in) ---
 _ensure_pipeline_tables()
 severity, kind = 0, None
-if sbp >= 180 or dbp >= 120: severity, kind = 3, "hypertensive_crisis"
-elif sbp >= 160 or dbp >= 100: severity, kind = 2, "stage2_hypertension"
-elif sbp >= 140 or dbp >= 90: severity, kind = 1, "stage1_hypertension"
-if hr >= 120: severity, kind = max(severity, 2), kind or "tachycardia"
-if hr <= 45:  severity, kind = max(severity, 2), kind or "bradycardia"
-if bmi >= 35: severity, kind = max(severity, 1), kind or "bmi_high"
+
+if sbp >= 180 or dbp >= 120:
+    severity, kind = 3, "hypertensive_crisis"
+elif sbp >= 160 or dbp >= 100:
+    severity, kind = 2, "stage2_hypertension"
+elif sbp >= 140 or dbp >= 90:
+    severity, kind = 1, "stage1_hypertension"
+
+if hr >= 120:
+    severity, kind = max(severity, 2), kind or "tachycardia"
+if hr <= 45:
+    severity, kind = max(severity, 2), kind or "bradycardia"
+if bmi >= 35:
+    severity, kind = max(severity, 1), kind or "bmi_high"
+
 if severity > 0:
     details = {"sbp": sbp, "dbp": dbp, "hr": hr, "bmi": bmi, "age": age}
-    db.session.execute(text("""
-        INSERT INTO health_anomaly (user_id, kind, severity, details_json, created_at)
-        VALUES (:user_id, :kind, :severity, :details_json, NOW())
-    """), {"user_id": user_id, "kind": kind, "severity": severity, "details_json": json.dumps(details)})
+    db.session.execute(
+        text("""
+            INSERT INTO health_anomaly (user_id, kind, severity, details_json, created_at)
+            VALUES (:user_id, :kind, :severity, :details_json, NOW())
+        """),
+        {"user_id": user_id, "kind": kind, "severity": severity, "details_json": json.dumps(details)},
+    )
     db.session.commit()
 # --- end anomaly detection ---
-    except Exception:
-        return jsonify({"error": "validation", "message": "Invalid numeric input"}), 400
 
     saved = False
     if HealthEvent is not None:
