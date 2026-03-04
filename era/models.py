@@ -1,27 +1,11 @@
 from datetime import datetime
 from flask_login import UserMixin
 from .extensions import db
-from .auth import login_manager
-
-class HealthEvent(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-
-    user_id = db.Column(db.String, index=True)
-
-    event_type = db.Column(db.String)
-
-    data = db.Column(db.JSON)
-
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
-class HealthEvent(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.String, index=True)
-    event_type = db.Column(db.String)
-    data = db.Column(db.JSON)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 
+# -----------------------------
+# User Model
+# -----------------------------
 class User(db.Model, UserMixin):
     __tablename__ = "users"
 
@@ -30,11 +14,9 @@ class User(db.Model, UserMixin):
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
 
-@login_manager.user_loader
-def load_user(user_id):
-    return User.query.get(int(user_id))
-
-
+# -----------------------------
+# Prediction Model
+# -----------------------------
 class Prediction(db.Model):
     __tablename__ = "predictions_v2"
 
@@ -44,6 +26,7 @@ class Prediction(db.Model):
     age = db.Column(db.Float, nullable=False)
     bmi = db.Column(db.Float, nullable=False)
     exercise_level = db.Column(db.String(20), nullable=False)
+
     systolic_bp = db.Column(db.Float, nullable=False)
     diastolic_bp = db.Column(db.Float, nullable=False)
     heart_rate = db.Column(db.Float, nullable=False)
@@ -51,12 +34,13 @@ class Prediction(db.Model):
     risk_label = db.Column(db.String(30), nullable=False)
     probability = db.Column(db.Float, nullable=False)
 
-from datetime import datetime
-from .extensions import db
 
-
+# -----------------------------
+# Health Event Pipeline
+# -----------------------------
 class HealthEvent(db.Model):
     __tablename__ = "health_event"
+    __table_args__ = {"extend_existing": True}
 
     id = db.Column(db.Integer, primary_key=True)
 
