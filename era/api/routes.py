@@ -228,7 +228,7 @@ def _trend_alert(user_id: str) -> Optional[Tuple[str, int, Dict[str, Any]]]:
     rows = db.session.execute(
         text(
             """
-            SELECT id, data_json, created_at
+            SELECT id, data AS data_json, created_at
             FROM health_event
             WHERE user_id = :user_id AND event_type IN ('health_intake','voice_intake')
             ORDER BY id DESC
