@@ -185,6 +185,16 @@ except Exception:
 
 api_bp = Blueprint("api", __name__)
 
+from werkzeug.exceptions import HTTPException
+
+@api_bp.errorhandler(Exception)
+def _json_errors(e):
+    # Make ALL errors return JSON (so curl | python -m json.tool works)
+    current_app.logger.exception("Unhandled error")
+    if isinstance(e, HTTPException):
+        return jsonify({"error": "http", "code": e.code, "message": e.description}), e.code
+    return jsonify({"error": "server", "message": str(e)}), 500
+
 # ----------------------------
 # Config helpers
 # ----------------------------
