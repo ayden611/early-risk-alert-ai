@@ -13,6 +13,137 @@ from flask import Blueprint, request, jsonify, current_app
 import re
 from flask import Response, stream_with_context
 from sqlalchemy import text
+from datetime import datetime, timedelta
+import math
+
+def _safe_float(x, default=None):
+    try:
+        if x is None:
+            return default
+        return float(x)
+    except Exception:
+        return default
+
+def _linear_slope(xs, ys):
+    # returns slope per point (simple least squares); handles small n
+    n = len(xs)
+    if n < 2:
+        return 0.0
+    x_mean = sum(xs) / n
+    y_mean = sum(ys) / n
+    num = sum((xs[i] - x_mean) * (ys[i] - y_mean) for i in range(n))
+    den = sum((xs[i] - x_mean) ** 2 for i in range(n))
+    return (num / den) if den else 0.0
+
+def _health_reasoning_engine(user_id: str, limit: int = 30) -> dict:
+    """
+    Deterministic reasoning engine:
+    - Pull last N rows for user
+    - Compute trends (SBP/DBP/HR/BMI) + simple anomaly flags
+    - Produce a natural-language summary + key facts
+    """
+    rows = []
+    if Prediction is not None:
+        try:
+            q = (db.session.query(Prediction)
+                 .filter(Prediction.user_id == user_id)
+                 .order_by(Prediction.created_at.desc())
+                 .limit(limit))
+            rows = list(q)
+        except Exception:
+            rows = []
+
+    if not rows:
+        return {
+            "summary": "I don’t see any saved readings yet. Submit an intake or prediction so I can generate your trend summary.",
+            "facts": {},
+            "alerts": [],
+            "recommendations": ["Add at least 3 readings across different days to unlock trends."]
+        }
+
+    # oldest -> newest for trend math
+    rows = list(reversed(rows))
+
+    # Extract vitals if your model stores them; adapt field names if needed
+    sbps, dbps, hrs, bmis, probs = [], [], [], [], []
+    for i, r in enumerate(rows):
+        sbps.append(_safe_float(getattr(r, "systolic_bp", None) or getattr(r, "sys_bp", None), None))
+        dbps.append(_safe_float(getattr(r, "diastolic_bp", None) or getattr(r, "dia_bp", None), None))
+        hrs.append(_safe_float(getattr(r, "heart_rate", None), None))
+        bmis.append(_safe_float(getattr(r, "bmi", None), None))
+        probs.append(_safe_float(getattr(r, "probability", None), None))
+
+    def last_valid(arr):
+        for v in reversed(arr):
+            if v is not None:
+                return v
+        return None
+
+    current = {
+        "systolic_bp": last_valid(sbps),
+        "diastolic_bp": last_valid(dbps),
+        "heart_rate": last_valid(hrs),
+        "bmi": last_valid(bmis),
+        "risk_probability": last_valid(probs),
+        "readings_count": len(rows),
+        "first_reading_at": getattr(rows[0], "created_at", None),
+        "last_reading_at": getattr(rows[-1], "created_at", None),
+    }
+
+    # Trend slopes (per reading index)
+    xs = list(range(len(rows)))
+    sbp_slope = _linear_slope(xs, [v if v is not None else last_valid([v]) or 0 for v in sbps])
+    dbp_slope = _linear_slope(xs, [v if v is not None else last_valid([v]) or 0 for v in dbps])
+    hr_slope  = _linear_slope(xs, [v if v is not None else last_valid([v]) or 0 for v in hrs])
+    bmi_slope = _linear_slope(xs, [v if v is not None else last_valid([v]) or 0 for v in bmis])
+
+    # Simple alerts (NOT medical diagnosis)
+    alerts = []
+    sbp = current["systolic_bp"]
+    dbp = current["diastolic_bp"]
+    hr  = current["heart_rate"]
+
+    if sbp is not None and dbp is not None:
+        if sbp >= 180 or dbp >= 120:
+            alerts.append("Very high blood pressure reading detected (consider seeking professional medical help).")
+        elif sbp >= 140 or dbp >= 90:
+            alerts.append("Elevated blood pressure reading detected.")
+    if hr is not None and (hr >= 110 or hr <= 45):
+        alerts.append("Heart rate looks outside a typical resting range (context matters: exercise, stress, meds).")
+
+    # Recommendations (safe + generic)
+    recs = []
+    if sbp_slope > 0.8 or dbp_slope > 0.5:
+        recs.append("Your blood pressure trend is rising across recent readings — take more readings at consistent times and track triggers (sleep, caffeine, stress).")
+    else:
+        recs.append("Keep consistent readings (same time of day) to improve trend accuracy.")
+    recs.append("This tool is for awareness, not diagnosis. If you feel unwell or readings remain high, talk to a clinician.")
+
+    def trend_word(s):
+        if abs(s) < 0.2: return "stable"
+        return "up" if s > 0 else "down"
+
+    summary = (
+        f"Last {len(rows)} readings: BP is {trend_word(sbp_slope)}/{trend_word(dbp_slope)}, "
+        f"HR is {trend_word(hr_slope)}, BMI is {trend_word(bmi_slope)}. "
+        f"Latest BP: {sbp}/{dbp}, HR: {hr}. "
+        + ("Alerts: " + " ".join(alerts) if alerts else "No major alerts flagged from your latest reading.")
+    )
+
+    return {
+        "summary": summary,
+        "facts": {
+            **{k: v for k, v in current.items() if v is not None},
+            "trend": {
+                "sbp": trend_word(sbp_slope),
+                "dbp": trend_word(dbp_slope),
+                "hr": trend_word(hr_slope),
+                "bmi": trend_word(bmi_slope),
+            }
+        },
+        "alerts": alerts,
+        "recommendations": recs
+    }
 
 
 _BP_RE = re.compile(r"\b(\d{2,3})\s*(?:/|over)\s*(\d{2,3})\b", re.IGNORECASE)
@@ -774,27 +905,27 @@ def monitor_stream():
 
 @api_bp.post("/assistant/ask")
 def assistant_ask():
-    try:
-        data = request.get_json(silent=True) or {}
+    data = request.get_json(silent=True) or {}
+    user_id = str(data.get("user_id","")).strip()
+    question = str(data.get("question","")).strip().lower()
 
-        user_id = str(data.get("user_id", "")).strip()
-        question = str(data.get("question", "")).strip()
+    if not user_id:
+        return jsonify({"error":"user_id required"}), 400
 
-        if not user_id:
-            return jsonify({"error": "user_id required"}), 400
-
-        # temporary assistant response (stable)
+    # Health reasoning trigger (summary / trends / insights)
+    if any(k in question for k in ["summary", "trend", "insight", "insights", "how am i doing"]):
+        intel = _health_reasoning_engine(user_id=user_id, limit=30)
         return jsonify({
             "ok": True,
-            "assistant": "Early Risk Alert AI",
             "user_id": user_id,
-            "question": question,
-            "answer": "Your AI health assistant is active. A full health summary will appear after your first intake reading."
+            "answer": intel["summary"],
+            "intel": intel
         })
 
-    except Exception as e:
-        return jsonify({
-            "ok": False,
-            "error": str(e)
-        }), 500
+    return jsonify({
+        "ok": True,
+        "user_id": user_id,
+        "answer": "Ask me for your 'summary' or 'trends' to generate insights from your readings."
+    })
+
 
