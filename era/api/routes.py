@@ -537,6 +537,102 @@ def predict():
             **intel,
         }
     )
+    # ----------------------------
+# Intake (event capture) endpoint
+# ----------------------------
+try:
+    from era.models import HealthEvent  # type: ignore
+except Exception:
+    HealthEvent = None  # type: ignore
+
+
+@api_bp.post("/intake")
+def intake():
+    user_id, _claims, err = _require_bearer_token()
+    if err:
+        return jsonify(err[0]), err[1]
+
+    payload = request.get_json(silent=True) or {}
+
+    # Accept either systolic_bp OR sys_bp, etc.
+    try:
+        age, bmi, ex, sbp, dbp, hr = _coerce_inputs(payload)
+    except Exception:
+        return jsonify({"error": "validation", "message": "Invalid numeric input"}), 400
+
+    saved = False
+    if HealthEvent is not None:
+        try:
+            event = HealthEvent(
+                user_id=user_id,
+                event_type="health_intake",
+                data={
+                    "age": age,
+                    "bmi": bmi,
+                    "exercise_level": payload.get("exercise_level"),
+                    "systolic_bp": sbp,
+                    "diastolic_bp": dbp,
+                    "heart_rate": hr,
+                },
+            )
+            db.session.add(event)
+            db.session.commit()
+            saved = True
+        except Exception:
+            # Don't break intake if DB/event table isn't ready yet
+            db.session.rollback()
+
+    return jsonify(
+        {
+            "ok": True,
+            "user_id": user_id,
+            "saved": saved,
+            "event_type": "health_intake",
+            "reading": {
+                "age": age,
+                "bmi": bmi,
+                "exercise_level": payload.get("exercise_level"),
+                "systolic_bp": sbp,
+                "diastolic_bp": dbp,
+                "heart_rate": hr,
+            },
+        }
+    ), 200
+
+@api_bp.post("/demo/intake")
+def demo_intake():
+    payload = request.get_json(silent=True) or {}
+    user_id = str(payload.get("user_id") or "").strip()
+    if not user_id:
+        return jsonify({"error": "validation", "message": "user_id is required"}), 400
+
+    try:
+        age, bmi, ex, sbp, dbp, hr = _coerce_inputs(payload)
+    except Exception:
+        return jsonify({"error": "validation", "message": "Invalid numeric input"}), 400
+
+    saved = False
+    if HealthEvent is not None:
+        try:
+            event = HealthEvent(
+                user_id=user_id,
+                event_type="health_intake",
+                data={
+                    "age": age,
+                    "bmi": bmi,
+                    "exercise_level": payload.get("exercise_level"),
+                    "systolic_bp": sbp,
+                    "diastolic_bp": dbp,
+                    "heart_rate": hr,
+                },
+            )
+            db.session.add(event)
+            db.session.commit()
+            saved = True
+        except Exception:
+            db.session.rollback()
+
+    return jsonify({"ok": True, "user_id": user_id, "saved": saved}), 200
 
 
 @api_bp.get("/history")
