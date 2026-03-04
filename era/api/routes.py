@@ -609,41 +609,64 @@ def demo_intake():
     if not user_id:
         return jsonify({"error": "validation", "message": "user_id is required"}), 400
 
-    # ✅ FIX: keep try/except together, then run anomaly detection AFTER it
-try:
-    age, bmi, ex, sbp, dbp, hr = _coerce_inputs(payload)
-except Exception:
-    return jsonify({"error": "validation", "message": "Invalid numeric input"}), 400
+    # 1) Parse numbers FIRST (keep try/except together)
+    try:
+        age, bmi, ex, sbp, dbp, hr = _coerce_inputs(payload)
+    except Exception:
+        return jsonify({"error": "validation", "message": "Invalid numeric input"}), 400
 
-# --- Real-time anomaly detection (drop-in) ---
-_ensure_pipeline_tables()
-severity, kind = 0, None
+    # 2) Then run anomaly detection (NO try/except breaking indentation)
+    _ensure_pipeline_tables()
+    severity, kind = 0, None
 
-if sbp >= 180 or dbp >= 120:
-    severity, kind = 3, "hypertensive_crisis"
-elif sbp >= 160 or dbp >= 100:
-    severity, kind = 2, "stage2_hypertension"
-elif sbp >= 140 or dbp >= 90:
-    severity, kind = 1, "stage1_hypertension"
+    if sbp >= 180 or dbp >= 120:
+        severity, kind = 3, "hypertensive_crisis"
+    elif sbp >= 160 or dbp >= 100:
+        severity, kind = 2, "stage2_hypertension"
+    elif sbp >= 140 or dbp >= 90:
+        severity, kind = 1, "stage1_hypertension"
 
-if hr >= 120:
-    severity, kind = max(severity, 2), kind or "tachycardia"
-if hr <= 45:
-    severity, kind = max(severity, 2), kind or "bradycardia"
-if bmi >= 35:
-    severity, kind = max(severity, 1), kind or "bmi_high"
+    if hr >= 120:
+        severity = max(severity, 2)
+        kind = kind or "tachycardia"
+    if hr <= 45:
+        severity = max(severity, 2)
+        kind = kind or "bradycardia"
+    if bmi >= 35:
+        severity = max(severity, 1)
+        kind = kind or "bmi_high"
 
-if severity > 0:
-    details = {"sbp": sbp, "dbp": dbp, "hr": hr, "bmi": bmi, "age": age}
-    db.session.execute(
-        text("""
-            INSERT INTO health_anomaly (user_id, kind, severity, details_json, created_at)
-            VALUES (:user_id, :kind, :severity, :details_json, NOW())
-        """),
-        {"user_id": user_id, "kind": kind, "severity": severity, "details_json": json.dumps(details)},
-    )
-    db.session.commit()
-# --- end anomaly detection ---
+    if severity > 0:
+        details = {"sbp": sbp, "dbp": dbp, "hr": hr, "bmi": bmi, "age": age}
+        db.session.execute(
+            text("""
+                INSERT INTO health_anomaly (user_id, kind, severity, details_json, created_at)
+                VALUES (:user_id, :kind, :severity, :details_json, NOW())
+            """),
+            {
+                "user_id": user_id,
+                "kind": kind,
+                "severity": severity,
+                "details_json": json.dumps(details),
+            },
+        )
+        db.session.commit()
+
+    # Optional: log the intake event (won't crash your deploy if model isn't wired)
+    try:
+        if HealthEvent is not None:
+            db.session.add(
+                HealthEvent(
+                    user_id=user_id,
+                    event_type="health_intake",
+                    data={"age": age, "bmi": bmi, "exercise_level": ex, "systolic_bp": sbp, "diastolic_bp": dbp, "heart_rate": hr},
+                )
+            )
+            db.session.commit()
+    except Exception:
+        db.session.rollback()
+
+    return jsonify({"ok": True, "user_id": user_id, "severity": severity, "kind": kind}), 200
 
     saved = False
     if HealthEvent is not None:
