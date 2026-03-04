@@ -796,20 +796,25 @@ def monitor_stream():
 def assistant_ask():
     try:
         data = request.get_json(silent=True) or {}
-        user_id = str(data.get("user_id","")).strip()
-        question = str(data.get("question","")).strip()
+
+        user_id = str(data.get("user_id", "")).strip()
+        question = str(data.get("question", "")).strip()
 
         if not user_id:
-            return jsonify({"error":"user_id required"}),400
+            return jsonify({"error": "user_id required"}), 400
 
+        # temporary assistant response (stable)
         return jsonify({
             "ok": True,
+            "assistant": "Early Risk Alert AI",
             "user_id": user_id,
-            "answer": "Your AI health assistant is active. A full summary will appear after your first intake."
+            "question": question,
+            "answer": "Your AI health assistant is active. A full health summary will appear after your first intake reading."
         })
 
     except Exception as e:
         return jsonify({
             "ok": False,
             "error": str(e)
-        }),500
+        }), 500
+
