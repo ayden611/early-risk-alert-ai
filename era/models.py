@@ -5,6 +5,17 @@ from .auth import login_manager
 
 class HealthEvent(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+
+    user_id = db.Column(db.String, index=True)
+
+    event_type = db.Column(db.String)
+
+    data = db.Column(db.JSON)
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class HealthEvent(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.String, index=True)
     event_type = db.Column(db.String)
     data = db.Column(db.JSON)
