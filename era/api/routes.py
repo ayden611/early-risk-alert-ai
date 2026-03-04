@@ -18,6 +18,28 @@ try:
 except Exception:
     HealthEvent = None  # type: ignore
 
+from flask import Blueprint, request, jsonify
+from werkzeug.exceptions import HTTPException
+
+api_bp = Blueprint("api", __name__)
+
+@api_bp.errorhandler(Exception)
+def _json_errors(e):
+    if isinstance(e, HTTPException):
+        return jsonify({"error": "http", "code": e.code, "message": e.description}), e.code
+    return jsonify({"error": "server", "message": str(e)}), 500
+
+from era.ai.health_reasoning import generate_health_reasoning
+
+@api_bp.get("/ai/health/reasoning")
+def ai_health_reasoning():
+    user_id = request.args.get("user_id")
+    if not user_id:
+        return jsonify({"error": "user_id required"}), 400
+
+    result = generate_health_reasoning(user_id)
+    return jsonify({"user_id": user_id, "ai_analysis": result}), 200
+
 
 api_bp = Blueprint("api", __name__)
 
