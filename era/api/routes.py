@@ -40,17 +40,7 @@ def ai_health_reasoning():
     result = generate_health_reasoning(user_id)
     return jsonify({"user_id": user_id, "ai_analysis": result}), 200
 
-
-api_bp = Blueprint("api", __name__)
-
-# ----------------------------
-# Error handler (JSON)
-# ----------------------------
-@api_bp.errorhandler(Exception)
-def _json_errors(e):
-    current_app.logger.exception("Unhandled error")
-    if isinstance(e, HTTPException):
-        return jsonify({"error": "http", "code": e.code, "message": e.description}), e.code
+ e.description}), e.code
     return jsonify({"error": "server", "message": str(e)}), 500
 
 
