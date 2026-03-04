@@ -50,3 +50,20 @@ class Prediction(db.Model):
 
     risk_label = db.Column(db.String(30), nullable=False)
     probability = db.Column(db.Float, nullable=False)
+
+from datetime import datetime
+from .extensions import db
+
+
+class HealthEvent(db.Model):
+    __tablename__ = "health_event"
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    user_id = db.Column(db.String(64), index=True)
+
+    event_type = db.Column(db.String(50))
+
+    data = db.Column(db.JSON)
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
