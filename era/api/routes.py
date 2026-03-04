@@ -791,3 +791,25 @@ def monitor_stream():
             time.sleep(10)
 
     return Response(stream_with_context(gen()), mimetype="text/event-stream")
+
+@api_bp.post("/assistant/ask")
+def assistant_ask():
+    try:
+        data = request.get_json(silent=True) or {}
+        user_id = str(data.get("user_id","")).strip()
+        question = str(data.get("question","")).strip()
+
+        if not user_id:
+            return jsonify({"error":"user_id required"}),400
+
+        return jsonify({
+            "ok": True,
+            "user_id": user_id,
+            "answer": "Your AI health assistant is active. A full summary will appear after your first intake."
+        })
+
+    except Exception as e:
+        return jsonify({
+            "ok": False,
+            "error": str(e)
+        }),500
