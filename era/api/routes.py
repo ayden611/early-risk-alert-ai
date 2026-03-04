@@ -1,28 +1,21 @@
 # era/api/routes.py
-import os
-import time
-import json
-import secrets
+import os, time, json, secrets, math, re
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional, Tuple
-from era.models import HealthEvent
-from era.extensions import db
-from sqlalchemy import text
 
 import jwt
 import numpy as np
 import joblib
-from flask import Blueprint, request, jsonify, current_app
-import re
-from flask import Response, stream_with_context
+from flask import Blueprint, request, jsonify, current_app, Response, stream_with_context
 from sqlalchemy import text
-from datetime import datetime, timedelta
-import math
 from werkzeug.exceptions import HTTPException
+
+from era.extensions import db
+
+api_bp = Blueprint("api", __name__)
 
 @api_bp.errorhandler(Exception)
 def _json_errors(e):
-    # Make ALL errors return JSON (so curl | python -m json.tool works)
     current_app.logger.exception("Unhandled error")
     if isinstance(e, HTTPException):
         return jsonify({"error": "http", "code": e.code, "message": e.description}), e.code
