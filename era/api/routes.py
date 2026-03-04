@@ -475,4 +475,3 @@ def demo_predict():
             **intel,
         }
     )
-    )
