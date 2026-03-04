@@ -528,8 +528,6 @@ def demo_predict():
             "user_id": user_id,
             "risk_label": risk_label,
             "probability": prob_high,
-            "token_type": "Bearer",
-            "token": token,  # optional to show; client can ignore
             **intel,
         }
     ), 200
