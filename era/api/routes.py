@@ -719,26 +719,6 @@ def _assistant_answer(question: str, ctx: dict) -> dict:
         },
     }
 
-
-@api_bp.post("/assistant/ask")
-def assistant_ask():
-    """
-    Minimal AI assistant endpoint.
-    Body: { "user_id": "123", "question": "How am I doing this week?" }
-    """
-    data = request.get_json(silent=True) or {}
-    user_id = str(data.get("user_id", "")).strip()
-    question = str(data.get("question", "")).strip()
-    if not user_id:
-        return jsonify({"error": "validation", "message": "user_id required"}), 400
-    if not question:
-        return jsonify({"error": "validation", "message": "question required"}), 400
-
-    ctx = _get_latest_context(user_id)
-    out = _assistant_answer(question, ctx)
-    return jsonify({"ok": True, "user_id": user_id, "question": question, **out}), 200
-
-
 @api_bp.get("/monitor/stream")
 def monitor_stream():
     """
