@@ -10,6 +10,24 @@ import jwt
 import numpy as np
 import joblib
 from flask import Blueprint, request, jsonify, current_app
+import re
+
+_BP_RE = re.compile(r"\b(\d{2,3})\s*(?:/|over)\s*(\d{2,3})\b", re.IGNORECASE)
+_HR_RE = re.compile(r"(?:heart rate|pulse)\s*(?:is|was)?\s*(\d{2,3})", re.IGNORECASE)
+
+def _parse_voice_transcript(transcript: str):
+    out = {}
+
+    m = _BP_RE.search(transcript)
+    if m:
+        out["systolic_bp"] = float(m.group(1))
+        out["diastolic_bp"] = float(m.group(2))
+
+    m = _HR_RE.search(transcript)
+    if m:
+        out["heart_rate"] = float(m.group(1))
+
+    return out
 
 from era.extensions import db
 
@@ -475,3 +493,56 @@ def demo_predict():
             **intel,
         }
     )
+
+@api_bp.post("/voice/predict")
+def voice_predict():
+    payload = request.get_json(silent=True) or {}
+    transcript = payload.get("transcript")
+
+    if not transcript:
+        return jsonify({"error": "transcript required"}), 400
+
+    extracted = _parse_voice_transcript(transcript)
+
+    merged = {**extracted, **payload}
+
+    required = ["age","bmi","exercise_level","systolic_bp","diastolic_bp","heart_rate"]
+    missing = [k for k in required if k not in merged]
+
+    if missing:
+        return jsonify({"error": f"Missing {missing}"}), 400
+
+    age = float(merged["age"])
+    bmi = float(merged["bmi"])
+    ex = _exercise_to_num(merged["exercise_level"])
+    sbp = float(merged["systolic_bp"])
+    dbp = float(merged["diastolic_bp"])
+    hr = float(merged["heart_rate"])
+
+    model = _load_model()
+
+    X = np.array([[age,bmi,ex,sbp,dbp,hr]])
+
+    pred = int(model.predict(X)[0])
+    risk_label = "High Risk" if pred else "Low Risk"
+
+    try:
+        prob = float(model.predict_proba(X)[0][1])
+    except Exception:
+        prob = 1.0 if pred else 0.0
+
+    intel = _health_risk_intelligence(
+        merged,
+        prob_high=prob,
+        risk_label=risk_label
+    )
+
+    return jsonify({
+        "ok":True,
+        "mode":"voice",
+        "transcript": transcript,
+        "extracted": extracted,
+        "risk_label":risk_label,
+        "probability":prob,
+        **intel
+    })
