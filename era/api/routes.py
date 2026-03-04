@@ -11,6 +11,9 @@ import numpy as np
 import joblib
 from flask import Blueprint, request, jsonify, current_app
 import re
+from flask import Response, stream_with_context
+from sqlalchemy import text
+
 
 _BP_RE = re.compile(r"\b(\d{2,3})\s*(?:/|over)\s*(\d{2,3})\b", re.IGNORECASE)
 _HR_RE = re.compile(r"(?:heart rate|pulse)\s*(?:is|was)?\s*(\d{2,3})", re.IGNORECASE)
@@ -581,3 +584,210 @@ def summary():
         "summary": row[1],
         "meta": json.loads(row[3]) if row[3] else {}
     }), 200
+
+# ============================================================
+# Real-time Monitor (SSE) + AI Assistant
+# ============================================================
+
+def _get_latest_context(user_id: str) -> dict:
+    """
+    Pull a compact 'patient context' that the assistant can reason over.
+    Keep it fast: 1-3 queries max.
+    """
+    # Latest summary (written by worker)
+    summary_row = db.session.execute(text("""
+        SELECT created_at, summary_text, model_version
+        FROM health_summary
+        WHERE user_id = :user_id
+        ORDER BY created_at DESC
+        LIMIT 1
+    """), {"user_id": user_id}).fetchone()
+
+    # Recent timeline/events (last 10)
+    events = db.session.execute(text("""
+        SELECT id, created_at, event_type, payload_json
+        FROM health_event
+        WHERE user_id = :user_id
+        ORDER BY id DESC
+        LIMIT 10
+    """), {"user_id": user_id}).fetchall()
+
+    # Recent anomalies (last 10)
+    anomalies = db.session.execute(text("""
+        SELECT id, created_at, kind, severity, details_json
+        FROM health_anomaly
+        WHERE user_id = :user_id
+        ORDER BY id DESC
+        LIMIT 10
+    """), {"user_id": user_id}).fetchall()
+
+    return {
+        "user_id": user_id,
+        "latest_summary": {
+            "created_at": summary_row[0].isoformat() if summary_row else None,
+            "text": summary_row[1] if summary_row else None,
+            "model_version": summary_row[2] if summary_row else None,
+        },
+        "recent_events": [
+            {
+                "id": r[0],
+                "created_at": r[1].isoformat() if r[1] else None,
+                "event_type": r[2],
+                "payload": json.loads(r[3]) if r[3] else {},
+            }
+            for r in events
+        ],
+        "recent_anomalies": [
+            {
+                "id": r[0],
+                "created_at": r[1].isoformat() if r[1] else None,
+                "kind": r[2],
+                "severity": r[3],
+                "details": json.loads(r[4]) if r[4] else {},
+            }
+            for r in anomalies
+        ],
+    }
+
+
+def _assistant_answer(question: str, ctx: dict) -> dict:
+    """
+    'Small change' assistant: deterministic, reliable, and fast.
+    It uses the user's real data (summary/events/anomalies) to answer.
+    You can later swap this function to a real LLM call without changing the API contract.
+    """
+    q = (question or "").strip().lower()
+    summary = (ctx.get("latest_summary") or {}).get("text") or "No summary yet. Record an intake to generate one."
+    anomalies = ctx.get("recent_anomalies") or []
+    events = ctx.get("recent_events") or []
+
+    # Extract last intake vitals if present
+    last_intake = None
+    for e in events:
+        if (e.get("event_type") or "").lower() in ("intake", "health_intake"):
+            last_intake = e.get("payload") or {}
+            break
+
+    # Quick helpers
+    def fmt_bp(p):
+        sbp = p.get("systolic_bp") or p.get("sys_bp")
+        dbp = p.get("diastolic_bp") or p.get("dia_bp")
+        if sbp is None or dbp is None:
+            return None
+        return f"{sbp}/{dbp}"
+
+    # Simple intent routing
+    if any(k in q for k in ["summary", "overview", "how am i doing", "status"]):
+        return {
+            "answer": summary,
+            "suggestions": [
+                "Ask: 'Any anomalies lately?'",
+                "Ask: 'Show my latest vitals'",
+                "Ask: 'What changed this week?'",
+            ],
+        }
+
+    if any(k in q for k in ["anomaly", "alert", "anything wrong", "red flag"]):
+        if not anomalies:
+            return {"answer": "No anomalies detected in your recent readings.", "suggestions": ["Ask: 'Show my latest vitals'"]}
+        top = anomalies[0]
+        return {
+            "answer": f"Most recent anomaly: {top.get('kind')} (severity: {top.get('severity')}).",
+            "details": top.get("details", {}),
+            "suggestions": ["Ask: 'What should I do next?'", "Ask: 'Explain this anomaly in plain English'"],
+        }
+
+    if any(k in q for k in ["latest", "vitals", "blood pressure", "heart rate", "my readings"]):
+        if not last_intake:
+            return {"answer": "I don't see a recent intake event yet. Send /intake first.", "suggestions": []}
+        bp = fmt_bp(last_intake)
+        hr = last_intake.get("heart_rate")
+        bmi = last_intake.get("bmi")
+        parts = []
+        if bp: parts.append(f"BP: {bp}")
+        if hr is not None: parts.append(f"HR: {hr}")
+        if bmi is not None: parts.append(f"BMI: {bmi}")
+        return {"answer": "Latest readings — " + ", ".join(parts) if parts else "Latest intake found, but readings were incomplete.", "suggestions": ["Ask: 'Any anomalies lately?'"]}
+
+    # Default: return a helpful data-grounded response
+    return {
+        "answer": "I can help with your health timeline. Try: 'summary', 'latest vitals', or 'anomalies'.",
+        "context_hint": {
+            "has_summary": bool(ctx.get("latest_summary", {}).get("text")),
+            "events_seen": len(events),
+            "anomalies_seen": len(anomalies),
+        },
+    }
+
+
+@api_bp.post("/assistant/ask")
+def assistant_ask():
+    """
+    Minimal AI assistant endpoint.
+    Body: { "user_id": "123", "question": "How am I doing this week?" }
+    """
+    data = request.get_json(silent=True) or {}
+    user_id = str(data.get("user_id", "")).strip()
+    question = str(data.get("question", "")).strip()
+    if not user_id:
+        return jsonify({"error": "validation", "message": "user_id required"}), 400
+    if not question:
+        return jsonify({"error": "validation", "message": "question required"}), 400
+
+    ctx = _get_latest_context(user_id)
+    out = _assistant_answer(question, ctx)
+    return jsonify({"ok": True, "user_id": user_id, "question": question, **out}), 200
+
+
+@api_bp.get("/monitor/stream")
+def monitor_stream():
+    """
+    Real-time monitor via Server-Sent Events (SSE).
+    Client connects and receives events like:
+      event: alert
+      data: {...json...}
+
+    Query params:
+      user_id=123
+      after_id=0   (optional) start after this anomaly id
+    """
+    user_id = request.args.get("user_id", "").strip()
+    if not user_id:
+        return jsonify({"error": "validation", "message": "user_id required"}), 400
+
+    try:
+        after_id = int(request.args.get("after_id", "0"))
+    except Exception:
+        after_id = 0
+
+    def gen():
+        nonlocal after_id
+        # Initial hello (helps proxies keep the connection)
+        yield "event: hello\ndata: {\"ok\":true}\n\n"
+
+        while True:
+            rows = db.session.execute(text("""
+                SELECT id, created_at, kind, severity, details_json
+                FROM health_anomaly
+                WHERE user_id = :user_id AND id > :after_id
+                ORDER BY id ASC
+                LIMIT 25
+            """), {"user_id": user_id, "after_id": after_id}).fetchall()
+
+            for r in rows:
+                after_id = max(after_id, int(r[0]))
+                payload = {
+                    "id": r[0],
+                    "created_at": r[1].isoformat() if r[1] else None,
+                    "kind": r[2],
+                    "severity": r[3],
+                    "details": json.loads(r[4]) if r[4] else {},
+                }
+                yield "event: alert\n"
+                yield "data: " + json.dumps(payload) + "\n\n"
+
+            # Keepalive ping every ~10s so Render/proxies don’t drop it
+            yield "event: ping\ndata: {}\n\n"
+            time.sleep(10)
+
+    return Response(stream_with_context(gen()), mimetype="text/event-stream")
