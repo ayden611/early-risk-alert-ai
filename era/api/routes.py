@@ -903,29 +903,70 @@ def monitor_stream():
 
     return Response(stream_with_context(gen()), mimetype="text/event-stream")
 
+def health_reasoning_engine(data):
+    """
+    Turns raw vitals + model output into human insights
+    """
+
+    systolic = data.get("systolic_bp")
+    diastolic = data.get("diastolic_bp")
+    heart = data.get("heart_rate")
+    bmi = data.get("bmi")
+    probability = data.get("probability")
+
+    insights = []
+
+    if systolic and diastolic:
+        if systolic > 140 or diastolic > 90:
+            insights.append("Your blood pressure reading is elevated compared to standard ranges.")
+
+    if heart:
+        if heart > 100:
+            insights.append("Your heart rate appears elevated.")
+
+    if bmi:
+        if bmi > 30:
+            insights.append("BMI indicates possible obesity risk factor.")
+
+    if probability:
+        if probability > 0.7:
+            insights.append("Your cardiovascular risk probability is high based on the model.")
+
+    if not insights:
+        insights.append("Your current health indicators appear relatively stable.")
+
+    return insights
 @api_bp.post("/assistant/ask")
 def assistant_ask():
     data = request.get_json(silent=True) or {}
-    user_id = str(data.get("user_id","")).strip()
-    question = str(data.get("question","")).strip().lower()
+
+    user_id = data.get("user_id")
 
     if not user_id:
-        return jsonify({"error":"user_id required"}), 400
+        return jsonify({"error": "user_id required"}), 400
 
-    # Health reasoning trigger (summary / trends / insights)
-    if any(k in question for k in ["summary", "trend", "insight", "insights", "how am i doing"]):
-        intel = _health_reasoning_engine(user_id=user_id, limit=30)
+    # get latest prediction from database
+    latest = Prediction.query.filter_by(user_id=user_id)\
+        .order_by(Prediction.created_at.desc())\
+        .first()
+
+    if not latest:
         return jsonify({
             "ok": True,
-            "user_id": user_id,
-            "answer": intel["summary"],
-            "intel": intel
+            "answer": "No health readings found yet. Submit an intake first."
         })
+
+    reasoning = health_reasoning_engine({
+        "systolic_bp": latest.systolic_bp,
+        "diastolic_bp": latest.diastolic_bp,
+        "heart_rate": latest.heart_rate,
+        "bmi": latest.bmi,
+        "probability": latest.probability
+    })
 
     return jsonify({
         "ok": True,
-        "user_id": user_id,
-        "answer": "Ask me for your 'summary' or 'trends' to generate insights from your readings."
+        "assistant": "Early Risk Alert AI",
+        "insights": reasoning,
+        "risk_probability": latest.probability
     })
-
-
