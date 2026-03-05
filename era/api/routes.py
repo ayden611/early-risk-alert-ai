@@ -12,6 +12,25 @@ from sqlalchemy import text
 from werkzeug.exceptions import HTTPException
 
 from era.extensions import db
+from flask import request, jsonify
+
+
+@api_bp.post("/api/v1/events")
+def ingest_event():
+    body = request.get_json(force=True) or {}
+    tenant_id = body.get("tenant_id", "demo-tenant")
+    patient_id = str(body.get("patient_id", "unknown"))
+    payload = body.get("payload", {})
+
+    db.session.execute(
+        text("""
+        INSERT INTO risk_jobs (tenant_id, patient_id, payload_json, status)
+        VALUES (:t, :p, :j, 'pending')
+        """),
+        {"t": tenant_id, "p": patient_id, "j": json.dumps(payload)},
+    )
+    db.session.commit()
+    return jsonify({"ok": True, "tenant_id": tenant_id, "patient_id": patient_id}), 200
 
 # Optional ORM model (if you have it)
 try:
