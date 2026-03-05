@@ -1,5 +1,12 @@
 import os
 
+db_url = os.getenv("SQLALCHEMY_DATABASE_URI") or os.getenv("DATABASE_URL")
+if db_url and db_url.startswith("postgres://"):
+    db_url = db_url.replace("postgres://", "postgresql://", 1)
+
+app.config["SQLALCHEMY_DATABASE_URI"] = db_url
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
 class BaseConfig:
     SECRET_KEY = os.getenv("SECRET_KEY", "change-this-in-production")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
