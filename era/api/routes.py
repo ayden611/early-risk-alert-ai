@@ -9,6 +9,7 @@ from sqlalchemy import text
 from werkzeug.exceptions import HTTPException
 from redis import Redis
 from era.streaming import REDIS_URL, VITALS_STREAM_KEY
+from era.streaming import publish_vitals_event
 
 from era.extensions import db
 
@@ -17,6 +18,21 @@ api_bp = Blueprint("api", __name__)
 # ----------------------------
 # Error handler (JSON)
 # ----------------------------
+
+ack = publish_vitals_event(
+    tenant_id=tenant_id,
+    patient_id=patient_id,
+    vitals=vitals,
+    event_ts=event_ts,
+    source=source,
+)
+
+return jsonify({
+    "ok": True,
+    "tenant_id": tenant_id,
+    "patient_id": patient_id,
+    **ack
+}), 200
 @api_bp.errorhandler(Exception)
 def _json_errors(e):
     current_app.logger.exception("Unhandled error")
