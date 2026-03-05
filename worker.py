@@ -1,8 +1,11 @@
-# worker.py
+"""
+Background worker: "continuous monitoring" engine
+"""
 import json
 import os
 import time
 from datetime import datetime, timezone
+from typing import Any, Dict, Optional, Tuple
 
 from sqlalchemy import text
 
@@ -10,237 +13,218 @@ from era import create_app
 from era.extensions import db
 
 try:
-    import redis  # type: ignore
+    from era.ai.health_reasoning import generate_health_reasoning  # type: ignore
 except Exception:
-    redis = None  # type: ignore
+    generate_health_reasoning = None  # type: ignore
 
 
-def _parse_iso(ts: str):
-    if not ts:
-        return None
+def _now_utc() -> datetime:
+    return datetime.now(timezone.utc)
+
+
+def _safe_float(x: Any) -> Optional[float]:
     try:
-        if ts.endswith("Z"):
-            ts = ts[:-1] + "+00:00"
-        return datetime.fromisoformat(ts)
+        if x is None or x == "":
+            return None
+        return float(x)
     except Exception:
         return None
 
 
-def detect_anomalies(vitals):
-    alerts = []
+def _ensure_pipeline_tables() -> None:
+    dialect = db.engine.dialect.name
+
+    if dialect == "postgresql":
+        db.session.execute(
+            text(
+                """
+                CREATE TABLE IF NOT EXISTS health_event (
+                    id SERIAL PRIMARY KEY,
+                    user_id TEXT NOT NULL,
+                    event_type TEXT NOT NULL,
+                    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                    data_json TEXT
+                );
+                """
+            )
+        )
+        db.session.execute(text("ALTER TABLE health_event ADD COLUMN IF NOT EXISTS data_json TEXT;"))
+    else:
+        db.session.execute(
+            text(
+                """
+                CREATE TABLE IF NOT EXISTS health_event (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id TEXT NOT NULL,
+                    event_type TEXT NOT NULL,
+                    created_at TEXT NOT NULL,
+                    data_json TEXT
+                );
+                """
+            )
+        )
+        cols = db.session.execute(text("PRAGMA table_info(health_event);")).fetchall()
+        col_names = {c[1] for c in cols}
+        if "data_json" not in col_names:
+            db.session.execute(text("ALTER TABLE health_event ADD COLUMN data_json TEXT;"))
+
+    db.session.commit()
+
+
+def _insert_event(user_id: str, event_type: str, payload: Dict[str, Any]) -> int:
+    _ensure_pipeline_tables()
+    created_at = _now_utc()
+
+    if db.engine.dialect.name == "postgresql":
+        row = db.session.execute(
+            text(
+                """
+                INSERT INTO health_event (user_id, event_type, created_at, data_json)
+                VALUES (:user_id, :event_type, :created_at, :data_json)
+                RETURNING id;
+                """
+            ),
+            {"user_id": user_id, "event_type": event_type, "created_at": created_at, "data_json": json.dumps(payload)},
+        ).fetchone()
+        db.session.commit()
+        return int(row[0])
+
+    db.session.execute(
+        text(
+            """
+            INSERT INTO health_event (user_id, event_type, created_at, data_json)
+            VALUES (:user_id, :event_type, :created_at, :data_json);
+            """
+        ),
+        {"user_id": user_id, "event_type": event_type, "created_at": created_at.isoformat(), "data_json": json.dumps(payload)},
+    )
+    db.session.commit()
+    rid = db.session.execute(text("SELECT last_insert_rowid();")).fetchone()
+    return int(rid[0])
+
+
+def _rule_anomalies(details: Dict[str, Any]) -> Tuple[Optional[Dict[str, Any]], Dict[str, Any]]:
+    sbp = _safe_float(details.get("systolic_bp") or details.get("sbp"))
+    dbp = _safe_float(details.get("diastolic_bp") or details.get("dbp"))
+    hr = _safe_float(details.get("heart_rate") or details.get("hr"))
+
+    kind = None
+    severity = 0
+
+    if sbp is not None and dbp is not None:
+        if sbp >= 180 or dbp >= 120:
+            kind = "hypertensive_crisis"
+            severity = 3
+        elif sbp >= 140 or dbp >= 90:
+            kind = "stage1_hypertension"
+            severity = 2
+        elif sbp >= 130 or dbp >= 80:
+            kind = "elevated_bp"
+            severity = 1
+
+    if hr is not None:
+        if hr >= 130:
+            kind = kind or "tachycardia"
+            severity = max(severity, 2)
+        elif hr <= 45:
+            kind = kind or "bradycardia"
+            severity = max(severity, 2)
+
+    if not kind:
+        return None, {"status": "ok"}
+
+    anomaly = {
+        "kind": kind,
+        "severity": severity,
+        "details": {"sbp": sbp, "dbp": dbp, "hr": hr},
+        "ts": _now_utc().isoformat(),
+        "source": "worker",
+    }
+    return anomaly, {"status": "anomaly"}
+
+
+def _load_json(s: Any) -> Dict[str, Any]:
+    if not s:
+        return {}
     try:
-        hr = float(vitals.get("heart_rate")) if vitals.get("heart_rate") is not None else None
-        sys_bp = float(vitals.get("systolic_bp")) if vitals.get("systolic_bp") is not None else None
-        dia_bp = float(vitals.get("diastolic_bp")) if vitals.get("diastolic_bp") is not None else None
-        spo2 = float(vitals.get("spo2")) if vitals.get("spo2") is not None else None
+        return json.loads(s)
     except Exception:
-        hr = sys_bp = dia_bp = spo2 = None
-
-    if hr is not None and hr >= 130:
-        alerts.append(("warn", f"High heart rate: {hr:.0f}"))
-    if sys_bp is not None and sys_bp >= 160:
-        alerts.append(("warn", f"High systolic BP: {sys_bp:.0f}"))
-    if dia_bp is not None and dia_bp >= 100:
-        alerts.append(("warn", f"High diastolic BP: {dia_bp:.0f}"))
-    if spo2 is not None and spo2 <= 92:
-        alerts.append(("warn", f"Low SpO2: {spo2:.0f}"))
-
-    return alerts
+        return {}
 
 
-def ensure_tables():
-    db.session.execute(
+def run_loop(poll_seconds: float = 2.0) -> None:
+    _ensure_pipeline_tables()
+
+    latest = db.session.execute(
         text(
             """
-        CREATE TABLE IF NOT EXISTS vitals_rollups_15m (
-            tenant_id TEXT NOT NULL,
-            patient_id TEXT NOT NULL,
-            bucket_start TIMESTAMPTZ NOT NULL,
-            count_events INTEGER NOT NULL DEFAULT 0,
-            avg_hr DOUBLE PRECISION,
-            min_spo2 DOUBLE PRECISION,
-            max_sys DOUBLE PRECISION,
-            max_dia DOUBLE PRECISION,
-            updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-            PRIMARY KEY (tenant_id, patient_id, bucket_start)
-        );
-        """
+            SELECT COALESCE(MAX(id), 0)
+            FROM health_event
+            WHERE event_type IN ('health_intake', 'voice_intake');
+            """
         )
-    )
-    db.session.execute(
-        text(
-            """
-        CREATE TABLE IF NOT EXISTS alerts (
-            id BIGSERIAL PRIMARY KEY,
-            tenant_id TEXT NOT NULL,
-            patient_id TEXT NOT NULL,
-            alert_type TEXT DEFAULT 'anomaly',
-            severity TEXT DEFAULT 'info',
-            message TEXT DEFAULT '',
-            created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-        );
-        """
-        )
-    )
-    db.session.execute(
-        text(
-            """
-        CREATE INDEX IF NOT EXISTS idx_alerts_tenant_patient_created
-        ON alerts(tenant_id, patient_id, created_at DESC);
-        """
-        )
-    )
-    db.session.commit()
+    ).fetchone()
+    last_seen = int(latest[0] or 0)
 
+    processed = set()
 
-def redis_client():
-    url = os.getenv("REDIS_URL")
-    if not url or redis is None:
-        return None
-    return redis.Redis.from_url(url, decode_responses=True)
+    while True:
+        rows = db.session.execute(
+            text(
+                """
+                SELECT id, user_id, event_type, created_at, data_json
+                FROM health_event
+                WHERE id > :last_seen
+                  AND event_type IN ('health_intake','voice_intake')
+                ORDER BY id ASC
+                LIMIT 200;
+                """
+            ),
+            {"last_seen": last_seen},
+        ).fetchall()
 
+        if rows:
+            for r in rows:
+                rid = int(r[0])
+                user_id = str(r[1])
+                data_json = r[4]
+                last_seen = max(last_seen, rid)
 
-def stream_key(tenant_id: str) -> str:
-    return f"vitals_stream:{tenant_id}"
-
-
-def bucket_15m(dt: datetime) -> datetime:
-    # floor to 15m
-    minute = (dt.minute // 15) * 15
-    return dt.replace(minute=minute, second=0, microsecond=0)
-
-
-def update_rollup(tenant_id: str, patient_id: str, event_ts: datetime, vitals: dict):
-    b = bucket_15m(event_ts)
-
-    hr = vitals.get("heart_rate")
-    spo2 = vitals.get("spo2")
-    sys_bp = vitals.get("systolic_bp")
-    dia_bp = vitals.get("diastolic_bp")
-
-    # Upsert rollup — keep it simple and fast
-    db.session.execute(
-        text(
-            """
-        INSERT INTO vitals_rollups_15m (tenant_id, patient_id, bucket_start, count_events, avg_hr, min_spo2, max_sys, max_dia, updated_at)
-        VALUES (:t,:p,:b, 1,
-                CASE WHEN :hr IS NULL THEN NULL ELSE :hr::double precision END,
-                CASE WHEN :spo2 IS NULL THEN NULL ELSE :spo2::double precision END,
-                CASE WHEN :sys IS NULL THEN NULL ELSE :sys::double precision END,
-                CASE WHEN :dia IS NULL THEN NULL ELSE :dia::double precision END,
-                NOW()
-        )
-        ON CONFLICT (tenant_id, patient_id, bucket_start)
-        DO UPDATE SET
-            count_events = vitals_rollups_15m.count_events + 1,
-            avg_hr = CASE
-                WHEN EXCLUDED.avg_hr IS NULL THEN vitals_rollups_15m.avg_hr
-                WHEN vitals_rollups_15m.avg_hr IS NULL THEN EXCLUDED.avg_hr
-                ELSE ((vitals_rollups_15m.avg_hr * vitals_rollups_15m.count_events) + EXCLUDED.avg_hr) / (vitals_rollups_15m.count_events + 1)
-            END,
-            min_spo2 = CASE
-                WHEN EXCLUDED.min_spo2 IS NULL THEN vitals_rollups_15m.min_spo2
-                WHEN vitals_rollups_15m.min_spo2 IS NULL THEN EXCLUDED.min_spo2
-                ELSE LEAST(vitals_rollups_15m.min_spo2, EXCLUDED.min_spo2)
-            END,
-            max_sys = CASE
-                WHEN EXCLUDED.max_sys IS NULL THEN vitals_rollups_15m.max_sys
-                WHEN vitals_rollups_15m.max_sys IS NULL THEN EXCLUDED.max_sys
-                ELSE GREATEST(vitals_rollups_15m.max_sys, EXCLUDED.max_sys)
-            END,
-            max_dia = CASE
-                WHEN EXCLUDED.max_dia IS NULL THEN vitals_rollups_15m.max_dia
-                WHEN vitals_rollups_15m.max_dia IS NULL THEN EXCLUDED.max_dia
-                ELSE GREATEST(vitals_rollups_15m.max_dia, EXCLUDED.max_dia)
-            END,
-            updated_at = NOW()
-        """
-        ),
-        {"t": tenant_id, "p": patient_id, "b": b, "hr": hr, "spo2": spo2, "sys": sys_bp, "dia": dia_bp},
-    )
-    db.session.commit()
-
-
-def write_alert(tenant_id: str, patient_id: str, severity: str, message: str):
-    db.session.execute(
-        text(
-            """
-        INSERT INTO alerts (tenant_id, patient_id, alert_type, severity, message)
-        VALUES (:t,:p,'anomaly',:sev,:msg)
-        """
-        ),
-        {"t": tenant_id, "p": patient_id, "sev": severity, "msg": message},
-    )
-    db.session.commit()
-
-
-def main():
-    app = create_app()
-    with app.app_context():
-        ensure_tables()
-
-        r = redis_client()
-        if r is None:
-            print("REDIS_URL not set or redis not installed. Worker idle.")
-            while True:
-                time.sleep(10)
-
-        tenant_id = os.getenv("WORKER_TENANT", "demo")
-        stream = stream_key(tenant_id)
-
-        group = os.getenv("STREAM_GROUP", "vitals_workers")
-        consumer = os.getenv("STREAM_CONSUMER", f"c-{os.getpid()}")
-        block_ms = int(os.getenv("STREAM_BLOCK_MS", "2000"))
-        batch = int(os.getenv("STREAM_BATCH", "50"))
-
-        # Create consumer group (safe if already exists)
-        try:
-            r.xgroup_create(stream, group, id="0-0", mkstream=True)
-        except Exception:
-            pass
-
-        print(f"Worker consuming stream={stream} group={group} consumer={consumer}")
-
-        # Consume loop
-        while True:
-            try:
-                resp = r.xreadgroup(
-                    groupname=group,
-                    consumername=consumer,
-                    streams={stream: ">"},
-                    count=batch,
-                    block=block_ms,
-                )
-                if not resp:
+                if rid in processed:
                     continue
+                processed.add(rid)
 
-                # resp: [(stream, [(id, {fields})...])]
-                for _, messages in resp:
-                    for msg_id, fields in messages:
-                        tenant = fields.get("tenant_id", tenant_id)
-                        patient = fields.get("patient_id", "unknown")
-                        event_ts = _parse_iso(fields.get("event_ts", "")) or datetime.now(timezone.utc)
+                payload = _load_json(data_json)
+                anomaly, _ = _rule_anomalies(payload)
+                if anomaly:
+                    anomaly["intake_event_id"] = rid
+                    _insert_event(user_id, "anomaly", anomaly)
 
-                        payload = fields.get("payload", "{}")
-                        try:
-                            vitals = json.loads(payload) if payload else {}
-                        except Exception:
-                            vitals = {}
+                if generate_health_reasoning is not None:
+                    try:
+                        analysis = generate_health_reasoning(user_id)
+                        _insert_event(
+                            user_id,
+                            "ai_reasoning",
+                            {
+                                "ts": _now_utc().isoformat(),
+                                "user_id": user_id,
+                                "intake_event_id": rid,
+                                "analysis": analysis,
+                            },
+                        )
+                    except Exception as e:
+                        _insert_event(
+                            user_id,
+                            "ai_reasoning_error",
+                            {"ts": _now_utc().isoformat(), "error": str(e)},
+                        )
 
-                        # 1) rollup
-                        update_rollup(tenant, patient, event_ts, vitals)
-
-                        # 2) anomaly detect
-                        for sev, msg in detect_anomalies(vitals):
-                            write_alert(tenant, patient, sev, msg)
-
-                        # ACK
-                        r.xack(stream, group, msg_id)
-
-            except Exception as e:
-                print(f"Worker loop error: {e}")
-                time.sleep(2)
+        time.sleep(poll_seconds)
 
 
 if __name__ == "__main__":
-    main()
+    app = create_app()
+    with app.app_context():
+        print("[worker] starting continuous monitoring loop...")
+        run_loop(poll_seconds=float(os.getenv("WORKER_POLL_SECONDS", "2.0")))

@@ -1,28 +1,32 @@
 # era/api/routes.py
 import json
-import os
+import re
 import time
 from datetime import datetime, timezone
-from typing import Any, Dict, Optional, List, Tuple
+from typing import Any, Dict, Optional, Tuple
 
-from flask import Blueprint, jsonify, request, current_app
+from flask import Blueprint, Response, current_app, jsonify, request, stream_with_context
 from sqlalchemy import text
 from werkzeug.exceptions import HTTPException
 
 from era.extensions import db
 
-# Optional Redis stream support (won't crash if redis isn't installed)
-try:
-    import redis  # type: ignore
-except Exception:
-    redis = None  # type: ignore
-
 api_bp = Blueprint("api", __name__)
 
+# ----------------------------
+# Optional imports (don't crash if missing)
+# ----------------------------
+try:
+    from era.models import HealthEvent  # type: ignore
+except Exception:
+    HealthEvent = None  # type: ignore
 
-# ----------------------------
-# Error handler (JSON)
-# ----------------------------
+try:
+    from era.ai.health_reasoning import generate_health_reasoning  # type: ignore
+except Exception:
+    generate_health_reasoning = None  # type: ignore
+
+
 @api_bp.errorhandler(Exception)
 def _json_errors(e):
     current_app.logger.exception("Unhandled error")
@@ -32,383 +36,301 @@ def _json_errors(e):
 
 
 # ----------------------------
-# Helpers
+# Helpers: parsing + anomaly rules
 # ----------------------------
-def _utcnow_iso() -> str:
-    return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+_BP_RE = re.compile(r"\b(?:bp|blood\s*pressure)\s*(\d{2,3})\s*(?:/|over)\s*(\d{2,3})\b", re.I)
+_HR_RE = re.compile(r"\b(?:hr|heart\s*rate)\s*(\d{2,3})\b", re.I)
+_BMI_RE = re.compile(r"\b(?:bmi)\s*([0-9]+(?:\.[0-9]+)?)\b", re.I)
+_AGE_RE = re.compile(r"\b(?:age)\s*(\d{1,3})\b", re.I)
+_EX_RE = re.compile(r"\b(?:exercise)\s*(low|moderate|high)\b", re.I)
 
 
-def _parse_iso(ts: Optional[str]) -> Optional[datetime]:
-    if not ts:
-        return None
+def _now_utc() -> datetime:
+    return datetime.now(timezone.utc)
+
+
+def _safe_float(x: Any) -> Optional[float]:
     try:
-        # Accept "Z"
-        if ts.endswith("Z"):
-            ts = ts[:-1] + "+00:00"
-        return datetime.fromisoformat(ts)
-    except Exception:
-        return None
-
-
-def _as_float(x) -> Optional[float]:
-    try:
-        if x is None:
+        if x is None or x == "":
             return None
         return float(x)
     except Exception:
         return None
 
 
-def _redis_client():
-    url = os.getenv("REDIS_URL")
-    if not url or redis is None:
-        return None
-    # Render Redis URLs are usually rediss:// (TLS) or redis://
-    return redis.Redis.from_url(url, decode_responses=True)
+def _parse_transcript(t: str) -> Dict[str, Any]:
+    t = (t or "").strip()
+    out: Dict[str, Any] = {"transcript": t}
+
+    m = _BP_RE.search(t)
+    if m:
+        out["systolic_bp"] = int(m.group(1))
+        out["diastolic_bp"] = int(m.group(2))
+
+    m = _HR_RE.search(t)
+    if m:
+        out["heart_rate"] = int(m.group(1))
+
+    m = _BMI_RE.search(t)
+    if m:
+        out["bmi"] = float(m.group(1))
+
+    m = _AGE_RE.search(t)
+    if m:
+        out["age"] = int(m.group(1))
+
+    m = _EX_RE.search(t)
+    if m:
+        out["exercise_level"] = m.group(1).capitalize()
+
+    return out
 
 
-def _stream_key(tenant_id: str) -> str:
-    # One stream per tenant (keeps it scalable + easy to shard later)
-    return f"vitals_stream:{tenant_id}"
+def _rule_anomalies(details: Dict[str, Any]) -> Tuple[Optional[Dict[str, Any]], Dict[str, Any]]:
+    sbp = _safe_float(details.get("systolic_bp") or details.get("sbp"))
+    dbp = _safe_float(details.get("diastolic_bp") or details.get("dbp"))
+    hr = _safe_float(details.get("heart_rate") or details.get("hr"))
+
+    kind = None
+    severity = 0
+
+    # Demo rules (NOT medical advice)
+    if sbp is not None and dbp is not None:
+        if sbp >= 180 or dbp >= 120:
+            kind = "hypertensive_crisis"
+            severity = 3
+        elif sbp >= 140 or dbp >= 90:
+            kind = "stage1_hypertension"
+            severity = 2
+        elif sbp >= 130 or dbp >= 80:
+            kind = "elevated_bp"
+            severity = 1
+
+    if hr is not None:
+        if hr >= 130:
+            kind = kind or "tachycardia"
+            severity = max(severity, 2)
+        elif hr <= 45:
+            kind = kind or "bradycardia"
+            severity = max(severity, 2)
+
+    if not kind:
+        return None, {"status": "ok", "note": "No rule-based anomaly detected (demo rules)."}
+
+    anomaly = {
+        "kind": kind,
+        "severity": severity,
+        "details": {
+            "sbp": sbp,
+            "dbp": dbp,
+            "hr": hr,
+            "age": details.get("age"),
+            "bmi": details.get("bmi"),
+            "exercise_level": details.get("exercise_level"),
+        },
+        "ts": _now_utc().isoformat(),
+    }
+    summary = {"status": "anomaly", "kind": kind, "severity": severity, "note": "Rule-based anomaly detected (demo rules)."}
+    return anomaly, summary
 
 
-def _partition_key(tenant_id: str, patient_id: str, partitions: int = 128) -> int:
-    # Stable partition: tenant+patient -> partition number
-    s = f"{tenant_id}:{patient_id}"
-    return (abs(hash(s)) % partitions)
+# ----------------------------
+# DB bootstrap (no manual ALTER TABLE needed)
+# ----------------------------
+def _ensure_pipeline_tables() -> None:
+    dialect = db.engine.dialect.name
 
-
-def _ensure_tables():
-    """
-    Creates tables if they do not exist.
-    Safe to run on every request (IF NOT EXISTS).
-    """
-    db.session.execute(
-        text(
-            """
-        CREATE TABLE IF NOT EXISTS vitals_events (
-            id BIGSERIAL PRIMARY KEY,
-            tenant_id TEXT NOT NULL,
-            patient_id TEXT NOT NULL,
-            source TEXT DEFAULT 'unknown',
-            event_ts TIMESTAMPTZ,
-            created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-            payload_json JSONB NOT NULL
-        );
-        """
+    if dialect == "postgresql":
+        db.session.execute(
+            text(
+                """
+                CREATE TABLE IF NOT EXISTS health_event (
+                    id SERIAL PRIMARY KEY,
+                    user_id TEXT NOT NULL,
+                    event_type TEXT NOT NULL,
+                    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                    data_json TEXT
+                );
+                """
+            )
         )
-    )
-
-    db.session.execute(
-        text(
-            """
-        CREATE TABLE IF NOT EXISTS alerts (
-            id BIGSERIAL PRIMARY KEY,
-            tenant_id TEXT NOT NULL,
-            patient_id TEXT NOT NULL,
-            alert_type TEXT DEFAULT 'anomaly',
-            severity TEXT DEFAULT 'info',
-            message TEXT DEFAULT '',
-            created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-        );
-        """
+        db.session.execute(text("ALTER TABLE health_event ADD COLUMN IF NOT EXISTS data_json TEXT;"))
+    else:
+        db.session.execute(
+            text(
+                """
+                CREATE TABLE IF NOT EXISTS health_event (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id TEXT NOT NULL,
+                    event_type TEXT NOT NULL,
+                    created_at TEXT NOT NULL,
+                    data_json TEXT
+                );
+                """
+            )
         )
-    )
-
-    db.session.execute(
-        text(
-            """
-        CREATE TABLE IF NOT EXISTS vitals_rollups_15m (
-            tenant_id TEXT NOT NULL,
-            patient_id TEXT NOT NULL,
-            bucket_start TIMESTAMPTZ NOT NULL,
-            count_events INTEGER NOT NULL DEFAULT 0,
-            avg_hr DOUBLE PRECISION,
-            min_spo2 DOUBLE PRECISION,
-            max_sys DOUBLE PRECISION,
-            max_dia DOUBLE PRECISION,
-            updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-            PRIMARY KEY (tenant_id, patient_id, bucket_start)
-        );
-        """
-        )
-    )
-
-    # Helpful indexes
-    db.session.execute(
-        text(
-            """
-        CREATE INDEX IF NOT EXISTS idx_vitals_events_tenant_patient_created
-        ON vitals_events(tenant_id, patient_id, created_at DESC);
-        """
-        )
-    )
-    db.session.execute(
-        text(
-            """
-        CREATE INDEX IF NOT EXISTS idx_alerts_tenant_patient_created
-        ON alerts(tenant_id, patient_id, created_at DESC);
-        """
-        )
-    )
+        cols = db.session.execute(text("PRAGMA table_info(health_event);")).fetchall()
+        col_names = {c[1] for c in cols}
+        if "data_json" not in col_names:
+            db.session.execute(text("ALTER TABLE health_event ADD COLUMN data_json TEXT;"))
 
     db.session.commit()
 
 
-def detect_anomalies(vitals: Dict[str, Any]) -> List[Dict[str, str]]:
+def _insert_event(user_id: str, event_type: str, payload: Dict[str, Any]) -> int:
+    _ensure_pipeline_tables()
+    created_at = _now_utc()
+
+    if db.engine.dialect.name == "postgresql":
+        row = db.session.execute(
+            text(
+                """
+                INSERT INTO health_event (user_id, event_type, created_at, data_json)
+                VALUES (:user_id, :event_type, :created_at, :data_json)
+                RETURNING id;
+                """
+            ),
+            {"user_id": user_id, "event_type": event_type, "created_at": created_at, "data_json": json.dumps(payload)},
+        ).fetchone()
+        db.session.commit()
+        return int(row[0])
+
+    db.session.execute(
+        text(
+            """
+            INSERT INTO health_event (user_id, event_type, created_at, data_json)
+            VALUES (:user_id, :event_type, :created_at, :data_json);
+            """
+        ),
+        {"user_id": user_id, "event_type": event_type, "created_at": created_at.isoformat(), "data_json": json.dumps(payload)},
+    )
+    db.session.commit()
+    rid = db.session.execute(text("SELECT last_insert_rowid();")).fetchone()
+    return int(rid[0])
+
+
+def _fetch_events_since(user_id: str, since_id: int, only_type: Optional[str] = None):
+    _ensure_pipeline_tables()
+    q = """
+        SELECT id, user_id, event_type, created_at, data_json
+        FROM health_event
+        WHERE user_id = :user_id AND id > :since_id
     """
-    Lightweight rules-based anomaly detection (fast).
-    You can later replace with ML model inference.
-    """
-    alerts: List[Dict[str, str]] = []
-
-    hr = _as_float(vitals.get("heart_rate"))
-    sys_bp = _as_float(vitals.get("systolic_bp"))
-    dia_bp = _as_float(vitals.get("diastolic_bp"))
-    spo2 = _as_float(vitals.get("spo2"))
-
-    if hr is not None and hr >= 130:
-        alerts.append({"severity": "warn", "message": f"High heart rate: {hr:.0f}"})
-    if sys_bp is not None and sys_bp >= 160:
-        alerts.append({"severity": "warn", "message": f"High systolic BP: {sys_bp:.0f}"})
-    if dia_bp is not None and dia_bp >= 100:
-        alerts.append({"severity": "warn", "message": f"High diastolic BP: {dia_bp:.0f}"})
-    if spo2 is not None and spo2 <= 92:
-        alerts.append({"severity": "warn", "message": f"Low SpO2: {spo2:.0f}"})
-
-    return alerts
+    params = {"user_id": user_id, "since_id": since_id}
+    if only_type:
+        q += " AND event_type = :event_type"
+        params["event_type"] = only_type
+    q += " ORDER BY id ASC LIMIT 200;"
+    return db.session.execute(text(q), params).fetchall()
 
 
 # ----------------------------
-# Health
+# Core endpoints
 # ----------------------------
 @api_bp.get("/healthz")
 def healthz():
-    db_ok = True
-    db_err = None
     try:
         db.session.execute(text("SELECT 1"))
-    except Exception as e:
+        db_ok = True
+    except Exception:
         db_ok = False
-        db_err = str(e)
 
-    r_ok = False
-    r_err = None
-    try:
-        r = _redis_client()
-        if r is not None:
-            r.ping()
-            r_ok = True
-    except Exception as e:
-        r_ok = False
-        r_err = str(e)
-
-    return (
-        jsonify(
-            {
-                "status": "ok" if db_ok else "degraded",
-                "db_ok": db_ok,
-                "db_error": db_err,
-                "redis_ok": r_ok,
-                "redis_error": r_err,
-                "time_utc": _utcnow_iso(),
-            }
-        ),
-        (200 if db_ok else 503),
-    )
+    return jsonify({"status": "ok" if db_ok else "degraded", "db_ok": db_ok, "service": "early-risk-alert"}), (200 if db_ok else 503)
 
 
-# ----------------------------
-# Stream ingestion endpoint
-# ----------------------------
-@api_bp.post("/v1/vitals")
-def ingest_vitals():
-    """
-    Device/app posts vitals here.
-    We always write raw event to Postgres.
-    If Redis is configured, we ALSO publish to a tenant stream for worker processing.
+@api_bp.get("/routes")
+def list_routes():
+    return jsonify({"routes": [str(r) for r in current_app.url_map.iter_rules()]}), 200
 
-    Payload example:
-    {
-      "tenant_id":"demo",
-      "patient_id":"123",
-      "source":"watch",
-      "event_ts":"2026-03-05T17:00:00Z",
-      "event_id":"evt-123-0001",
-      "vitals":{"heart_rate":132,"systolic_bp":165,"diastolic_bp":100,"spo2":91}
-    }
-    """
-    _ensure_tables()
 
-    body = request.get_json(force=True) or {}
-    tenant_id = str(body.get("tenant_id") or "demo")
-    patient_id = str(body.get("patient_id") or "unknown")
-    source = str(body.get("source") or "unknown")
-    event_ts = _parse_iso(body.get("event_ts"))
-    event_id = str(body.get("event_id") or "")
+@api_bp.post("/api/v1/demo/intake")
+def demo_intake():
+    body = request.get_json(silent=True) or {}
+    user_id = str(body.get("user_id") or "").strip()
+    if not user_id:
+        return jsonify({"error": "user_id required"}), 400
 
-    vitals = body.get("vitals") or {}
-    if not isinstance(vitals, dict):
-        return jsonify({"error": "bad_request", "message": "vitals must be an object"}), 400
+    event_id = _insert_event(user_id, "health_intake", body)
 
-    # Save raw event
-    db.session.execute(
+    anomaly, summary = _rule_anomalies(body)
+    anomaly_id = _insert_event(user_id, "anomaly", anomaly) if anomaly else None
+
+    return jsonify({"ok": True, "user_id": user_id, "event_id": event_id, "anomaly_event_id": anomaly_id, "summary": summary}), 200
+
+
+@api_bp.post("/api/v1/voice/intake")
+def voice_intake():
+    body = request.get_json(silent=True) or {}
+    user_id = str(body.get("user_id") or "").strip()
+    transcript = str(body.get("transcript") or "").strip()
+
+    if not user_id:
+        return jsonify({"error": "user_id required"}), 400
+    if not transcript:
+        return jsonify({"error": "transcript required"}), 400
+
+    parsed = _parse_transcript(transcript)
+    payload = {**body, **parsed}
+
+    event_id = _insert_event(user_id, "voice_intake", payload)
+
+    anomaly, summary = _rule_anomalies(payload)
+    anomaly_id = _insert_event(user_id, "anomaly", anomaly) if anomaly else None
+
+    return jsonify({"ok": True, "user_id": user_id, "event_id": event_id, "parsed": parsed, "anomaly_event_id": anomaly_id, "summary": summary}), 200
+
+
+@api_bp.get("/api/v1/stream/anomalies")
+def stream_anomalies():
+    user_id = str(request.args.get("user_id") or "").strip()
+    if not user_id:
+        return jsonify({"error": "user_id required"}), 400
+
+    _ensure_pipeline_tables()
+    latest = db.session.execute(
         text(
             """
-        INSERT INTO vitals_events (tenant_id, patient_id, source, event_ts, payload_json)
-        VALUES (:t, :p, :s, :ets, :j::jsonb)
-        """
-        ),
-        {
-            "t": tenant_id,
-            "p": patient_id,
-            "s": source,
-            "ets": event_ts,
-            "j": json.dumps(
-                {
-                    "tenant_id": tenant_id,
-                    "patient_id": patient_id,
-                    "source": source,
-                    "event_ts": body.get("event_ts"),
-                    "event_id": event_id,
-                    "vitals": vitals,
-                }
-            ),
-        },
-    )
-    db.session.commit()
-
-    # Publish to Redis stream (queue) for scalable processing
-    message_id = None
-    pushed = False
-    try:
-        r = _redis_client()
-        if r is not None:
-            partitions = int(os.getenv("STREAM_PARTITIONS", "128"))
-            part = _partition_key(tenant_id, patient_id, partitions=partitions)
-            stream = _stream_key(tenant_id)
-
-            message = {
-                "tenant_id": tenant_id,
-                "patient_id": patient_id,
-                "source": source,
-                "event_ts": body.get("event_ts") or "",
-                "event_id": event_id,
-                "partition": str(part),
-                "payload": json.dumps(vitals),
-            }
-            message_id = r.xadd(stream, message, maxlen=100000, approximate=True)
-            pushed = True
-    except Exception as e:
-        current_app.logger.warning(f"Redis publish failed: {e}")
-
-    # Optional immediate detection (tiny) so you see alerts even if worker lags
-    # You can set INLINE_DETECT=0 to disable
-    inline_detect = os.getenv("INLINE_DETECT", "1") == "1"
-    inline_alerts = []
-    if inline_detect:
-        for a in detect_anomalies(vitals):
-            inline_alerts.append(a)
-            db.session.execute(
-                text(
-                    """
-                INSERT INTO alerts (tenant_id, patient_id, alert_type, severity, message)
-                VALUES (:t,:p,'anomaly',:sev,:msg)
-                """
-                ),
-                {"t": tenant_id, "p": patient_id, "sev": a["severity"], "msg": a["message"]},
-            )
-        db.session.commit()
-
-    return (
-        jsonify(
-            {
-                "ok": True,
-                "accepted": True,
-                "tenant_id": tenant_id,
-                "patient_id": patient_id,
-                "pushed_to_queue": pushed,
-                "message_id": message_id,
-                "inline_alerts": inline_alerts,
-            }
-        ),
-        200,
-    )
-
-
-# ----------------------------
-# Read endpoints
-# ----------------------------
-@api_bp.get("/v1/alerts")
-def get_alerts():
-    _ensure_tables()
-
-    tenant_id = str(request.args.get("tenant_id") or "demo")
-    patient_id = str(request.args.get("patient_id") or "unknown")
-    limit = int(request.args.get("limit") or 50)
-
-    rows = db.session.execute(
-        text(
+            SELECT COALESCE(MAX(id), 0)
+            FROM health_event
+            WHERE user_id = :user_id AND event_type = 'anomaly';
             """
-        SELECT id, alert_type, severity, message, created_at
-        FROM alerts
-        WHERE tenant_id=:t AND patient_id=:p
-        ORDER BY created_at DESC
-        LIMIT :lim
-        """
         ),
-        {"t": tenant_id, "p": patient_id, "lim": limit},
-    ).mappings().all()
+        {"user_id": user_id},
+    ).fetchone()
+    last_id = int(latest[0] or 0)
 
-    return jsonify({"tenant_id": tenant_id, "patient_id": patient_id, "alerts": list(rows)}), 200
+    def sse():
+        nonlocal last_id
+        yield "event: ping\ndata: " + json.dumps({"ts": _now_utc().isoformat(), "hello": True}) + "\n\n"
 
+        while True:
+            try:
+                rows = _fetch_events_since(user_id, last_id, only_type="anomaly")
+                for r in rows:
+                    rid = int(r[0])
+                    data_json = r[4] or "{}"
+                    last_id = max(last_id, rid)
+                    yield "event: anomaly\ndata: " + json.dumps({"id": rid, "user_id": user_id, "data": json.loads(data_json)}) + "\n\n"
 
-@api_bp.get("/v1/vitals/latest")
-def latest_vitals():
-    _ensure_tables()
+                yield "event: ping\ndata: " + json.dumps({"ts": _now_utc().isoformat()}) + "\n\n"
+                time.sleep(2)
+            except GeneratorExit:
+                return
+            except Exception as e:
+                yield "event: error\ndata: " + json.dumps({"message": str(e)}) + "\n\n"
+                time.sleep(2)
 
-    tenant_id = str(request.args.get("tenant_id") or "demo")
-    patient_id = str(request.args.get("patient_id") or "unknown")
-
-    row = db.session.execute(
-        text(
-            """
-        SELECT payload_json, created_at
-        FROM vitals_events
-        WHERE tenant_id=:t AND patient_id=:p
-        ORDER BY created_at DESC
-        LIMIT 1
-        """
-        ),
-        {"t": tenant_id, "p": patient_id},
-    ).mappings().first()
-
-    if not row:
-        return jsonify({"tenant_id": tenant_id, "patient_id": patient_id, "latest": None}), 200
-
-    return jsonify({"tenant_id": tenant_id, "patient_id": patient_id, "latest": row}), 200
+    return Response(stream_with_context(sse()), mimetype="text/event-stream")
 
 
-@api_bp.get("/v1/rollups/15m")
-def rollups_15m():
-    _ensure_tables()
+@api_bp.get("/ai/health/reasoning")
+def ai_health_reasoning():
+    user_id = str(request.args.get("user_id") or "").strip()
+    if not user_id:
+        return jsonify({"error": "user_id required"}), 400
 
-    tenant_id = str(request.args.get("tenant_id") or "demo")
-    patient_id = str(request.args.get("patient_id") or "unknown")
-    since_minutes = int(request.args.get("since_minutes") or 120)
+    if generate_health_reasoning is None:
+        return jsonify({"user_id": user_id, "ai_analysis": {"status": "unavailable", "message": "Reasoning engine not installed in this deploy."}}), 200
 
-    rows = db.session.execute(
-        text(
-            """
-        SELECT bucket_start, count_events, avg_hr, min_spo2, max_sys, max_dia, updated_at
-        FROM vitals_rollups_15m
-        WHERE tenant_id=:t AND patient_id=:p
-          AND bucket_start >= NOW() - (:mins || ' minutes')::interval
-        ORDER BY bucket_start DESC
-        LIMIT 200
-        """
-        ),
-        {"t": tenant_id, "p": patient_id, "mins": since_minutes},
-    ).mappings().all()
-
-    return jsonify({"tenant_id": tenant_id, "patient_id": patient_id, "rollups": list(rows)}), 200
+    result = generate_health_reasoning(user_id)
+    return jsonify({"user_id": user_id, "ai_analysis": result}), 200
