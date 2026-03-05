@@ -1,19 +1,18 @@
-from era import create_app
+import os
 
-app = create_app()
 
-@app.get("/")
-def root():
-    return {
-        "status": "running",
-        "service": "early-risk-alert-ai-prod"
-    }
+class Config:
+    SECRET_KEY = os.getenv("SECRET_KEY", "dev")
 
-@app.get("/healthz")
-def healthz():
-    return {
-        "status": "ok"
-    }
+    # Database URL (Render provides DATABASE_URL)
+    SQLALCHEMY_DATABASE_URI = (
+        os.getenv("SQLALCHEMY_DATABASE_URI")
+        or os.getenv("DATABASE_URL")
+    )
 
-if __name__ == "__main__":
-    app.run(debug=True)
+    if SQLALCHEMY_DATABASE_URI and SQLALCHEMY_DATABASE_URI.startswith("postgres://"):
+        SQLALCHEMY_DATABASE_URI = SQLALCHEMY_DATABASE_URI.replace(
+            "postgres://", "postgresql://", 1
+        )
+
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
