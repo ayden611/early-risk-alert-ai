@@ -1,58 +1,48 @@
-from flask import Flask
+from flask import Flask, jsonify
+from sqlalchemy import text
+
 from .config import Config
 from .extensions import db
-from .api.routes import api_bp
-from .web.routes import web_bp
-from flask_login import LoginManager
-import os
-
-login_manager = LoginManager()
-
-
-@login_manager.user_loader
-def load_user(user_id):
-    return None
+from .api.routes import api_bp, ensure_api_tables
 
 
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
 
-    # -------------------------
-    # Database Configuration
-    # -------------------------
-    db_url = os.getenv("SQLALCHEMY_DATABASE_URI") or os.getenv("DATABASE_URL")
-
-    if db_url and db_url.startswith("postgres://"):
-        db_url = db_url.replace("postgres://", "postgresql://", 1)
-
-    app.config["SQLALCHEMY_DATABASE_URI"] = db_url
-    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-
-    # -------------------------
-    # Initialize Extensions
-    # -------------------------
-    login_manager.init_app(app)
     db.init_app(app)
+    app.register_blueprint(api_bp, url_prefix="/api/v1")
 
-    # -------------------------
-    # Register Blueprints
-    # -------------------------
-    app.register_blueprint(api_bp)
-    app.register_blueprint(web_bp)
-
-    # -------------------------
-    # Root Route
-    # -------------------------
     @app.get("/")
     def root():
-        return {"status": "running", "service": "early-risk-alert-ai"}
+        return jsonify(
+            {
+                "status": "running",
+                "service": "early-risk-alert",
+            }
+        )
 
-    # -------------------------
-    # Health Check Route
-    # -------------------------
     @app.get("/healthz")
     def healthz():
-        return {"status": "ok"}
+        db_ok = True
+        db_error = None
+
+        try:
+            db.session.execute(text("SELECT 1"))
+        except Exception as e:
+            db_ok = False
+            db_error = str(e)
+
+        return jsonify(
+            {
+                "status": "ok" if db_ok else "degraded",
+                "service": "early-risk-alert",
+                "db_ok": db_ok,
+                "db_error": db_error,
+            }
+        ), (200 if db_ok else 503)
+
+    with app.app_context():
+        ensure_api_tables()
 
     return app
