@@ -4,8 +4,12 @@ import time
 from typing import Any, Dict
 
 from flask import Blueprint, current_app, jsonify, request
-from sqlalchemy import text
 from werkzeug.exceptions import HTTPException
+from datetime import datetime, timezone, timedelta
+from sqlalchemy import text
+
+from era.ai.anomaly import detect_anomalies
+from era.ai.reasoning import risk_score_snapshot
 
 from era.extensions import db
 
@@ -190,3 +194,354 @@ def get_job(job_id: int):
             "error": row[8],
         }
     )
+
+@api_bp.post("/vitals")
+def ingest_vitals():
+    """
+    Ingests a vital payload and immediately runs lightweight anomaly detection.
+    This is the "stream ingestion" endpoint (devices/apps post here).
+    """
+    body = request.get_json(force=True) or {}
+    tenant_id = body.get("tenant_id", "demo-tenant")
+    patient_id = str(body.get("patient_id", "unknown"))
+    source = body.get("source", "manual")
+    vitals = body.get("vitals", {}) or {}
+    event_ts = body.get("event_ts")  # optional ISO string
+
+    # Save raw vitals event
+    db.session.execute(
+        text("""
+            INSERT INTO vitals_events (tenant_id, patient_id, source, event_ts, payload_json)
+            VALUES (:t, :p, :s, :ts, :j::jsonb)
+        """),
+        {
+            "t": tenant_id,
+            "p": patient_id,
+            "s": source,
+            "ts": event_ts,
+            "j": json.dumps(vitals),
+        },
+    )
+
+    # Run anomaly detection now (fast) and write alerts
+    alerts = detect_anomalies(vitals)
+    for a in alerts:
+        db.session.execute(
+            text("""
+                INSERT INTO alerts (tenant_id, patient_id, severity, kind, title, details)
+                VALUES (:t, :p, :sev, :kind, :title, :details::jsonb)
+            """),
+            {
+                "t": tenant_id,
+                "p": patient_id,
+                "sev": a.severity,
+                "kind": a.kind,
+                "title": a.title,
+                "details": json.dumps(a.details),
+            },
+        )
+
+    db.session.commit()
+
+    return jsonify(
+        {
+            "ok": True,
+            "tenant_id": tenant_id,
+            "patient_id": patient_id,
+            "alerts_written": len(alerts),
+        }
+    ), 200
+
+
+@api_bp.get("/patients/latest")
+def patient_latest():
+    """
+    Returns latest vitals + last N alerts for a patient.
+    """
+    tenant_id = request.args.get("tenant_id", "demo-tenant")
+    patient_id = request.args.get("patient_id", "unknown")
+
+    latest = db.session.execute(
+        text("""
+            SELECT received_at, payload_json
+            FROM vitals_events
+            WHERE tenant_id=:t AND patient_id=:p
+            ORDER BY received_at DESC
+            LIMIT 1
+        """),
+        {"t": tenant_id, "p": patient_id},
+    ).mappings().first()
+
+    alerts = db.session.execute(
+        text("""
+            SELECT created_at, severity, kind, title, details
+            FROM alerts
+            WHERE tenant_id=:t AND patient_id=:p
+            ORDER BY created_at DESC
+            LIMIT 25
+        """),
+        {"t": tenant_id, "p": patient_id},
+    ).mappings().all()
+
+    return jsonify(
+        {
+            "tenant_id": tenant_id,
+            "patient_id": patient_id,
+            "latest_vitals": latest["payload_json"] if latest else None,
+            "latest_vitals_at": latest["received_at"].isoformat() if latest else None,
+            "alerts": [
+                {
+                    "created_at": a["created_at"].isoformat(),
+                    "severity": a["severity"],
+                    "kind": a["kind"],
+                    "title": a["title"],
+                    "details": a["details"],
+                }
+                for a in alerts
+            ],
+        }
+    ), 200
+
+
+@api_bp.get("/ai/reasoning")
+def ai_reasoning():
+    """
+    AI reasoning engine v1:
+      - pulls latest vitals
+      - looks at recent alerts
+      - outputs risk score + clinician-facing notes
+    """
+    tenant_id = request.args.get("tenant_id", "demo-tenant")
+    patient_id = request.args.get("patient_id", "unknown")
+
+    latest = db.session.execute(
+        text("""
+            SELECT payload_json
+            FROM vitals_events
+            WHERE tenant_id=:t AND patient_id=:p
+            ORDER BY received_at DESC
+            LIMIT 1
+        """),
+        {"t": tenant_id, "p": patient_id},
+    ).mappings().first()
+
+    since = datetime.now(timezone.utc) - timedelta(hours=24)
+    recent_alerts = db.session.execute(
+        text("""
+            SELECT severity, kind, title, details
+            FROM alerts
+            WHERE tenant_id=:t AND patient_id=:p AND created_at >= :since
+            ORDER BY created_at DESC
+            LIMIT 50
+        """),
+        {"t": tenant_id, "p": patient_id, "since": since},
+    ).mappings().all()
+
+    latest_vitals = latest["payload_json"] if latest else {}
+    snapshot = risk_score_snapshot(latest_vitals, [dict(r) for r in recent_alerts])
+
+    return jsonify(
+        {
+            "tenant_id": tenant_id,
+            "patient_id": patient_id,
+            "latest_vitals": latest_vitals,
+            "ai_analysis": snapshot,
+        }
+    ), 200
+    @api_bp.post("/vitals")
+def ingest_vitals():
+    """
+    Ingests a vital payload and immediately runs lightweight anomaly detection.
+    This is the "stream ingestion" endpoint (devices/apps post here).
+    """
+    body = request.get_json(force=True) or {}
+    tenant_id = body.get("tenant_id", "demo-tenant")
+    patient_id = str(body.get("patient_id", "unknown"))
+    source = body.get("source", "manual")
+    vitals = body.get("vitals", {}) or {}
+    event_ts = body.get("event_ts")  # optional ISO string
+
+    # Save raw vitals event
+    db.session.execute(
+        text("""
+            INSERT INTO vitals_events (tenant_id, patient_id, source, event_ts, payload_json)
+            VALUES (:t, :p, :s, :ts, :j::jsonb)
+        """),
+        {
+            "t": tenant_id,
+            "p": patient_id,
+            "s": source,
+            "ts": event_ts,
+            "j": json.dumps(vitals),
+        },
+    )
+
+    # Run anomaly detection now (fast) and write alerts
+    alerts = detect_anomalies(vitals)
+    for a in alerts:
+        db.session.execute(
+            text("""
+                INSERT INTO alerts (tenant_id, patient_id, severity, kind, title, details)
+                VALUES (:t, :p, :sev, :kind, :title, :details::jsonb)
+            """),
+            {
+                "t": tenant_id,
+                "p": patient_id,
+                "sev": a.severity,
+                "kind": a.kind,
+                "title": a.title,
+                "details": json.dumps(a.details),
+            },
+        )
+
+    db.session.commit()
+
+    return jsonify(
+        {
+            "ok": True,
+            "tenant_id": tenant_id,
+            "patient_id": patient_id,
+            "alerts_written": len(alerts),
+        }
+    ), 200
+
+
+@api_bp.get("/patients/latest")
+def patient_latest():
+    """
+    Returns latest vitals + last N alerts for a patient.
+    """
+    tenant_id = request.args.get("tenant_id", "demo-tenant")
+    patient_id = request.args.get("patient_id", "unknown")
+
+    latest = db.session.execute(
+        text("""
+            SELECT received_at, payload_json
+            FROM vitals_events
+            WHERE tenant_id=:t AND patient_id=:p
+            ORDER BY received_at DESC
+            LIMIT 1
+        """),
+        {"t": tenant_id, "p": patient_id},
+    ).mappings().first()
+
+    alerts = db.session.execute(
+        text("""
+            SELECT created_at, severity, kind, title, details
+            FROM alerts
+            WHERE tenant_id=:t AND patient_id=:p
+            ORDER BY created_at DESC
+            LIMIT 25
+        """),
+        {"t": tenant_id, "p": patient_id},
+    ).mappings().all()
+
+    return jsonify(
+        {
+            "tenant_id": tenant_id,
+            "patient_id": patient_id,
+            "latest_vitals": latest["payload_json"] if latest else None,
+            "latest_vitals_at": latest["received_at"].isoformat() if latest else None,
+            "alerts": [
+                {
+                    "created_at": a["created_at"].isoformat(),
+                    "severity": a["severity"],
+                    "kind": a["kind"],
+                    "title": a["title"],
+                    "details": a["details"],
+                }
+                for a in alerts
+            ],
+        }
+    ), 200
+
+
+@api_bp.get("/ai/reasoning")
+def ai_reasoning():
+    """
+    AI reasoning engine v1:
+      - pulls latest vitals
+      - looks at recent alerts
+      - outputs risk score + clinician-facing notes
+    """
+    tenant_id = request.args.get("tenant_id", "demo-tenant")
+    patient_id = request.args.get("patient_id", "unknown")
+
+    latest = db.session.execute(
+        text("""
+            SELECT payload_json
+            FROM vitals_events
+            WHERE tenant_id=:t AND patient_id=:p
+            ORDER BY received_at DESC
+            LIMIT 1
+        """),
+        {"t": tenant_id, "p": patient_id},
+    ).mappings().first()
+
+    since = datetime.now(timezone.utc) - timedelta(hours=24)
+    recent_alerts = db.session.execute(
+        text("""
+            SELECT severity, kind, title, details
+            FROM alerts
+            WHERE tenant_id=:t AND patient_id=:p AND created_at >= :since
+            ORDER BY created_at DESC
+            LIMIT 50
+        """),
+        {"t": tenant_id, "p": patient_id, "since": since},
+    ).mappings().all()
+
+    latest_vitals = latest["payload_json"] if latest else {}
+    snapshot = risk_score_snapshot(latest_vitals, [dict(r) for r in recent_alerts])
+
+    return jsonify(
+        {
+            "tenant_id": tenant_id,
+            "patient_id": patient_id,
+            "latest_vitals": latest_vitals,
+            "ai_analysis": snapshot,
+        }
+    ), 200
+
+
+@api_bp.get("/stream/alerts")
+def stream_alerts():
+    """
+    Simple server-sent events (SSE) stream of alerts.
+    This is a stepping stone toward WebSockets + pubsub for scale.
+    """
+    tenant_id = request.args.get("tenant_id", "demo-tenant")
+    after_id = int(request.args.get("after_id", "0"))
+
+    def gen():
+        nonlocal after_id
+        # NOTE: polling loop; good for demos, not for 1M scale
+        while True:
+            rows = db.session.execute(
+                text("""
+                    SELECT id, created_at, patient_id, severity, kind, title, details
+                    FROM alerts
+                    WHERE tenant_id=:t AND id > :after
+                    ORDER BY id ASC
+                    LIMIT 100
+                """),
+                {"t": tenant_id, "after": after_id},
+            ).mappings().all()
+
+            for r in rows:
+                after_id = int(r["id"])
+                payload = {
+                    "id": int(r["id"]),
+                    "created_at": r["created_at"].isoformat(),
+                    "patient_id": r["patient_id"],
+                    "severity": r["severity"],
+                    "kind": r["kind"],
+                    "title": r["title"],
+                    "details": r["details"],
+                }
+                yield f"event: alert\ndata: {json.dumps(payload)}\n\n"
+
+            time.sleep(2)
+
+    return Response(gen(), mimetype="text/event-stream")
+
+
