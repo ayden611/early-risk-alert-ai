@@ -1,0 +1,59 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Early Risk Alert - Live Dashboard</title>
+    <style>
+      body { font-family: system-ui, -apple-system, Segoe UI, Roboto; margin: 20px; }
+      .row { display:flex; gap:10px; align-items:center; margin-bottom: 12px;}
+      input { padding:8px; border:1px solid #ccc; border-radius:8px; }
+      button { padding:8px 12px; border-radius:10px; border:1px solid #222; background:#111; color:#fff; cursor:pointer; }
+      .log { border:1px solid #ddd; border-radius:12px; padding:12px; height: 420px; overflow:auto; }
+      .item { padding:8px 10px; border-bottom:1px solid #eee; }
+      .warn { background: #fff7e6; }
+      .info { background: #f4f8ff; }
+    </style>
+  </head>
+  <body>
+    <h2>Live Alerts (SSE)</h2>
+    <div class="row">
+      <input id="tenant" value="demo" placeholder="tenant_id" />
+      <input id="patient" value="123" placeholder="patient_id" />
+      <button onclick="connect()">Connect</button>
+      <button onclick="disconnect()">Disconnect</button>
+    </div>
+
+    <div class="log" id="log"></div>
+
+    <script>
+      let es = null;
+
+      function addLine(obj) {
+        const log = document.getElementById("log");
+        const div = document.createElement("div");
+        const sev = (obj.severity || "info").toLowerCase();
+        div.className = "item " + (sev === "warn" ? "warn" : "info");
+        div.textContent = JSON.stringify(obj);
+        log.prepend(div);
+      }
+
+      function connect() {
+        disconnect();
+        const tenant = document.getElementById("tenant").value.trim();
+        const patient = document.getElementById("patient").value.trim();
+        const url = `/api/v1/stream/alerts?tenant_id=${encodeURIComponent(tenant)}&patient_id=${encodeURIComponent(patient)}`;
+
+        es = new EventSource(url);
+        es.onmessage = (ev) => {
+          try { addLine(JSON.parse(ev.data)); }
+          catch { addLine({raw: ev.data}); }
+        };
+        es.onerror = () => addLine({type:"error", message:"SSE error/reconnect..."});
+      }
+
+      function disconnect() {
+        if (es) { es.close(); es = null; }
+      }
+    </script>
+  </body>
+</html>
