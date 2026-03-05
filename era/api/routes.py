@@ -37,6 +37,15 @@ def _json_errors(e):
     if isinstance(e, HTTPException):
         return jsonify({"error": "http", "code": e.code, "message": e.description}), e.code
     return jsonify({"error": "server", "message": str(e)}), 500
+    
+    @api_bp.get("/routes")
+def list_routes():
+    from flask import current_app
+    return {
+        "routes": [
+            str(r) for r in current_app.url_map.iter_rules()
+        ]
+    }
 
 
 # ----------------------------
