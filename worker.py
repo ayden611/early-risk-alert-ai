@@ -1,230 +1,354 @@
-"""
-Background worker: "continuous monitoring" engine
-"""
 import json
 import os
 import time
 from datetime import datetime, timezone
-from typing import Any, Dict, Optional, Tuple
 
-from sqlalchemy import text
+from sqlalchemy import create_engine, text
 
-from era import create_app
-from era.extensions import db
+DATABASE_URL = os.getenv("SQLALCHEMY_DATABASE_URI") or os.getenv("DATABASE_URL")
+if not DATABASE_URL:
+    raise RuntimeError("DATABASE_URL is not set")
 
-try:
-    from era.ai.health_reasoning import generate_health_reasoning  # type: ignore
-except Exception:
-    generate_health_reasoning = None  # type: ignore
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
-
-def _now_utc() -> datetime:
-    return datetime.now(timezone.utc)
+engine = create_engine(DATABASE_URL, pool_pre_ping=True)
 
 
-def _safe_float(x: Any) -> Optional[float]:
+def utcnow_iso():
+    return datetime.now(timezone.utc).isoformat()
+
+
+def as_float(v):
     try:
-        if x is None or x == "":
+        if v is None or v == "":
             return None
-        return float(x)
+        return float(v)
     except Exception:
         return None
 
 
-def _ensure_pipeline_tables() -> None:
-    dialect = db.engine.dialect.name
-
-    if dialect == "postgresql":
-        db.session.execute(
+def ensure_tables():
+    with engine.begin() as conn:
+        conn.execute(
             text(
                 """
-                CREATE TABLE IF NOT EXISTS health_event (
-                    id SERIAL PRIMARY KEY,
-                    user_id TEXT NOT NULL,
-                    event_type TEXT NOT NULL,
+                CREATE TABLE IF NOT EXISTS vitals_events (
+                    id BIGSERIAL PRIMARY KEY,
+                    tenant_id TEXT NOT NULL,
+                    patient_id TEXT NOT NULL,
+                    source TEXT,
+                    event_id TEXT,
+                    event_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
                     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-                    data_json TEXT
+                    payload_json JSONB NOT NULL
                 );
                 """
             )
         )
-        db.session.execute(text("ALTER TABLE health_event ADD COLUMN IF NOT EXISTS data_json TEXT;"))
+
+        conn.execute(
+            text(
+                """
+                CREATE INDEX IF NOT EXISTS idx_vitals_events_tenant_patient_created
+                ON vitals_events (tenant_id, patient_id, created_at DESC);
+                """
+            )
+        )
+
+        conn.execute(
+            text(
+                """
+                CREATE TABLE IF NOT EXISTS alerts (
+                    id BIGSERIAL PRIMARY KEY,
+                    tenant_id TEXT NOT NULL,
+                    patient_id TEXT NOT NULL,
+                    alert_type TEXT NOT NULL DEFAULT 'anomaly',
+                    severity TEXT NOT NULL DEFAULT 'info',
+                    message TEXT NOT NULL DEFAULT '',
+                    payload_json JSONB,
+                    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+                );
+                """
+            )
+        )
+
+        conn.execute(
+            text(
+                """
+                CREATE INDEX IF NOT EXISTS idx_alerts_tenant_patient_created
+                ON alerts (tenant_id, patient_id, created_at DESC);
+                """
+            )
+        )
+
+        conn.execute(
+            text(
+                """
+                CREATE TABLE IF NOT EXISTS risk_jobs (
+                    id BIGSERIAL PRIMARY KEY,
+                    tenant_id TEXT NOT NULL,
+                    patient_id TEXT NOT NULL,
+                    payload_json JSONB NOT NULL,
+                    status TEXT NOT NULL DEFAULT 'pending',
+                    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                    started_at TIMESTAMPTZ,
+                    finished_at TIMESTAMPTZ,
+                    result_json JSONB,
+                    error TEXT
+                );
+                """
+            )
+        )
+
+        conn.execute(
+            text(
+                """
+                CREATE INDEX IF NOT EXISTS idx_risk_jobs_status_id
+                ON risk_jobs (status, id);
+                """
+            )
+        )
+
+
+def detect_alerts(vitals):
+    alerts = []
+
+    hr = as_float(vitals.get("heart_rate"))
+    sys_bp = as_float(vitals.get("systolic_bp"))
+    dia_bp = as_float(vitals.get("diastolic_bp"))
+    spo2 = as_float(vitals.get("spo2"))
+
+    if hr is not None and hr >= 120:
+        alerts.append(
+            {
+                "alert_type": "tachycardia",
+                "severity": "high",
+                "message": f"Heart rate elevated at {hr:.0f} bpm",
+            }
+        )
+
+    if sys_bp is not None and sys_bp >= 160:
+        alerts.append(
+            {
+                "alert_type": "hypertension",
+                "severity": "high",
+                "message": f"Systolic blood pressure elevated at {sys_bp:.0f}",
+            }
+        )
+
+    if dia_bp is not None and dia_bp >= 100:
+        alerts.append(
+            {
+                "alert_type": "hypertension",
+                "severity": "high",
+                "message": f"Diastolic blood pressure elevated at {dia_bp:.0f}",
+            }
+        )
+
+    if spo2 is not None and spo2 < 92:
+        alerts.append(
+            {
+                "alert_type": "low_oxygen",
+                "severity": "critical",
+                "message": f"SpO2 low at {spo2:.0f}%",
+            }
+        )
+
+    return alerts
+
+
+def build_health_reasoning(payload):
+    vitals = payload.get("vitals") or payload
+    hr = as_float(vitals.get("heart_rate"))
+    sys_bp = as_float(vitals.get("systolic_bp"))
+    dia_bp = as_float(vitals.get("diastolic_bp"))
+    spo2 = as_float(vitals.get("spo2"))
+
+    findings = []
+    risk_score = 0.1
+
+    if hr is not None and hr >= 120:
+        findings.append("tachycardia")
+        risk_score += 0.25
+
+    if sys_bp is not None and sys_bp >= 160:
+        findings.append("high systolic blood pressure")
+        risk_score += 0.25
+
+    if dia_bp is not None and dia_bp >= 100:
+        findings.append("high diastolic blood pressure")
+        risk_score += 0.2
+
+    if spo2 is not None and spo2 < 92:
+        findings.append("low oxygen saturation")
+        risk_score += 0.3
+
+    risk_score = min(risk_score, 0.99)
+
+    if risk_score >= 0.75:
+        level = "high"
+    elif risk_score >= 0.4:
+        level = "moderate"
     else:
-        db.session.execute(
+        level = "low"
+
+    summary = (
+        "No major abnormalities detected."
+        if not findings
+        else "Detected " + ", ".join(findings) + "."
+    )
+
+    return {
+        "generated_at": utcnow_iso(),
+        "risk_score": round(risk_score, 3),
+        "risk_level": level,
+        "summary": summary,
+        "findings": findings,
+    }
+
+
+def fetch_next_job():
+    with engine.begin() as conn:
+        row = conn.execute(
             text(
                 """
-                CREATE TABLE IF NOT EXISTS health_event (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    user_id TEXT NOT NULL,
-                    event_type TEXT NOT NULL,
-                    created_at TEXT NOT NULL,
-                    data_json TEXT
-                );
+                SELECT id, tenant_id, patient_id, payload_json
+                FROM risk_jobs
+                WHERE status = 'pending'
+                ORDER BY id
+                LIMIT 1
                 """
             )
-        )
-        cols = db.session.execute(text("PRAGMA table_info(health_event);")).fetchall()
-        col_names = {c[1] for c in cols}
-        if "data_json" not in col_names:
-            db.session.execute(text("ALTER TABLE health_event ADD COLUMN data_json TEXT;"))
+        ).mappings().first()
 
-    db.session.commit()
+        if not row:
+            return None
 
-
-def _insert_event(user_id: str, event_type: str, payload: Dict[str, Any]) -> int:
-    _ensure_pipeline_tables()
-    created_at = _now_utc()
-
-    if db.engine.dialect.name == "postgresql":
-        row = db.session.execute(
+        updated = conn.execute(
             text(
                 """
-                INSERT INTO health_event (user_id, event_type, created_at, data_json)
-                VALUES (:user_id, :event_type, :created_at, :data_json)
-                RETURNING id;
+                UPDATE risk_jobs
+                SET status = 'processing',
+                    started_at = NOW()
+                WHERE id = :id AND status = 'pending'
                 """
             ),
-            {"user_id": user_id, "event_type": event_type, "created_at": created_at, "data_json": json.dumps(payload)},
-        ).fetchone()
-        db.session.commit()
-        return int(row[0])
-
-    db.session.execute(
-        text(
-            """
-            INSERT INTO health_event (user_id, event_type, created_at, data_json)
-            VALUES (:user_id, :event_type, :created_at, :data_json);
-            """
-        ),
-        {"user_id": user_id, "event_type": event_type, "created_at": created_at.isoformat(), "data_json": json.dumps(payload)},
-    )
-    db.session.commit()
-    rid = db.session.execute(text("SELECT last_insert_rowid();")).fetchone()
-    return int(rid[0])
-
-
-def _rule_anomalies(details: Dict[str, Any]) -> Tuple[Optional[Dict[str, Any]], Dict[str, Any]]:
-    sbp = _safe_float(details.get("systolic_bp") or details.get("sbp"))
-    dbp = _safe_float(details.get("diastolic_bp") or details.get("dbp"))
-    hr = _safe_float(details.get("heart_rate") or details.get("hr"))
-
-    kind = None
-    severity = 0
-
-    if sbp is not None and dbp is not None:
-        if sbp >= 180 or dbp >= 120:
-            kind = "hypertensive_crisis"
-            severity = 3
-        elif sbp >= 140 or dbp >= 90:
-            kind = "stage1_hypertension"
-            severity = 2
-        elif sbp >= 130 or dbp >= 80:
-            kind = "elevated_bp"
-            severity = 1
-
-    if hr is not None:
-        if hr >= 130:
-            kind = kind or "tachycardia"
-            severity = max(severity, 2)
-        elif hr <= 45:
-            kind = kind or "bradycardia"
-            severity = max(severity, 2)
-
-    if not kind:
-        return None, {"status": "ok"}
-
-    anomaly = {
-        "kind": kind,
-        "severity": severity,
-        "details": {"sbp": sbp, "dbp": dbp, "hr": hr},
-        "ts": _now_utc().isoformat(),
-        "source": "worker",
-    }
-    return anomaly, {"status": "anomaly"}
-
-
-def _load_json(s: Any) -> Dict[str, Any]:
-    if not s:
-        return {}
-    try:
-        return json.loads(s)
-    except Exception:
-        return {}
-
-
-def run_loop(poll_seconds: float = 2.0) -> None:
-    _ensure_pipeline_tables()
-
-    latest = db.session.execute(
-        text(
-            """
-            SELECT COALESCE(MAX(id), 0)
-            FROM health_event
-            WHERE event_type IN ('health_intake', 'voice_intake');
-            """
+            {"id": row["id"]},
         )
-    ).fetchone()
-    last_seen = int(latest[0] or 0)
 
-    processed = set()
+        if updated.rowcount == 0:
+            return None
+
+        return row
+
+
+def insert_alerts(tenant_id, patient_id, vitals, alerts):
+    if not alerts:
+        return
+
+    with engine.begin() as conn:
+        for alert in alerts:
+            conn.execute(
+                text(
+                    """
+                    INSERT INTO alerts
+                        (tenant_id, patient_id, alert_type, severity, message, payload_json)
+                    VALUES
+                        (:t, :p, :atype, :sev, :msg, CAST(:payload AS jsonb))
+                    """
+                ),
+                {
+                    "t": tenant_id,
+                    "p": patient_id,
+                    "atype": alert["alert_type"],
+                    "sev": alert["severity"],
+                    "msg": alert["message"],
+                    "payload": json.dumps(vitals),
+                },
+            )
+
+
+def complete_job(job_id, result):
+    with engine.begin() as conn:
+        conn.execute(
+            text(
+                """
+                UPDATE risk_jobs
+                SET status = 'done',
+                    finished_at = NOW(),
+                    result_json = CAST(:result AS jsonb),
+                    error = NULL
+                WHERE id = :id
+                """
+            ),
+            {"id": job_id, "result": json.dumps(result)},
+        )
+
+
+def fail_job(job_id, error_message):
+    with engine.begin() as conn:
+        conn.execute(
+            text(
+                """
+                UPDATE risk_jobs
+                SET status = 'failed',
+                    finished_at = NOW(),
+                    error = :err
+                WHERE id = :id
+                """
+            ),
+            {"id": job_id, "err": error_message[:4000]},
+        )
+
+
+def process_job(job):
+    payload = job["payload_json"]
+    if isinstance(payload, str):
+        payload = json.loads(payload)
+
+    vitals = payload.get("vitals") or payload
+    alerts = detect_alerts(vitals)
+    reasoning = build_health_reasoning(payload)
+
+    insert_alerts(job["tenant_id"], job["patient_id"], vitals, alerts)
+
+    result = {
+        "ok": True,
+        "tenant_id": job["tenant_id"],
+        "patient_id": job["patient_id"],
+        "alerts_created": len(alerts),
+        "alerts": alerts,
+        "ai_analysis": reasoning,
+    }
+
+    complete_job(job["id"], result)
+    print(f"[{utcnow_iso()}] processed job {job['id']} for patient {job['patient_id']}")
+
+
+def main():
+    print(f"[{utcnow_iso()}] worker starting")
+    ensure_tables()
+
+    poll_seconds = float(os.getenv("WORKER_POLL_SECONDS", "2"))
 
     while True:
-        rows = db.session.execute(
-            text(
-                """
-                SELECT id, user_id, event_type, created_at, data_json
-                FROM health_event
-                WHERE id > :last_seen
-                  AND event_type IN ('health_intake','voice_intake')
-                ORDER BY id ASC
-                LIMIT 200;
-                """
-            ),
-            {"last_seen": last_seen},
-        ).fetchall()
+        try:
+            job = fetch_next_job()
+            if not job:
+                time.sleep(poll_seconds)
+                continue
 
-        if rows:
-            for r in rows:
-                rid = int(r[0])
-                user_id = str(r[1])
-                data_json = r[4]
-                last_seen = max(last_seen, rid)
+            try:
+                process_job(job)
+            except Exception as e:
+                fail_job(job["id"], str(e))
+                print(f"[{utcnow_iso()}] job {job['id']} failed: {e}")
 
-                if rid in processed:
-                    continue
-                processed.add(rid)
-
-                payload = _load_json(data_json)
-                anomaly, _ = _rule_anomalies(payload)
-                if anomaly:
-                    anomaly["intake_event_id"] = rid
-                    _insert_event(user_id, "anomaly", anomaly)
-
-                if generate_health_reasoning is not None:
-                    try:
-                        analysis = generate_health_reasoning(user_id)
-                        _insert_event(
-                            user_id,
-                            "ai_reasoning",
-                            {
-                                "ts": _now_utc().isoformat(),
-                                "user_id": user_id,
-                                "intake_event_id": rid,
-                                "analysis": analysis,
-                            },
-                        )
-                    except Exception as e:
-                        _insert_event(
-                            user_id,
-                            "ai_reasoning_error",
-                            {"ts": _now_utc().isoformat(), "error": str(e)},
-                        )
-
-        time.sleep(poll_seconds)
+        except Exception as e:
+            print(f"[{utcnow_iso()}] worker loop error: {e}")
+            time.sleep(5)
 
 
 if __name__ == "__main__":
-    app = create_app()
-    with app.app_context():
-        print("[worker] starting continuous monitoring loop...")
-        run_loop(poll_seconds=float(os.getenv("WORKER_POLL_SECONDS", "2.0")))
+    main()
