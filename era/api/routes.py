@@ -284,4 +284,3 @@ def ingest_vitals():
             **stream_ack,
         }
     ), 200
-@api
