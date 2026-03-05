@@ -349,7 +349,7 @@ def ai_reasoning():
         }
     ), 200
     @api_bp.post("/vitals")
-def ingest_vitals():
+    def ingest_vitals():
     """
     Ingests a vital payload and immediately runs lightweight anomaly detection.
     This is the "stream ingestion" endpoint (devices/apps post here).
