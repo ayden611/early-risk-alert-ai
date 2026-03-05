@@ -406,7 +406,7 @@ def _score_vitals(vitals: Dict[str, Any]) -> Dict[str, Any]:
         "alerts": alerts,
     }
 
-    ```python
+
 # --------------------------------------------------
 # Core platform endpoints
 # --------------------------------------------------
@@ -741,4 +741,268 @@ def patient_timeline(patient_id: str):
     return jsonify({"tenant_id": _tenant_id(), "patient_id": patient_id, "timeline": timeline}), 200
 
 
-# (Truncated here only because message length limits — if you want, say “continue” and I’ll paste the rest exactly the same way.)
+# --------------------------------------------------
+# C) Hospital admin analytics portal
+# --------------------------------------------------
+@api_bp.get("/admin/analytics/overview")
+@require_roles("admin")
+def admin_analytics():
+    ensure_platform_tables()
+
+    tenant_id = _tenant_id()
+
+    kpis = db.session.execute(
+        text(
+            """
+            SELECT
+                (SELECT COUNT(DISTINCT patient_id) FROM vitals_events WHERE tenant_id = :t) AS unique_patients,
+                (SELECT COUNT(*) FROM vitals_events WHERE tenant_id = :t AND created_at >= NOW() - INTERVAL '24 hours') AS vitals_24h,
+                (SELECT COUNT(*) FROM alerts WHERE tenant_id = :t AND status = 'open') AS open_alerts,
+                (SELECT COUNT(*) FROM alerts WHERE tenant_id = :t AND severity = 'critical' AND created_at >= NOW() - INTERVAL '24 hours') AS critical_alerts_24h
+            """
+        ),
+        {"t": tenant_id},
+    ).mappings().first()
+
+    risk_mix = db.session.execute(
+        text(
+            """
+            SELECT risk_level, COUNT(*) AS count
+            FROM (
+                SELECT DISTINCT ON (patient_id) patient_id, risk_level
+                FROM risk_scores
+                WHERE tenant_id = :t
+                ORDER BY patient_id, created_at DESC
+            ) x
+            GROUP BY risk_level
+            ORDER BY risk_level
+            """
+        ),
+        {"t": tenant_id},
+    ).mappings().all()
+
+    return (
+        jsonify(
+            {
+                "tenant_id": tenant_id,
+                "overview": {
+                    "unique_patients": int(kpis["unique_patients"] or 0),
+                    "vitals_24h": int(kpis["vitals_24h"] or 0),
+                    "open_alerts": int(kpis["open_alerts"] or 0),
+                    "critical_alerts_24h": int(kpis["critical_alerts_24h"] or 0),
+                },
+                "risk_mix": [{"risk_level": r["risk_level"], "count": int(r["count"])} for r in risk_mix],
+            }
+        ),
+        200,
+    )
+
+
+# --------------------------------------------------
+# D) Insurance risk pool monitoring
+# --------------------------------------------------
+@api_bp.get("/insurer/pool/overview")
+@require_roles("insurer", "admin")
+def insurer_pool_overview():
+    ensure_platform_tables()
+
+    tenant_id = _tenant_id()
+
+    rows = db.session.execute(
+        text(
+            """
+            SELECT risk_level, COUNT(*) AS members
+            FROM (
+                SELECT DISTINCT ON (patient_id) patient_id, risk_level
+                FROM risk_scores
+                WHERE tenant_id = :t
+                ORDER BY patient_id, created_at DESC
+            ) latest
+            GROUP BY risk_level
+            ORDER BY risk_level
+            """
+        ),
+        {"t": tenant_id},
+    ).mappings().all()
+
+    alert_rows = db.session.execute(
+        text(
+            """
+            SELECT severity, COUNT(*) AS count
+            FROM alerts
+            WHERE tenant_id = :t
+              AND created_at >= NOW() - INTERVAL '24 hours'
+            GROUP BY severity
+            ORDER BY severity
+            """
+        ),
+        {"t": tenant_id},
+    ).mappings().all()
+
+    return (
+        jsonify(
+            {
+                "tenant_id": tenant_id,
+                "member_risk_distribution": [
+                    {"risk_level": row["risk_level"], "members": int(row["members"])} for row in rows
+                ],
+                "alerts_last_24h": [
+                    {"severity": row["severity"], "count": int(row["count"])} for row in alert_rows
+                ],
+            }
+        ),
+        200,
+    )
+
+
+# --------------------------------------------------
+# E) Investor-ready system architecture diagram
+# --------------------------------------------------
+@api_bp.get("/architecture/diagram")
+@require_roles("admin", "insurer")
+def architecture_diagram():
+    mermaid = """
+flowchart LR
+    mobile[Mobile App / Device SDK] --> api[Mobile API / Flask]
+    api --> pg[(Postgres)]
+    api --> redis[(Redis / Valkey)]
+    api --> worker[Background Worker]
+    worker --> pg
+    worker --> alerts[Live Alerts Stream]
+    api --> admin[Hospital Admin Portal]
+    api --> insurer[Insurance Risk Portal]
+    api --> audit[Audit / RBAC Layer]
+    admin --> api
+    insurer --> api
+"""
+    return (
+        jsonify(
+            {
+                "title": "Early Risk Alert Platform Architecture",
+                "diagram_type": "mermaid",
+                "mermaid": mermaid.strip(),
+                "notes": [
+                    "API tier handles ingestion, scoring, analytics APIs, and mobile app connectivity.",
+                    "Postgres is the system of record for vitals, alerts, scores, audit logs, and devices.",
+                    "Redis/Valkey supports queueing, caching, and fan-out for real-time alert streams.",
+                    "Background workers scale horizontally for anomaly detection and batch scoring.",
+                    "Role-based access and audit logs support HIPAA-oriented operational controls.",
+                ],
+            }
+        ),
+        200,
+    )
+
+
+# --------------------------------------------------
+# F) HIPAA-grade audit logging & RBAC security
+# --------------------------------------------------
+@api_bp.get("/security/me")
+def security_me():
+    return (
+        jsonify(
+            {
+                "tenant_id": _tenant_id(),
+                "actor_id": _actor_id(),
+                "role": _actor_role(),
+                "permissions": {
+                    "admin": ["all"],
+                    "clinician": ["read_patients", "read_alerts", "ack_alerts", "read_analytics"],
+                    "insurer": ["read_pool_monitoring", "read_risk", "read_architecture"],
+                    "mobile": ["connect_device", "submit_vitals"],
+                }.get(_actor_role(), []),
+            }
+        ),
+        200,
+    )
+
+
+@api_bp.get("/audit/logs")
+@require_roles("admin")
+def audit_logs():
+    ensure_platform_tables()
+
+    limit = _as_int(request.args.get("limit"), 100)
+    rows = db.session.execute(
+        text(
+            """
+            SELECT actor_id, actor_role, action, resource_type, resource_id, ip_address, meta_json, created_at
+            FROM audit_logs
+            WHERE tenant_id = :t
+            ORDER BY created_at DESC
+            LIMIT :lim
+            """
+        ),
+        {"t": _tenant_id(), "lim": limit},
+    ).mappings().all()
+
+    items = []
+    for row in rows:
+        meta = row["meta_json"]
+        if isinstance(meta, str):
+            meta = json.loads(meta)
+        items.append(
+            {
+                "actor_id": row["actor_id"],
+                "actor_role": row["actor_role"],
+                "action": row["action"],
+                "resource_type": row["resource_type"],
+                "resource_id": row["resource_id"],
+                "ip_address": row["ip_address"],
+                "meta": meta,
+                "created_at": row["created_at"].isoformat() if row["created_at"] else None,
+            }
+        )
+
+    return jsonify({"tenant_id": _tenant_id(), "logs": items}), 200
+
+
+# --------------------------------------------------
+# G) Million-patient scaling architecture metadata
+# --------------------------------------------------
+@api_bp.get("/scale/readiness")
+@require_roles("admin", "insurer")
+def scale_readiness():
+    return (
+        jsonify(
+            {
+                "status": "ready_for_next_phase",
+                "current_pattern": {
+                    "api": "stateless Flask web tier",
+                    "db": "Postgres system of record",
+                    "cache_queue": "Redis / Valkey",
+                    "worker": "horizontal background processors",
+                },
+                "million_patient_plan": [
+                    "Partition vitals events by tenant_id and time window",
+                    "Move real-time alert fan-out to Redis streams or Kafka",
+                    "Scale workers horizontally by patient shard",
+                    "Add read replicas for analytics-heavy dashboards",
+                    "Cache live dashboard aggregates in Redis",
+                    "Adopt time-series retention and archival strategy for historical events",
+                ],
+            }
+        ),
+        200,
+    )
+
+
+# --------------------------------------------------
+# H) Mobile app connection layer
+# --------------------------------------------------
+@api_bp.get("/mobile/config")
+def mobile_config():
+    return (
+        jsonify(
+            {
+                "tenant_id": _tenant_id(),
+                "api_version": "v1",
+                "submit_vitals_path": "/api/v1/vitals",
+                "device_connect_path": "/api/v1/mobile/connect",
+                "health_check_path": "/api/v1/healthz",
+                "recommended_headers": ["X-Tenant-Id", "X-User-Id", "X-Role"],
+                "auth_mode": "header-based placeholder; replace with JWT for production",
+            }
+        ),
+        200,
+    )
