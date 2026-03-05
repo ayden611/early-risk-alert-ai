@@ -7,6 +7,8 @@ from typing import Any, Dict, List, Optional
 from flask import Blueprint, jsonify, request, current_app
 from sqlalchemy import text
 from werkzeug.exceptions import HTTPException
+from redis import Redis
+from era.streaming import REDIS_URL, VITALS_STREAM_KEY
 
 from era.extensions import db
 
@@ -266,49 +268,47 @@ def ingest_event():
 # ----------------------------
 @api_bp.post("/vitals")
 def ingest_vitals():
-    ensure_tables()
+    """
+    Stream ingestion endpoint: devices/apps post vitals here.
+    Now pushes to Redis Stream instead of doing heavy work.
+    """
+
+    if not REDIS_URL:
+        return jsonify({"error": "REDIS_URL not set"}), 500
 
     body = request.get_json(force=True) or {}
+
     tenant_id = body.get("tenant_id", "demo-tenant")
     patient_id = str(body.get("patient_id", "unknown"))
     source = body.get("source", "manual")
     vitals = body.get("vitals", {}) or {}
     event_ts = body.get("event_ts")
 
-    db.session.execute(
-        text("""
-            INSERT INTO vitals_events (tenant_id, patient_id, source, event_ts, payload_json)
-            VALUES (:t, :p, :s, :ts, :j)
-        """),
-        {"t": tenant_id, "p": patient_id, "s": source, "ts": event_ts, "j": json.dumps(vitals)},
+    event = {
+        "tenant_id": tenant_id,
+        "patient_id": patient_id,
+        "source": source,
+        "event_ts": event_ts or "",
+        "vitals_json": json.dumps(vitals),
+        "ingested_at": _utcnow_iso(),
+    }
+
+    r = Redis.from_url(REDIS_URL, decode_responses=True)
+
+    msg_id = r.xadd(
+        VITALS_STREAM_KEY,
+        event,
+        maxlen=2000000,
+        approximate=True
     )
-
-    alerts = detect_anomalies(vitals)
-    for a in alerts:
-        db.session.execute(
-            text("""
-                INSERT INTO alerts (tenant_id, patient_id, alert_type, severity, message)
-                VALUES (:t, :p, :at, :sev, :msg)
-            """),
-            {
-                "t": tenant_id,
-                "p": patient_id,
-                "at": a.get("type", "unknown"),
-                "sev": a.get("severity", "medium"),
-                "msg": a.get("message", ""),
-            },
-        )
-
-    db.session.commit()
 
     return jsonify({
         "ok": True,
+        "accepted": True,
+        "message_id": msg_id,
         "tenant_id": tenant_id,
-        "patient_id": patient_id,
-        "received_vitals": vitals,
-        "alerts": alerts,
-        "ts": _utcnow_iso()
-    }), 200
+        "patient_id": patient_id
+    }), 202
 
 
 # ----------------------------
