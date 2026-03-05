@@ -5,9 +5,10 @@ import time
 from datetime import datetime, timezone
 
 from sqlalchemy import text
+from sqlalchemy import create_engine, text
 
-from era import create_app
-from era.extensions import db
+DATABASE_URL = os.getenv("DATABASE_URL")
+engine = create_engine(DATABASE_URL)
 
 
 POLL_SECONDS = int(os.getenv("WORKER_POLL_SECONDS", "5"))
