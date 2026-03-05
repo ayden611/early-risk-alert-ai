@@ -5,6 +5,13 @@ from .extensions import db
 from .api.routes import api_bp
 from .web.routes import web_bp
 from .auth import login_manager
+from flask_login import LoginManager
+
+login_manager = LoginManager()
+
+@login_manager.user_loader
+def load_user(user_id):
+    return None
 
 
 def create_app():
