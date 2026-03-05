@@ -2,8 +2,7 @@
 import json
 import os
 import time
-from datetime import datetime, timezone, timedelta
-from typing import Any, Dict, Optional, Tuple
+from datetime import datetime, timezone
 
 from sqlalchemy import text
 
@@ -16,67 +15,82 @@ except Exception:
     redis = None  # type: ignore
 
 
-STREAM_KEY = os.getenv("VITALS_STREAM_KEY", "vitals:events")
-DLQ_KEY = os.getenv("VITALS_DLX_KEY", "vitals:dlq")
-GROUP = os.getenv("VITALS_CONSUMER_GROUP", "vitals-workers")
-CONSUMER = os.getenv("VITALS_CONSUMER_NAME", f"worker-{os.getpid()}")
-BLOCK_MS = int(os.getenv("WORKER_BLOCK_MS", "5000"))
-BATCH = int(os.getenv("WORKER_BATCH", "50"))
-
-
-def _utcnow() -> datetime:
-    return datetime.now(timezone.utc)
-
-
-def _parse_ts(s: Optional[str]) -> datetime:
-    if not s:
-        return _utcnow()
+def _parse_iso(ts: str):
+    if not ts:
+        return None
     try:
-        return datetime.fromisoformat(s.replace("Z", "+00:00")).astimezone(timezone.utc)
-    except Exception:
-        return _utcnow()
-
-
-def _as_float(x) -> Optional[float]:
-    try:
-        if x is None:
-            return None
-        return float(x)
+        if ts.endswith("Z"):
+            ts = ts[:-1] + "+00:00"
+        return datetime.fromisoformat(ts)
     except Exception:
         return None
 
 
-def _bucket_15m(ts: datetime) -> Tuple[datetime, datetime]:
-    # floor to 15-minute boundary
-    minute = (ts.minute // 15) * 15
-    start = ts.replace(minute=minute, second=0, microsecond=0)
-    end = start + timedelta(minutes=15)
-    return start, end
-
-
-def detect_anomalies(vitals: Dict[str, Any]) -> list[Dict[str, Any]]:
-    alerts: list[Dict[str, Any]] = []
-    hr = _as_float(vitals.get("heart_rate"))
-    sys = _as_float(vitals.get("systolic_bp"))
-    dia = _as_float(vitals.get("diastolic_bp"))
-    spo2 = _as_float(vitals.get("spo2"))
+def detect_anomalies(vitals):
+    alerts = []
+    try:
+        hr = float(vitals.get("heart_rate")) if vitals.get("heart_rate") is not None else None
+        sys_bp = float(vitals.get("systolic_bp")) if vitals.get("systolic_bp") is not None else None
+        dia_bp = float(vitals.get("diastolic_bp")) if vitals.get("diastolic_bp") is not None else None
+        spo2 = float(vitals.get("spo2")) if vitals.get("spo2") is not None else None
+    except Exception:
+        hr = sys_bp = dia_bp = spo2 = None
 
     if hr is not None and hr >= 130:
-        alerts.append({"alert_type": "tachycardia", "severity": "warn", "message": f"High heart rate: {hr}"})
-    if hr is not None and hr <= 40:
-        alerts.append({"alert_type": "bradycardia", "severity": "warn", "message": f"Low heart rate: {hr}"})
-
-    if sys is not None and dia is not None and (sys >= 180 or dia >= 120):
-        alerts.append({"alert_type": "hypertensive_crisis", "severity": "high", "message": f"Very high BP: {sys}/{dia}"})
-    elif sys is not None and dia is not None and (sys >= 140 or dia >= 90):
-        alerts.append({"alert_type": "hypertension", "severity": "warn", "message": f"High BP: {sys}/{dia}"})
-
-    if spo2 is not None and spo2 < 90:
-        alerts.append({"alert_type": "low_spo2", "severity": "high", "message": f"Low SpO2: {spo2}"})
-    elif spo2 is not None and spo2 < 92:
-        alerts.append({"alert_type": "borderline_spo2", "severity": "warn", "message": f"Borderline SpO2: {spo2}"})
+        alerts.append(("warn", f"High heart rate: {hr:.0f}"))
+    if sys_bp is not None and sys_bp >= 160:
+        alerts.append(("warn", f"High systolic BP: {sys_bp:.0f}"))
+    if dia_bp is not None and dia_bp >= 100:
+        alerts.append(("warn", f"High diastolic BP: {dia_bp:.0f}"))
+    if spo2 is not None and spo2 <= 92:
+        alerts.append(("warn", f"Low SpO2: {spo2:.0f}"))
 
     return alerts
+
+
+def ensure_tables():
+    db.session.execute(
+        text(
+            """
+        CREATE TABLE IF NOT EXISTS vitals_rollups_15m (
+            tenant_id TEXT NOT NULL,
+            patient_id TEXT NOT NULL,
+            bucket_start TIMESTAMPTZ NOT NULL,
+            count_events INTEGER NOT NULL DEFAULT 0,
+            avg_hr DOUBLE PRECISION,
+            min_spo2 DOUBLE PRECISION,
+            max_sys DOUBLE PRECISION,
+            max_dia DOUBLE PRECISION,
+            updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            PRIMARY KEY (tenant_id, patient_id, bucket_start)
+        );
+        """
+        )
+    )
+    db.session.execute(
+        text(
+            """
+        CREATE TABLE IF NOT EXISTS alerts (
+            id BIGSERIAL PRIMARY KEY,
+            tenant_id TEXT NOT NULL,
+            patient_id TEXT NOT NULL,
+            alert_type TEXT DEFAULT 'anomaly',
+            severity TEXT DEFAULT 'info',
+            message TEXT DEFAULT '',
+            created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
+        """
+        )
+    )
+    db.session.execute(
+        text(
+            """
+        CREATE INDEX IF NOT EXISTS idx_alerts_tenant_patient_created
+        ON alerts(tenant_id, patient_id, created_at DESC);
+        """
+        )
+    )
+    db.session.commit()
 
 
 def redis_client():
@@ -86,239 +100,145 @@ def redis_client():
     return redis.Redis.from_url(url, decode_responses=True)
 
 
-def ensure_group(r):
-    try:
-        r.xgroup_create(name=STREAM_KEY, groupname=GROUP, id="0-0", mkstream=True)
-    except Exception as e:
-        # Group exists is OK
-        if "BUSYGROUP" in str(e):
-            return
-        raise
+def stream_key(tenant_id: str) -> str:
+    return f"vitals_stream:{tenant_id}"
 
 
-def write_dlq(r, payload: str, error: str):
-    r.xadd(DLQ_KEY, {"payload": payload, "error": error, "ts": _utcnow().isoformat()}, maxlen=200000, approximate=True)
+def bucket_15m(dt: datetime) -> datetime:
+    # floor to 15m
+    minute = (dt.minute // 15) * 15
+    return dt.replace(minute=minute, second=0, microsecond=0)
 
 
-def process_one(message_id: str, payload_str: str) -> None:
-    """
-    Core worker logic:
-    - idempotent event write
-    - alerts
-    - latest snapshot
-    - 15m rollup upsert
-    """
-    payload = json.loads(payload_str)
+def update_rollup(tenant_id: str, patient_id: str, event_ts: datetime, vitals: dict):
+    b = bucket_15m(event_ts)
 
-    tenant_id = str(payload.get("tenant_id") or "demo")
-    patient_id = str(payload.get("patient_id") or "unknown")
-    source = str(payload.get("source") or "stream")
-    event_id = str(payload.get("event_id") or message_id)
-    event_ts = _parse_ts(payload.get("event_ts"))
-    vitals = payload.get("vitals") or {}
+    hr = vitals.get("heart_rate")
+    spo2 = vitals.get("spo2")
+    sys_bp = vitals.get("systolic_bp")
+    dia_bp = vitals.get("diastolic_bp")
 
-    # 1) Raw event (deduped by unique index when event_id present)
+    # Upsert rollup — keep it simple and fast
     db.session.execute(
         text(
             """
-            INSERT INTO vitals_events (tenant_id, patient_id, source, event_ts, event_id, payload_json)
-            VALUES (:t, :p, :s, :ets, :eid, :j::jsonb)
-            ON CONFLICT DO NOTHING
-            """
-        ),
-        {
-            "t": tenant_id,
-            "p": patient_id,
-            "s": source,
-            "ets": event_ts,
-            "eid": event_id,
-            "j": json.dumps(vitals),
-        },
-    )
-
-    # 2) Latest snapshot
-    db.session.execute(
-        text(
-            """
-            INSERT INTO patient_latest_vitals (tenant_id, patient_id, updated_at, latest_json)
-            VALUES (:t, :p, NOW(), :j::jsonb)
-            ON CONFLICT (tenant_id, patient_id)
-            DO UPDATE SET updated_at = NOW(), latest_json = EXCLUDED.latest_json
-            """
-        ),
-        {"t": tenant_id, "p": patient_id, "j": json.dumps(vitals)},
-    )
-
-    # 3) Alerts
-    alerts = detect_anomalies(vitals)
-    for a in alerts:
-        db.session.execute(
-            text(
-                """
-                INSERT INTO alerts (tenant_id, patient_id, alert_type, severity, message, details_json)
-                VALUES (:t, :p, :atype, :sev, :msg, :d::jsonb)
-                """
-            ),
-            {
-                "t": tenant_id,
-                "p": patient_id,
-                "atype": a.get("alert_type", "anomaly"),
-                "sev": a.get("severity", "info"),
-                "msg": a.get("message", ""),
-                "d": json.dumps({"vitals": vitals, "event_ts": event_ts.isoformat(), "event_id": event_id}),
-            },
+        INSERT INTO vitals_rollups_15m (tenant_id, patient_id, bucket_start, count_events, avg_hr, min_spo2, max_sys, max_dia, updated_at)
+        VALUES (:t,:p,:b, 1,
+                CASE WHEN :hr IS NULL THEN NULL ELSE :hr::double precision END,
+                CASE WHEN :spo2 IS NULL THEN NULL ELSE :spo2::double precision END,
+                CASE WHEN :sys IS NULL THEN NULL ELSE :sys::double precision END,
+                CASE WHEN :dia IS NULL THEN NULL ELSE :dia::double precision END,
+                NOW()
         )
+        ON CONFLICT (tenant_id, patient_id, bucket_start)
+        DO UPDATE SET
+            count_events = vitals_rollups_15m.count_events + 1,
+            avg_hr = CASE
+                WHEN EXCLUDED.avg_hr IS NULL THEN vitals_rollups_15m.avg_hr
+                WHEN vitals_rollups_15m.avg_hr IS NULL THEN EXCLUDED.avg_hr
+                ELSE ((vitals_rollups_15m.avg_hr * vitals_rollups_15m.count_events) + EXCLUDED.avg_hr) / (vitals_rollups_15m.count_events + 1)
+            END,
+            min_spo2 = CASE
+                WHEN EXCLUDED.min_spo2 IS NULL THEN vitals_rollups_15m.min_spo2
+                WHEN vitals_rollups_15m.min_spo2 IS NULL THEN EXCLUDED.min_spo2
+                ELSE LEAST(vitals_rollups_15m.min_spo2, EXCLUDED.min_spo2)
+            END,
+            max_sys = CASE
+                WHEN EXCLUDED.max_sys IS NULL THEN vitals_rollups_15m.max_sys
+                WHEN vitals_rollups_15m.max_sys IS NULL THEN EXCLUDED.max_sys
+                ELSE GREATEST(vitals_rollups_15m.max_sys, EXCLUDED.max_sys)
+            END,
+            max_dia = CASE
+                WHEN EXCLUDED.max_dia IS NULL THEN vitals_rollups_15m.max_dia
+                WHEN vitals_rollups_15m.max_dia IS NULL THEN EXCLUDED.max_dia
+                ELSE GREATEST(vitals_rollups_15m.max_dia, EXCLUDED.max_dia)
+            END,
+            updated_at = NOW()
+        """
+        ),
+        {"t": tenant_id, "p": patient_id, "b": b, "hr": hr, "spo2": spo2, "sys": sys_bp, "dia": dia_bp},
+    )
+    db.session.commit()
 
-    # 4) 15-minute rollup (upsert)
-    b_start, b_end = _bucket_15m(event_ts)
 
-    hr = _as_float(vitals.get("heart_rate"))
-    sys = _as_float(vitals.get("systolic_bp"))
-    dia = _as_float(vitals.get("diastolic_bp"))
-    spo2 = _as_float(vitals.get("spo2"))
-
-    # Use upsert that updates min/max/last + increments n_events
+def write_alert(tenant_id: str, patient_id: str, severity: str, message: str):
     db.session.execute(
         text(
             """
-            INSERT INTO vitals_rollups_15m (
-              tenant_id, patient_id, bucket_start, bucket_end,
-              n_events,
-              hr_min, hr_max, hr_last,
-              sys_min, sys_max, sys_last,
-              dia_min, dia_max, dia_last,
-              spo2_min, spo2_max, spo2_last,
-              updated_at
-            )
-            VALUES (
-              :t, :p, :bs, :be,
-              1,
-              :hr, :hr, :hr,
-              :sys, :sys, :sys,
-              :dia, :dia, :dia,
-              :spo2, :spo2, :spo2,
-              NOW()
-            )
-            ON CONFLICT (tenant_id, patient_id, bucket_start)
-            DO UPDATE SET
-              bucket_end = EXCLUDED.bucket_end,
-              n_events = vitals_rollups_15m.n_events + 1,
-
-              hr_min = CASE
-                WHEN EXCLUDED.hr_last IS NULL THEN vitals_rollups_15m.hr_min
-                WHEN vitals_rollups_15m.hr_min IS NULL THEN EXCLUDED.hr_last
-                ELSE LEAST(vitals_rollups_15m.hr_min, EXCLUDED.hr_last)
-              END,
-              hr_max = CASE
-                WHEN EXCLUDED.hr_last IS NULL THEN vitals_rollups_15m.hr_max
-                WHEN vitals_rollups_15m.hr_max IS NULL THEN EXCLUDED.hr_last
-                ELSE GREATEST(vitals_rollups_15m.hr_max, EXCLUDED.hr_last)
-              END,
-              hr_last = COALESCE(EXCLUDED.hr_last, vitals_rollups_15m.hr_last),
-
-              sys_min = CASE
-                WHEN EXCLUDED.sys_last IS NULL THEN vitals_rollups_15m.sys_min
-                WHEN vitals_rollups_15m.sys_min IS NULL THEN EXCLUDED.sys_last
-                ELSE LEAST(vitals_rollups_15m.sys_min, EXCLUDED.sys_last)
-              END,
-              sys_max = CASE
-                WHEN EXCLUDED.sys_last IS NULL THEN vitals_rollups_15m.sys_max
-                WHEN vitals_rollups_15m.sys_max IS NULL THEN EXCLUDED.sys_last
-                ELSE GREATEST(vitals_rollups_15m.sys_max, EXCLUDED.sys_last)
-              END,
-              sys_last = COALESCE(EXCLUDED.sys_last, vitals_rollups_15m.sys_last),
-
-              dia_min = CASE
-                WHEN EXCLUDED.dia_last IS NULL THEN vitals_rollups_15m.dia_min
-                WHEN vitals_rollups_15m.dia_min IS NULL THEN EXCLUDED.dia_last
-                ELSE LEAST(vitals_rollups_15m.dia_min, EXCLUDED.dia_last)
-              END,
-              dia_max = CASE
-                WHEN EXCLUDED.dia_last IS NULL THEN vitals_rollups_15m.dia_max
-                WHEN vitals_rollups_15m.dia_max IS NULL THEN EXCLUDED.dia_last
-                ELSE GREATEST(vitals_rollups_15m.dia_max, EXCLUDED.dia_last)
-              END,
-              dia_last = COALESCE(EXCLUDED.dia_last, vitals_rollups_15m.dia_last),
-
-              spo2_min = CASE
-                WHEN EXCLUDED.spo2_last IS NULL THEN vitals_rollups_15m.spo2_min
-                WHEN vitals_rollups_15m.spo2_min IS NULL THEN EXCLUDED.spo2_last
-                ELSE LEAST(vitals_rollups_15m.spo2_min, EXCLUDED.spo2_last)
-              END,
-              spo2_max = CASE
-                WHEN EXCLUDED.spo2_last IS NULL THEN vitals_rollups_15m.spo2_max
-                WHEN vitals_rollups_15m.spo2_max IS NULL THEN EXCLUDED.spo2_last
-                ELSE GREATEST(vitals_rollups_15m.spo2_max, EXCLUDED.spo2_last)
-              END,
-              spo2_last = COALESCE(EXCLUDED.spo2_last, vitals_rollups_15m.spo2_last),
-
-              updated_at = NOW()
-            """
+        INSERT INTO alerts (tenant_id, patient_id, alert_type, severity, message)
+        VALUES (:t,:p,'anomaly',:sev,:msg)
+        """
         ),
-        {
-            "t": tenant_id,
-            "p": patient_id,
-            "bs": b_start,
-            "be": b_end,
-            "hr": hr,
-            "sys": sys,
-            "dia": dia,
-            "spo2": spo2,
-        },
+        {"t": tenant_id, "p": patient_id, "sev": severity, "msg": message},
     )
-
     db.session.commit()
 
 
 def main():
     app = create_app()
-    r = redis_client()
-
     with app.app_context():
-        if not r:
-            app.logger.error("REDIS_URL not set or redis not installed. Worker will idle.")
+        ensure_tables()
+
+        r = redis_client()
+        if r is None:
+            print("REDIS_URL not set or redis not installed. Worker idle.")
             while True:
                 time.sleep(10)
 
-        ensure_group(r)
-        app.logger.info(f"Worker online. stream={STREAM_KEY} group={GROUP} consumer={CONSUMER}")
+        tenant_id = os.getenv("WORKER_TENANT", "demo")
+        stream = stream_key(tenant_id)
 
+        group = os.getenv("STREAM_GROUP", "vitals_workers")
+        consumer = os.getenv("STREAM_CONSUMER", f"c-{os.getpid()}")
+        block_ms = int(os.getenv("STREAM_BLOCK_MS", "2000"))
+        batch = int(os.getenv("STREAM_BATCH", "50"))
+
+        # Create consumer group (safe if already exists)
+        try:
+            r.xgroup_create(stream, group, id="0-0", mkstream=True)
+        except Exception:
+            pass
+
+        print(f"Worker consuming stream={stream} group={group} consumer={consumer}")
+
+        # Consume loop
         while True:
             try:
                 resp = r.xreadgroup(
-                    groupname=GROUP,
-                    consumername=CONSUMER,
-                    streams={STREAM_KEY: ">"},
-                    count=BATCH,
-                    block=BLOCK_MS,
+                    groupname=group,
+                    consumername=consumer,
+                    streams={stream: ">"},
+                    count=batch,
+                    block=block_ms,
                 )
                 if not resp:
                     continue
 
-                # resp format: [(stream, [(id, {field: value})...])]
-                for _stream, messages in resp:
+                # resp: [(stream, [(id, {fields})...])]
+                for _, messages in resp:
                     for msg_id, fields in messages:
-                        payload_str = fields.get("payload")
-                        if not payload_str:
-                            # ack and skip
-                            r.xack(STREAM_KEY, GROUP, msg_id)
-                            continue
+                        tenant = fields.get("tenant_id", tenant_id)
+                        patient = fields.get("patient_id", "unknown")
+                        event_ts = _parse_iso(fields.get("event_ts", "")) or datetime.now(timezone.utc)
 
+                        payload = fields.get("payload", "{}")
                         try:
-                            process_one(msg_id, payload_str)
-                            r.xack(STREAM_KEY, GROUP, msg_id)
-                        except Exception as e:
-                            app.logger.exception("Process failed; moving to DLQ")
-                            try:
-                                write_dlq(r, payload_str, error=str(e))
-                                r.xack(STREAM_KEY, GROUP, msg_id)
-                            except Exception:
-                                app.logger.exception("DLQ write failed; leaving message pending")
-                                # do not ack, so it stays pending
-                                time.sleep(1)
+                            vitals = json.loads(payload) if payload else {}
+                        except Exception:
+                            vitals = {}
 
-            except Exception:
-                app.logger.exception("Worker loop error")
+                        # 1) rollup
+                        update_rollup(tenant, patient, event_ts, vitals)
+
+                        # 2) anomaly detect
+                        for sev, msg in detect_anomalies(vitals):
+                            write_alert(tenant, patient, sev, msg)
+
+                        # ACK
+                        r.xack(stream, group, msg_id)
+
+            except Exception as e:
+                print(f"Worker loop error: {e}")
                 time.sleep(2)
 
 
