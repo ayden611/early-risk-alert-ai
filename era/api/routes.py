@@ -1,54 +1,19 @@
 # era/api/routes.py
 import json
-import re
 import time
-import queue
-import threading
 from datetime import datetime, timezone
-from typing import Any, Dict, Optional, List, Tuple
+from typing import Any, Dict, Optional
 
-from flask import Blueprint, Response, current_app, jsonify, request, stream_with_context
+from flask import Blueprint, Response, current_app, jsonify, request
 from sqlalchemy import text
 from werkzeug.exceptions import HTTPException
 
 from era.extensions import db
-from flask import request, jsonify
-
-
-@api_bp.post("/api/v1/events")
-def ingest_event():
-    body = request.get_json(force=True) or {}
-    tenant_id = body.get("tenant_id", "demo-tenant")
-    patient_id = str(body.get("patient_id", "unknown"))
-    payload = body.get("payload", {})
-
-    db.session.execute(
-        text("""
-        INSERT INTO risk_jobs (tenant_id, patient_id, payload_json, status)
-        VALUES (:t, :p, :j, 'pending')
-        """),
-        {"t": tenant_id, "p": patient_id, "j": json.dumps(payload)},
-    )
-    db.session.commit()
-    return jsonify({"ok": True, "tenant_id": tenant_id, "patient_id": patient_id}), 200
-
-# Optional ORM model (if you have it)
-try:
-    from era.models import HealthEvent  # type: ignore
-except Exception:
-    HealthEvent = None  # type: ignore
-
-# Optional AI reasoning engine (if present)
-try:
-    from era.ai.health_reasoning import generate_health_reasoning  # type: ignore
-except Exception:
-    generate_health_reasoning = None  # type: ignore
-
 
 api_bp = Blueprint("api", __name__)
 
 # ----------------------------
-# JSON error handler (ONE)
+# Error handler (JSON)
 # ----------------------------
 @api_bp.errorhandler(Exception)
 def _json_errors(e):
@@ -56,384 +21,305 @@ def _json_errors(e):
     if isinstance(e, HTTPException):
         return jsonify({"error": "http", "code": e.code, "message": e.description}), e.code
     return jsonify({"error": "server", "message": str(e)}), 500
-    
-@api_bp.get("/routes")
-def list_routes():
-    from flask import current_app
-    return {
-        "routes": [
-            str(r) for r in current_app.url_map.iter_rules()
-        ]
-    }
 
 
 # ----------------------------
 # Helpers
 # ----------------------------
-def _now_utc() -> datetime:
-    return datetime.now(timezone.utc)
+def _utc_now_iso() -> str:
+    return datetime.now(timezone.utc).isoformat()
 
 
-def _safe_float(x: Any, default: Optional[float] = None) -> Optional[float]:
-    try:
-        if x is None:
-            return default
-        return float(x)
-    except Exception:
-        return default
-
-
-def _exercise_to_num(x: Any) -> Optional[float]:
-    if x is None:
-        return None
-    s = str(x).strip().lower()
-    if s in ("0", "low"):
-        return 0.0
-    if s in ("1", "moderate", "medium"):
-        return 1.0
-    if s in ("2", "high"):
-        return 2.0
-    return _safe_float(x)
-
-
-# Regexes for voice transcript parsing
-_BP_RE = re.compile(r"\b(?:bp|blood\s*pressure)\s*(\d{2,3})\s*(?:/|over)\s*(\d{2,3})\b", re.I)
-_HR_RE = re.compile(r"\b(?:hr|heart\s*rate)\s*(\d{2,3})\b", re.I)
-_BMI_RE = re.compile(r"\bbmi\s*(\d{1,2}(?:\.\d+)?)\b", re.I)
-_AGE_RE = re.compile(r"\bage\s*(\d{1,3})\b", re.I)
-_EX_RE = re.compile(r"\bexercise\s*(low|moderate|high)\b", re.I)
-
-
-def _parse_transcript(transcript: str) -> Dict[str, Any]:
-    out: Dict[str, Any] = {}
-    t = transcript or ""
-
-    m = _BP_RE.search(t)
-    if m:
-        out["systolic_bp"] = float(m.group(1))
-        out["diastolic_bp"] = float(m.group(2))
-
-    m = _HR_RE.search(t)
-    if m:
-        out["heart_rate"] = float(m.group(1))
-
-    m = _BMI_RE.search(t)
-    if m:
-        out["bmi"] = float(m.group(1))
-
-    m = _AGE_RE.search(t)
-    if m:
-        out["age"] = float(m.group(1))
-
-    m = _EX_RE.search(t)
-    if m:
-        out["exercise_level"] = m.group(1).capitalize()
-
-    return out
-
-
-def _coerce_inputs(payload: Dict[str, Any]) -> Dict[str, Any]:
+def _ensure_tables():
     """
-    Normalize keys + cast types. Keeps raw fields too.
+    Minimal tables required for:
+    - ingesting events -> risk_jobs
+    - showing dashboard data (patient_risk_cache, alerts, clinician_notes) if you created them
     """
-    out = dict(payload or {})
-    out["user_id"] = str(out.get("user_id") or "").strip()
-
-    out["age"] = _safe_float(out.get("age"))
-    out["bmi"] = _safe_float(out.get("bmi"))
-    out["systolic_bp"] = _safe_float(out.get("systolic_bp"))
-    out["diastolic_bp"] = _safe_float(out.get("diastolic_bp"))
-    out["heart_rate"] = _safe_float(out.get("heart_rate"))
-    out["exercise_level"] = out.get("exercise_level")
-    out["exercise_num"] = _exercise_to_num(out.get("exercise_level"))
-
-    return out
-
-
-# ----------------------------
-# Minimal anomaly detection (rules)
-# ----------------------------
-def _detect_anomalies(v: Dict[str, Any]) -> List[Dict[str, Any]]:
-    sbp = v.get("systolic_bp")
-    dbp = v.get("diastolic_bp")
-    hr = v.get("heart_rate")
-    bmi = v.get("bmi")
-
-    anomalies: List[Dict[str, Any]] = []
-
-    # Hypertensive crisis
-    if (sbp is not None and sbp >= 180) or (dbp is not None and dbp >= 120):
-        anomalies.append({
-            "kind": "hypertensive_crisis",
-            "severity": 3,
-            "details": {"sbp": sbp, "dbp": dbp, "hr": hr, "bmi": bmi},
-        })
-        return anomalies  # highest priority
-
-    # Stage 2 hypertension
-    if (sbp is not None and sbp >= 140) or (dbp is not None and dbp >= 90):
-        anomalies.append({
-            "kind": "stage2_hypertension",
-            "severity": 2,
-            "details": {"sbp": sbp, "dbp": dbp, "hr": hr, "bmi": bmi},
-        })
-
-    # Tachy / brady (simple)
-    if hr is not None and hr >= 120:
-        anomalies.append({"kind": "tachycardia", "severity": 2, "details": {"hr": hr}})
-    if hr is not None and hr < 50:
-        anomalies.append({"kind": "bradycardia", "severity": 2, "details": {"hr": hr}})
-
-    # BMI flag (non-emergency)
-    if bmi is not None and bmi >= 35:
-        anomalies.append({"kind": "high_bmi", "severity": 1, "details": {"bmi": bmi}})
-
-    return anomalies
-
-
-# ----------------------------
-# Storage: ensure event table exists (works even without ORM)
-# ----------------------------
-def _ensure_health_event_table() -> None:
-    """
-    Creates a simple table if ORM isn't present.
-    Safe to call repeatedly.
-    """
-    if HealthEvent is not None:
-        return
-
-    try:
-        db.session.execute(text("""
-            CREATE TABLE IF NOT EXISTS health_event (
-                id SERIAL PRIMARY KEY,
-                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-                user_id TEXT NOT NULL,
-                event_type TEXT NOT NULL,
-                data_json TEXT
-            );
-        """))
-        db.session.commit()
-    except Exception:
-        db.session.rollback()
-
-
-def _insert_event(user_id: str, event_type: str, data: Dict[str, Any]) -> Optional[int]:
-    created_at = _now_utc()
-    payload_json = json.dumps(data, separators=(",", ":"), default=str)
-
-    if HealthEvent is not None:
-        try:
-            ev = HealthEvent(  # type: ignore
-                user_id=user_id,
-                event_type=event_type,
-                created_at=created_at,
-                data_json=payload_json,
-            )
-            db.session.add(ev)
-            db.session.commit()
-            return getattr(ev, "id", None)
-        except Exception:
-            db.session.rollback()
-            # fall through to raw insert attempt
-
-    _ensure_health_event_table()
-    try:
-        res = db.session.execute(
-            text("""
-                INSERT INTO health_event (created_at, user_id, event_type, data_json)
-                VALUES (:created_at, :user_id, :event_type, :data_json)
-                RETURNING id
-            """),
-            {
-                "created_at": created_at,
-                "user_id": user_id,
-                "event_type": event_type,
-                "data_json": payload_json,
-            },
+    # risk_jobs queue (your worker polls this)
+    db.session.execute(
+        text(
+            """
+        CREATE TABLE IF NOT EXISTS risk_jobs (
+          id BIGSERIAL PRIMARY KEY,
+          tenant_id TEXT NOT NULL,
+          patient_id TEXT NOT NULL,
+          payload_json TEXT NOT NULL,
+          status TEXT NOT NULL DEFAULT 'pending', -- pending|processing|done|failed
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+          started_at TIMESTAMPTZ,
+          finished_at TIMESTAMPTZ,
+          result_json TEXT,
+          error TEXT
+        );
+        """
         )
-        new_id = res.scalar()
-        db.session.commit()
-        return int(new_id) if new_id is not None else None
-    except Exception:
-        db.session.rollback()
-        return None
+    )
+    db.session.execute(
+        text(
+            """
+        CREATE INDEX IF NOT EXISTS idx_risk_jobs_status_id
+        ON risk_jobs(status, id);
+        """
+        )
+    )
+    db.session.execute(
+        text(
+            """
+        CREATE INDEX IF NOT EXISTS idx_risk_jobs_tenant_patient
+        ON risk_jobs(tenant_id, patient_id);
+        """
+        )
+    )
 
+    # Optional “dashboard” tables (safe to create even if unused)
+    db.session.execute(
+        text(
+            """
+        CREATE TABLE IF NOT EXISTS patient_risk_cache (
+          tenant_id TEXT NOT NULL,
+          patient_id TEXT NOT NULL,
+          risk_score FLOAT,
+          risk_level TEXT,
+          summary TEXT,
+          model_version TEXT,
+          last_updated TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+          PRIMARY KEY (tenant_id, patient_id)
+        );
+        """
+        )
+    )
 
-def _get_recent_events(user_id: str, limit: int = 20) -> List[Dict[str, Any]]:
-    if not user_id:
-        return []
-    try:
-        rows = db.session.execute(
-            text("""
-                SELECT created_at, event_type, data_json
-                FROM health_event
-                WHERE user_id = :user_id
-                ORDER BY created_at DESC
-                LIMIT :limit
-            """),
-            {"user_id": user_id, "limit": limit},
-        ).fetchall()
-        out: List[Dict[str, Any]] = []
-        for r in rows:
-            data_json = r[2]
-            try:
-                data = json.loads(data_json) if data_json else {}
-            except Exception:
-                data = {"raw": data_json}
-            out.append({"created_at": str(r[0]), "event_type": r[1], "data": data})
-        return out
-    except Exception:
-        return []
+    db.session.execute(
+        text(
+            """
+        CREATE TABLE IF NOT EXISTS alerts (
+          id BIGSERIAL PRIMARY KEY,
+          tenant_id TEXT NOT NULL,
+          patient_id TEXT NOT NULL,
+          severity TEXT NOT NULL, -- info|warn|high
+          title TEXT NOT NULL,
+          body TEXT NOT NULL,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+          acknowledged_at TIMESTAMPTZ
+        );
+        """
+        )
+    )
+
+    db.session.execute(
+        text(
+            """
+        CREATE TABLE IF NOT EXISTS clinician_notes (
+          id BIGSERIAL PRIMARY KEY,
+          tenant_id TEXT NOT NULL,
+          patient_id TEXT NOT NULL,
+          author_user_id TEXT,
+          note TEXT NOT NULL,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
+        """
+        )
+    )
+
+    db.session.commit()
 
 
 # ----------------------------
-# REAL-TIME STREAM BUS (the “12-line upgrade” concept)
+# Health check
 # ----------------------------
-# In-memory pub/sub (works on one instance). Billion-dollar version swaps this with Redis Streams.
-_subscribers: Dict[str, List["queue.Queue[str]"]] = {}
-_sub_lock = threading.Lock()
-
-def _publish(user_id: str, event: Dict[str, Any]) -> None:
-    msg = json.dumps(event, separators=(",", ":"), default=str)
-    with _sub_lock:
-        qs = list(_subscribers.get(user_id, []))
-    for q in qs:
-        try:
-            q.put_nowait(msg)
-        except Exception:
-            pass
-
-
-def _sse_stream(user_id: str):
-    q: "queue.Queue[str]" = queue.Queue(maxsize=200)
-    with _sub_lock:
-        _subscribers.setdefault(user_id, []).append(q)
-
-    try:
-        # initial ping so client sees connection
-        yield "event: ping\ndata: {}\n\n"
-        while True:
-            try:
-                msg = q.get(timeout=20)
-                yield f"event: anomaly\ndata: {msg}\n\n"
-            except queue.Empty:
-                yield f"event: ping\ndata: {json.dumps({'ts': str(_now_utc())})}\n\n"
-    finally:
-        with _sub_lock:
-            if user_id in _subscribers and q in _subscribers[user_id]:
-                _subscribers[user_id].remove(q)
-
-
-# ----------------------------
-# Routes
-# ----------------------------
-@api_bp.get("/healthz")
+@api_bp.get("/api/v1/healthz")
 def healthz():
-    return jsonify({"status": "ok"}), 200
+    db_ok = True
+    db_error = None
+    try:
+        db.session.execute(text("SELECT 1"))
+    except Exception as e:
+        db_ok = False
+        db_error = str(e)
 
-
-@api_bp.get("/api/v1/stream/anomalies")
-def stream_anomalies():
-    user_id = (request.args.get("user_id") or "").strip()
-    if not user_id:
-        return jsonify({"error": "user_id required"}), 400
-
-    return Response(
-        stream_with_context(_sse_stream(user_id)),
-        mimetype="text/event-stream",
-        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    return (
+        jsonify(
+            {
+                "status": "ok" if db_ok else "degraded",
+                "db_ok": db_ok,
+                "db_error": db_error,
+                "utc_now": _utc_now_iso(),
+            }
+        ),
+        (200 if db_ok else 503),
     )
 
 
-@api_bp.post("/api/v1/demo/intake")
-def demo_intake():
-    payload = request.get_json(silent=True) or {}
-    v = _coerce_inputs(payload)
-    user_id = v.get("user_id") or ""
-    if not user_id:
-        return jsonify({"error": "user_id required"}), 400
+# ----------------------------
+# Event ingestion -> queue job
+# ----------------------------
+@api_bp.post("/api/v1/events")
+def ingest_event():
+    """
+    Pushes an event into risk_jobs for the worker to process.
+    """
+    _ensure_tables()
 
-    # store intake event
-    event_id = _insert_event(user_id, "health_intake", v)
+    body: Dict[str, Any] = request.get_json(force=True) or {}
+    tenant_id = (body.get("tenant_id") or "demo-tenant").strip()
+    patient_id = str(body.get("patient_id") or "unknown").strip()
+    payload = body.get("payload") or {}
 
-    # continuous “analysis” on every new event (smallest real-time engine)
-    anomalies = _detect_anomalies(v)
-    published = []
-    for a in anomalies:
-        evt = {
-            "id": event_id,
-            "user_id": user_id,
-            "kind": a["kind"],
-            "severity": a["severity"],
-            "details": a.get("details", {}),
-            "created_at": str(_now_utc()),
-        }
-        _publish(user_id, evt)
-        published.append(evt)
+    if not isinstance(payload, dict):
+        return jsonify({"error": "payload must be an object"}), 400
 
-    return jsonify({"ok": True, "user_id": user_id, "event_id": event_id, "anomalies": published}), 200
+    db.session.execute(
+        text(
+            """
+            INSERT INTO risk_jobs (tenant_id, patient_id, payload_json, status)
+            VALUES (:t, :p, :j, 'pending')
+            """
+        ),
+        {"t": tenant_id, "p": patient_id, "j": json.dumps(payload)},
+    )
+    db.session.commit()
 
-
-@api_bp.post("/api/v1/voice/intake")
-def voice_intake():
-    payload = request.get_json(silent=True) or {}
-    user_id = str(payload.get("user_id") or "").strip()
-    transcript = str(payload.get("transcript") or "")
-
-    if not user_id:
-        return jsonify({"error": "user_id required"}), 400
-    if not transcript:
-        return jsonify({"error": "transcript required"}), 400
-
-    extracted = _parse_transcript(transcript)
-    merged = dict(payload)
-    merged.update(extracted)
-    merged["user_id"] = user_id
-    merged["transcript"] = transcript
-
-    # route through the same engine
-    v = _coerce_inputs(merged)
-    event_id = _insert_event(user_id, "voice_intake", {"transcript": transcript, "extracted": extracted})
-
-    anomalies = _detect_anomalies(v)
-    published = []
-    for a in anomalies:
-        evt = {
-            "id": event_id,
-            "user_id": user_id,
-            "kind": a["kind"],
-            "severity": a["severity"],
-            "details": a.get("details", {}),
-            "created_at": str(_now_utc()),
-        }
-        _publish(user_id, evt)
-        published.append(evt)
-
-    return jsonify({
-        "ok": True,
-        "user_id": user_id,
-        "event_id": event_id,
-        "extracted": extracted,
-        "anomalies": published,
-    }), 200
+    return jsonify({"ok": True, "tenant_id": tenant_id, "patient_id": patient_id}), 202
 
 
-@api_bp.get("/ai/health/reasoning")
-def ai_health_reasoning():
-    user_id = (request.args.get("user_id") or "").strip()
-    if not user_id:
-        return jsonify({"error": "user_id required"}), 400
+# ----------------------------
+# Clinician dashboard (JSON APIs)
+# ----------------------------
+@api_bp.get("/api/v1/clinician/patients")
+def clinician_patients():
+    """
+    List patients for a tenant from patient_risk_cache (fast).
+    """
+    _ensure_tables()
+    tenant_id = (request.args.get("tenant_id") or request.headers.get("X-Tenant-Id") or "demo-tenant").strip()
 
-    # If your real AI engine exists, use it.
-    if generate_health_reasoning is not None:
-        result = generate_health_reasoning(user_id)
-        return jsonify({"user_id": user_id, "ai_analysis": result}), 200
+    rows = db.session.execute(
+        text(
+            """
+            SELECT patient_id, risk_score, risk_level, last_updated
+            FROM patient_risk_cache
+            WHERE tenant_id=:t
+            ORDER BY last_updated DESC
+            LIMIT 500
+            """
+        ),
+        {"t": tenant_id},
+    ).mappings().all()
 
-    # Fallback reasoning: summarize recent events
-    recent = _get_recent_events(user_id, limit=12)
-    summary = {
-        "note": "AI engine not available; returning recent event summary.",
-        "recent_events": recent,
-        "tip": "Add era/ai/health_reasoning.py with generate_health_reasoning(user_id) to enable the full AI assistant.",
-    }
-    return jsonify({"user_id": user_id, "ai_analysis": summary}), 200
+    return jsonify({"tenant_id": tenant_id, "patients": list(rows)}), 200
+
+
+@api_bp.get("/api/v1/clinician/patients/<patient_id>")
+def clinician_patient_detail(patient_id: str):
+    """
+    Patient detail: risk cache + recent notes + alerts
+    """
+    _ensure_tables()
+    tenant_id = (request.args.get("tenant_id") or request.headers.get("X-Tenant-Id") or "demo-tenant").strip()
+
+    risk = db.session.execute(
+        text(
+            """
+            SELECT patient_id, risk_score, risk_level, summary, model_version, last_updated
+            FROM patient_risk_cache
+            WHERE tenant_id=:t AND patient_id=:p
+            """
+        ),
+        {"t": tenant_id, "p": patient_id},
+    ).mappings().first()
+
+    notes = db.session.execute(
+        text(
+            """
+            SELECT note, author_user_id, created_at
+            FROM clinician_notes
+            WHERE tenant_id=:t AND patient_id=:p
+            ORDER BY created_at DESC
+            LIMIT 50
+            """
+        ),
+        {"t": tenant_id, "p": patient_id},
+    ).mappings().all()
+
+    alerts = db.session.execute(
+        text(
+            """
+            SELECT id, severity, title, body, created_at, acknowledged_at
+            FROM alerts
+            WHERE tenant_id=:t AND patient_id=:p
+            ORDER BY created_at DESC
+            LIMIT 50
+            """
+        ),
+        {"t": tenant_id, "p": patient_id},
+    ).mappings().all()
+
+    return jsonify(
+        {"tenant_id": tenant_id, "patient_id": patient_id, "risk": risk, "notes": list(notes), "alerts": list(alerts)}
+    ), 200
+
+
+@api_bp.post("/api/v1/clinician/patients/<patient_id>/notes")
+def clinician_add_note(patient_id: str):
+    """
+    Add a clinician note (no auth in this demo version).
+    """
+    _ensure_tables()
+    tenant_id = (request.args.get("tenant_id") or request.headers.get("X-Tenant-Id") or "demo-tenant").strip()
+    body: Dict[str, Any] = request.get_json(force=True) or {}
+    note = (body.get("note") or "").strip()
+
+    if not note:
+        return jsonify({"error": "note required"}), 400
+
+    author_user_id = (body.get("author_user_id") or "").strip() or None
+
+    db.session.execute(
+        text(
+            """
+            INSERT INTO clinician_notes (tenant_id, patient_id, author_user_id, note)
+            VALUES (:t, :p, :u, :n)
+            """
+        ),
+        {"t": tenant_id, "p": patient_id, "u": author_user_id, "n": note},
+    )
+    db.session.commit()
+
+    return jsonify({"ok": True}), 201
+
+
+@api_bp.get("/api/v1/clinician/alerts")
+def clinician_alerts():
+    _ensure_tables()
+    tenant_id = (request.args.get("tenant_id") or request.headers.get("X-Tenant-Id") or "demo-tenant").strip()
+
+    rows = db.session.execute(
+        text(
+            """
+            SELECT id, patient_id, severity, title, body, created_at, acknowledged_at
+            FROM alerts
+            WHERE tenant_id=:t
+            ORDER BY created_at DESC
+            LIMIT 200
+            """
+        ),
+        {"t": tenant_id},
+    ).mappings().all()
+
+    return jsonify({"tenant_id": tenant_id, "alerts": list(rows)}), 200
+
+
+# ----------------------------
+# Simple HTML redirect / placeholder
+# ----------------------------
+@api_bp.get("/dashboard")
+def dashboard_hint():
+    """
+    If your HTML dashboard template lives in the web blueprint instead, this just guides you.
+    """
+    return Response(
+        "Dashboard route is active. If you have an HTML dashboard, wire it in your web blueprint.\n"
+        "Try: GET /api/v1/clinician/patients?tenant_id=demo-tenant",
+        mimetype="text/plain",
+    )
