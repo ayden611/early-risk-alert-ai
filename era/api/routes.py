@@ -38,7 +38,7 @@ def _json_errors(e):
         return jsonify({"error": "http", "code": e.code, "message": e.description}), e.code
     return jsonify({"error": "server", "message": str(e)}), 500
     
-    @api_bp.get("/routes")
+@api_bp.get("/routes")
 def list_routes():
     from flask import current_app
     return {
