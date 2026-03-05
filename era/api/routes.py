@@ -190,4 +190,3 @@ def get_job(job_id: int):
             "error": row[8],
         }
     )
-PY
