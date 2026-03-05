@@ -10,6 +10,18 @@ from sqlalchemy import create_engine, text
 DATABASE_URL = os.getenv("DATABASE_URL")
 engine = create_engine(DATABASE_URL)
 
+print("AI Health Worker started...")
+
+while True:
+    try:
+        with engine.connect() as conn:
+            result = conn.execute(text("SELECT 1"))
+            print("Worker heartbeat:", result.fetchone())
+    except Exception as e:
+        print("Worker error:", e)
+
+    time.sleep(10)
+
 
 POLL_SECONDS = int(os.getenv("WORKER_POLL_SECONDS", "5"))
 BATCH_SIZE = int(os.getenv("WORKER_BATCH_SIZE", "25"))
@@ -105,7 +117,6 @@ def _insert_summary(user_id: str, text_summary: str, source_event_id=None, model
 
 
 def run():
-    app = create_app()
     with app.app_context():
         _ensure_worker_tables()
         print(f"[worker] started at {_utc_now_iso()} poll={POLL_SECONDS}s batch={BATCH_SIZE}")
