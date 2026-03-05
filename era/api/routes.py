@@ -17,8 +17,7 @@ try:
 except Exception:
     redis = None  # type: ignore
 
-
-api_bp = Blueprint("api", __name__, url_prefix="/api/v1")
+api_bp = Blueprint("api", __name__)
 
 
 # ----------------------------
