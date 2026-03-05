@@ -126,5 +126,42 @@ The model can be evaluated using:
 Future versions will include train/test split validation
 and performance metrics visualization.
 
+Mermaid:
+flowchart LR
+  subgraph Clients
+    M[Mobile App / Devices]
+    W[Web Dashboard]
+  end
+
+  subgraph API[early-risk-alert-mobile-api]
+    V1[POST /vitals]
+    AL[GET /alerts]
+    SSE[GET /stream/alerts (SSE)]
+  end
+
+  subgraph Stream[Streaming Layer]
+    RS[(Redis Streams)]
+    PUB[(Redis PubSub)]
+    K[(Kafka - optional)]
+  end
+
+  subgraph Worker[early-risk-alert-ai-worker]
+    C1[Consumer Group: vitals-workers]
+    DET[Anomaly Detection]
+    WR[Write Alerts]
+    PUSH[Publish Realtime Alerts]
+  end
+
+  subgraph DB[(Postgres)]
+    VE[vitals_events]
+    A[alerts]
+  end
+
+  M --> V1
+  V1 --> VE
+  V1 --> RS
+  RS --> C1 --> DET --> WR --> A
+  WR --> PUSH --> PUB --> SSE --> W
+  AL --> A
 
 - Open-source Python libraries such as NumPy and scikit-learn
