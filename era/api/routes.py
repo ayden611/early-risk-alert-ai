@@ -2,20 +2,13 @@ import json
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
-from flask import Blueprint, Response, current_app, jsonify, request, stream_with_context
+from flask import Blueprint, current_app, jsonify, request
 from sqlalchemy import text
 from werkzeug.exceptions import HTTPException
 
 from era.extensions import db
 
-try:
-    import redis
-except Exception:
-    redis = None
-
 api_bp = Blueprint("api", __name__)
-
-REDIS_URL = current_app = None
 
 
 @api_bp.errorhandler(Exception)
@@ -54,7 +47,15 @@ def _normalize_vitals(payload: Dict[str, Any]) -> Dict[str, Any]:
     nested = payload.get("vitals")
     if isinstance(nested, dict):
         return nested
-    keys = ["heart_rate", "systolic_bp", "diastolic_bp", "spo2", "respiratory_rate", "temperature_f"]
+
+    keys = [
+        "heart_rate",
+        "systolic_bp",
+        "diastolic_bp",
+        "spo2",
+        "respiratory_rate",
+        "temperature_f",
+    ]
     return {k: payload.get(k) for k in keys if k in payload}
 
 
@@ -63,6 +64,8 @@ def _score_vitals(vitals: Dict[str, Any]) -> Dict[str, Any]:
     sys_bp = _as_float(vitals.get("systolic_bp"))
     dia_bp = _as_float(vitals.get("diastolic_bp"))
     spo2 = _as_float(vitals.get("spo2"))
+    rr = _as_float(vitals.get("respiratory_rate"))
+    temp = _as_float(vitals.get("temperature_f"))
 
     findings: List[str] = []
     alerts: List[Dict[str, str]] = []
@@ -70,26 +73,98 @@ def _score_vitals(vitals: Dict[str, Any]) -> Dict[str, Any]:
 
     if hr is not None and hr >= 120:
         findings.append(f"Tachycardia detected ({hr:.0f} bpm)")
-        alerts.append({"alert_type": "tachycardia", "severity": "high", "message": f"Heart rate elevated at {hr:.0f} bpm"})
+        alerts.append(
+            {
+                "alert_type": "tachycardia",
+                "severity": "high",
+                "message": f"Heart rate elevated at {hr:.0f} bpm",
+            }
+        )
         score += 0.22
+    elif hr is not None and hr >= 100:
+        findings.append(f"Elevated heart rate ({hr:.0f} bpm)")
+        score += 0.10
 
-    if sys_bp is not None and sys_bp >= 160:
+    if sys_bp is not None and sys_bp >= 180:
+        findings.append(f"Severely elevated systolic blood pressure ({sys_bp:.0f})")
+        alerts.append(
+            {
+                "alert_type": "hypertensive_crisis",
+                "severity": "critical",
+                "message": f"Systolic blood pressure critically high at {sys_bp:.0f}",
+            }
+        )
+        score += 0.30
+    elif sys_bp is not None and sys_bp >= 160:
         findings.append(f"High systolic blood pressure ({sys_bp:.0f})")
-        alerts.append({"alert_type": "hypertension", "severity": "high", "message": f"Systolic blood pressure elevated at {sys_bp:.0f}"})
+        alerts.append(
+            {
+                "alert_type": "hypertension",
+                "severity": "high",
+                "message": f"Systolic blood pressure elevated at {sys_bp:.0f}",
+            }
+        )
         score += 0.18
 
-    if dia_bp is not None and dia_bp >= 100:
+    if dia_bp is not None and dia_bp >= 110:
+        findings.append(f"Severely elevated diastolic blood pressure ({dia_bp:.0f})")
+        alerts.append(
+            {
+                "alert_type": "hypertensive_crisis",
+                "severity": "critical",
+                "message": f"Diastolic blood pressure critically high at {dia_bp:.0f}",
+            }
+        )
+        score += 0.25
+    elif dia_bp is not None and dia_bp >= 100:
         findings.append(f"High diastolic blood pressure ({dia_bp:.0f})")
-        alerts.append({"alert_type": "hypertension", "severity": "high", "message": f"Diastolic blood pressure elevated at {dia_bp:.0f}"})
+        alerts.append(
+            {
+                "alert_type": "hypertension",
+                "severity": "high",
+                "message": f"Diastolic blood pressure elevated at {dia_bp:.0f}",
+            }
+        )
         score += 0.16
 
-    if spo2 is not None and spo2 < 92:
+    if spo2 is not None and spo2 < 90:
+        findings.append(f"Critical low oxygen saturation ({spo2:.0f}%)")
+        alerts.append(
+            {
+                "alert_type": "low_oxygen",
+                "severity": "critical",
+                "message": f"SpO2 critically low at {spo2:.0f}%",
+            }
+        )
+        score += 0.30
+    elif spo2 is not None and spo2 < 92:
         findings.append(f"Low oxygen saturation ({spo2:.0f}%)")
-        alerts.append({"alert_type": "low_oxygen", "severity": "critical", "message": f"SpO2 low at {spo2:.0f}%"})
+        alerts.append(
+            {
+                "alert_type": "low_oxygen",
+                "severity": "high",
+                "message": f"SpO2 low at {spo2:.0f}%",
+            }
+        )
         score += 0.20
 
+    if rr is not None and rr >= 24:
+        findings.append(f"Elevated respiratory rate ({rr:.0f})")
+        score += 0.08
+
+    if temp is not None and temp >= 101.5:
+        findings.append(f"Fever detected ({temp:.1f}F)")
+        score += 0.08
+
     score = min(score, 0.99)
-    risk_level = "high" if score >= 0.75 else "moderate" if score >= 0.40 else "low"
+
+    if score >= 0.75:
+        risk_level = "high"
+    elif score >= 0.40:
+        risk_level = "moderate"
+    else:
+        risk_level = "low"
+
     summary = "No major abnormalities detected." if not findings else " | ".join(findings)
 
     return {
@@ -118,6 +193,7 @@ def ensure_platform_tables() -> None:
             """
         )
     )
+
     db.session.execute(
         text(
             """
@@ -126,6 +202,7 @@ def ensure_platform_tables() -> None:
             """
         )
     )
+
     db.session.execute(
         text(
             """
@@ -143,6 +220,7 @@ def ensure_platform_tables() -> None:
             """
         )
     )
+
     db.session.execute(
         text(
             """
@@ -151,6 +229,7 @@ def ensure_platform_tables() -> None:
             """
         )
     )
+
     db.session.execute(
         text(
             """
@@ -167,6 +246,7 @@ def ensure_platform_tables() -> None:
             """
         )
     )
+
     db.session.execute(
         text(
             """
@@ -175,18 +255,8 @@ def ensure_platform_tables() -> None:
             """
         )
     )
+
     db.session.commit()
-
-
-def _redis_client():
-    import os
-    url = os.getenv("REDIS_URL")
-    if not url or redis is None:
-        return None
-    try:
-        return redis.Redis.from_url(url, decode_responses=True)
-    except Exception:
-        return None
 
 
 @api_bp.get("/healthz")
@@ -485,29 +555,6 @@ def command_center_summary():
     ), 200
 
 
-@api_bp.get("/scale/readiness")
-def scale_readiness():
-    return jsonify(
-        {
-            "status": "ready_for_next_phase",
-            "scaling_mode": "million_patient",
-            "current_pattern": {
-                "api": "stateless Flask web tier",
-                "db": "Postgres system of record",
-                "workers": "background workers can scale horizontally",
-                "cache_queue": "Redis/Valkey ready",
-            },
-            "next_steps": [
-                "Partition vitals events by tenant and time window",
-                "Move hot alert fan-out to Redis pub/sub or streams",
-                "Shard workers by patient or tenant hash",
-                "Add read replicas for analytics",
-                "Cache dashboard aggregates in Redis",
-            ],
-        }
-    ), 200
-
-
 @api_bp.get("/rollups/15m")
 def rollups_15m():
     ensure_platform_tables()
@@ -563,65 +610,24 @@ def rollups_15m():
     ), 200
 
 
-@api_bp.get("/stream/health")
-def stream_health():
-    client = _redis_client()
-    redis_ok = False
-    if client is not None:
-        try:
-            redis_ok = bool(client.ping())
-        except Exception:
-            redis_ok = False
-
+@api_bp.get("/scale/readiness")
+def scale_readiness():
     return jsonify(
         {
-            "status": "ok",
-            "redis_ok": redis_ok,
-            "mode": "pubsub" if redis_ok else "polling_fallback",
+            "status": "ready_for_next_phase",
+            "scaling_mode": "million_patient",
+            "current_pattern": {
+                "api": "stateless Flask web tier",
+                "db": "Postgres system of record",
+                "workers": "background workers can scale horizontally",
+                "cache_queue": "Redis/Valkey ready",
+            },
+            "next_steps": [
+                "Partition vitals events by tenant and time window",
+                "Move hot alert fan-out to Redis pub/sub or streams",
+                "Shard workers by patient or tenant hash",
+                "Add read replicas for analytics",
+                "Cache dashboard aggregates in Redis",
+            ],
         }
     ), 200
-
-
-@api_bp.get("/stream/events")
-def stream_events():
-    tenant_id = request.args.get("tenant_id", "demo")
-    patient_id = request.args.get("patient_id")
-
-    client = _redis_client()
-    if client is None:
-        return jsonify(
-            {
-                "status": "fallback_only",
-                "message": "Redis not configured; use polling endpoints.",
-            }
-        ), 200
-
-    channels = [f"stream:vitals:{tenant_id}", f"stream:alerts:{tenant_id}"]
-    if patient_id:
-        channels.extend(
-            [
-                f"stream:vitals:{tenant_id}:{patient_id}",
-                f"stream:alerts:{tenant_id}:{patient_id}",
-            ]
-        )
-
-    pubsub = client.pubsub()
-    pubsub.subscribe(*channels)
-
-    @stream_with_context
-    def generate():
-        try:
-            yield "event: ready\ndata: {\"status\":\"connected\"}\n\n"
-            while True:
-                message = pubsub.get_message(ignore_subscribe_messages=True, timeout=10.0)
-                if message and message.get("type") == "message":
-                    yield f"event: update\ndata: {message['data']}\n\n"
-                else:
-                    yield "event: heartbeat\ndata: {\"ok\":true}\n\n"
-        finally:
-            try:
-                pubsub.close()
-            except Exception:
-                pass
-
-    return Response(generate(), mimetype="text/event-stream")
