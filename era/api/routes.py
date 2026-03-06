@@ -430,7 +430,6 @@ def latest_vitals():
     ), 200
 
 
-@api_bp.get("/alerts/live")
 def alerts_live():
     ensure_platform_tables()
 
@@ -629,5 +628,60 @@ def scale_readiness():
                 "Add read replicas for analytics",
                 "Cache dashboard aggregates in Redis",
             ],
+        }
+    ), 200
+    ```python
+@api_bp.get("/stream/health")
+def stream_health():
+    try:
+        import os
+        import redis as redis_lib
+    except Exception:
+        redis_lib = None
+
+    redis_ok = False
+    if redis_lib is not None:
+        url = __import__("os").getenv("REDIS_URL")
+        if url:
+            try:
+                client = redis_lib.Redis.from_url(url, decode_responses=True)
+                redis_ok = bool(client.ping())
+            except Exception:
+                redis_ok = False
+
+    return jsonify(
+        {
+            "status": "ok",
+            "redis_ok": redis_ok,
+            "mode": "pubsub" if redis_ok else "polling_fallback",
+        }
+    ), 200
+
+
+@api_bp.get("/stream/channels")
+def stream_channels():
+    tenant_id = request.args.get("tenant_id", "demo")
+    patient_id = request.args.get("patient_id")
+
+    channels = [
+        "stream:vitals",
+        f"stream:vitals:{tenant_id}",
+        "stream:alerts",
+        f"stream:alerts:{tenant_id}",
+    ]
+
+    if patient_id:
+        channels.extend(
+            [
+                f"stream:vitals:{tenant_id}:{patient_id}",
+                f"stream:alerts:{tenant_id}:{patient_id}",
+            ]
+        )
+
+    return jsonify(
+        {
+            "tenant_id": tenant_id,
+            "patient_id": patient_id,
+            "channels": channels,
         }
     ), 200
