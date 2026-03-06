@@ -1,10 +1,9 @@
 import json
-import os
+import time
 from datetime import datetime, timezone
-from functools import wraps
 from typing import Any, Dict, List, Optional
 
-from flask import Blueprint, current_app, jsonify, request
+from flask import Blueprint, Response, current_app, jsonify, request, stream_with_context
 from sqlalchemy import text
 from werkzeug.exceptions import HTTPException
 
@@ -47,57 +46,34 @@ def _as_int(v, default: int) -> int:
         return default
 
 
+def _json_dumps(v: Any) -> str:
+    return json.dumps(v, default=str)
+
+
 def _tenant_id() -> str:
+    body = request.get_json(silent=True) or {}
     return (
         request.headers.get("X-Tenant-Id")
         or request.args.get("tenant_id")
-        or (request.get_json(silent=True) or {}).get("tenant_id")
+        or body.get("tenant_id")
         or "demo"
     )
 
 
-def _actor_id() -> str:
-    return request.headers.get("X-User-Id", "system")
+def _normalize_vitals(body: Dict[str, Any]) -> Dict[str, Any]:
+    nested = body.get("vitals")
+    if isinstance(nested, dict):
+        return nested
 
-
-def _actor_role() -> str:
-    return request.headers.get("X-Role", "admin")
-
-
-def _request_ip() -> str:
-    forwarded = request.headers.get("X-Forwarded-For")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
-    return request.remote_addr or "unknown"
-
-
-def _json_dumps(value: Any) -> str:
-    return json.dumps(value, default=str)
-
-
-def require_roles(*roles: str):
-    allowed = {r.lower() for r in roles}
-
-    def decorator(fn):
-        @wraps(fn)
-        def wrapper(*args, **kwargs):
-            role = _actor_role().lower()
-            if role not in allowed:
-                return (
-                    jsonify(
-                        {
-                            "error": "forbidden",
-                            "message": f"Role '{role}' is not allowed for this endpoint",
-                            "allowed_roles": sorted(list(allowed)),
-                        }
-                    ),
-                    403,
-                )
-            return fn(*args, **kwargs)
-
-        return wrapper
-
-    return decorator
+    keys = [
+        "heart_rate",
+        "systolic_bp",
+        "diastolic_bp",
+        "spo2",
+        "respiratory_rate",
+        "temperature_f",
+    ]
+    return {k: body.get(k) for k in keys if k in body}
 
 
 # --------------------------------------------------
@@ -142,9 +118,7 @@ def ensure_platform_tables() -> None:
                 status TEXT NOT NULL DEFAULT 'open',
                 message TEXT NOT NULL DEFAULT '',
                 payload_json JSONB,
-                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-                acknowledged_at TIMESTAMPTZ,
-                acknowledged_by TEXT
+                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
             );
             """
         )
@@ -185,111 +159,12 @@ def ensure_platform_tables() -> None:
         )
     )
 
-    db.session.execute(
-        text(
-            """
-            CREATE TABLE IF NOT EXISTS audit_logs (
-                id BIGSERIAL PRIMARY KEY,
-                tenant_id TEXT NOT NULL,
-                actor_id TEXT NOT NULL,
-                actor_role TEXT NOT NULL,
-                action TEXT NOT NULL,
-                resource_type TEXT NOT NULL,
-                resource_id TEXT,
-                ip_address TEXT,
-                meta_json JSONB,
-                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-            );
-            """
-        )
-    )
-
-    db.session.execute(
-        text(
-            """
-            CREATE INDEX IF NOT EXISTS idx_audit_logs_tenant_created
-            ON audit_logs (tenant_id, created_at DESC);
-            """
-        )
-    )
-
-    db.session.execute(
-        text(
-            """
-            CREATE TABLE IF NOT EXISTS mobile_devices (
-                id BIGSERIAL PRIMARY KEY,
-                tenant_id TEXT NOT NULL,
-                patient_id TEXT NOT NULL,
-                device_id TEXT NOT NULL,
-                platform TEXT,
-                app_version TEXT,
-                push_token TEXT,
-                last_seen_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-            );
-            """
-        )
-    )
-
-    db.session.execute(
-        text(
-            """
-            CREATE UNIQUE INDEX IF NOT EXISTS ux_mobile_devices_tenant_patient_device
-            ON mobile_devices (tenant_id, patient_id, device_id);
-            """
-        )
-    )
-
     db.session.commit()
 
 
-def _audit(
-    action: str,
-    resource_type: str,
-    resource_id: Optional[str],
-    meta: Optional[Dict[str, Any]] = None,
-) -> None:
-    db.session.execute(
-        text(
-            """
-            INSERT INTO audit_logs
-                (tenant_id, actor_id, actor_role, action, resource_type, resource_id, ip_address, meta_json)
-            VALUES
-                (:tenant_id, :actor_id, :actor_role, :action, :resource_type, :resource_id, :ip_address, CAST(:meta_json AS jsonb))
-            """
-        ),
-        {
-            "tenant_id": _tenant_id(),
-            "actor_id": _actor_id(),
-            "actor_role": _actor_role(),
-            "action": action,
-            "resource_type": resource_type,
-            "resource_id": resource_id,
-            "ip_address": _request_ip(),
-            "meta_json": _json_dumps(meta or {}),
-        },
-    )
-
-
 # --------------------------------------------------
-# AI scoring and anomaly logic
+# AI scoring / anomaly detection
 # --------------------------------------------------
-def _normalize_vitals(payload: Dict[str, Any]) -> Dict[str, Any]:
-    nested = payload.get("vitals")
-    if isinstance(nested, dict):
-        return nested
-
-    keys = [
-        "heart_rate",
-        "systolic_bp",
-        "diastolic_bp",
-        "spo2",
-        "respiratory_rate",
-        "temperature_f",
-    ]
-    return {k: payload.get(k) for k in keys if k in payload}
-
-
 def _score_vitals(vitals: Dict[str, Any]) -> Dict[str, Any]:
     hr = _as_float(vitals.get("heart_rate"))
     sys_bp = _as_float(vitals.get("systolic_bp"))
@@ -303,7 +178,7 @@ def _score_vitals(vitals: Dict[str, Any]) -> Dict[str, Any]:
     score = 0.08
 
     if hr is not None and hr >= 120:
-        findings.append(f"Tachycardia detected ({hr:.0f} bpm)")
+        findings.append(f"Tachycardia ({hr:.0f} bpm)")
         alerts.append(
             {
                 "alert_type": "tachycardia",
@@ -317,7 +192,7 @@ def _score_vitals(vitals: Dict[str, Any]) -> Dict[str, Any]:
         score += 0.10
 
     if sys_bp is not None and sys_bp >= 180:
-        findings.append(f"Severely elevated systolic blood pressure ({sys_bp:.0f})")
+        findings.append(f"Critical systolic blood pressure ({sys_bp:.0f})")
         alerts.append(
             {
                 "alert_type": "hypertensive_crisis",
@@ -338,7 +213,7 @@ def _score_vitals(vitals: Dict[str, Any]) -> Dict[str, Any]:
         score += 0.18
 
     if dia_bp is not None and dia_bp >= 110:
-        findings.append(f"Severely elevated diastolic blood pressure ({dia_bp:.0f})")
+        findings.append(f"Critical diastolic blood pressure ({dia_bp:.0f})")
         alerts.append(
             {
                 "alert_type": "hypertensive_crisis",
@@ -384,23 +259,23 @@ def _score_vitals(vitals: Dict[str, Any]) -> Dict[str, Any]:
         score += 0.08
 
     if temp is not None and temp >= 101.5:
-        findings.append(f"Fever detected ({temp:.1f}F)")
+        findings.append(f"Fever ({temp:.1f}F)")
         score += 0.08
 
     score = min(score, 0.99)
 
     if score >= 0.75:
-        risk_level = "high"
+        level = "high"
     elif score >= 0.40:
-        risk_level = "moderate"
+        level = "moderate"
     else:
-        risk_level = "low"
+        level = "low"
 
     summary = "No major abnormalities detected." if not findings else " | ".join(findings)
 
     return {
         "risk_score": round(score, 3),
-        "risk_level": risk_level,
+        "risk_level": level,
         "summary": summary,
         "findings": findings,
         "alerts": alerts,
@@ -408,7 +283,7 @@ def _score_vitals(vitals: Dict[str, Any]) -> Dict[str, Any]:
 
 
 # --------------------------------------------------
-# Core platform endpoints
+# Core endpoints
 # --------------------------------------------------
 @api_bp.get("/healthz")
 def api_healthz():
@@ -438,57 +313,6 @@ def api_healthz():
             ),
             503,
         )
-
-
-@api_bp.post("/mobile/connect")
-def mobile_connect():
-    ensure_platform_tables()
-    body = request.get_json(force=True) or {}
-
-    tenant_id = str(body.get("tenant_id", _tenant_id()))
-    patient_id = str(body.get("patient_id", "unknown"))
-    device_id = str(body.get("device_id", "device-unknown"))
-    platform = str(body.get("platform", "unknown"))
-    app_version = str(body.get("app_version", "unknown"))
-    push_token = body.get("push_token")
-
-    db.session.execute(
-        text(
-            """
-            INSERT INTO mobile_devices (tenant_id, patient_id, device_id, platform, app_version, push_token, last_seen_at)
-            VALUES (:t, :p, :d, :platform, :app_version, :push_token, NOW())
-            ON CONFLICT (tenant_id, patient_id, device_id)
-            DO UPDATE SET
-                platform = EXCLUDED.platform,
-                app_version = EXCLUDED.app_version,
-                push_token = EXCLUDED.push_token,
-                last_seen_at = NOW()
-            """
-        ),
-        {
-            "t": tenant_id,
-            "p": patient_id,
-            "d": device_id,
-            "platform": platform,
-            "app_version": app_version,
-            "push_token": push_token,
-        },
-    )
-    _audit("mobile_connect", "mobile_device", device_id, body)
-    db.session.commit()
-
-    return (
-        jsonify(
-            {
-                "ok": True,
-                "tenant_id": tenant_id,
-                "patient_id": patient_id,
-                "device_id": device_id,
-                "connected_at": _utcnow_iso(),
-            }
-        ),
-        200,
-    )
 
 
 @api_bp.post("/vitals")
@@ -563,12 +387,6 @@ def ingest_vitals():
             },
         )
 
-    _audit(
-        "vitals_ingested",
-        "patient",
-        patient_id,
-        {"source": source, "risk_level": ai["risk_level"], "alerts_created": len(ai["alerts"])},
-    )
     db.session.commit()
 
     return (
@@ -589,15 +407,268 @@ def ingest_vitals():
     )
 
 
+@api_bp.get("/vitals/latest")
+def latest_vitals():
+    ensure_platform_tables()
+
+    tenant_id = request.args.get("tenant_id", _tenant_id())
+    patient_id = request.args.get("patient_id")
+    if not patient_id:
+        return jsonify({"error": "patient_id required"}), 400
+
+    row = db.session.execute(
+        text(
+            """
+            SELECT tenant_id, patient_id, source, event_id, event_ts, created_at, payload_json
+            FROM vitals_events
+            WHERE tenant_id = :t AND patient_id = :p
+            ORDER BY created_at DESC
+            LIMIT 1
+            """
+        ),
+        {"t": tenant_id, "p": patient_id},
+    ).mappings().first()
+
+    if not row:
+        return jsonify({"error": "not_found"}), 404
+
+    payload = row["payload_json"]
+    if isinstance(payload, str):
+        payload = json.loads(payload)
+
+    return (
+        jsonify(
+            {
+                "tenant_id": row["tenant_id"],
+                "patient_id": row["patient_id"],
+                "source": row["source"],
+                "event_id": row["event_id"],
+                "event_ts": row["event_ts"].isoformat() if row["event_ts"] else None,
+                "created_at": row["created_at"].isoformat() if row["created_at"] else None,
+                "vitals": payload,
+            }
+        ),
+        200,
+    )
+
+
+@api_bp.get("/rollups/15m")
+def rollups_15m():
+    ensure_platform_tables()
+
+    tenant_id = request.args.get("tenant_id", _tenant_id())
+    patient_id = request.args.get("patient_id")
+    since_minutes = _as_int(request.args.get("since_minutes"), 120)
+
+    if not patient_id:
+        return jsonify({"error": "patient_id required"}), 400
+
+    rows = db.session.execute(
+        text(
+            """
+            SELECT
+                to_timestamp(floor(extract(epoch from event_ts) / 900) * 900) AS bucket_start,
+                COUNT(*) AS samples,
+                ROUND(AVG((payload_json->>'heart_rate')::numeric), 2) AS avg_heart_rate,
+                ROUND(AVG((payload_json->>'systolic_bp')::numeric), 2) AS avg_systolic_bp,
+                ROUND(AVG((payload_json->>'diastolic_bp')::numeric), 2) AS avg_diastolic_bp,
+                ROUND(AVG((payload_json->>'spo2')::numeric), 2) AS avg_spo2
+            FROM vitals_events
+            WHERE tenant_id = :t
+              AND patient_id = :p
+              AND created_at >= NOW() - (:mins || ' minutes')::interval
+            GROUP BY 1
+            ORDER BY 1 DESC
+            """
+        ),
+        {"t": tenant_id, "p": patient_id, "mins": since_minutes},
+    ).mappings().all()
+
+    items = []
+    for row in rows:
+        items.append(
+            {
+                "bucket_start": row["bucket_start"].isoformat() if row["bucket_start"] else None,
+                "samples": int(row["samples"] or 0),
+                "avg_heart_rate": float(row["avg_heart_rate"]) if row["avg_heart_rate"] is not None else None,
+                "avg_systolic_bp": float(row["avg_systolic_bp"]) if row["avg_systolic_bp"] is not None else None,
+                "avg_diastolic_bp": float(row["avg_diastolic_bp"]) if row["avg_diastolic_bp"] is not None else None,
+                "avg_spo2": float(row["avg_spo2"]) if row["avg_spo2"] is not None else None,
+            }
+        )
+
+    return (
+        jsonify(
+            {
+                "tenant_id": tenant_id,
+                "patient_id": patient_id,
+                "since_minutes": since_minutes,
+                "rollups": items,
+            }
+        ),
+        200,
+    )
+
+
 # --------------------------------------------------
-# A) Live anomaly alerts dashboard
+# Real-time patient monitoring dashboard
+# --------------------------------------------------
+@api_bp.get("/patients/<patient_id>/dashboard")
+def patient_dashboard(patient_id: str):
+    ensure_platform_tables()
+    tenant_id = request.args.get("tenant_id", _tenant_id())
+
+    latest_event = db.session.execute(
+        text(
+            """
+            SELECT event_ts, created_at, payload_json
+            FROM vitals_events
+            WHERE tenant_id = :t AND patient_id = :p
+            ORDER BY created_at DESC
+            LIMIT 1
+            """
+        ),
+        {"t": tenant_id, "p": patient_id},
+    ).mappings().first()
+
+    latest_risk = db.session.execute(
+        text(
+            """
+            SELECT risk_score, risk_level, summary, findings_json, created_at
+            FROM risk_scores
+            WHERE tenant_id = :t AND patient_id = :p
+            ORDER BY created_at DESC
+            LIMIT 1
+            """
+        ),
+        {"t": tenant_id, "p": patient_id},
+    ).mappings().first()
+
+    open_alerts = db.session.execute(
+        text(
+            """
+            SELECT id, alert_type, severity, status, message, created_at
+            FROM alerts
+            WHERE tenant_id = :t AND patient_id = :p AND status = 'open'
+            ORDER BY created_at DESC
+            LIMIT 20
+            """
+        ),
+        {"t": tenant_id, "p": patient_id},
+    ).mappings().all()
+
+    latest_vitals = None
+    if latest_event:
+        payload = latest_event["payload_json"]
+        if isinstance(payload, str):
+            payload = json.loads(payload)
+        latest_vitals = {
+            "event_ts": latest_event["event_ts"].isoformat() if latest_event["event_ts"] else None,
+            "created_at": latest_event["created_at"].isoformat() if latest_event["created_at"] else None,
+            "vitals": payload,
+        }
+
+    risk = None
+    if latest_risk:
+        findings = latest_risk["findings_json"]
+        if isinstance(findings, str):
+            findings = json.loads(findings)
+        risk = {
+            "risk_score": float(latest_risk["risk_score"]),
+            "risk_level": latest_risk["risk_level"],
+            "summary": latest_risk["summary"],
+            "findings": findings,
+            "created_at": latest_risk["created_at"].isoformat() if latest_risk["created_at"] else None,
+        }
+
+    alerts = [
+        {
+            "id": row["id"],
+            "alert_type": row["alert_type"],
+            "severity": row["severity"],
+            "status": row["status"],
+            "message": row["message"],
+            "created_at": row["created_at"].isoformat() if row["created_at"] else None,
+        }
+        for row in open_alerts
+    ]
+
+    return (
+        jsonify(
+            {
+                "tenant_id": tenant_id,
+                "patient_id": patient_id,
+                "latest_vitals": latest_vitals,
+                "risk": risk,
+                "open_alerts": alerts,
+                "generated_at": _utcnow_iso(),
+            }
+        ),
+        200,
+    )
+
+
+# --------------------------------------------------
+# Live streaming vitals via SSE
+# --------------------------------------------------
+@api_bp.get("/stream/patient/<patient_id>")
+def stream_patient(patient_id: str):
+    ensure_platform_tables()
+    tenant_id = request.args.get("tenant_id", _tenant_id())
+    interval = max(1, _as_int(request.args.get("interval_seconds"), 2))
+
+    def generate():
+        last_event_id = None
+
+        while True:
+            row = db.session.execute(
+                text(
+                    """
+                    SELECT id, event_ts, created_at, payload_json
+                    FROM vitals_events
+                    WHERE tenant_id = :t AND patient_id = :p
+                    ORDER BY created_at DESC
+                    LIMIT 1
+                    """
+                ),
+                {"t": tenant_id, "p": patient_id},
+            ).mappings().first()
+
+            if row and row["id"] != last_event_id:
+                payload = row["payload_json"]
+                if isinstance(payload, str):
+                    payload = json.loads(payload)
+
+                packet = {
+                    "patient_id": patient_id,
+                    "event_id": row["id"],
+                    "event_ts": row["event_ts"].isoformat() if row["event_ts"] else None,
+                    "created_at": row["created_at"].isoformat() if row["created_at"] else None,
+                    "vitals": payload,
+                }
+                last_event_id = row["id"]
+                yield f"data: {_json_dumps(packet)}\n\n"
+
+            time.sleep(interval)
+
+    return Response(
+        stream_with_context(generate()),
+        mimetype="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",
+        },
+    )
+
+
+# --------------------------------------------------
+# AI anomaly alerts
 # --------------------------------------------------
 @api_bp.get("/alerts/live")
-@require_roles("admin", "clinician", "insurer")
 def alerts_live():
     ensure_platform_tables()
 
-    tenant_id = _tenant_id()
+    tenant_id = request.args.get("tenant_id", _tenant_id())
     limit = _as_int(request.args.get("limit"), 100)
     severity = request.args.get("severity")
 
@@ -616,12 +687,12 @@ def alerts_live():
 
     rows = db.session.execute(text(sql), params).mappings().all()
 
-    alerts = []
+    items = []
     for row in rows:
         payload = row["payload_json"]
         if isinstance(payload, str):
             payload = json.loads(payload)
-        alerts.append(
+        items.append(
             {
                 "id": row["id"],
                 "patient_id": row["patient_id"],
@@ -634,148 +705,39 @@ def alerts_live():
             }
         )
 
-    return jsonify({"tenant_id": tenant_id, "alerts": alerts}), 200
-
-
-@api_bp.post("/alerts/<int:alert_id>/ack")
-@require_roles("admin", "clinician")
-def ack_alert(alert_id: int):
-    ensure_platform_tables()
-
-    updated = db.session.execute(
-        text(
-            """
-            UPDATE alerts
-            SET status = 'acknowledged',
-                acknowledged_at = NOW(),
-                acknowledged_by = :actor
-            WHERE id = :id AND tenant_id = :t
-            """
-        ),
-        {"id": alert_id, "t": _tenant_id(), "actor": _actor_id()},
-    )
-
-    if updated.rowcount == 0:
-        return jsonify({"error": "not_found"}), 404
-
-    _audit("alert_acknowledged", "alert", str(alert_id), {})
-    db.session.commit()
-    return jsonify({"ok": True, "alert_id": alert_id, "status": "acknowledged"}), 200
+    return jsonify({"tenant_id": tenant_id, "alerts": items}), 200
 
 
 # --------------------------------------------------
-# B) AI health risk scoring per patient
+# Command center UI data
 # --------------------------------------------------
-@api_bp.get("/patients/<patient_id>/risk")
-@require_roles("admin", "clinician", "insurer")
-def patient_risk(patient_id: str):
+@api_bp.get("/command-center")
+def command_center():
     ensure_platform_tables()
+    tenant_id = request.args.get("tenant_id", _tenant_id())
 
-    row = db.session.execute(
-        text(
-            """
-            SELECT risk_score, risk_level, summary, findings_json, created_at
-            FROM risk_scores
-            WHERE tenant_id = :t AND patient_id = :p
-            ORDER BY created_at DESC
-            LIMIT 1
-            """
-        ),
-        {"t": _tenant_id(), "p": patient_id},
-    ).mappings().first()
-
-    if not row:
-        return jsonify({"error": "not_found"}), 404
-
-    findings = row["findings_json"]
-    if isinstance(findings, str):
-        findings = json.loads(findings)
-
-    return (
-        jsonify(
-            {
-                "tenant_id": _tenant_id(),
-                "patient_id": patient_id,
-                "risk_score": float(row["risk_score"]),
-                "risk_level": row["risk_level"],
-                "summary": row["summary"],
-                "findings": findings,
-                "created_at": row["created_at"].isoformat() if row["created_at"] else None,
-            }
-        ),
-        200,
-    )
-
-
-@api_bp.get("/patients/<patient_id>/timeline")
-@require_roles("admin", "clinician")
-def patient_timeline(patient_id: str):
-    ensure_platform_tables()
-
-    rows = db.session.execute(
-        text(
-            """
-            SELECT event_ts, created_at, payload_json
-            FROM vitals_events
-            WHERE tenant_id = :t AND patient_id = :p
-            ORDER BY created_at DESC
-            LIMIT 100
-            """
-        ),
-        {"t": _tenant_id(), "p": patient_id},
-    ).mappings().all()
-
-    timeline = []
-    for row in rows:
-        payload = row["payload_json"]
-        if isinstance(payload, str):
-            payload = json.loads(payload)
-        timeline.append(
-            {
-                "event_ts": row["event_ts"].isoformat() if row["event_ts"] else None,
-                "created_at": row["created_at"].isoformat() if row["created_at"] else None,
-                "vitals": payload,
-            }
-        )
-
-    return jsonify({"tenant_id": _tenant_id(), "patient_id": patient_id, "timeline": timeline}), 200
-
-
-# --------------------------------------------------
-# C) Hospital admin analytics portal
-# --------------------------------------------------
-@api_bp.get("/admin/analytics/overview")
-@require_roles("admin")
-def admin_analytics():
-    ensure_platform_tables()
-
-    tenant_id = _tenant_id()
-
-    kpis = db.session.execute(
+    overview = db.session.execute(
         text(
             """
             SELECT
-                (SELECT COUNT(DISTINCT patient_id) FROM vitals_events WHERE tenant_id = :t) AS unique_patients,
-                (SELECT COUNT(*) FROM vitals_events WHERE tenant_id = :t AND created_at >= NOW() - INTERVAL '24 hours') AS vitals_24h,
+                (SELECT COUNT(DISTINCT patient_id) FROM vitals_events WHERE tenant_id = :t) AS total_patients,
+                (SELECT COUNT(*) FROM vitals_events WHERE tenant_id = :t AND created_at >= NOW() - INTERVAL '1 hour') AS vitals_last_hour,
                 (SELECT COUNT(*) FROM alerts WHERE tenant_id = :t AND status = 'open') AS open_alerts,
-                (SELECT COUNT(*) FROM alerts WHERE tenant_id = :t AND severity = 'critical' AND created_at >= NOW() - INTERVAL '24 hours') AS critical_alerts_24h
+                (SELECT COUNT(*) FROM alerts WHERE tenant_id = :t AND severity = 'critical' AND status = 'open') AS critical_open_alerts
             """
         ),
         {"t": tenant_id},
     ).mappings().first()
 
-    risk_mix = db.session.execute(
+    hot_patients = db.session.execute(
         text(
             """
-            SELECT risk_level, COUNT(*) AS count
-            FROM (
-                SELECT DISTINCT ON (patient_id) patient_id, risk_level
-                FROM risk_scores
-                WHERE tenant_id = :t
-                ORDER BY patient_id, created_at DESC
-            ) x
-            GROUP BY risk_level
-            ORDER BY risk_level
+            SELECT patient_id, MAX(created_at) AS last_seen, COUNT(*) FILTER (WHERE severity IN ('high','critical') AND status = 'open') AS open_high_alerts
+            FROM alerts
+            WHERE tenant_id = :t
+            GROUP BY patient_id
+            ORDER BY open_high_alerts DESC, last_seen DESC
+            LIMIT 20
             """
         ),
         {"t": tenant_id},
@@ -786,69 +748,20 @@ def admin_analytics():
             {
                 "tenant_id": tenant_id,
                 "overview": {
-                    "unique_patients": int(kpis["unique_patients"] or 0),
-                    "vitals_24h": int(kpis["vitals_24h"] or 0),
-                    "open_alerts": int(kpis["open_alerts"] or 0),
-                    "critical_alerts_24h": int(kpis["critical_alerts_24h"] or 0),
+                    "total_patients": int(overview["total_patients"] or 0),
+                    "vitals_last_hour": int(overview["vitals_last_hour"] or 0),
+                    "open_alerts": int(overview["open_alerts"] or 0),
+                    "critical_open_alerts": int(overview["critical_open_alerts"] or 0),
                 },
-                "risk_mix": [{"risk_level": r["risk_level"], "count": int(r["count"])} for r in risk_mix],
-            }
-        ),
-        200,
-    )
-
-
-# --------------------------------------------------
-# D) Insurance risk pool monitoring
-# --------------------------------------------------
-@api_bp.get("/insurer/pool/overview")
-@require_roles("insurer", "admin")
-def insurer_pool_overview():
-    ensure_platform_tables()
-
-    tenant_id = _tenant_id()
-
-    rows = db.session.execute(
-        text(
-            """
-            SELECT risk_level, COUNT(*) AS members
-            FROM (
-                SELECT DISTINCT ON (patient_id) patient_id, risk_level
-                FROM risk_scores
-                WHERE tenant_id = :t
-                ORDER BY patient_id, created_at DESC
-            ) latest
-            GROUP BY risk_level
-            ORDER BY risk_level
-            """
-        ),
-        {"t": tenant_id},
-    ).mappings().all()
-
-    alert_rows = db.session.execute(
-        text(
-            """
-            SELECT severity, COUNT(*) AS count
-            FROM alerts
-            WHERE tenant_id = :t
-              AND created_at >= NOW() - INTERVAL '24 hours'
-            GROUP BY severity
-            ORDER BY severity
-            """
-        ),
-        {"t": tenant_id},
-    ).mappings().all()
-
-    return (
-        jsonify(
-            {
-                "tenant_id": tenant_id,
-                "member_risk_distribution": [
-                    {"risk_level": row["risk_level"], "members": int(row["members"])} for row in rows
+                "hot_patients": [
+                    {
+                        "patient_id": row["patient_id"],
+                        "last_seen": row["last_seen"].isoformat() if row["last_seen"] else None,
+                        "open_high_alerts": int(row["open_high_alerts"] or 0),
+                    }
+                    for row in hot_patients
                 ],
-                "alerts_last_24h": [
-                    {"severity": row["severity"], "count": int(row["count"])} for row in alert_rows
-                ],
+                "generated_at": _utcnow_iso(),
             }
         ),
         200,
@@ -856,152 +769,29 @@ def insurer_pool_overview():
 
 
 # --------------------------------------------------
-# E) Investor-ready system architecture diagram
-# --------------------------------------------------
-@api_bp.get("/architecture/diagram")
-@require_roles("admin", "insurer")
-def architecture_diagram():
-    mermaid = """
-flowchart LR
-    mobile[Mobile App / Device SDK] --> api[Mobile API / Flask]
-    api --> pg[(Postgres)]
-    api --> redis[(Redis / Valkey)]
-    api --> worker[Background Worker]
-    worker --> pg
-    worker --> alerts[Live Alerts Stream]
-    api --> admin[Hospital Admin Portal]
-    api --> insurer[Insurance Risk Portal]
-    api --> audit[Audit / RBAC Layer]
-    admin --> api
-    insurer --> api
-"""
-    return (
-        jsonify(
-            {
-                "title": "Early Risk Alert Platform Architecture",
-                "diagram_type": "mermaid",
-                "mermaid": mermaid.strip(),
-                "notes": [
-                    "API tier handles ingestion, scoring, analytics APIs, and mobile app connectivity.",
-                    "Postgres is the system of record for vitals, alerts, scores, audit logs, and devices.",
-                    "Redis/Valkey supports queueing, caching, and fan-out for real-time alert streams.",
-                    "Background workers scale horizontally for anomaly detection and batch scoring.",
-                    "Role-based access and audit logs support HIPAA-oriented operational controls.",
-                ],
-            }
-        ),
-        200,
-    )
-
-
-# --------------------------------------------------
-# F) HIPAA-grade audit logging & RBAC security
-# --------------------------------------------------
-@api_bp.get("/security/me")
-def security_me():
-    return (
-        jsonify(
-            {
-                "tenant_id": _tenant_id(),
-                "actor_id": _actor_id(),
-                "role": _actor_role(),
-                "permissions": {
-                    "admin": ["all"],
-                    "clinician": ["read_patients", "read_alerts", "ack_alerts", "read_analytics"],
-                    "insurer": ["read_pool_monitoring", "read_risk", "read_architecture"],
-                    "mobile": ["connect_device", "submit_vitals"],
-                }.get(_actor_role(), []),
-            }
-        ),
-        200,
-    )
-
-
-@api_bp.get("/audit/logs")
-@require_roles("admin")
-def audit_logs():
-    ensure_platform_tables()
-
-    limit = _as_int(request.args.get("limit"), 100)
-    rows = db.session.execute(
-        text(
-            """
-            SELECT actor_id, actor_role, action, resource_type, resource_id, ip_address, meta_json, created_at
-            FROM audit_logs
-            WHERE tenant_id = :t
-            ORDER BY created_at DESC
-            LIMIT :lim
-            """
-        ),
-        {"t": _tenant_id(), "lim": limit},
-    ).mappings().all()
-
-    items = []
-    for row in rows:
-        meta = row["meta_json"]
-        if isinstance(meta, str):
-            meta = json.loads(meta)
-        items.append(
-            {
-                "actor_id": row["actor_id"],
-                "actor_role": row["actor_role"],
-                "action": row["action"],
-                "resource_type": row["resource_type"],
-                "resource_id": row["resource_id"],
-                "ip_address": row["ip_address"],
-                "meta": meta,
-                "created_at": row["created_at"].isoformat() if row["created_at"] else None,
-            }
-        )
-
-    return jsonify({"tenant_id": _tenant_id(), "logs": items}), 200
-
-
-# --------------------------------------------------
-# G) Million-patient scaling architecture metadata
+# Million-patient scaling mode
 # --------------------------------------------------
 @api_bp.get("/scale/readiness")
-@require_roles("admin", "insurer")
 def scale_readiness():
     return (
         jsonify(
             {
-                "status": "ready_for_next_phase",
-                "current_pattern": {
+                "mode": "million-patient-ready-next-phase",
+                "current_stack": {
                     "api": "stateless Flask web tier",
                     "db": "Postgres system of record",
-                    "cache_queue": "Redis / Valkey",
-                    "worker": "horizontal background processors",
+                    "streaming": "SSE-ready live stream endpoint",
+                    "alerts": "database-backed anomaly alerts",
+                    "workers": "background worker compatible",
                 },
-                "million_patient_plan": [
-                    "Partition vitals events by tenant_id and time window",
-                    "Move real-time alert fan-out to Redis streams or Kafka",
-                    "Scale workers horizontally by patient shard",
-                    "Add read replicas for analytics-heavy dashboards",
-                    "Cache live dashboard aggregates in Redis",
-                    "Adopt time-series retention and archival strategy for historical events",
+                "next_scale_steps": [
+                    "Partition vitals_events by tenant and time window",
+                    "Move live fan-out to Redis streams or Kafka",
+                    "Horizontal worker sharding by tenant or patient bucket",
+                    "Read replicas for dashboards and analytics",
+                    "Redis caching for command center metrics",
+                    "Long-term archival for historical vitals",
                 ],
-            }
-        ),
-        200,
-    )
-
-
-# --------------------------------------------------
-# H) Mobile app connection layer
-# --------------------------------------------------
-@api_bp.get("/mobile/config")
-def mobile_config():
-    return (
-        jsonify(
-            {
-                "tenant_id": _tenant_id(),
-                "api_version": "v1",
-                "submit_vitals_path": "/api/v1/vitals",
-                "device_connect_path": "/api/v1/mobile/connect",
-                "health_check_path": "/api/v1/healthz",
-                "recommended_headers": ["X-Tenant-Id", "X-User-Id", "X-Role"],
-                "auth_mode": "header-based placeholder; replace with JWT for production",
             }
         ),
         200,
