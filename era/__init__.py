@@ -3,7 +3,7 @@ from sqlalchemy import text
 
 from .config import Config
 from .extensions import db
-from .api.routes import api_bp, ensure_api_tables
+from .api.routes import api_bp
 
 
 def create_app():
@@ -11,7 +11,7 @@ def create_app():
     app.config.from_object(Config)
 
     db.init_app(app)
-    app.register_blueprint(api_bp, url_prefix="/api/v1")
+   app.register_blueprint(api_bp, url_prefix="/api/v1")
 
     @app.get("/")
     def root():
