@@ -2,7 +2,7 @@ import random
 import time
 import requests
 
-API_URL = "https://early-risk-alert-mobile-api.onrender.com/api/v1/vitals"
+API_URL = "https://early-risk-alert-mobile-api.onrender.com/api/v1/vitals/"
 TENANT_ID = "demo"
 
 PATIENTS = [
