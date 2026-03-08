@@ -1,8 +1,7 @@
 import random
 import time
 import requests
-
-API_URL = "https://early-risk-alert-mobile-api.onrender.com/api/v1/vitals/"
+API_URL = "https://early-risk-alert-mobile-api.onrender.com/api/dashboard/overview"
 TENANT_ID = "demo"
 
 PATIENTS = [
@@ -51,7 +50,7 @@ def vary_patient(p):
 
 def send_vitals(payload):
     try:
-        response = requests.post(API_URL, json=payload, timeout=15)
+        response = requests.get(API_URL, json=payload, timeout=15)
         print(f"Sent {payload['patient_id']} | {payload} | status={response.status_code}")
     except Exception as e:
         print(f"Error sending {payload['patient_id']}: {e}")
