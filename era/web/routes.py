@@ -1209,4 +1209,3 @@ def pitch_deck():
         "Early_Risk_Alert_AI_Pitch_Deck.pdf",
         as_attachment=True
     )
-```
