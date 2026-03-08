@@ -122,8 +122,7 @@ def stream_channels():
             ],
         }
     )
-
-from flask import render_template
+    from flask import render_template
 from . import web_bp
 
 @web_bp.route("/login")
@@ -133,5 +132,6 @@ def login():
 @web_bp.route("/dashboard")
 def dashboard():
     return render_template("dashboard.html")
+
 
 plate("dashboard.html")
