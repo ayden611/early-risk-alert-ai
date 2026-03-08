@@ -123,7 +123,6 @@ def stream_channels():
         }
     )
 
-
 @api_bp.get("/scale/readiness")
 def scale_readiness():
     return jsonify(
@@ -138,3 +137,14 @@ def scale_readiness():
             ],
         }
     )
+
+
+from flask import render_template
+
+@api_bp.route("/login")
+def login():
+    return render_template("login.html")
+
+@api_bp.route("/dashboard")
+def dashboard():
+    return render_template("dashboard.html")
