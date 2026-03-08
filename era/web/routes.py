@@ -636,4 +636,12 @@ def pitch_deck():
         static_dir,
         "Early_Risk_Alert_AI_Pitch_Deck.pdf",
         as_attachment=True
+
+from flask import send_from_directory
+import os
+
+@web_bp.route("/pitch-deck")
+def pitch_deck():
+    static_dir = os.path.join(os.getcwd(), "static")
+    return send_from_directory(static_dir, "Early_Risk_Alert_AI_Pitch_Deck.pdf")
     )
