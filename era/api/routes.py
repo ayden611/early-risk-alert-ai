@@ -123,28 +123,15 @@ def stream_channels():
         }
     )
 
-@api_bp.get("/scale/readiness")
-def scale_readiness():
-    return jsonify(
-        {
-            "status": "ready",
-            "scaling_mode": "horizontal",
-            "next_steps": [
-                "Add Redis streams",
-                "Shard workers by tenant",
-                "Enable autoscaling",
-                "Add read replicas",
-            ],
-        }
-    )
-
-
 from flask import render_template
+from . import web_bp
 
-@api_bp.route("/login")
+@web_bp.route("/login")
 def login():
     return render_template("login.html")
 
-@api_bp.route("/dashboard")
+@web_bp.route("/dashboard")
 def dashboard():
     return render_template("dashboard.html")
+
+plate("dashboard.html")
