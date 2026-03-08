@@ -1,4 +1,5 @@
 from flask import Blueprint, jsonify, request
+from flask import render_template
 
 api_bp = Blueprint("api", __name__)
 
@@ -131,4 +132,3 @@ def login():
 @api_bp.route("/dashboard")
 def dashboard():
     return render_template("dashboard.html")
-plate("dashboard.html")
