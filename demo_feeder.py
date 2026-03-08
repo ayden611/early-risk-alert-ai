@@ -1,7 +1,7 @@
 import random
 import time
 import requests
-API_URL = "https://early-risk-alert-mobile-api.onrender.com/api/dashboard/overview"
+API_URL = "https://early-risk-alert-ai-1.onrender.com/api/v1/dashboard/overview?tenant_id=demo"
 TENANT_ID = "demo"
 
 PATIENTS = [
@@ -50,10 +50,10 @@ def vary_patient(p):
 
 def send_vitals(payload):
     try:
-        response = requests.get(API_URL, json=payload, timeout=15)
-        print(f"Sent {payload['patient_id']} | {payload} | status={response.status_code}")
+        response = requests.get(API_URL, timeout=15)
+        print(f"Pinged dashboard | status={response.status_code}")
     except Exception as e:
-        print(f"Error sending {payload['patient_id']}: {e}")
+        print(f"Error pinging dashboard: {e}")
 
 def main():
     print("Starting demo feeder...")
@@ -67,5 +67,4 @@ def main():
         time.sleep(15)
 
 if __name__ == "__main__":
-    main()
     main()
