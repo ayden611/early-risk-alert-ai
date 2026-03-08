@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, render_template_string
 
 web_bp = Blueprint("web", __name__)
 
-HTML = """
+COMMAND_CENTER_HTML = """
 <!doctype html>
 <html lang="en">
 <head>
@@ -358,7 +358,6 @@ HTML = """
       margin-top:10px;
     }
 
-    .fullscreen body,
     body.fullscreen{
       overflow:hidden;
     }
@@ -775,9 +774,880 @@ HTML = """
 </html>
 """
 
+INVESTOR_HTML = """
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Early Risk Alert AI | Investor Overview</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root{
+      --bg:#07111f;
+      --bg2:#0d1728;
+      --panel:#101b2d;
+      --panel2:#14233a;
+      --text:#edf4ff;
+      --muted:#9db0cf;
+      --line:rgba(255,255,255,.09);
+      --accent:#7db2ff;
+      --accent2:#86efac;
+      --gold:#f4d38a;
+      --shadow:0 20px 60px rgba(0,0,0,.35);
+      --max:1220px;
+    }
+
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0}
+    body{
+      font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(125,178,255,.14), transparent 28%),
+        radial-gradient(circle at top right, rgba(134,239,172,.07), transparent 24%),
+        linear-gradient(180deg, var(--bg) 0%, var(--bg2) 100%);
+      line-height:1.6;
+    }
+
+    a{color:inherit;text-decoration:none}
+
+    .wrap{
+      max-width:var(--max);
+      margin:0 auto;
+      padding:0 22px;
+    }
+
+    .nav{
+      position:sticky;
+      top:0;
+      z-index:20;
+      backdrop-filter:blur(10px);
+      background:rgba(7,17,31,.72);
+      border-bottom:1px solid rgba(255,255,255,.06);
+    }
+
+    .nav-inner{
+      max-width:var(--max);
+      margin:0 auto;
+      padding:16px 22px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+      flex-wrap:wrap;
+    }
+
+    .brand{
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+    }
+
+    .brand small{
+      color:var(--muted);
+      text-transform:uppercase;
+      letter-spacing:.16em;
+      font-size:11px;
+      font-weight:800;
+    }
+
+    .brand strong{
+      font-size:20px;
+      font-weight:900;
+      letter-spacing:-.02em;
+    }
+
+    .nav-links{
+      display:flex;
+      gap:16px;
+      flex-wrap:wrap;
+      color:var(--muted);
+      font-size:14px;
+      font-weight:700;
+    }
+
+    .nav-cta{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:12px 18px;
+      border-radius:999px;
+      font-size:14px;
+      font-weight:900;
+      letter-spacing:.02em;
+      border:1px solid transparent;
+      transition:transform .15s ease, opacity .15s ease, border-color .15s ease;
+    }
+
+    .btn:hover{transform:translateY(-1px);opacity:.98}
+
+    .btn-primary{
+      background:linear-gradient(180deg, #88b7ff 0%, #6399f1 100%);
+      color:#08111f;
+      box-shadow:0 10px 30px rgba(99,153,241,.25);
+    }
+
+    .btn-secondary{
+      background:rgba(255,255,255,.04);
+      color:var(--text);
+      border-color:var(--line);
+    }
+
+    .hero{
+      padding:76px 0 52px;
+    }
+
+    .hero-grid{
+      display:grid;
+      grid-template-columns:1.15fr .85fr;
+      gap:26px;
+      align-items:center;
+    }
+
+    .eyebrow{
+      color:#cddaf2;
+      text-transform:uppercase;
+      letter-spacing:.18em;
+      font-size:12px;
+      font-weight:900;
+      margin-bottom:12px;
+    }
+
+    h1{
+      margin:0;
+      font-size:64px;
+      line-height:.96;
+      letter-spacing:-.05em;
+    }
+
+    .hero-sub{
+      margin-top:18px;
+      font-size:20px;
+      color:#d7e4fb;
+      max-width:760px;
+    }
+
+    .hero-copy{
+      margin-top:18px;
+      color:var(--muted);
+      font-size:16px;
+      max-width:760px;
+    }
+
+    .hero-actions{
+      margin-top:28px;
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+
+    .hero-card{
+      background:linear-gradient(180deg, rgba(20,35,58,.88), rgba(13,24,40,.95));
+      border:1px solid var(--line);
+      border-radius:28px;
+      padding:22px;
+      box-shadow:var(--shadow);
+      position:relative;
+      overflow:hidden;
+    }
+
+    .hero-card:before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:linear-gradient(135deg, rgba(255,255,255,.06), transparent 45%);
+      pointer-events:none;
+    }
+
+    .hero-card h3{
+      margin:0 0 10px 0;
+      font-size:18px;
+      letter-spacing:.01em;
+    }
+
+    .mini-grid{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:12px;
+      margin-top:16px;
+    }
+
+    .mini{
+      border:1px solid rgba(255,255,255,.07);
+      background:rgba(255,255,255,.03);
+      border-radius:18px;
+      padding:14px;
+    }
+
+    .mini .k{
+      color:var(--muted);
+      font-size:12px;
+      font-weight:800;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+    }
+
+    .mini .v{
+      margin-top:6px;
+      font-size:24px;
+      font-weight:900;
+      letter-spacing:-.03em;
+    }
+
+    .section{
+      padding:28px 0 34px;
+    }
+
+    .section-title{
+      font-size:38px;
+      line-height:1.04;
+      letter-spacing:-.04em;
+      margin:0 0 12px 0;
+    }
+
+    .section-sub{
+      color:var(--muted);
+      font-size:17px;
+      max-width:860px;
+      margin-bottom:22px;
+    }
+
+    .grid-2{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:18px;
+    }
+
+    .grid-3{
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:18px;
+    }
+
+    .panel{
+      background:linear-gradient(180deg, rgba(19,34,56,.88), rgba(14,24,40,.96));
+      border:1px solid var(--line);
+      border-radius:24px;
+      padding:22px;
+      box-shadow:var(--shadow);
+    }
+
+    .panel h3{
+      margin:0 0 10px 0;
+      font-size:22px;
+      letter-spacing:-.02em;
+    }
+
+    .panel p{
+      margin:0;
+      color:var(--muted);
+      font-size:15px;
+    }
+
+    .bullet-list{
+      margin:12px 0 0 0;
+      padding-left:18px;
+      color:var(--text);
+    }
+
+    .bullet-list li{
+      margin-bottom:8px;
+    }
+
+    .stat-band{
+      margin:12px 0 0;
+      display:grid;
+      grid-template-columns:repeat(4,minmax(0,1fr));
+      gap:14px;
+    }
+
+    .stat{
+      background:rgba(255,255,255,.03);
+      border:1px solid rgba(255,255,255,.06);
+      border-radius:18px;
+      padding:16px;
+    }
+
+    .stat .num{
+      font-size:28px;
+      font-weight:900;
+      letter-spacing:-.03em;
+    }
+
+    .stat .txt{
+      color:var(--muted);
+      font-size:13px;
+      margin-top:6px;
+      font-weight:700;
+    }
+
+    .demo-wrap{
+      display:grid;
+      grid-template-columns:1.05fr .95fr;
+      gap:18px;
+      align-items:stretch;
+    }
+
+    .video-frame{
+      position:relative;
+      width:100%;
+      padding-top:56.25%;
+      border-radius:24px;
+      overflow:hidden;
+      border:1px solid var(--line);
+      box-shadow:var(--shadow);
+      background:#000;
+    }
+
+    .video-frame iframe{
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      border:0;
+    }
+
+    .callout{
+      display:flex;
+      gap:12px;
+      align-items:flex-start;
+      padding:14px 0;
+      border-top:1px solid rgba(255,255,255,.06);
+    }
+
+    .callout:first-child{border-top:none;padding-top:0}
+
+    .icon{
+      width:36px;
+      height:36px;
+      border-radius:12px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:rgba(125,178,255,.14);
+      border:1px solid rgba(125,178,255,.22);
+      flex:0 0 36px;
+      font-weight:900;
+    }
+
+    .highlight{
+      color:var(--gold);
+      font-weight:800;
+    }
+
+    .quote{
+      font-size:20px;
+      line-height:1.5;
+      color:#dbe8ff;
+      margin:0;
+    }
+
+    .founder{
+      display:grid;
+      grid-template-columns:.8fr 1.2fr;
+      gap:18px;
+    }
+
+    .founder-card{
+      background:linear-gradient(180deg, rgba(19,34,56,.88), rgba(14,24,40,.96));
+      border:1px solid var(--line);
+      border-radius:26px;
+      padding:24px;
+      box-shadow:var(--shadow);
+    }
+
+    .founder-name{
+      font-size:30px;
+      font-weight:900;
+      letter-spacing:-.03em;
+      margin:0 0 6px 0;
+    }
+
+    .founder-role{
+      color:var(--gold);
+      font-size:14px;
+      font-weight:800;
+      text-transform:uppercase;
+      letter-spacing:.12em;
+      margin-bottom:18px;
+    }
+
+    .contact-block{
+      margin-top:18px;
+      color:var(--muted);
+      font-size:15px;
+    }
+
+    .cta-band{
+      margin:20px 0 70px;
+      padding:28px;
+      border-radius:28px;
+      background:
+        radial-gradient(circle at left top, rgba(125,178,255,.16), transparent 32%),
+        linear-gradient(180deg, rgba(17,30,49,.96), rgba(13,23,40,.96));
+      border:1px solid var(--line);
+      box-shadow:var(--shadow);
+    }
+
+    .cta-band h2{
+      margin:0 0 10px 0;
+      font-size:38px;
+      line-height:1.04;
+      letter-spacing:-.04em;
+    }
+
+    .cta-band p{
+      margin:0;
+      color:var(--muted);
+      max-width:820px;
+      font-size:17px;
+    }
+
+    .cta-actions{
+      margin-top:22px;
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+
+    .footer{
+      border-top:1px solid rgba(255,255,255,.06);
+      padding:24px 0 40px;
+      color:var(--muted);
+      font-size:14px;
+    }
+
+    @media (max-width:1024px){
+      .hero-grid,.demo-wrap,.founder,.grid-2,.grid-3{
+        grid-template-columns:1fr;
+      }
+      .stat-band{
+        grid-template-columns:repeat(2,minmax(0,1fr));
+      }
+      h1{font-size:50px}
+    }
+
+    @media (max-width:640px){
+      h1{font-size:40px}
+      .section-title,.cta-band h2{font-size:30px}
+      .stat-band{
+        grid-template-columns:1fr;
+      }
+      .nav-inner{padding:14px 16px}
+      .wrap{padding:0 16px}
+      .hero{padding:56px 0 34px}
+    }
+  </style>
+</head>
+<body>
+  <div class="nav">
+    <div class="nav-inner">
+      <div class="brand">
+        <small>Investor Overview</small>
+        <strong>Early Risk Alert AI</strong>
+      </div>
+
+      <div class="nav-links">
+        <a href="#problem">Problem</a>
+        <a href="#solution">Solution</a>
+        <a href="#demo">Demo</a>
+        <a href="#model">Revenue Model</a>
+        <a href="#compliance">Compliance</a>
+        <a href="#founder">Founder</a>
+      </div>
+
+      <div class="nav-cta">
+        <a class="btn btn-secondary" href="/">Hospital Command Center</a>
+        <a class="btn btn-primary" href="mailto:info@earlyriskalertai.com?subject=Investor%20Inquiry%20-%20Early%20Risk%20Alert%20AI">Contact Founder</a>
+      </div>
+    </div>
+  </div>
+
+  <section class="hero">
+    <div class="wrap">
+      <div class="hero-grid">
+        <div>
+          <div class="eyebrow">AI-Powered Predictive Clinical Intelligence</div>
+          <h1>Detect patient deterioration earlier. Strengthen hospital response at scale.</h1>
+          <div class="hero-sub">
+            Early Risk Alert AI is a clinical intelligence platform designed to help hospitals, health systems, and remote monitoring programs identify elevated-risk patients in real time.
+          </div>
+          <div class="hero-copy">
+            Our platform transforms fragmented monitoring into a unified command-center model—bringing together live patient visibility, AI-assisted risk prioritization, and enterprise-grade operational oversight.
+          </div>
+
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="#demo">View Live Product Demo</a>
+            <a class="btn btn-secondary" href="/">Open Hospital Command Center</a>
+          </div>
+        </div>
+
+        <div class="hero-card">
+          <h3>Investment Highlights</h3>
+          <p>
+            Positioned at the intersection of hospital efficiency, predictive monitoring, and scalable healthcare software infrastructure.
+          </p>
+
+          <div class="mini-grid">
+            <div class="mini">
+              <div class="k">Model</div>
+              <div class="v">Enterprise SaaS</div>
+            </div>
+            <div class="mini">
+              <div class="k">Primary Buyer</div>
+              <div class="v">Hospitals</div>
+            </div>
+            <div class="mini">
+              <div class="k">Use Case</div>
+              <div class="v">Early Risk Detection</div>
+            </div>
+            <div class="mini">
+              <div class="k">Expansion</div>
+              <div class="v">Multi-Site Rollout</div>
+            </div>
+          </div>
+
+          <div class="stat-band">
+            <div class="stat">
+              <div class="num">24/7</div>
+              <div class="txt">Continuous monitoring framework</div>
+            </div>
+            <div class="stat">
+              <div class="num">AI</div>
+              <div class="txt">Risk detection and prioritization</div>
+            </div>
+            <div class="stat">
+              <div class="num">RPM</div>
+              <div class="txt">Remote monitoring integration path</div>
+            </div>
+            <div class="stat">
+              <div class="num">SaaS</div>
+              <div class="txt">Recurring enterprise revenue model</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="problem">
+    <div class="wrap">
+      <h2 class="section-title">The problem: healthcare systems are still forced to react too late.</h2>
+      <div class="section-sub">
+        Hospitals face growing pressure to manage rising patient complexity, staffing shortages, and preventable escalations with systems that are often fragmented, manual, and difficult to scale.
+      </div>
+
+      <div class="grid-3">
+        <div class="panel">
+          <h3>Reactive Monitoring</h3>
+          <p>
+            Traditional workflows often identify deterioration after patient risk has already escalated, limiting the time available for early intervention.
+          </p>
+        </div>
+        <div class="panel">
+          <h3>Operational Strain</h3>
+          <p>
+            Care teams are expected to monitor more patients with fewer resources, creating delays, alert fatigue, and inconsistent prioritization.
+          </p>
+        </div>
+        <div class="panel">
+          <h3>Missed Visibility</h3>
+          <p>
+            Vital trends, warning signs, and risk signals are too often buried across disconnected systems rather than surfaced in a unified real-time view.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="solution">
+    <div class="wrap">
+      <h2 class="section-title">The solution: a centralized intelligence layer for modern clinical operations.</h2>
+      <div class="section-sub">
+        Early Risk Alert AI provides a smarter operating model for care delivery by converting real-time health signals into prioritized clinical intelligence.
+      </div>
+
+      <div class="grid-2">
+        <div class="panel">
+          <h3>Core Platform Capabilities</h3>
+          <ul class="bullet-list">
+            <li>Continuous patient monitoring visibility across care environments</li>
+            <li>AI-assisted early warning detection for elevated-risk cases</li>
+            <li>Live alert prioritization by severity and operational importance</li>
+            <li>Command-center style oversight for hospitals and care networks</li>
+            <li>Scalable architecture designed for enterprise deployment</li>
+          </ul>
+        </div>
+
+        <div class="panel">
+          <h3>Clinical and Operational Value</h3>
+          <ul class="bullet-list">
+            <li>Earlier intervention opportunities before emergencies escalate</li>
+            <li>More efficient allocation of clinician attention and response capacity</li>
+            <li>Improved visibility across departments, facilities, and remote programs</li>
+            <li>Stronger infrastructure for proactive, data-informed care delivery</li>
+            <li>Premium software positioning for hospital modernization initiatives</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="demo">
+    <div class="wrap">
+      <h2 class="section-title">Live product demo</h2>
+      <div class="section-sub">
+        A short live demonstration showing Early Risk Alert AI in action through a hospital command-center interface, including patient monitoring, alert prioritization, and centralized clinical visibility.
+      </div>
+
+      <div class="demo-wrap">
+        <div class="video-frame">
+          <iframe src="https://www.youtube.com/embed/HiidXiXifY4" title="Early Risk Alert AI Live Demo" allowfullscreen></iframe>
+        </div>
+
+        <div class="panel">
+          <h3>What the demo shows</h3>
+
+          <div class="callout">
+            <div class="icon">1</div>
+            <div>
+              <strong>Real-time patient monitoring</strong>
+              <div class="muted">Live overview of patient status and critical metrics.</div>
+            </div>
+          </div>
+
+          <div class="callout">
+            <div class="icon">2</div>
+            <div>
+              <strong>AI-prioritized alerts</strong>
+              <div class="muted">Risk signals surfaced clearly by severity and urgency.</div>
+            </div>
+          </div>
+
+          <div class="callout">
+            <div class="icon">3</div>
+            <div>
+              <strong>Command-center visibility</strong>
+              <div class="muted">A unified operational interface for modern hospital workflows.</div>
+            </div>
+          </div>
+
+          <div class="callout">
+            <div class="icon">4</div>
+            <div>
+              <strong>Enterprise presentation quality</strong>
+              <div class="muted">Built to communicate credibility with hospitals, partners, and investors.</div>
+            </div>
+          </div>
+
+          <div style="margin-top:18px">
+            <a class="btn btn-primary" href="/">Open Command Center</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="market">
+    <div class="wrap">
+      <h2 class="section-title">Why now</h2>
+      <div class="section-sub">
+        Hospitals and health systems are under increasing pressure to improve outcomes, manage labor constraints, and modernize digital care infrastructure. That shift creates strong demand for predictive intelligence platforms that can support earlier intervention and scalable operational oversight.
+      </div>
+
+      <div class="grid-3">
+        <div class="panel">
+          <h3>Staffing and Burnout Pressure</h3>
+          <p>
+            Health systems need better tools to help limited care teams identify the highest-priority patients faster and with greater clarity.
+          </p>
+        </div>
+        <div class="panel">
+          <h3>Growth of Remote Monitoring</h3>
+          <p>
+            As distributed care models expand, providers need software that can unify patient oversight beyond facility walls.
+          </p>
+        </div>
+        <div class="panel">
+          <h3>Value-Based Care Momentum</h3>
+          <p>
+            Early intervention, reduced escalations, and stronger operational efficiency increasingly align with how modern healthcare systems are measured and rewarded.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="opportunity">
+    <div class="wrap">
+      <h2 class="section-title">Market opportunity</h2>
+      <div class="section-sub">
+        Early Risk Alert AI is positioned for deployment across multiple institutional healthcare segments where patient visibility, early risk detection, and enterprise coordination matter most.
+      </div>
+
+      <div class="grid-2">
+        <div class="panel">
+          <h3>Primary Market Segments</h3>
+          <ul class="bullet-list">
+            <li>Hospitals and integrated health systems</li>
+            <li>Remote patient monitoring providers</li>
+            <li>Care management networks</li>
+            <li>Clinical command centers and centralized operations teams</li>
+            <li>Enterprise digital health and care coordination programs</li>
+          </ul>
+        </div>
+
+        <div class="panel">
+          <h3>Expansion Logic</h3>
+          <ul class="bullet-list">
+            <li>Initial hospital and provider deployments</li>
+            <li>Department-level adoption expanding to multi-site systems</li>
+            <li>Remote monitoring and care network integrations</li>
+            <li>Analytics and enterprise workflow extensions</li>
+            <li>Long-term platform positioning inside larger health infrastructures</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="model">
+    <div class="wrap">
+      <h2 class="section-title">Revenue model</h2>
+      <div class="section-sub">
+        Early Risk Alert AI is structured as a scalable enterprise software business designed for recurring revenue and network-level growth.
+      </div>
+
+      <div class="grid-3">
+        <div class="panel">
+          <h3>Enterprise Platform Subscriptions</h3>
+          <p>
+            Recurring software subscriptions for hospitals, care networks, and monitoring organizations adopting the platform operationally.
+          </p>
+        </div>
+        <div class="panel">
+          <h3>Per-Patient Monitoring Programs</h3>
+          <p>
+            Usage-aligned pricing for remote monitoring and distributed care initiatives where scale increases recurring platform value.
+          </p>
+        </div>
+        <div class="panel">
+          <h3>Analytics and Integration Packages</h3>
+          <p>
+            Additional revenue through premium analytics, deployment services, enterprise configuration, and system integrations.
+          </p>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-top:18px">
+        <h3>Commercial positioning</h3>
+        <p>
+          The business model is designed to support land-and-expand growth: initial adoption within focused hospital programs, followed by broader deployment across departments, facilities, and enterprise care environments.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="compliance">
+    <div class="wrap">
+      <h2 class="section-title">Compliance and enterprise readiness</h2>
+      <div class="section-sub">
+        Early Risk Alert AI is being positioned with the language, architecture, and operational framing expected of enterprise healthcare technology.
+      </div>
+
+      <div class="grid-2">
+        <div class="panel">
+          <h3>Platform Readiness</h3>
+          <ul class="bullet-list">
+            <li>HIPAA-ready architectural positioning</li>
+            <li>Secure cloud deployment model</li>
+            <li>Audit-friendly workflow structure</li>
+            <li>Scalable multi-site software framework</li>
+            <li>Command-center interface aligned with clinical operations</li>
+          </ul>
+        </div>
+
+        <div class="panel">
+          <h3>Enterprise Confidence</h3>
+          <p class="quote">
+            “Built to support hospitals, providers, and care networks seeking a premium, modern platform for proactive patient monitoring and early risk detection.”
+          </p>
+          <div style="margin-top:18px;color:var(--muted)">
+            The platform is presented as infrastructure for clinical modernization, not simply a dashboard. That distinction strengthens both enterprise and investor credibility.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="founder">
+    <div class="wrap">
+      <h2 class="section-title">About the founder</h2>
+      <div class="section-sub">
+        Early Risk Alert AI was founded to advance predictive healthcare through intelligent monitoring systems that help care teams act earlier, prioritize faster, and operate with greater confidence.
+      </div>
+
+      <div class="founder">
+        <div class="founder-card">
+          <div class="founder-name">Milton MUNROE</div>
+          <div class="founder-role">Founder, Early Risk Alert AI</div>
+
+          <div>
+            Building AI-powered preventive health technology focused on earlier detection, smarter monitoring, and better patient outcomes.
+          </div>
+
+          <div class="contact-block">
+            <div><strong>Email:</strong> info@earlyriskalertai.com</div>
+            <div><strong>Phone:</strong> 732-724-7267</div>
+          </div>
+        </div>
+
+        <div class="founder-card">
+          <h3>Founder mission</h3>
+          <p>
+            Milton MUNROE founded Early Risk Alert AI to help move healthcare from reactive response toward proactive, intelligence-driven prevention. The platform is built around a clear vision: identify patient deterioration sooner, strengthen clinical decision support, and create more scalable systems for modern care delivery.
+          </p>
+          <p style="margin-top:14px">
+            The company’s positioning combines technical credibility, hospital relevance, and premium software presentation—creating a foundation for both institutional adoption and investor interest.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="wrap">
+    <div class="cta-band">
+      <h2>Partner with Early Risk Alert AI</h2>
+      <p>
+        For investors, strategic partners, and healthcare organizations interested in product demonstrations, partnership discussions, or founder conversations, Early Risk Alert AI is available for direct outreach.
+      </p>
+
+      <div class="cta-actions">
+        <a class="btn btn-primary" href="mailto:info@earlyriskalertai.com?subject=Investor%20Inquiry%20-%20Early%20Risk%20Alert%20AI">Contact Founder</a>
+        <a class="btn btn-secondary" href="/">Open Hospital Command Center</a>
+        <a class="btn btn-secondary" href="https://youtu.be/HiidXiXifY4" target="_blank">Watch Demo Video</a>
+      </div>
+    </div>
+  </section>
+
+  <div class="footer">
+    <div class="wrap">
+      Early Risk Alert AI LLC • Investor Overview • Milton MUNROE • 732-724-7267
+    </div>
+  </div>
+</body>
+</html>
+"""
+
 @web_bp.get("/")
 def home():
-    return render_template_string(HTML)
+    return render_template_string(COMMAND_CENTER_HTML)
 
 @web_bp.get("/login")
 def login():
@@ -785,4 +1655,8 @@ def login():
 
 @web_bp.get("/dashboard")
 def dashboard():
-    return render_template_string(HTML)
+    return render_template_string(COMMAND_CENTER_HTML)
+
+@web_bp.get("/investors")
+def investors():
+    return render_template_string(INVESTOR_HTML)
