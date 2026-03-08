@@ -308,20 +308,14 @@ setInterval(refreshAll, 10000);
 </body>
 </html>
 """
-
 @web_bp.get("/")
 def home():
     return render_template_string(HTML)
 
-
-
-  @web_bp.get("/login")
+@web_bp.get("/login")
 def login():
     return render_template("login.html")
 
 @web_bp.get("/dashboard")
 def dashboard():
-    return render_template_string(HTML)
-  
-  
     return render_template_string(HTML)
