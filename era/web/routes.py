@@ -19,9 +19,7 @@ COMMAND_CENTER_HTML = """
       --text:#ecf3ff;
       --muted:#92a6c8;
       --border:rgba(255,255,255,.08);
-      --border-strong:rgba(255,255,255,.16);
       --accent:#6ea8ff;
-      --accent-2:#86efac;
       --red:#ff6b6b;
       --amber:#f7c95c;
       --green:#31d17c;
@@ -95,7 +93,7 @@ COMMAND_CENTER_HTML = """
       margin:10px 0 14px;
     }
 
-    input, button, select{
+    input, button{
       border-radius:12px;
       border:1px solid var(--border);
       background:rgba(19,35,58,.88);
@@ -103,12 +101,9 @@ COMMAND_CENTER_HTML = """
       padding:11px 13px;
       font-size:14px;
       outline:none;
-      box-shadow:none;
     }
 
-    input{
-      min-width:130px;
-    }
+    input{min-width:130px}
 
     button{
       cursor:pointer;
@@ -358,18 +353,12 @@ COMMAND_CENTER_HTML = """
       margin-top:10px;
     }
 
-    body.fullscreen{
-      overflow:hidden;
-    }
+    body.fullscreen{overflow:hidden}
 
     body.fullscreen .shell{
       max-width:none;
       padding:14px;
     }
-
-    body.fullscreen .title{font-size:46px}
-    body.fullscreen .value{font-size:52px}
-    body.fullscreen .card{border-radius:22px}
 
     @media (max-width:1250px){
       .kpis{grid-template-columns:repeat(3, minmax(0,1fr))}
@@ -391,13 +380,8 @@ COMMAND_CENTER_HTML = """
       <div class="brand-wrap">
         <div class="eyebrow">Predictive Clinical Intelligence</div>
         <h1 class="title">Early Risk Alert</h1>
-        <div class="subtitle">
-          Hospital UI + Investor Demo + Command Center
-        </div>
-        <div class="live-pill">
-          <span class="live-dot"></span>
-          Live System
-        </div>
+        <div class="subtitle">Hospital UI + Investor Demo + Command Center</div>
+        <div class="live-pill"><span class="live-dot"></span>Live System</div>
       </div>
 
       <div class="hero-actions">
@@ -426,30 +410,12 @@ COMMAND_CENTER_HTML = """
     </div>
 
     <div class="kpis">
-      <div class="card">
-        <div class="label">Patients</div>
-        <div class="value" id="kpiPatients">—</div>
-      </div>
-      <div class="card">
-        <div class="label">Open Alerts</div>
-        <div class="value" id="kpiOpenAlerts">—</div>
-      </div>
-      <div class="card">
-        <div class="label">Critical Alerts</div>
-        <div class="value" id="kpiCriticalAlerts">—</div>
-      </div>
-      <div class="card">
-        <div class="label">Events Last Hour</div>
-        <div class="value" id="kpiEventsHour">—</div>
-      </div>
-      <div class="card">
-        <div class="label">Stream Mode</div>
-        <div class="value" id="kpiStreamMode" style="font-size:28px">—</div>
-      </div>
-      <div class="card investor-only">
-        <div class="label">Commercial Model</div>
-        <div class="value" style="font-size:22px">SaaS</div>
-      </div>
+      <div class="card"><div class="label">Patients</div><div class="value" id="kpiPatients">—</div></div>
+      <div class="card"><div class="label">Open Alerts</div><div class="value" id="kpiOpenAlerts">—</div></div>
+      <div class="card"><div class="label">Critical Alerts</div><div class="value" id="kpiCriticalAlerts">—</div></div>
+      <div class="card"><div class="label">Events Last Hour</div><div class="value" id="kpiEventsHour">—</div></div>
+      <div class="card"><div class="label">Stream Mode</div><div class="value" id="kpiStreamMode" style="font-size:28px">—</div></div>
+      <div class="card investor-only"><div class="label">Commercial Model</div><div class="value" style="font-size:22px">SaaS</div></div>
     </div>
 
     <div class="layout">
@@ -536,9 +502,7 @@ COMMAND_CENTER_HTML = """
       </div>
     </div>
 
-    <div class="footer-note">
-      Early Risk Alert AI™ • Premium Live Command Center Demo
-    </div>
+    <div class="footer-note">Early Risk Alert AI™ • Premium Live Command Center Demo</div>
   </div>
 
   <script>
@@ -883,6 +847,7 @@ INVESTOR_HTML = """
       letter-spacing:.02em;
       border:1px solid transparent;
       transition:transform .15s ease, opacity .15s ease, border-color .15s ease;
+      cursor:pointer;
     }
 
     .btn:hover{transform:translateY(-1px);opacity:.98}
@@ -900,7 +865,7 @@ INVESTOR_HTML = """
     }
 
     .hero{
-      padding:76px 0 52px;
+      padding:76px 0 34px;
     }
 
     .hero-grid{
@@ -1000,6 +965,25 @@ INVESTOR_HTML = """
       letter-spacing:-.03em;
     }
 
+    .cred-strip{
+      display:grid;
+      grid-template-columns:repeat(5,minmax(0,1fr));
+      gap:12px;
+      margin-top:28px;
+    }
+
+    .cred{
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.03);
+      border-radius:16px;
+      padding:14px;
+      text-align:center;
+      font-size:13px;
+      font-weight:800;
+      color:#dce8ff;
+      letter-spacing:.03em;
+    }
+
     .section{
       padding:28px 0 34px;
     }
@@ -1056,9 +1040,7 @@ INVESTOR_HTML = """
       color:var(--text);
     }
 
-    .bullet-list li{
-      margin-bottom:8px;
-    }
+    .bullet-list li{margin-bottom:8px}
 
     .stat-band{
       margin:12px 0 0;
@@ -1148,6 +1130,31 @@ INVESTOR_HTML = """
       margin:0;
     }
 
+    .fund-band{
+      margin-top:18px;
+      padding:24px;
+      border-radius:24px;
+      border:1px solid var(--line);
+      background:
+        radial-gradient(circle at top left, rgba(125,178,255,.12), transparent 28%),
+        linear-gradient(180deg, rgba(17,30,49,.96), rgba(13,23,40,.96));
+      box-shadow:var(--shadow);
+    }
+
+    .fund-grid{
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:16px;
+      margin-top:16px;
+    }
+
+    .fund-box{
+      border:1px solid rgba(255,255,255,.07);
+      border-radius:18px;
+      background:rgba(255,255,255,.03);
+      padding:16px;
+    }
+
     .founder{
       display:grid;
       grid-template-columns:.8fr 1.2fr;
@@ -1182,6 +1189,29 @@ INVESTOR_HTML = """
       margin-top:18px;
       color:var(--muted);
       font-size:15px;
+    }
+
+    .contact-grid{
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:16px;
+      margin-top:18px;
+    }
+
+    .contact-box{
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.03);
+      border-radius:18px;
+      padding:16px;
+    }
+
+    .contact-label{
+      color:var(--muted);
+      font-size:12px;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+      font-weight:800;
+      margin-bottom:6px;
     }
 
     .cta-band{
@@ -1224,8 +1254,11 @@ INVESTOR_HTML = """
     }
 
     @media (max-width:1024px){
-      .hero-grid,.demo-wrap,.founder,.grid-2,.grid-3{
+      .hero-grid,.demo-wrap,.founder,.grid-2,.grid-3,.fund-grid,.contact-grid{
         grid-template-columns:1fr;
+      }
+      .cred-strip{
+        grid-template-columns:repeat(2,minmax(0,1fr));
       }
       .stat-band{
         grid-template-columns:repeat(2,minmax(0,1fr));
@@ -1236,7 +1269,7 @@ INVESTOR_HTML = """
     @media (max-width:640px){
       h1{font-size:40px}
       .section-title,.cta-band h2{font-size:30px}
-      .stat-band{
+      .stat-band,.cred-strip{
         grid-template-columns:1fr;
       }
       .nav-inner{padding:14px 16px}
@@ -1264,7 +1297,7 @@ INVESTOR_HTML = """
 
       <div class="nav-cta">
         <a class="btn btn-secondary" href="/">Hospital Command Center</a>
-        <a class="btn btn-primary" href="mailto:info@earlyriskalertai.com?subject=Investor%20Inquiry%20-%20Early%20Risk%20Alert%20AI">Contact Founder</a>
+        <a class="btn btn-primary" href="#contact">Contact Founder</a>
       </div>
     </div>
   </div>
@@ -1332,6 +1365,14 @@ INVESTOR_HTML = """
             </div>
           </div>
         </div>
+      </div>
+
+      <div class="cred-strip">
+        <div class="cred">Enterprise SaaS</div>
+        <div class="cred">Predictive Monitoring</div>
+        <div class="cred">Hospital Command Center</div>
+        <div class="cred">HIPAA-Ready Architecture</div>
+        <div class="cred">Remote Monitoring Ready</div>
       </div>
     </div>
   </section>
@@ -1545,11 +1586,32 @@ INVESTOR_HTML = """
         </div>
       </div>
 
-      <div class="panel" style="margin-top:18px">
-        <h3>Commercial positioning</h3>
-        <p>
-          The business model is designed to support land-and-expand growth: initial adoption within focused hospital programs, followed by broader deployment across departments, facilities, and enterprise care environments.
-        </p>
+      <div class="fund-band">
+        <h3 style="margin:0;font-size:28px;letter-spacing:-.03em">Funding and growth acceleration</h3>
+        <div class="section-sub" style="margin:10px 0 0 0;max-width:none">
+          Early Risk Alert AI is currently positioned for strategic partnerships and early-stage investment that can accelerate product maturation, pilot deployment, and enterprise expansion.
+        </div>
+
+        <div class="fund-grid">
+          <div class="fund-box">
+            <strong>Use of capital</strong>
+            <div class="muted" style="margin-top:8px">
+              Product refinement, engineering expansion, deployment infrastructure, and enterprise readiness execution.
+            </div>
+          </div>
+          <div class="fund-box">
+            <strong>Near-term milestones</strong>
+            <div class="muted" style="margin-top:8px">
+              Pilot conversations, stronger commercial packaging, platform scaling, and hospital-facing product validation.
+            </div>
+          </div>
+          <div class="fund-box">
+            <strong>Growth objective</strong>
+            <div class="muted" style="margin-top:8px">
+              Establish Early Risk Alert AI as a premium predictive monitoring platform for modern healthcare systems.
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </section>
@@ -1621,15 +1683,39 @@ INVESTOR_HTML = """
     </div>
   </section>
 
+  <section class="section" id="contact">
+    <div class="wrap">
+      <h2 class="section-title">Investor contact</h2>
+      <div class="section-sub">
+        For investor conversations, strategic partnerships, product demonstrations, or founder outreach, contact Early Risk Alert AI directly using the information below.
+      </div>
+
+      <div class="contact-grid">
+        <div class="contact-box">
+          <div class="contact-label">Founder</div>
+          <div style="font-size:22px;font-weight:900">Milton MUNROE</div>
+        </div>
+        <div class="contact-box">
+          <div class="contact-label">Email</div>
+          <div style="font-size:18px;font-weight:800">info@earlyriskalertai.com</div>
+        </div>
+        <div class="contact-box">
+          <div class="contact-label">Business Phone</div>
+          <div style="font-size:18px;font-weight:800">732-724-7267</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <section class="wrap">
     <div class="cta-band">
       <h2>Partner with Early Risk Alert AI</h2>
       <p>
-        For investors, strategic partners, and healthcare organizations interested in product demonstrations, partnership discussions, or founder conversations, Early Risk Alert AI is available for direct outreach.
+        Early Risk Alert AI is building a premium predictive clinical intelligence platform for hospitals, health systems, and remote monitoring programs. The company is open to investor discussions, strategic partnerships, and product demonstration conversations.
       </p>
 
       <div class="cta-actions">
-        <a class="btn btn-primary" href="mailto:info@earlyriskalertai.com?subject=Investor%20Inquiry%20-%20Early%20Risk%20Alert%20AI">Contact Founder</a>
+        <a class="btn btn-primary" href="#contact">Contact Founder</a>
         <a class="btn btn-secondary" href="/">Open Hospital Command Center</a>
         <a class="btn btn-secondary" href="https://youtu.be/HiidXiXifY4" target="_blank">Watch Demo Video</a>
       </div>
