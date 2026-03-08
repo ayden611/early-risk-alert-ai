@@ -1,4 +1,5 @@
 from flask import Blueprint, render_template_string
+from flask import Blueprint, render_template, render_template_string
 
 web_bp = Blueprint("web", __name__)
 
@@ -310,4 +311,17 @@ setInterval(refreshAll, 10000);
 
 @web_bp.get("/")
 def home():
+    return render_template_string(HTML)
+
+
+
+  @web_bp.get("/login")
+def login():
+    return render_template("login.html")
+
+@web_bp.get("/dashboard")
+def dashboard():
+    return render_template_string(HTML)
+  
+  
     return render_template_string(HTML)
