@@ -57,6 +57,28 @@ HTML = """
     .kv{display:grid;grid-template-columns:1fr auto;gap:8px;font-size:14px}
     @media (max-width:1200px){.kpis{grid-template-columns:repeat(2,1fr)}.layout{grid-template-columns:1fr}}
     @media (max-width:700px){.kpis{grid-template-columns:1fr}}
+    .live-pill{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  margin-top:10px;
+  padding:8px 14px;
+  border-radius:999px;
+  background:rgba(34,197,94,.12);
+  border:1px solid rgba(34,197,94,.35);
+  color:#d1fae5;
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:.08em;
+}
+
+.live-dot{
+  width:10px;
+  height:10px;
+  border-radius:999px;
+  background:#22c55e;
+  box-shadow:0 0 10px rgba(34,197,94,.8);
+  animation
   </style>
 </head>
 <body>
@@ -65,6 +87,11 @@ HTML = """
     <div>
       <div class="title">Early Risk Alert</div>
       <div class="subtitle">Hospital UI + Investor Demo + Command Center</div>
+    </div>
+    <div class="topbar">
+    <div>
+        <div class="title">Early Risk Alert</div>
+        <div class="subtitle">Hospital UI + Investor Demo + Command Center</div>
     </div>
     <div class="toolbar">
       <input id="tenantId" value="demo" placeholder="tenant_id">
