@@ -22,6 +22,27 @@ HTML = """
       --amber:#f59e0b;
       --green:#22c55e;
     }
+    .ticker {
+  width: 100%;
+  overflow: hidden;
+  background: linear-gradient(90deg, #0f1b2d, #13233a);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  margin: 12px 0 20px 0;
+}
+
+.ticker-track {
+  white-space: nowrap;
+  padding: 10px 0;
+  font-weight: 600;
+  color: #ff6767;
+  animation: tickerMove 25s linear infinite;
+}
+
+@keyframes tickerMove {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
     *{box-sizing:border-box}
     body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text)}
     .shell{max-width:1500px;margin:20px auto;padding:0 16px}
@@ -87,6 +108,11 @@ HTML = """
     <div>
       <div class="title">Early Risk Alert</div>
       <div class="subtitle">Hospital UI + Investor Demo + Command Center</div>
+      <div class="ticker">
+  <div class="ticker-track" id="alertTicker">
+    🚨 LIVE ALERTS — System monitoring patients in real time
+  </div>
+</div>
     </div>
     <div class="topbar">
     <div>
@@ -238,10 +264,36 @@ async function refreshAlerts(){
   const data = await getJson(`/api/v1/alerts?tenant_id=${encodeURIComponent(tenant())}&limit=24`);
   const el = document.getElementById("alertsList");
 
+  // ✅ ALERT TICKER (runs when alerts exist)
+  const ticker = document.getElementById("alertTicker");
+  if (ticker && data && data.alerts && data.alerts.length){
+    ticker.innerText = data.alerts.map(a =>
+      `🚨 ${String(a.severity || "info").toUpperCase()} — Patient ${a.patient_id} — ${a.message}`
+    ).join("     ✦     ");
+  }
+
+  // No alerts
   if (!data || !data.alerts || data.alerts.length === 0){
     el.innerHTML = '<div class="muted">No alerts yet.</div>';
     return [];
   }
+
+  el.innerHTML = data.alerts.map(a => `
+    <div class="item">
+      <div class="row">
+        <div>
+          <div><strong>${esc(a.alert_type)}</strong></div>
+          <div class="muted">Patient ${esc(a.patient_id)}</div>
+        </div>
+        <div class="badge ${sevClass(a.severity)}">${esc(a.severity || "info")}</div>
+      </div>
+      <div style="margin-top:8px">${esc(a.message || "")}</div>
+      <div class="muted small" style="margin-top:8px">${esc(a.created_at || "")}</div>
+    </div>
+  `).join("");
+
+  return data.alerts;
+}
 
   el.innerHTML = data.alerts.map(a => `
     <div class="item">
