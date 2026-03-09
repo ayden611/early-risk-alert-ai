@@ -1,67 +1,204 @@
-{% extends "base.html" %}
-{% block content %}
-  <div class="card">
-    <h1>Run Prediction</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Early Risk Alert AI — Hospital Command Center</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <form method="POST" class="form">
-      <label>Age
-        <input name="age" type="number" step="1" min="1" required>
-      </label>
+<style>
+:root{
+  --bg:#0b0f18;
+  --panel:#111827;
+  --panel2:#172033;
+  --border:rgba(255,255,255,.08);
+  --text:#ecf3ff;
+  --muted:#9eb0c7;
+  --accent:#7aa2ff;
+  --accent2:#5bd4ff;
+}
 
-      <label>BMI
-        <input name="bmi" type="number" step="0.1" min="1" required>
-      </label>
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
+  background:linear-gradient(180deg,#0b0f18,#0e1424);
+  color:var(--text);
+}
 
-      <label>Exercise Level
-        <select name="exercise_level" required>
-          <option value="Low">Low</option>
-          <option value="Medium">Medium</option>
-          <option value="High">High</option>
-        </select>
-      </label>
+.container{
+  max-width:1200px;
+  margin:auto;
+  padding:40px 20px;
+}
 
-      <label>Systolic BP
-        <input name="systolic_bp" type="number" step="1" min="50" required>
-      </label>
+.hero{
+  text-align:center;
+  padding:60px 20px;
+}
 
-      <label>Diastolic BP
-        <input name="diastolic_bp" type="number" step="1" min="30" required>
-      </label>
+.hero h1{
+  font-size:42px;
+  margin-bottom:10px;
+}
 
-      <label>Heart Rate
-        <input name="heart_rate" type="number" step="1" min="30" required>
-      </label>
+.hero p{
+  font-size:18px;
+  color:var(--muted);
+  max-width:800px;
+  margin:auto;
+}
 
-      <button class="btn" type="submit">Run Prediction</button>
-    </form>
+.buttons{
+  margin-top:30px;
+  display:flex;
+  gap:15px;
+  justify-content:center;
+  flex-wrap:wrap;
+}
 
-    {% if prediction %}
-      <div class="result">
-        <div class="pill {{ 'bad' if prediction=='High Risk' else 'good' }}">
-          {{ prediction }}
-        </div>
-        <div class="muted">Probability (High Risk): <b>{{ probability }}%</b></div>
-        {% if current_user.is_authenticated %}
-          <div class="muted"><a href="{{ url_for('history') }}">View History</a></div>
-        {% else %}
-          <div class="muted"><a href="{{ url_for('login') }}">Login to view history</a></div>
-        {% endif %}
-      </div>
-    {% endif %}
-  </div>
+.btn{
+  padding:14px 22px;
+  border-radius:10px;
+  text-decoration:none;
+  font-weight:600;
+}
 
-  <div class="card">
-    <h2>API</h2>
-    <p class="muted">
-      POST <code>/api/predict</code> with JSON body:
+.btn-primary{
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#08111f;
+}
+
+.btn-secondary{
+  border:1px solid var(--border);
+  color:var(--text);
+}
+
+.section{
+  margin-top:70px;
+}
+
+.section h2{
+  font-size:28px;
+  margin-bottom:20px;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+  gap:20px;
+}
+
+.card{
+  background:linear-gradient(180deg,var(--panel),var(--panel2));
+  border:1px solid var(--border);
+  padding:24px;
+  border-radius:16px;
+}
+
+.card h3{
+  margin-top:0;
+}
+
+.video-wrap{
+  position:relative;
+  padding-bottom:56.25%;
+  height:0;
+  overflow:hidden;
+  border-radius:18px;
+  border:1px solid var(--border);
+}
+
+.video-wrap iframe{
+  position:absolute;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+}
+
+.footer{
+  margin-top:80px;
+  padding:30px;
+  text-align:center;
+  color:var(--muted);
+  border-top:1px solid var(--border);
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <div class="hero">
+    <h1>Early Risk Alert AI™</h1>
+    <p>
+      Real-time predictive clinical intelligence platform for hospitals,
+      command centers, and remote patient monitoring.
+      Transforming healthcare from reactive response to proactive prevention.
     </p>
-    <pre class="code">{
-  "age": 50,
-  "bmi": 25.0,
-  "exercise_level": "Low",
-  "systolic_bp": 120,
-  "diastolic_bp": 80,
-  "heart_rate": 70
-}</pre>
+
+    <div class="buttons">
+      <a href="/dashboard" class="btn btn-primary">Open Live Command Center</a>
+      <a href="/investors" class="btn btn-secondary">Investor Overview</a>
+    </div>
   </div>
-{% endblock %}
+
+  <div class="section">
+    <h2>🎥 Live Product Demonstration</h2>
+    <div class="video-wrap">
+      <!-- REPLACE VIDEO ID BELOW -->
+      <iframe src="https://www.youtube.com/embed/YOUR_VIDEO_ID"
+              frameborder="0"
+              allowfullscreen></iframe>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>🏥 Platform Capabilities</h2>
+    <div class="grid">
+      <div class="card">
+        <h3>Real-Time Patient Monitoring</h3>
+        <p>Continuously tracks vital signs and detects early deterioration signals before emergencies occur.</p>
+      </div>
+      <div class="card">
+        <h3>AI Risk Detection</h3>
+        <p>Machine learning models analyze patterns to identify cardiovascular and clinical risk factors instantly.</p>
+      </div>
+      <div class="card">
+        <h3>Hospital Command Center</h3>
+        <p>Centralized dashboards allow care teams to monitor thousands of patients simultaneously.</p>
+      </div>
+      <div class="card">
+        <h3>Automated Clinical Alerts</h3>
+        <p>Intelligent alert prioritization ensures rapid response to critical patient events.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>🚀 Built for Modern Healthcare Systems</h2>
+    <div class="grid">
+      <div class="card">
+        <h3>Hospitals & Health Systems</h3>
+        <p>Enhance patient safety, reduce ICU overload, and improve early intervention outcomes.</p>
+      </div>
+      <div class="card">
+        <h3>Remote Patient Monitoring</h3>
+        <p>Monitor patients beyond facility walls with scalable AI-driven infrastructure.</p>
+      </div>
+      <div class="card">
+        <h3>Enterprise-Grade Infrastructure</h3>
+        <p>Secure, scalable cloud deployment designed for regulated healthcare environments.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    Early Risk Alert AI LLC • Milton MUNROE • Business: 732-724-7267
+  </div>
+
+</div>
+
+</body>
+</html>
