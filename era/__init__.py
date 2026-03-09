@@ -14,7 +14,7 @@ def create_app():
     db.init_app(app)
 
     # API routes (clean URLs for dashboard)
-    app.register_blueprint(api_bp, url_prefix="/api")
+    app.register_blueprint(api_bp, url_prefix="/api/v1")
 
     # Web routes (pages)
     app.register_blueprint(web_bp)
