@@ -1,161 +1,704 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Early Risk Alert AI — Investor Overview</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Early Risk Alert AI — Investor Overview</title>
+  <style>
+    :root{
+      --bg:#0b0f18;
+      --panel:#111827;
+      --panel2:#172033;
+      --border:rgba(255,255,255,.08);
+      --text:#ecf3ff;
+      --muted:#9eb0c7;
+      --accent:#7aa2ff;
+      --accent2:#5bd4ff;
+      --green:#28c76f;
+      --amber:#f5b84f;
+      --red:#ff6b6b;
+      --shadow:0 18px 48px rgba(0,0,0,.35);
+      --radius:20px;
+      --max:1240px;
+    }
 
-<style>
-body{
-  margin:0;
-  font-family:Arial, Helvetica, sans-serif;
-  background:#0b0f18;
-  color:#e8f0ff;
-}
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(122,162,255,.12), transparent 24%),
+        radial-gradient(circle at top right, rgba(91,212,255,.08), transparent 22%),
+        var(--bg);
+    }
 
-.container{
-  width:90%;
-  max-width:1200px;
-  margin:auto;
-  padding:60px 0;
-}
+    a{color:inherit;text-decoration:none}
+    .shell{max-width:var(--max);margin:0 auto;padding:22px 18px 70px}
+    .nav{
+      display:flex;justify-content:space-between;align-items:center;gap:18px;
+      flex-wrap:wrap;margin-bottom:26px
+    }
+    .brand-kicker{
+      font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+      color:#cfe0ff;font-weight:900
+    }
+    .brand-name{
+      font-size:22px;font-weight:950;letter-spacing:-.03em;margin-top:4px
+    }
+    .nav-links{
+      display:flex;gap:16px;align-items:center;flex-wrap:wrap;
+      font-size:14px;font-weight:800;color:#dce7ff
+    }
 
-h1{font-size:48px;margin-bottom:10px}
-h2{font-size:32px;margin:60px 0 20px}
-h3{margin-bottom:10px}
-p{color:#9eb0c7;line-height:1.6}
+    .btn{
+      display:inline-flex;align-items:center;justify-content:center;
+      padding:14px 18px;border-radius:14px;border:none;cursor:pointer;
+      text-decoration:none;font-weight:900;font-size:14px;
+      transition:transform .18s ease, opacity .18s ease, box-shadow .18s ease;
+      box-shadow:var(--shadow)
+    }
+    .btn:hover{transform:translateY(-1px);opacity:.96}
+    .btn-primary{
+      background:linear-gradient(180deg,var(--accent),var(--accent2));
+      color:#08111f
+    }
+    .btn-secondary{
+      background:#111b2f;color:var(--text);border:1px solid var(--border);box-shadow:none
+    }
+    .btn-outline{
+      background:transparent;color:#dfe9ff;border:1px solid var(--border);box-shadow:none
+    }
 
-.hero{
-  padding:100px 0 60px;
-}
+    .hero{
+      display:grid;grid-template-columns:1.35fr .9fr;gap:20px;align-items:stretch;
+      margin-top:8px
+    }
 
-.grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
-  gap:20px;
-}
+    .card{
+      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015));
+      border:1px solid var(--border);
+      border-radius:26px;
+      padding:28px;
+      backdrop-filter:blur(4px);
+    }
 
-.card{
-  background:#121a2b;
-  padding:24px;
-  border-radius:14px;
-}
+    .hero-kicker,.section-kicker{
+      font-size:12px;letter-spacing:.18em;text-transform:uppercase;
+      color:#dce7ff;font-weight:900;margin-bottom:14px
+    }
+    .headline{
+      font-size:68px;line-height:.94;letter-spacing:-.06em;margin:0 0 18px;
+      font-weight:950
+    }
+    .body-lg{font-size:19px;line-height:1.65;color:#dce7ff;margin:0 0 12px}
+    .body{font-size:17px;line-height:1.7;color:var(--muted);margin:0}
+    .hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:24px}
 
-.highlight{
-  background:linear-gradient(145deg,#182338,#121a2b);
-}
+    .mini-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+    .mini{
+      border:1px solid rgba(255,255,255,.06);
+      background:rgba(255,255,255,.03);
+      border-radius:18px;padding:16px;min-height:118px
+    }
+    .mini-k{
+      font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+      color:#b7c7e6;font-weight:900;margin-bottom:10px
+    }
+    .mini-v{font-size:22px;font-weight:950;letter-spacing:-.03em}
+    .mini-s{font-size:13px;color:#c4d3ef;line-height:1.45;margin-top:8px}
 
-.btn{
-  display:inline-block;
-  margin-top:18px;
-  padding:14px 22px;
-  border-radius:10px;
-  text-decoration:none;
-  font-weight:bold;
-  background:#5b8cff;
-  color:white;
-}
+    .section{margin-top:72px}
+    .section-title{
+      font-size:42px;letter-spacing:-.04em;font-weight:950;margin:0 0 12px
+    }
+    .section-sub{
+      font-size:18px;color:var(--muted);line-height:1.7;margin:0 0 24px
+    }
 
-.btn.secondary{
-  background:#1a2336;
-  border:1px solid rgba(255,255,255,.1);
-}
+    .grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
+    .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+    .grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
 
-.footer{
-  text-align:center;
-  padding:40px 0;
-  border-top:1px solid rgba(255,255,255,.08);
-  margin-top:80px;
-  color:#8aa0c8;
-}
-input{
-  width:100%;
-  padding:12px;
-  margin-bottom:12px;
-  border-radius:8px;
-  border:none;
-}
-</style>
+    .feature h3,.box h3,.dash-card h3,.metric-card h3,.contact-card h3{
+      margin:0 0 10px;font-size:22px;letter-spacing:-.03em
+    }
+    .feature p,.box p,.dash-card p,.metric-card p,.contact-card p{
+      margin:0;color:var(--muted);line-height:1.65
+    }
+
+    .quote{
+      font-size:28px;line-height:1.45;color:#eaf2ff;font-weight:800;letter-spacing:-.02em
+    }
+    .band{
+      background:linear-gradient(180deg, rgba(122,162,255,.08), rgba(122,162,255,.03));
+      border:1px solid rgba(122,162,255,.16);
+      border-radius:26px;padding:28px
+    }
+
+    .demo-frame{
+      margin-top:20px;background:#0a1220;border:1px solid var(--border);
+      border-radius:20px;padding:18px;overflow:hidden
+    }
+    .demo-top{
+      display:flex;justify-content:space-between;align-items:center;
+      gap:12px;flex-wrap:wrap;margin-bottom:16px
+    }
+    .live-pill{
+      display:inline-flex;align-items:center;gap:8px;padding:8px 12px;
+      border-radius:999px;background:rgba(40,199,111,.12);
+      border:1px solid rgba(40,199,111,.22);color:#cffff0;font-weight:900;
+      font-size:12px;letter-spacing:.08em;text-transform:uppercase
+    }
+    .dot{
+      width:10px;height:10px;border-radius:999px;background:var(--green);
+      box-shadow:0 0 12px rgba(40,199,111,.8)
+    }
+    .stream-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    .stream-card{
+      background:rgba(255,255,255,.03);border:1px solid var(--border);
+      border-radius:16px;padding:16px
+    }
+    .stream-title{font-size:13px;text-transform:uppercase;letter-spacing:.12em;color:#b9c9e8;font-weight:900}
+    .alert-list{margin-top:12px;display:grid;gap:10px}
+    .alert-item{
+      display:flex;justify-content:space-between;gap:14px;align-items:center;
+      background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.05);
+      padding:12px 14px;border-radius:14px
+    }
+    .alert-left{display:grid;gap:4px}
+    .alert-name{font-weight:900}
+    .alert-sub{font-size:13px;color:#b3c2de}
+    .badge{
+      font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.1em;
+      padding:7px 10px;border-radius:999px
+    }
+    .critical{background:rgba(255,107,107,.12);border:1px solid rgba(255,107,107,.2);color:#ffd2d2}
+    .warning{background:rgba(245,184,79,.12);border:1px solid rgba(245,184,79,.2);color:#ffe7b5}
+    .normal{background:rgba(40,199,111,.12);border:1px solid rgba(40,199,111,.2);color:#d7ffeb}
+
+    .metric-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+    .metric-card{
+      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015));
+      border:1px solid var(--border);border-radius:18px;padding:18px
+    }
+    .metric-k{
+      font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#b9c9e8;font-weight:900
+    }
+    .metric-v{
+      font-size:38px;font-weight:950;letter-spacing:-.04em;margin-top:8px
+    }
+    .bar{
+      height:10px;background:rgba(255,255,255,.06);border-radius:999px;overflow:hidden;margin-top:14px
+    }
+    .bar > span{
+      display:block;height:100%;
+      background:linear-gradient(90deg,var(--accent),var(--accent2));
+      border-radius:999px;
+      animation:grow 1.8s ease forwards;
+      transform-origin:left;
+    }
+
+    .dash-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:18px}
+    .dash-panel{
+      background:#0d1526;border:1px solid var(--border);border-radius:22px;padding:20px
+    }
+    .dash-row{
+      display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px
+    }
+    .dash-stat{
+      background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);
+      border-radius:16px;padding:14px
+    }
+    .dash-stat-k{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#adc0df;font-weight:900}
+    .dash-stat-v{font-size:28px;font-weight:950;margin-top:8px;letter-spacing:-.03em}
+    .list{
+      margin:14px 0 0;padding:0;list-style:none;display:grid;gap:10px
+    }
+    .list li{
+      background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);
+      border-radius:14px;padding:12px 14px;color:#d9e5fb
+    }
+
+    .form-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+    .field, textarea, select{
+      width:100%;background:#0c1424;color:var(--text);
+      border:1px solid var(--border);border-radius:14px;
+      padding:14px 15px;font:inherit;outline:none
+    }
+    textarea{min-height:130px;resize:vertical}
+    .full{grid-column:1 / -1}
+
+    .data-room{
+      display:grid;grid-template-columns:1.1fr .9fr;gap:18px
+    }
+    .doc-list{display:grid;gap:12px;margin-top:14px}
+    .doc{
+      display:flex;justify-content:space-between;gap:12px;align-items:center;
+      padding:14px;border:1px solid rgba(255,255,255,.05);border-radius:16px;
+      background:rgba(255,255,255,.025)
+    }
+    .doc strong{display:block}
+    .doc small{color:#9fb1d1}
+
+    .contact-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+    .contact-label{
+      font-size:11px;font-weight:900;letter-spacing:.15em;text-transform:uppercase;
+      color:#9fb3d8;margin-bottom:10px
+    }
+    .contact-value{
+      font-size:24px;font-weight:900;letter-spacing:-.03em
+    }
+    .contact-small{font-size:15px;color:#c2d1eb;line-height:1.5;word-break:break-word}
+
+    .footer{
+      margin-top:34px;padding-top:18px;border-top:1px solid rgba(255,255,255,.06);
+      text-align:center;color:#8aa0c8;font-size:14px
+    }
+
+    @keyframes grow{
+      from{width:0}
+      to{width:var(--w,70%)}
+    }
+
+    @media (max-width:1100px){
+      .hero,.dash-grid,.data-room{grid-template-columns:1fr}
+      .metric-grid,.grid-4{grid-template-columns:repeat(2,1fr)}
+      .contact-grid{grid-template-columns:repeat(2,1fr)}
+      .headline{font-size:56px}
+    }
+
+    @media (max-width:820px){
+      .grid-3,.grid-2,.form-grid,.stream-grid,.mini-grid,.metric-grid,.contact-grid,.grid-4{grid-template-columns:1fr}
+      .headline{font-size:44px}
+      .section-title{font-size:34px}
+      .brand-name{font-size:18px}
+      .shell{padding:18px 14px 56px}
+    }
+  </style>
 </head>
-
 <body>
+  <div class="shell">
+    <div class="nav">
+      <div>
+        <div class="brand-kicker">Investor Overview</div>
+        <div class="brand-name">Early Risk Alert AI</div>
+      </div>
 
-<div class="container hero">
-  <h1>Detect patient deterioration earlier.<br>Strengthen hospital response at scale.</h1>
-  <p>
-    Early Risk Alert AI is a predictive clinical intelligence platform designed to help
-    hospitals identify high-risk patients in real time and improve operational response.
-  </p>
-  <a href="#contact" class="btn">Contact Founder</a>
-</div>
+      <div class="nav-links">
+        <a href="#summary">Executive Summary</a>
+        <a href="#demo">Live Demo</a>
+        <a href="#valuation">Valuation</a>
+        <a href="#metrics">Metrics</a>
+        <a href="#intake">Investor Intake</a>
+        <a href="#data-room">Data Room</a>
+        <a href="#founder">Founder</a>
+        <a class="btn btn-primary" href="#contact">Contact Founder</a>
+      </div>
+    </div>
 
-<div class="container">
-  <h2>Investment Highlights</h2>
-  <div class="grid">
-    <div class="card highlight">
-      <h3>Enterprise SaaS</h3>
-      <p>Recurring platform revenue with enterprise hospital expansion potential.</p>
-    </div>
-    <div class="card highlight">
-      <h3>Hospital Systems</h3>
-      <p>Built for command centers, remote monitoring teams, and large care networks.</p>
-    </div>
-    <div class="card highlight">
-      <h3>Early Risk Detection</h3>
-      <p>AI models identify deterioration signals before emergencies escalate.</p>
-    </div>
-    <div class="card highlight">
-      <h3>Multi-Site Rollout</h3>
-      <p>Designed for scaling across facilities and enterprise networks.</p>
+    <section class="hero" id="summary">
+      <div class="card">
+        <div class="hero-kicker">AI-Powered Predictive Clinical Intelligence</div>
+        <h1 class="headline">Detect patient deterioration earlier. Strengthen hospital response at scale.</h1>
+        <p class="body-lg">
+          Early Risk Alert AI is a clinical intelligence platform built to help hospitals, health systems,
+          and remote monitoring programs identify elevated-risk patients in real time, prioritize
+          intervention, and centralize operational visibility.
+        </p>
+        <p class="body">
+          The platform transforms fragmented monitoring into a unified command-center model — combining
+          live patient visibility, AI-assisted risk prioritization, investor-ready product infrastructure,
+          and enterprise-grade operational oversight.
+        </p>
+
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="#demo">View Live Product Demo</a>
+          <a class="btn btn-secondary" href="/">Open Hospital Command Center</a>
+          <a class="btn btn-outline" href="/deck">Download Pitch Deck PDF</a>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-kicker">Investment Snapshot</div>
+        <div class="mini-grid">
+          <div class="mini">
+            <div class="mini-k">Model</div>
+            <div class="mini-v">Enterprise SaaS</div>
+            <div class="mini-s">Recurring platform revenue with enterprise expansion potential.</div>
+          </div>
+          <div class="mini">
+            <div class="mini-k">Primary Buyer</div>
+            <div class="mini-v">Hospitals</div>
+            <div class="mini-s">Built for health systems, command centers, and remote monitoring teams.</div>
+          </div>
+          <div class="mini">
+            <div class="mini-k">Use Case</div>
+            <div class="mini-v">Early Risk Detection</div>
+            <div class="mini-s">Identify deterioration signals before emergencies escalate.</div>
+          </div>
+          <div class="mini">
+            <div class="mini-k">Expansion</div>
+            <div class="mini-v">Multi-Site Rollout</div>
+            <div class="mini-s">Designed for scale across facilities and enterprise networks.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="valuation">
+      <h2 class="section-title">Executive Summary</h2>
+      <p class="section-sub">
+        Early Risk Alert AI sits at the intersection of hospital efficiency, predictive monitoring,
+        and scalable healthcare software infrastructure.
+      </p>
+
+      <div class="grid-3">
+        <div class="card feature">
+          <h3>The Problem</h3>
+          <p>Hospitals face delayed intervention, fragmented remote monitoring, staffing pressure, and limited real-time visibility across large patient populations.</p>
+        </div>
+        <div class="card feature">
+          <h3>The Solution</h3>
+          <p>A command-center platform that centralizes patient monitoring, prioritizes risk signals, and gives teams faster decision support before deterioration escalates.</p>
+        </div>
+        <div class="card feature">
+          <h3>Why Now</h3>
+          <p>Remote monitoring adoption, clinician burnout, value-based care, and health system efficiency demands create strong timing for intelligent operational tools.</p>
+        </div>
+      </div>
+
+      <div class="band" style="margin-top:18px">
+        <div class="quote">
+          “Early Risk Alert AI centralizes live patient monitoring, AI-assisted risk detection,
+          and command-center visibility into one premium clinical intelligence platform.”
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="demo">
+      <h2 class="section-title">Live Demo + Alert Streaming</h2>
+      <p class="section-sub">
+        Show investors a polished, real-time preview of live alert activity, command-center visibility,
+        and clinical prioritization.
+      </p>
+
+      <div class="demo-frame">
+        <div class="demo-top">
+          <div class="live-pill"><span class="dot"></span> Live alert streaming active</div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <a class="btn btn-primary" href="/">Open Command Center</a>
+            <a class="btn btn-secondary" href="#intake">Request Private Demo</a>
+          </div>
+        </div>
+
+        <div class="stream-grid">
+          <div class="stream-card">
+            <div class="stream-title">Current alert queue</div>
+            <div class="alert-list">
+              <div class="alert-item">
+                <div class="alert-left">
+                  <div class="alert-name">Patient A102 — Cardiac Trend Escalation</div>
+                  <div class="alert-sub">HR 121 · SpO2 91% · BP variance detected</div>
+                </div>
+                <div class="badge critical">Critical</div>
+              </div>
+              <div class="alert-item">
+                <div class="alert-left">
+                  <div class="alert-name">Patient B233 — Respiratory Risk Signal</div>
+                  <div class="alert-sub">RR elevated · O2 dip · trend acceleration</div>
+                </div>
+                <div class="badge warning">High</div>
+              </div>
+              <div class="alert-item">
+                <div class="alert-left">
+                  <div class="alert-name">Patient C318 — Stable Monitoring</div>
+                  <div class="alert-sub">No escalation in last 2 hours</div>
+                </div>
+                <div class="badge normal">Stable</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="stream-card">
+            <div class="stream-title">Command center preview</div>
+            <div class="alert-list">
+              <div class="alert-item">
+                <div class="alert-left">
+                  <div class="alert-name">Active Monitored Patients</div>
+                  <div class="alert-sub">Unified cross-site visibility</div>
+                </div>
+                <div class="badge normal">1,284</div>
+              </div>
+              <div class="alert-item">
+                <div class="alert-left">
+                  <div class="alert-name">Open Alerts</div>
+                  <div class="alert-sub">AI-prioritized intervention queue</div>
+                </div>
+                <div class="badge warning">46</div>
+              </div>
+              <div class="alert-item">
+                <div class="alert-left">
+                  <div class="alert-name">Critical Escalations</div>
+                  <div class="alert-sub">Immediate review recommended</div>
+                </div>
+                <div class="badge critical">8</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="metrics">
+      <h2 class="section-title">Animated Metrics</h2>
+      <p class="section-sub">
+        Use these headline metrics to support investor conversations, demo meetings, and seed round outreach.
+      </p>
+
+      <div class="metric-grid">
+        <div class="metric-card">
+          <div class="metric-k">Patients Monitored</div>
+          <div class="metric-v">1,284</div>
+          <div class="bar"><span style="--w:86%"></span></div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-k">Alerts Last Hour</div>
+          <div class="metric-v">93</div>
+          <div class="bar"><span style="--w:72%"></span></div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-k">Health Systems Pipeline</div>
+          <div class="metric-v">12</div>
+          <div class="bar"><span style="--w:64%"></span></div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-k">Projected ARR Path</div>
+          <div class="metric-v">$2.4M</div>
+          <div class="bar"><span style="--w:58%"></span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2 class="section-title">Investor Platform Features</h2>
+      <p class="section-sub">
+        One bundled investor experience for lead capture, live clinical product visibility, executive access,
+        and seed round readiness.
+      </p>
+
+      <div class="grid-4">
+        <div class="card feature">
+          <h3>⭐ Investor CRM Capture</h3>
+          <p>Capture inbound investor interest, qualify conversations, and track outreach through a clean executive intake flow.</p>
+        </div>
+        <div class="card feature">
+          <h3>⭐ Live Alert Streaming</h3>
+          <p>Present real-time AI monitoring activity and hospital command-center visibility during demos and investor meetings.</p>
+        </div>
+        <div class="card feature">
+          <h3>⭐ Admin Investor Dashboard</h3>
+          <p>Provide leadership-level visibility into traction, meetings, data room status, and partnership pipeline.</p>
+        </div>
+        <div class="card feature">
+          <h3>⭐ Seed Round Data Room</h3>
+          <p>Organize core fundraising materials, product summaries, strategic documents, and downloadable pitch assets.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2 class="section-title">Admin Investor Dashboard Preview</h2>
+      <p class="section-sub">
+        A private dashboard concept for managing investor relationships, traction signals, and executive follow-up.
+      </p>
+
+      <div class="dash-grid">
+        <div class="dash-panel">
+          <h3 style="margin:0 0 4px;font-size:28px;letter-spacing:-.03em">Dashboard Overview</h3>
+          <p class="body">High-level visibility across investor engagement, active fundraising conversations, and platform traction.</p>
+
+          <div class="dash-row">
+            <div class="dash-stat">
+              <div class="dash-stat-k">Qualified Investors</div>
+              <div class="dash-stat-v">18</div>
+            </div>
+            <div class="dash-stat">
+              <div class="dash-stat-k">Meetings Scheduled</div>
+              <div class="dash-stat-v">7</div>
+            </div>
+            <div class="dash-stat">
+              <div class="dash-stat-k">Deck Requests</div>
+              <div class="dash-stat-v">29</div>
+            </div>
+          </div>
+
+          <ul class="list">
+            <li>Investor pipeline segmented by stage: new inquiry, intro call, diligence, strategic follow-up.</li>
+            <li>Centralized record of deck requests, command-center demos, and partnership interest.</li>
+            <li>Executive notes for valuation discussions, objections, and next-step follow-ups.</li>
+          </ul>
+        </div>
+
+        <div class="dash-panel">
+          <h3 style="margin:0 0 4px;font-size:28px;letter-spacing:-.03em">Current Priorities</h3>
+          <p class="body">Suggested executive actions for seed round outreach and strategic partner conversion.</p>
+
+          <ul class="list">
+            <li>Finalize investor intro funnel and response workflow.</li>
+            <li>Open private data room access for approved prospects.</li>
+            <li>Schedule product demo sessions tied to command-center preview.</li>
+            <li>Publish traction highlights and milestone-based funding narrative.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="intake">
+      <h2 class="section-title">Investor Intake Form</h2>
+      <p class="section-sub">
+        A clean capture section for investor interest, partner outreach, and deck request management.
+      </p>
+
+      <div class="card">
+        <form>
+          <div class="form-grid">
+            <input class="field" type="text" placeholder="Full Name" />
+            <input class="field" type="email" placeholder="Email Address" />
+            <input class="field" type="text" placeholder="Fund / Organization" />
+            <select class="field">
+              <option>Investor Type</option>
+              <option>Angel Investor</option>
+              <option>Seed Fund</option>
+              <option>Strategic Partner</option>
+              <option>Hospital / Health System</option>
+            </select>
+            <input class="field" type="text" placeholder="Check Size / Interest Level" />
+            <input class="field" type="text" placeholder="Best Contact Number" />
+            <textarea class="full" placeholder="Message, diligence interests, or meeting request"></textarea>
+          </div>
+
+          <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:16px">
+            <a class="btn btn-primary" href="#data-room">Request Investor Access</a>
+            <a class="btn btn-secondary" href="/deck">Download Deck First</a>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section class="section" id="data-room">
+      <h2 class="section-title">Seed Round Data Room</h2>
+      <p class="section-sub">
+        A premium fundraising section for core diligence materials and controlled investor access.
+      </p>
+
+      <div class="data-room">
+        <div class="card">
+          <div class="section-kicker">Available Materials</div>
+          <div class="doc-list">
+            <div class="doc">
+              <div>
+                <strong>Pitch Deck</strong>
+                <small>Company narrative, market opportunity, business model, and fundraising ask.</small>
+              </div>
+              <a class="btn btn-secondary" href="/deck">Open</a>
+            </div>
+            <div class="doc">
+              <div>
+                <strong>Executive Summary</strong>
+                <small>Problem, solution, traction positioning, expansion logic, and strategic timing.</small>
+              </div>
+              <a class="btn btn-secondary" href="#summary">View</a>
+            </div>
+            <div class="doc">
+              <div>
+                <strong>Product Demonstration</strong>
+                <small>Command-center preview, live alert streaming, and investor demo experience.</small>
+              </div>
+              <a class="btn btn-secondary" href="#demo">View</a>
+            </div>
+            <div class="doc">
+              <div>
+                <strong>Metrics + Growth Snapshot</strong>
+                <small>Operational visibility, pipeline metrics, and enterprise rollout positioning.</small>
+              </div>
+              <a class="btn btn-secondary" href="#metrics">View</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="section-kicker">Access Control</div>
+          <h3 style="margin:0 0 10px;font-size:28px;letter-spacing:-.03em">Private investor review</h3>
+          <p class="body">
+            This section can serve as the starting point for a protected seed round data room.
+            Approved investors can be granted access to additional materials, diligence documents,
+            strategic partnership summaries, and updated fundraising milestones.
+          </p>
+
+          <div style="margin-top:18px;display:grid;gap:12px">
+            <input class="field" type="password" placeholder="Enter investor access code" />
+            <a class="btn btn-primary" href="#contact">Request Access</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="founder">
+      <h2 class="section-title">Founder</h2>
+      <p class="section-sub">
+        Mission-driven leadership focused on predictive healthcare infrastructure, earlier intervention,
+        and scalable hospital intelligence systems.
+      </p>
+
+      <div class="grid-2">
+        <div class="card box">
+          <h3>Milton MUNROE</h3>
+          <p>
+            Founder of Early Risk Alert AI. Focused on advancing predictive healthcare through intelligent
+            monitoring infrastructure, operational visibility, and earlier clinical intervention.
+          </p>
+        </div>
+        <div class="card box">
+          <h3>Founder Mission</h3>
+          <p>
+            Build a premium clinical intelligence platform that helps healthcare teams identify risk sooner,
+            improve response speed, and scale operational decision support across hospitals and care networks.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="contact">
+      <h2 class="section-title">Investor Contact</h2>
+      <p class="section-sub">
+        Open to investor discussions, strategic partnerships, and product demonstration conversations.
+      </p>
+
+      <div class="contact-grid">
+        <div class="card contact-card">
+          <div class="contact-label">Founder</div>
+          <div class="contact-value">Milton MUNROE</div>
+        </div>
+        <div class="card contact-card">
+          <div class="contact-label">Email</div>
+          <div class="contact-small">info@earlyriskalertai.com</div>
+        </div>
+        <div class="card contact-card">
+          <div class="contact-label">Business Phone</div>
+          <div class="contact-value">732-724-7267</div>
+        </div>
+        <div class="card contact-card">
+          <div class="contact-label">Primary CTA</div>
+          <div class="contact-small">Request investor deck, schedule meeting, or open product demo.</div>
+        </div>
+      </div>
+    </section>
+
+    <div class="footer">
+      Early Risk Alert AI LLC • Investor Overview • Milton MUNROE • 732-724-7267
     </div>
   </div>
-</div>
-
-<div class="container">
-  <h2>Investor Access Suite</h2>
-  <div class="grid">
-    <div class="card">
-      <h3>⭐ Investor CRM Capture</h3>
-      <p>Secure system for tracking investor interest and managing fundraising communication.</p>
-    </div>
-    <div class="card">
-      <h3>⭐ Live Alert Streaming</h3>
-      <p>Real-time demonstration of AI risk detection and hospital alert prioritization.</p>
-    </div>
-    <div class="card">
-      <h3>⭐ Admin Investor Dashboard</h3>
-      <p>Private executive dashboard with traction metrics and partnership visibility.</p>
-    </div>
-    <div class="card">
-      <h3>⭐ Seed Round Data Room</h3>
-      <p>Secure access to financials, pitch materials, product documentation, and roadmap.</p>
-    </div>
-  </div>
-</div>
-
-<div class="container">
-  <h2>Investor Interest Form</h2>
-  <div class="card">
-    <input type="text" placeholder="Full Name">
-    <input type="email" placeholder="Email Address">
-    <input type="text" placeholder="Firm / Organization">
-    <a class="btn">Request Investor Deck</a>
-  </div>
-</div>
-
-<div class="container" id="contact">
-  <h2>Contact Founder</h2>
-  <div class="card">
-    <p><strong>Milton MUNROE</strong><br>
-    Founder, Early Risk Alert AI</p>
-    <p>Email: info@earlyriskalertai.com<br>
-    Business Phone: 732-724-7267</p>
-  </div>
-</div>
-
-<div class="footer">
-  Early Risk Alert AI LLC • Investor Overview
-</div>
-
 </body>
 </html>
