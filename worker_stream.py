@@ -1,185 +1,194 @@
-import json
 import os
+import json
 import time
-from redis import Redis
+import random
+from datetime import datetime, timezone
 
-from era import create_app
-from era.extensions import db
-from sqlalchemy import text
+from sqlalchemy import create_engine, text
 
-from era.streaming import REDIS_URL, VITALS_STREAM_KEY, VITALS_CONSUMER_GROUP
+DATABASE_URL = os.getenv("DATABASE_URL")
+if not DATABASE_URL:
+    raise RuntimeError("DATABASE_URL is not set")
 
-# Import helpers from routes.py (or duplicate them here if you prefer)
-# We’ll duplicate tiny essentials here to avoid circular imports.
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
-def _as_float(x):
-    try:
-        if x is None:
-            return None
-        return float(x)
-    except Exception:
-        return None
+engine = create_engine(DATABASE_URL, pool_pre_ping=True)
 
-def detect_anomalies(vitals):
-    alerts = []
-    hr = _as_float(vitals.get("heart_rate"))
-    sys_bp = _as_float(vitals.get("systolic_bp") or vitals.get("sys_bp"))
-    dia_bp = _as_float(vitals.get("diastolic_bp") or vitals.get("dia_bp"))
-    spo2 = _as_float(vitals.get("spo2"))
-    temp_c = _as_float(vitals.get("temp_c"))
-    temp_f = _as_float(vitals.get("temp_f"))
-    if temp_f is None and temp_c is not None:
-        temp_f = (temp_c * 9.0 / 5.0) + 32.0
+TENANT_ID = "demo"
 
-    if hr is not None:
-        if hr >= 130:
-            alerts.append({"type": "tachycardia", "severity": "high", "message": f"Heart rate very high ({hr})."})
-        elif hr >= 110:
-            alerts.append({"type": "tachycardia", "severity": "medium", "message": f"Heart rate elevated ({hr})."})
-        elif hr <= 40:
-            alerts.append({"type": "bradycardia", "severity": "high", "message": f"Heart rate very low ({hr})."})
-        elif hr <= 50:
-            alerts.append({"type": "bradycardia", "severity": "medium", "message": f"Heart rate low ({hr})."})
+PATIENTS = [
+    {"patient_id": "p101", "baseline_hr": 82, "baseline_sys": 126, "baseline_dia": 82, "baseline_spo2": 97},
+    {"patient_id": "p202", "baseline_hr": 76, "baseline_sys": 122, "baseline_dia": 79, "baseline_spo2": 98},
+    {"patient_id": "p303", "baseline_hr": 88, "baseline_sys": 132, "baseline_dia": 86, "baseline_spo2": 96},
+    {"patient_id": "p404", "baseline_hr": 72, "baseline_sys": 118, "baseline_dia": 76, "baseline_spo2": 99},
+]
 
-    if sys_bp is not None and dia_bp is not None:
-        if sys_bp >= 180 or dia_bp >= 120:
-            alerts.append({"type": "hypertensive_crisis", "severity": "high",
-                           "message": f"BP crisis range ({sys_bp}/{dia_bp})."})
-        elif sys_bp >= 160 or dia_bp >= 100:
-            alerts.append({"type": "high_bp", "severity": "medium", "message": f"High BP ({sys_bp}/{dia_bp})."})
-        elif sys_bp <= 90 or dia_bp <= 60:
-            alerts.append({"type": "low_bp", "severity": "medium", "message": f"Low BP ({sys_bp}/{dia_bp})."})
+def utc_now():
+    return datetime.now(timezone.utc).isoformat()
 
-    if spo2 is not None:
-        if spo2 < 90:
-            alerts.append({"type": "low_spo2", "severity": "high", "message": f"Low oxygen saturation ({spo2}%)."})
-        elif spo2 < 93:
-            alerts.append({"type": "low_spo2", "severity": "medium", "message": f"Borderline oxygen saturation ({spo2}%)."})
+def clamp(value, low, high):
+    return max(low, min(high, value))
 
-    if temp_f is not None:
-        if temp_f >= 103:
-            alerts.append({"type": "fever", "severity": "high", "message": f"High fever ({round(temp_f, 1)}F)."})
-        elif temp_f >= 100.4:
-            alerts.append({"type": "fever", "severity": "medium", "message": f"Fever ({round(temp_f, 1)}F)."})
-        elif temp_f <= 95:
-            alerts.append({"type": "hypothermia", "severity": "high", "message": f"Low temperature ({round(temp_f, 1)}F)."})
+def generate_vitals(p):
+    event_mode = random.choices(
+        ["normal", "watch", "critical"],
+        weights=[60, 28, 12],
+        k=1
+    )[0]
 
-    return alerts
+    hr = p["baseline_hr"] + random.randint(-8, 8)
+    sys_bp = p["baseline_sys"] + random.randint(-10, 10)
+    dia_bp = p["baseline_dia"] + random.randint(-6, 6)
+    spo2 = p["baseline_spo2"] + random.randint(-2, 1)
 
+    alert_type = None
+    alert_message = None
+    severity = None
+
+    if event_mode == "watch":
+        bump = random.choice(["hr", "bp", "spo2"])
+        if bump == "hr":
+            hr += random.randint(18, 28)
+            alert_type, alert_message, severity = "tachycardia", "Heart rate elevated", "high"
+        elif bump == "bp":
+            sys_bp += random.randint(18, 30)
+            dia_bp += random.randint(10, 18)
+            alert_type, alert_message, severity = "hypertension", "Blood pressure elevated", "high"
+        else:
+            spo2 -= random.randint(4, 7)
+            alert_type, alert_message, severity = "low_spo2", "Oxygen saturation dropping", "high"
+
+    elif event_mode == "critical":
+        bump = random.choice(["hr", "bp", "spo2"])
+        if bump == "hr":
+            hr += random.randint(30, 45)
+            alert_type, alert_message, severity = "tachycardia", "Heart rate critical", "critical"
+        elif bump == "bp":
+            sys_bp += random.randint(28, 40)
+            dia_bp += random.randint(16, 24)
+            alert_type, alert_message, severity = "hypertension", "Blood pressure critical", "critical"
+        else:
+            spo2 -= random.randint(8, 12)
+            alert_type, alert_message, severity = "low_spo2", "Oxygen saturation critical", "critical"
+
+    hr = clamp(hr, 45, 180)
+    sys_bp = clamp(sys_bp, 90, 210)
+    dia_bp = clamp(dia_bp, 50, 130)
+    spo2 = clamp(spo2, 78, 100)
+
+    return {
+        "heart_rate": hr,
+        "systolic_bp": sys_bp,
+        "diastolic_bp": dia_bp,
+        "spo2": spo2,
+        "alert_type": alert_type,
+        "alert_message": alert_message,
+        "severity": severity,
+    }
 
 def ensure_tables():
-    db.session.execute(text("""
+    with engine.begin() as conn:
+        conn.execute(text("""
         CREATE TABLE IF NOT EXISTS vitals_events (
-          id BIGSERIAL PRIMARY KEY,
-          tenant_id TEXT NOT NULL,
-          patient_id TEXT NOT NULL,
-          source TEXT,
-          event_ts TIMESTAMPTZ,
-          payload_json TEXT NOT NULL,
-          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+            id BIGSERIAL PRIMARY KEY,
+            tenant_id TEXT NOT NULL,
+            patient_id TEXT NOT NULL,
+            event_ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            payload_json JSONB NOT NULL
         );
-    """))
-    db.session.execute(text("""
-        CREATE INDEX IF NOT EXISTS idx_vitals_events_tenant_patient_created
-        ON vitals_events(tenant_id, patient_id, created_at DESC);
-    """))
-    db.session.execute(text("""
-        CREATE TABLE IF NOT EXISTS alerts (
-          id BIGSERIAL PRIMARY KEY,
-          tenant_id TEXT NOT NULL,
-          patient_id TEXT NOT NULL,
-          alert_type TEXT NOT NULL,
-          severity TEXT NOT NULL,
-          message TEXT NOT NULL,
-          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-        );
-    """))
-    db.session.execute(text("""
-        CREATE INDEX IF NOT EXISTS idx_alerts_tenant_patient_created
-        ON alerts(tenant_id, patient_id, created_at DESC);
-    """))
-    db.session.commit()
+        """))
 
+        conn.execute(text("""
+        CREATE TABLE IF NOT EXISTS alerts (
+            id BIGSERIAL PRIMARY KEY,
+            tenant_id TEXT NOT NULL,
+            patient_id TEXT NOT NULL,
+            alert_type TEXT NOT NULL,
+            severity TEXT NOT NULL,
+            message TEXT NOT NULL,
+            created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
+        """))
+
+def insert_event(patient_id, payload):
+    with engine.begin() as conn:
+        conn.execute(
+            text("""
+            INSERT INTO vitals_events (tenant_id, patient_id, payload_json)
+            VALUES (:tenant_id, :patient_id, CAST(:payload_json AS JSONB))
+            """),
+            {
+                "tenant_id": TENANT_ID,
+                "patient_id": patient_id,
+                "payload_json": json.dumps(payload),
+            }
+        )
+
+def insert_alert(patient_id, alert_type, severity, message):
+    with engine.begin() as conn:
+        conn.execute(
+            text("""
+            INSERT INTO alerts (tenant_id, patient_id, alert_type, severity, message)
+            VALUES (:tenant_id, :patient_id, :alert_type, :severity, :message)
+            """),
+            {
+                "tenant_id": TENANT_ID,
+                "patient_id": patient_id,
+                "alert_type": alert_type,
+                "severity": severity,
+                "message": message,
+            }
+        )
+
+def trim_old_data():
+    with engine.begin() as conn:
+        conn.execute(text("""
+            DELETE FROM alerts
+            WHERE id NOT IN (
+                SELECT id FROM alerts
+                ORDER BY created_at DESC
+                LIMIT 100
+            )
+        """))
+        conn.execute(text("""
+            DELETE FROM vitals_events
+            WHERE id NOT IN (
+                SELECT id FROM vitals_events
+                ORDER BY created_at DESC
+                LIMIT 500
+            )
+        """))
 
 def main():
-    if not REDIS_URL:
-        raise RuntimeError("REDIS_URL not set")
+    ensure_tables()
+    print("Live dashboard feeder started...")
 
-    app = create_app()
-    r = Redis.from_url(REDIS_URL, decode_responses=True)
+    while True:
+        for p in PATIENTS:
+            result = generate_vitals(p)
+            payload = {
+                "event_ts": utc_now(),
+                "heart_rate": result["heart_rate"],
+                "systolic_bp": result["systolic_bp"],
+                "diastolic_bp": result["diastolic_bp"],
+                "spo2": result["spo2"],
+            }
 
-    consumer_name = os.getenv("WORKER_NAME") or f"worker-{os.getpid()}"
+            insert_event(p["patient_id"], payload)
 
-    with app.app_context():
-        ensure_tables()
+            if result["alert_type"]:
+                insert_alert(
+                    p["patient_id"],
+                    result["alert_type"],
+                    result["severity"],
+                    result["alert_message"],
+                )
 
-        # Create consumer group if missing
-        try:
-            r.xgroup_create(VITALS_STREAM_KEY, VITALS_CONSUMER_GROUP, id="0-0", mkstream=True)
-        except Exception as e:
-            # BUSYGROUP is expected if already exists
-            if "BUSYGROUP" not in str(e):
-                raise
-
-        print(f"[stream-worker] group={VITALS_CONSUMER_GROUP} consumer={consumer_name} stream={VITALS_STREAM_KEY}")
-
-        while True:
-            # Read up to N messages, block briefly
-            resp = r.xreadgroup(
-                groupname=VITALS_CONSUMER_GROUP,
-                consumername=consumer_name,
-                streams={VITALS_STREAM_KEY: ">"},
-                count=100,
-                block=2000,
-            )
-
-            if not resp:
-                continue
-
-            for stream_name, messages in resp:
-                for msg_id, fields in messages:
-                    try:
-                        tenant_id = fields.get("tenant_id", "demo-tenant")
-                        patient_id = fields.get("patient_id", "unknown")
-                        source = fields.get("source", "manual")
-                        event_ts = fields.get("event_ts") or None
-                        vitals = json.loads(fields.get("vitals_json") or "{}")
-
-                        # Save vitals
-                        db.session.execute(
-                            text("""
-                                INSERT INTO vitals_events (tenant_id, patient_id, source, event_ts, payload_json)
-                                VALUES (:t, :p, :s, :ts, :j)
-                            """),
-                            {"t": tenant_id, "p": patient_id, "s": source, "ts": event_ts, "j": json.dumps(vitals)},
-                        )
-
-                        # Detect + save alerts
-                        alerts = detect_anomalies(vitals)
-                        for a in alerts:
-                            db.session.execute(
-                                text("""
-                                    INSERT INTO alerts (tenant_id, patient_id, alert_type, severity, message)
-                                    VALUES (:t, :p, :at, :sev, :msg)
-                                """),
-                                {
-                                    "t": tenant_id,
-                                    "p": patient_id,
-                                    "at": a.get("type", "unknown"),
-                                    "sev": a.get("severity", "medium"),
-                                    "msg": a.get("message", ""),
-                                },
-                            )
-
-                        db.session.commit()
-
-                        # Ack message (remove from pending list for this group)
-                        r.xack(VITALS_STREAM_KEY, VITALS_CONSUMER_GROUP, msg_id)
-
-                    except Exception as e:
-                        db.session.rollback()
-                        # Don’t ack so it remains pending; you can add retries/DLQ later
-                        print(f"[stream-worker] ERROR msg_id={msg_id} err={e}")
+        trim_old_data()
+        print("Inserted live vitals + alerts...")
+        time.sleep(6)
 
 if __name__ == "__main__":
     main()
