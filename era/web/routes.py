@@ -4,7 +4,7 @@ import os
 web_bp = Blueprint("web", __name__)
 
 COMMAND_CENTER_HTML = r"""
-<!doctype html>
+<!doctype html> 
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -828,4 +828,3 @@ def pitch_deck():
         as_attachment=True,
         download_name="Early_Risk_Alert_AI_Pitch_Deck.pdf",
     )
-```
