@@ -13,9 +13,13 @@ def create_app():
 
     db.init_app(app)
 
-    app.register_blueprint(api_bp, url_prefix="/api/v1")
+    # API routes (clean URLs for dashboard)
+    app.register_blueprint(api_bp, url_prefix="/api")
+
+    # Web routes (pages)
     app.register_blueprint(web_bp)
 
+    # Health check (for Render + monitoring)
     @app.get("/healthz")
     def healthz():
         db_ok = True
@@ -26,16 +30,11 @@ def create_app():
             db_ok = False
             db_error = str(e)
 
-        return (
-            jsonify(
-                {
-                    "status": "ok" if db_ok else "degraded",
-                    "service": "early-risk-alert",
-                    "db_ok": db_ok,
-                    "db_error": db_error,
-                }
-            ),
-            200 if db_ok else 503,
-        )
+        return jsonify({
+            "status": "ok" if db_ok else "degraded",
+            "service": "early-risk-alert",
+            "db_ok": db_ok,
+            "db_error": db_error,
+        })
 
     return app
