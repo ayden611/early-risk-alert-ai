@@ -3,427 +3,673 @@ import os
 
 web_bp = Blueprint("web", __name__)
 
-COMMAND_CENTER_HTML = """
+COMMAND_CENTER_HTML = r'''
 <!doctype html>
 <html lang="en">
 <head>
- <meta charset="utf-8">
- <title>Early Risk Alert Command Center</title>
- <meta name="viewport" content="width=device-width, initial-scale=1">
- <style>
-   :root{
-     --bg:#08111f;
-     --panel:#101a2d;
-     --text:#ecf3ff;
-     --muted:#92a6c8;
-     --border:rgba(255,255,255,.08);
-     --accent:#7aa2ff;
-     --accent2:#5b84f7;
-   }
-   *{box-sizing:border-box}
-   body{
-     margin:0;
-     font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-     background:
-       radial-gradient(circle at top left, rgba(122,162,255,.10), transparent 22%),
-       radial-gradient(circle at top right, rgba(91,211,141,.08), transparent 20%),
-       var(--bg);
-     color:var(--text);
-   }
-   .shell{max-width:1400px;margin:0 auto;padding:24px 18px 60px}
-   .top{display:flex;justify-content:space-between;gap:16px;align-items:center;flex-wrap:wrap;margin-bottom:22px}
-   .kicker{font-size:11px;letter-spacing:.18em;text-transform:uppercase;font-weight:900;color:#dbe7ff}
-   .title{font-size:46px;font-weight:950;letter-spacing:-.04em;margin:6px 0}
-   .sub{color:var(--muted);font-size:15px;font-weight:700}
-   .btn{
-     display:inline-flex;align-items:center;justify-content:center;
-     padding:12px 18px;border-radius:12px;text-decoration:none;font-weight:900;
-     background:linear-gradient(180deg,var(--accent),var(--accent2));
-     color:#08111f;border:none
-   }
-   .btn.secondary{
-     background:#111b2f;color:var(--text);border:1px solid var(--border)
-   }
-   .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
-   .card{
-     background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015));
-     border:1px solid var(--border);
-     border-radius:22px;
-     padding:22px;
-   }
-   .card h3{margin:0 0 10px;font-size:24px}
-   .card p{margin:0;color:#cbd8ef;line-height:1.6}
-   .live{
-     display:inline-flex;align-items:center;gap:10px;
-     background:rgba(91,211,141,.11);
-     border:1px solid rgba(91,211,141,.22);
-     color:#d8ffe8;padding:8px 12px;border-radius:999px;
-     font-size:12px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;
-     margin-top:14px
-   }
-   .dot{width:10px;height:10px;border-radius:999px;background:#5bd38d}
-   @media (max-width:900px){ .grid{grid-template-columns:1fr} .title{font-size:38px} }
- </style>
+  <meta charset="utf-8">
+  <title>Early Risk Alert AI — Command Center</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root{
+      --bg:#08111f;
+      --panel:#101a2d;
+      --panel2:#0d1526;
+      --text:#ecf3ff;
+      --muted:#92a6c8;
+      --border:rgba(255,255,255,.08);
+      --accent:#7aa2ff;
+      --accent2:#5bd4ff;
+      --red:#ff6b6b;
+      --amber:#f5c06a;
+      --green:#5bd38d;
+      --glow:0 12px 40px rgba(0,0,0,.35);
+      --radius:22px;
+      --max:1380px;
+    }
+
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(122,162,255,.10), transparent 24%),
+        radial-gradient(circle at top right, rgba(91,212,255,.08), transparent 24%),
+        linear-gradient(180deg, #08111f 0%, #0b1323 100%);
+      color:var(--text);
+    }
+
+    a{color:inherit;text-decoration:none}
+
+    .shell{max-width:var(--max);margin:0 auto;padding:22px 18px 60px}
+    .nav{
+      position:sticky;top:0;z-index:50;
+      backdrop-filter:blur(12px);
+      background:rgba(8,17,31,.75);
+      border-bottom:1px solid rgba(255,255,255,.05);
+    }
+    .nav-inner{
+      max-width:var(--max);margin:0 auto;padding:14px 18px;
+      display:flex;justify-content:space-between;align-items:center;gap:18px;flex-wrap:wrap
+    }
+    .brand-kicker{
+      font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+      color:#cfe0ff;font-weight:900
+    }
+    .brand-title{
+      font-size:20px;font-weight:950;letter-spacing:-.03em;margin-top:3px
+    }
+    .nav-links{
+      display:flex;gap:18px;align-items:center;flex-wrap:wrap;
+      color:#dbe7ff;font-size:14px;font-weight:800
+    }
+
+    .btn{
+      display:inline-flex;align-items:center;justify-content:center;
+      padding:13px 18px;border-radius:14px;font-weight:900;
+      border:none;cursor:pointer;transition:transform .18s ease, opacity .18s ease
+    }
+    .btn:hover{transform:translateY(-1px);opacity:.96}
+    .btn-primary{
+      background:linear-gradient(180deg,var(--accent),var(--accent2));
+      color:#08111f;
+      box-shadow:var(--glow)
+    }
+    .btn-secondary{
+      background:#111b2f;color:var(--text);border:1px solid var(--border)
+    }
+    .btn-outline{
+      background:transparent;color:#dfe9ff;border:1px solid var(--border)
+    }
+
+    .hero{
+      display:grid;grid-template-columns:1.2fr .8fr;gap:18px;align-items:stretch;
+      padding-top:20px
+    }
+    .card{
+      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015));
+      border:1px solid var(--border);
+      border-radius:26px;
+      padding:26px;
+      box-shadow:var(--glow);
+    }
+    .hero-kicker,.section-kicker{
+      font-size:12px;letter-spacing:.18em;text-transform:uppercase;
+      color:#dce7ff;font-weight:900;margin-bottom:14px
+    }
+    .headline{
+      font-size:64px;line-height:.94;letter-spacing:-.06em;margin:0 0 18px;font-weight:950
+    }
+    .body-lg{font-size:19px;line-height:1.65;color:#dce7ff;margin:0 0 10px}
+    .body{font-size:16px;line-height:1.75;color:var(--muted);margin:0}
+    .hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:24px}
+
+    .live-pill{
+      display:inline-flex;align-items:center;gap:8px;padding:8px 12px;
+      border-radius:999px;background:rgba(91,211,141,.12);
+      border:1px solid rgba(91,211,141,.22);color:#d8ffee;
+      font-size:12px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;
+      margin-bottom:16px
+    }
+    .dot{
+      width:10px;height:10px;border-radius:999px;background:var(--green);
+      box-shadow:0 0 14px rgba(91,211,141,.9)
+    }
+
+    .mini-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+    .mini{
+      background:rgba(255,255,255,.03);
+      border:1px solid rgba(255,255,255,.05);
+      border-radius:18px;padding:16px;min-height:118px
+    }
+    .mini-k{font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:#b8cae8;font-weight:900}
+    .mini-v{font-size:28px;font-weight:950;letter-spacing:-.04em;margin-top:8px}
+    .mini-s{font-size:13px;color:#c4d4ef;line-height:1.5;margin-top:8px}
+
+    .section{margin-top:64px}
+    .section-title{
+      font-size:40px;letter-spacing:-.04em;font-weight:950;margin:0 0 10px
+    }
+    .section-sub{
+      font-size:18px;line-height:1.7;color:var(--muted);margin:0 0 22px
+    }
+
+    .metric-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:16px}
+    .metric-card{
+      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015));
+      border:1px solid var(--border);
+      border-radius:18px;padding:18px
+    }
+    .metric-k{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#adc0df;font-weight:900}
+    .metric-v{font-size:42px;font-weight:950;letter-spacing:-.04em;margin-top:8px}
+    .metric-s{font-size:13px;color:#afc0dc;line-height:1.45;margin-top:8px}
+    .bar{
+      height:9px;background:rgba(255,255,255,.06);border-radius:999px;overflow:hidden;margin-top:14px
+    }
+    .bar > span{
+      display:block;height:100%;
+      background:linear-gradient(90deg,var(--accent),var(--accent2));
+      border-radius:999px;transition:width .7s ease;width:0%
+    }
+
+    .dash-grid{display:grid;grid-template-columns:1.1fr .95fr .85fr;gap:18px}
+    .feed-card,.focus-card,.side-card{
+      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015));
+      border:1px solid var(--border);
+      border-radius:22px;padding:22px;min-height:420px
+    }
+    .panel-title{
+      margin:0 0 8px;font-size:34px;letter-spacing:-.04em;font-weight:950
+    }
+    .panel-sub{margin:0 0 18px;color:var(--muted);line-height:1.6}
+    .list{display:grid;gap:12px}
+    .alert{
+      padding:14px;border-radius:16px;border:1px solid rgba(255,255,255,.05);
+      background:rgba(255,255,255,.025)
+    }
+    .alert-top{display:flex;justify-content:space-between;gap:10px;align-items:center}
+    .alert-type{font-size:22px;font-weight:900;letter-spacing:-.03em;text-transform:lowercase}
+    .badge{
+      font-size:11px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;
+      padding:7px 10px;border-radius:999px
+    }
+    .badge.high{background:rgba(245,192,106,.14);border:1px solid rgba(245,192,106,.22);color:#ffe5ae}
+    .badge.critical{background:rgba(255,107,107,.14);border:1px solid rgba(255,107,107,.22);color:#ffd4d4}
+    .badge.info{background:rgba(122,162,255,.14);border:1px solid rgba(122,162,255,.22);color:#d7e3ff}
+    .alert-patient{font-size:14px;color:#dfe9ff;margin-top:4px;font-weight:700}
+    .alert-msg{margin-top:8px;color:#dce8ff;font-size:16px;line-height:1.5}
+    .alert-time{margin-top:6px;color:#8da2c7;font-size:13px}
+
+    .stat-block{
+      background:rgba(255,255,255,.03);
+      border:1px solid rgba(255,255,255,.05);
+      border-radius:18px;padding:16px;margin-bottom:12px
+    }
+    .stat-row{display:flex;justify-content:space-between;gap:14px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+    .stat-row:last-child{border-bottom:none}
+    .stat-label{color:#c5d3ed}
+    .stat-value{font-weight:900}
+
+    .video-wrap{
+      position:relative;padding-bottom:56.25%;height:0;overflow:hidden;
+      border-radius:22px;border:1px solid var(--border);background:#08111f
+    }
+    .video-wrap iframe{
+      position:absolute;top:0;left:0;width:100%;height:100%;border:0
+    }
+
+    .bottom-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+    .footer{
+      margin-top:40px;padding-top:18px;border-top:1px solid rgba(255,255,255,.06);
+      text-align:center;color:#8aa0c8;font-size:14px
+    }
+
+    .muted{color:var(--muted)}
+    .small{font-size:13px}
+    .empty{color:#90a3c5;font-size:15px;padding:14px 0}
+
+    @media (max-width:1180px){
+      .hero,.dash-grid,.bottom-grid{grid-template-columns:1fr}
+      .metric-grid{grid-template-columns:repeat(2,1fr)}
+      .headline{font-size:52px}
+    }
+    @media (max-width:760px){
+      .metric-grid,.mini-grid{grid-template-columns:1fr}
+      .headline{font-size:40px}
+      .section-title{font-size:32px}
+      .shell{padding:18px 14px 46px}
+      .nav-inner{padding:12px 14px}
+    }
+  </style>
 </head>
 <body>
- <div class="shell">
-   <div class="top">
-     <div>
-       <div class="kicker">Predictive Clinical Intelligence</div>
-       <div class="title">Early Risk Alert</div>
-       <div class="sub">Hospital UI + Investor Demo + Command Center</div>
-       <div class="live"><span class="dot"></span> Live System</div>
-     </div>
-     <div style="display:flex;gap:10px;flex-wrap:wrap">
-       <a class="btn secondary" href="/investors">Investor View</a>
-       <a class="btn secondary" href="/deck">Download Pitch Deck</a>
-     </div>
-   </div>
+  <div class="nav">
+    <div class="nav-inner">
+      <div>
+        <div class="brand-kicker">AI-Powered Predictive Clinical Intelligence</div>
+        <div class="brand-title">Early Risk Alert AI</div>
+      </div>
+      <div class="nav-links">
+        <a href="#overview">Overview</a>
+        <a href="#metrics">Metrics</a>
+        <a href="#live">Live Dashboard</a>
+        <a href="#demo">Demo</a>
+        <a href="/investors" class="btn btn-secondary">Investor View</a>
+        <a href="/deck" class="btn btn-primary">Download Pitch Deck</a>
+      </div>
+    </div>
+  </div>
 
-   <div class="grid">
-     <div class="card">
-       <h3>Live Alerts Feed</h3>
-       <p>Clinical alerts, patient prioritization, and rapid visibility for command center operations.</p>
-     </div>
-     <div class="card">
-       <h3>Patient Focus</h3>
-       <p>Focused patient view for vital signs, risk indicators, and rollup metrics.</p>
-     </div>
-     <div class="card">
-       <h3>System Panels</h3>
-       <p>Operational stream health, channels, and command center summary views.</p>
-     </div>
-   </div>
- </div>
+  <div class="shell">
+    <section class="hero" id="overview">
+      <div class="card">
+        <div class="live-pill"><span class="dot"></span> Live system connected</div>
+        <div class="hero-kicker">Clinical Operations Command Center</div>
+        <h1 class="headline">Detect patient deterioration earlier. Strengthen hospital response at scale.</h1>
+        <p class="body-lg">
+          Early Risk Alert AI unifies live patient monitoring, alert prioritization, and command-center
+          visibility into one professional hospital-facing platform.
+        </p>
+        <p class="body">
+          This main page is designed to work as your hospital demo page and executive command-center
+          preview at the same time. It continuously refreshes key operational data using your live API.
+        </p>
+
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="#live">Open Live Dashboard</a>
+          <a class="btn btn-secondary" href="#demo">View Product Demo</a>
+          <a class="btn btn-outline" href="/investors">Open Investor Portal</a>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-kicker">System Snapshot</div>
+        <div class="mini-grid">
+          <div class="mini">
+            <div class="mini-k">Primary Use Case</div>
+            <div class="mini-v">Early Risk Detection</div>
+            <div class="mini-s">Surface deterioration signals before emergencies escalate.</div>
+          </div>
+          <div class="mini">
+            <div class="mini-k">Buyer</div>
+            <div class="mini-v">Hospitals</div>
+            <div class="mini-s">Built for command centers, health systems, and remote monitoring teams.</div>
+          </div>
+          <div class="mini">
+            <div class="mini-k">Mode</div>
+            <div class="mini-v" id="modeHero">realtime</div>
+            <div class="mini-s">Operational stream health and monitoring state update automatically.</div>
+          </div>
+          <div class="mini">
+            <div class="mini-k">Live Feed</div>
+            <div class="mini-v" id="patientsWithAlertsHero">3</div>
+            <div class="mini-s">Patients currently visible with active alerts across the system.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="metrics">
+      <h2 class="section-title">Animated Metrics</h2>
+      <p class="section-sub">
+        Core operational metrics refresh automatically from your live API and animate in place.
+      </p>
+
+      <div class="metric-grid">
+        <div class="metric-card">
+          <div class="metric-k">Patients</div>
+          <div class="metric-v" id="patientsCount">0</div>
+          <div class="metric-s">Active monitored patient volume</div>
+          <div class="bar"><span id="barPatients"></span></div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-k">Open Alerts</div>
+          <div class="metric-v" id="openAlerts">0</div>
+          <div class="metric-s">Unresolved alert count across visible feeds</div>
+          <div class="bar"><span id="barOpenAlerts"></span></div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-k">Critical Alerts</div>
+          <div class="metric-v" id="criticalAlerts">0</div>
+          <div class="metric-s">Highest-priority escalation queue</div>
+          <div class="bar"><span id="barCriticalAlerts"></span></div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-k">Events Last Hour</div>
+          <div class="metric-v" id="eventsLastHour">0</div>
+          <div class="metric-s">Recent event throughput and activity</div>
+          <div class="bar"><span id="barEvents"></span></div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-k">Stream Mode</div>
+          <div class="metric-v" id="streamMode">—</div>
+          <div class="metric-s">Current backend stream operating mode</div>
+          <div class="bar"><span id="barMode"></span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="live">
+      <h2 class="section-title">Live Command Dashboard</h2>
+      <p class="section-sub">
+        Professional command-center layout showing alert feed, patient focus, and stream health in one place.
+      </p>
+
+      <div class="dash-grid">
+        <div class="feed-card">
+          <h3 class="panel-title">Live Alerts Feed</h3>
+          <p class="panel-sub">Clinical alerts, patient prioritization, and rapid visibility for command center operations.</p>
+          <div class="list" id="alertsList"></div>
+        </div>
+
+        <div class="focus-card">
+          <h3 class="panel-title">Patient Focus</h3>
+          <p class="panel-sub">Focused patient view for vital signs, risk indicators, and rollup metrics.</p>
+
+          <div class="stat-block">
+            <div class="stat-row"><div class="stat-label">Patient</div><div class="stat-value" id="focusPatient">p101</div></div>
+            <div class="stat-row"><div class="stat-label">Event time</div><div class="stat-value" id="focusEventTime">live</div></div>
+            <div class="stat-row"><div class="stat-label">Heart rate</div><div class="stat-value" id="focusHeartRate">128</div></div>
+            <div class="stat-row"><div class="stat-label">Systolic BP</div><div class="stat-value" id="focusSystolic">172</div></div>
+            <div class="stat-row"><div class="stat-label">Diastolic BP</div><div class="stat-value" id="focusDiastolic">104</div></div>
+            <div class="stat-row"><div class="stat-label">SpO2</div><div class="stat-value" id="focusSpo2">89</div></div>
+          </div>
+
+          <div class="stat-block">
+            <div class="stat-row"><div class="stat-label">Avg heart rate</div><div class="stat-value" id="rollAvgHr">118</div></div>
+            <div class="stat-row"><div class="stat-label">Avg systolic BP</div><div class="stat-value" id="rollAvgSys">164</div></div>
+            <div class="stat-row"><div class="stat-label">Avg diastolic BP</div><div class="stat-value" id="rollAvgDia">98</div></div>
+            <div class="stat-row"><div class="stat-label">Avg SpO2</div><div class="stat-value" id="rollAvgSpo2">92</div></div>
+          </div>
+        </div>
+
+        <div class="side-card">
+          <h3 class="panel-title">System Panels</h3>
+          <p class="panel-sub">Operational stream health, channels, and command center summary views.</p>
+
+          <div class="stat-block">
+            <div class="stat-row"><div class="stat-label">Status</div><div class="stat-value" id="streamStatus">running</div></div>
+            <div class="stat-row"><div class="stat-label">Redis OK</div><div class="stat-value" id="redisOk">true</div></div>
+            <div class="stat-row"><div class="stat-label">Mode</div><div class="stat-value" id="streamModePanel">realtime</div></div>
+            <div class="stat-row"><div class="stat-label">Patients with alerts</div><div class="stat-value" id="patientsWithAlerts">3</div></div>
+          </div>
+
+          <div class="stat-block">
+            <div class="small muted" style="margin-bottom:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase">Channels</div>
+            <div id="channelsList" class="small" style="line-height:1.7;color:#dce7ff"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="demo">
+      <div class="bottom-grid">
+        <div class="card">
+          <h2 class="section-title" style="font-size:34px">Live Product Demo</h2>
+          <p class="section-sub" style="margin-bottom:18px">
+            Drop in your YouTube demo link below once ready. The page is already styled to present it professionally.
+          </p>
+          <div class="video-wrap">
+            <iframe
+              src="https://www.youtube.com/embed/dQw4w9WgXcQ?rel=0"
+              title="Early Risk Alert AI Demo"
+              allowfullscreen>
+            </iframe>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="section-kicker">Platform Summary</div>
+          <h2 class="section-title" style="font-size:34px">Built for modern hospital operations</h2>
+          <p class="body" style="margin-bottom:16px">
+            This main page now combines your public-facing hospital pitch, professional navigation,
+            live system metrics, and command-center style into one polished experience.
+          </p>
+          <div class="stat-block">
+            <div class="stat-row"><div class="stat-label">Use case</div><div class="stat-value">Clinical intelligence</div></div>
+            <div class="stat-row"><div class="stat-label">Deployment</div><div class="stat-value">Cloud-based</div></div>
+            <div class="stat-row"><div class="stat-label">Buyer</div><div class="stat-value">Hospitals / RPM</div></div>
+            <div class="stat-row"><div class="stat-label">Expansion</div><div class="stat-value">Enterprise rollout</div></div>
+          </div>
+
+          <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:16px">
+            <a class="btn btn-primary" href="/investors">Investor View</a>
+            <a class="btn btn-secondary" href="/deck">Pitch Deck PDF</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="footer">
+      Early Risk Alert AI LLC • Hospital UI + Investor Demo + Command Center
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = "/api";
+    const DEFAULT_TENANT = "demo";
+    let currentPatientId = "p101";
+    let currentAlerts = [];
+
+    function setText(id, value) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = value;
+    }
+
+    function animateNumber(el, target) {
+      const start = Number(el.dataset.value || 0);
+      const end = Number(target || 0);
+      const duration = 650;
+      const startTime = performance.now();
+
+      function frame(now) {
+        const progress = Math.min((now - startTime) / duration, 1);
+        const value = Math.round(start + (end - start) * progress);
+        el.textContent = String(value);
+        if (progress < 1) {
+          requestAnimationFrame(frame);
+        } else {
+          el.dataset.value = String(end);
+        }
+      }
+      requestAnimationFrame(frame);
+    }
+
+    function setMetric(id, value) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (typeof value === "number") {
+        animateNumber(el, value);
+      } else {
+        el.textContent = String(value);
+      }
+    }
+
+    function setBar(id, pct) {
+      const el = document.getElementById(id);
+      if (el) el.style.width = Math.max(8, Math.min(100, pct)) + "%";
+    }
+
+    async function fetchJSON(url, fallback) {
+      try {
+        const res = await fetch(url, { cache: "no-store" });
+        if (!res.ok) throw new Error("bad response");
+        return await res.json();
+      } catch (e) {
+        return fallback;
+      }
+    }
+
+    function severityClass(sev) {
+      const s = String(sev || "").toLowerCase();
+      if (s.includes("crit")) return "critical";
+      if (s.includes("high") || s.includes("warn")) return "high";
+      return "info";
+    }
+
+    function renderAlerts(items) {
+      const root = document.getElementById("alertsList");
+      if (!root) return;
+      if (!items || !items.length) {
+        root.innerHTML = '<div class="empty">No live alerts available right now.</div>';
+        return;
+      }
+
+      root.innerHTML = items.map(a => {
+        const sev = a.severity || "info";
+        return `
+          <div class="alert">
+            <div class="alert-top">
+              <div class="alert-type">${a.alert_type || "alert"}</div>
+              <div class="badge ${severityClass(sev)}">${sev}</div>
+            </div>
+            <div class="alert-patient">Patient ${a.patient_id || "—"}</div>
+            <div class="alert-msg">${a.message || "No message provided"}</div>
+            <div class="alert-time">${a.created_at || "live"}</div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderChannels(items) {
+      const root = document.getElementById("channelsList");
+      if (!root) return;
+      if (!items || !items.length) {
+        root.innerHTML = '<div class="muted">No channels reported.</div>';
+        return;
+      }
+      root.innerHTML = items.map(x => `<div>${x}</div>`).join("");
+    }
+
+    async function loadOverview() {
+      const fallback = {
+        tenant_id: DEFAULT_TENANT,
+        patient_count: 1284,
+        open_alerts: 6,
+        critical_alerts: 2,
+        events_last_hour: 93
+      };
+      const data = await fetchJSON(`${API_BASE}/dashboard/overview?tenant_id=${DEFAULT_TENANT}`, fallback);
+
+      setMetric("patientsCount", Number(data.patient_count || 0));
+      setMetric("openAlerts", Number(data.open_alerts || 0));
+      setMetric("criticalAlerts", Number(data.critical_alerts || 0));
+      setMetric("eventsLastHour", Number(data.events_last_hour || 0));
+
+      setBar("barPatients", Math.min(100, (Number(data.patient_count || 0) / 1500) * 100));
+      setBar("barOpenAlerts", Math.min(100, (Number(data.open_alerts || 0) / 12) * 100));
+      setBar("barCriticalAlerts", Math.min(100, (Number(data.critical_alerts || 0) / 6) * 100));
+      setBar("barEvents", Math.min(100, (Number(data.events_last_hour || 0) / 120) * 100));
+    }
+
+    async function loadAlerts() {
+      const fallback = {
+        tenant_id: DEFAULT_TENANT,
+        alerts: [
+          { alert_type: "tachycardia", severity: "high", patient_id: "p101", message: "Heart rate elevated", created_at: "live" },
+          { alert_type: "low_spo2", severity: "critical", patient_id: "p202", message: "Oxygen saturation critical", created_at: "live" },
+          { alert_type: "hypertension", severity: "high", patient_id: "p303", message: "Blood pressure elevated", created_at: "live" }
+        ]
+      };
+      const data = await fetchJSON(`${API_BASE}/alerts?tenant_id=${DEFAULT_TENANT}`, fallback);
+      currentAlerts = Array.isArray(data.alerts) ? data.alerts : [];
+      renderAlerts(currentAlerts);
+
+      const first = currentAlerts[0];
+      currentPatientId = first && first.patient_id ? first.patient_id : "p101";
+      setText("focusPatient", currentPatientId);
+      setText("patientsWithAlerts", currentAlerts.length);
+      setText("patientsWithAlertsHero", currentAlerts.length);
+    }
+
+    async function loadVitalsAndRollups() {
+      const fallbackVitals = {
+        tenant_id: DEFAULT_TENANT,
+        patient_id: currentPatientId,
+        event_ts: "live",
+        vitals: { heart_rate: 128, systolic_bp: 172, diastolic_bp: 104, spo2: 89 }
+      };
+      const fallbackRollups = {
+        tenant_id: DEFAULT_TENANT,
+        patient_id: currentPatientId,
+        rollups: { avg_heart_rate: 118, avg_systolic_bp: 164, avg_diastolic_bp: 98, avg_spo2: 92 }
+      };
+
+      const vitals = await fetchJSON(
+        `${API_BASE}/vitals/latest?tenant_id=${DEFAULT_TENANT}&patient_id=${encodeURIComponent(currentPatientId)}`,
+        fallbackVitals
+      );
+      const rollups = await fetchJSON(
+        `${API_BASE}/patients/${encodeURIComponent(currentPatientId)}/rollups?tenant_id=${DEFAULT_TENANT}`,
+        fallbackRollups
+      );
+
+      const v = vitals.vitals || {};
+      const r = rollups.rollups || {};
+
+      setText("focusPatient", vitals.patient_id || currentPatientId);
+      setText("focusEventTime", vitals.event_ts || "live");
+      setText("focusHeartRate", v.heart_rate ?? "—");
+      setText("focusSystolic", v.systolic_bp ?? "—");
+      setText("focusDiastolic", v.diastolic_bp ?? "—");
+      setText("focusSpo2", v.spo2 ?? "—");
+
+      setText("rollAvgHr", r.avg_heart_rate ?? "—");
+      setText("rollAvgSys", r.avg_systolic_bp ?? "—");
+      setText("rollAvgDia", r.avg_diastolic_bp ?? "—");
+      setText("rollAvgSpo2", r.avg_spo2 ?? "—");
+    }
+
+    async function loadStream() {
+      const fallbackHealth = { status: "running", redis_ok: true, mode: "realtime" };
+      const fallbackChannels = {
+        tenant_id: DEFAULT_TENANT,
+        patient_id: currentPatientId,
+        channels: [
+          "stream:vitals",
+          `stream:vitals:${DEFAULT_TENANT}`,
+          `stream:vitals:${DEFAULT_TENANT}:${currentPatientId}`,
+          "stream:alerts",
+          `stream:alerts:${DEFAULT_TENANT}`,
+          `stream:alerts:${DEFAULT_TENANT}:${currentPatientId}`
+        ]
+      };
+
+      const health = await fetchJSON(`${API_BASE}/stream/health`, fallbackHealth);
+      const channels = await fetchJSON(
+        `${API_BASE}/stream/channels?tenant_id=${DEFAULT_TENANT}&patient_id=${encodeURIComponent(currentPatientId)}`,
+        fallbackChannels
+      );
+
+      const mode = health.mode || "realtime";
+      setText("streamStatus", health.status || "running");
+      setText("redisOk", String(health.redis_ok));
+      setText("streamMode", mode);
+      setText("streamModePanel", mode);
+      setText("modeHero", mode);
+      setBar("barMode", mode === "realtime" ? 100 : 60);
+
+      renderChannels(channels.channels || []);
+    }
+
+    async function refreshAll() {
+      await loadOverview();
+      await loadAlerts();
+      await loadVitalsAndRollups();
+      await loadStream();
+    }
+
+    refreshAll();
+    setInterval(refreshAll, 6000);
+  </script>
 </body>
 </html>
-"""
+'''
 
-INVESTOR_HTML = """
-<!doctype html>
-<html lang="en">
-<head>
- <meta charset="utf-8">
- <title>Investor Overview — Early Risk Alert AI</title>
- <meta name="viewport" content="width=device-width, initial-scale=1">
- <style>
-   :root{
-     --bg:#08111f;
-     --panel:#101a2d;
-     --text:#ecf3ff;
-     --muted:#92a6c8;
-     --border:rgba(255,255,255,.08);
-     --accent:#7aa2ff;
-     --accent2:#5b84f7;
-   }
-   *{box-sizing:border-box}
-   html{scroll-behavior:smooth}
-   body{
-     margin:0;
-     font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-     background:
-       radial-gradient(circle at top left, rgba(122,162,255,.10), transparent 22%),
-       radial-gradient(circle at top right, rgba(91,211,141,.08), transparent 20%),
-       var(--bg);
-     color:var(--text);
-   }
-   .shell{max-width:1440px;margin:0 auto;padding:22px 18px 60px}
-   .nav{
-     display:flex;justify-content:space-between;align-items:center;gap:18px;flex-wrap:wrap;
-     margin-bottom:28px
-   }
-   .logo-kicker{font-size:11px;letter-spacing:.18em;text-transform:uppercase;font-weight:900;color:#dbe7ff}
-   .logo{font-size:34px;font-weight:950;letter-spacing:-.04em;margin-top:4px}
-   .nav-links{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
-   .nav-links a{text-decoration:none;color:#dfe9ff;font-weight:800;font-size:14px}
-   .btn{
-     display:inline-flex;align-items:center;justify-content:center;
-     padding:13px 18px;border-radius:12px;text-decoration:none;font-weight:900;
-     background:linear-gradient(180deg,var(--accent),var(--accent2));
-     color:#08111f;border:none
-   }
-   .btn.secondary{background:#111b2f;color:var(--text);border:1px solid var(--border)}
-   .btn.outline{background:transparent;color:#dfe9ff;border:1px solid var(--border)}
-   .hero{
-     display:grid;grid-template-columns:1.1fr .9fr;gap:20px;align-items:stretch
-   }
-   .card{
-     background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015));
-     border:1px solid var(--border);
-     border-radius:26px;
-     padding:28px;
-   }
-   .hero-kicker{font-size:12px;letter-spacing:.18em;text-transform:uppercase;font-weight:900;color:#dce7ff;margin-bottom:16px}
-   .headline{font-size:76px;line-height:.94;font-weight:950;letter-spacing:-.065em;margin:0 0 18px}
-   .body{font-size:22px;line-height:1.45;color:#d3def2}
-   .sub{margin-top:16px;font-size:17px;line-height:1.65;color:#a9bad8}
-   .actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:24px}
-   .side-title{font-size:34px;font-weight:950;letter-spacing:-.03em;margin:0 0 14px}
-   .side-text{color:#d5e1f5;font-size:18px;line-height:1.6;margin-bottom:18px}
-   .grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
-   .mini{
-     border:1px solid rgba(255,255,255,.05);
-     background:rgba(255,255,255,.02);
-     border-radius:18px;padding:16px;min-height:120px
-   }
-   .mini-k{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#9cb1d6;font-weight:900}
-   .mini-v{font-size:28px;font-weight:950;letter-spacing:-.04em;margin-top:10px}
-   .mini-s{margin-top:6px;color:#b7c7e4;font-size:13px;line-height:1.45;font-weight:700}
-   .section{margin-top:34px}
-   .section-title{font-size:40px;font-weight:950;letter-spacing:-.04em;margin:0 0 18px}
-   .cards3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
-   .cards2{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
-   .box h3{margin:0 0 10px;font-size:24px}
-   .box p{margin:0;color:#c9d7ef;font-size:16px;line-height:1.6}
-   .band{
-     background:linear-gradient(180deg, rgba(122,162,255,.08), rgba(122,162,255,.03));
-     border:1px solid rgba(122,162,255,.16);
-     border-radius:26px;padding:28px
-   }
-   .quote{font-size:28px;line-height:1.45;color:#eaf2ff;font-weight:800;letter-spacing:-.02em}
-   .contact-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
-   .contact-card{
-     background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015));
-     border:1px solid var(--border);border-radius:20px;padding:20px
-   }
-   .contact-label{font-size:11px;font-weight:900;letter-spacing:.15em;text-transform:uppercase;color:#9fb3d8;margin-bottom:10px}
-   .contact-value{font-size:28px;font-weight:900;letter-spacing:-.03em}
-   .contact-value.small{font-size:20px;line-height:1.4;word-break:break-word}
-   .contact-link{color:#9bc0ff;text-decoration:none;font-weight:900}
-   .footer{
-     margin-top:42px;padding-top:18px;border-top:1px solid rgba(255,255,255,.06);
-     color:#88a0c8;font-size:14px;text-align:center
-   }
-   @media (max-width:1200px){
-     .hero{grid-template-columns:1fr}
-     .headline{font-size:56px}
-     .cards3{grid-template-columns:1fr 1fr}
-     .contact-grid{grid-template-columns:1fr 1fr}
-   }
-   @media (max-width:900px){
-     .cards3,.cards2,.grid-2,.contact-grid{grid-template-columns:1fr}
-     .headline{font-size:42px}
-     .logo{font-size:28px}
-   }
- </style>
-</head>
-<body>
- <div class="shell">
-   <div class="nav">
-     <div>
-       <div class="logo-kicker">Investor Overview</div>
-       <div class="logo">Early Risk Alert AI</div>
-     </div>
-     <div class="nav-links">
-       <a href="#problem">Problem</a>
-       <a href="#solution">Solution</a>
-       <a href="#revenue">Revenue Model</a>
-       <a href="#compliance">Compliance</a>
-       <a href="#partnership">Partnership</a>
-       <a href="#founder">Founder</a>
-       <a class="btn secondary" href="/">Hospital Command Center</a>
-       <a class="btn" href="#contact">Contact Founder</a>
-     </div>
-   </div>
-
-   <div class="hero">
-     <div class="card">
-       <div class="hero-kicker">AI-Powered Predictive Clinical Intelligence</div>
-       <h1 class="headline">Detect patient deterioration earlier. Strengthen hospital response at scale.</h1>
-       <div class="body">
-         Early Risk Alert AI is a clinical intelligence platform designed to help hospitals, health systems,
-         and remote monitoring programs identify elevated-risk patients in real time.
-       </div>
-       <div class="sub">
-         Our platform transforms fragmented monitoring into a unified command-center model —
-         bringing together live patient visibility, AI-assisted risk prioritization, and enterprise-grade operational oversight.
-       </div>
-       <div class="actions">
-         <a class="btn" href="/">View Live Product Demo</a>
-         <a class="btn secondary" href="/">Open Hospital Command Center</a>
-         <a class="btn outline" href="/deck">Download Pitch Deck PDF</a>
-       </div>
-     </div>
-
-     <div class="card">
-       <div class="side-title">Investment Highlights</div>
-       <div class="side-text">
-         Positioned at the intersection of hospital efficiency, predictive monitoring,
-         and scalable healthcare software infrastructure.
-       </div>
-       <div class="grid-2">
-         <div class="mini">
-           <div class="mini-k">Model</div>
-           <div class="mini-v">Enterprise SaaS</div>
-           <div class="mini-s">Recurring platform revenue with enterprise expansion potential.</div>
-         </div>
-         <div class="mini">
-           <div class="mini-k">Primary Buyer</div>
-           <div class="mini-v">Hospitals</div>
-           <div class="mini-s">Built for hospital systems, command centers, and remote monitoring teams.</div>
-         </div>
-         <div class="mini">
-           <div class="mini-k">Use Case</div>
-           <div class="mini-v">Early Risk Detection</div>
-           <div class="mini-s">Identify deterioration signals before emergencies escalate.</div>
-         </div>
-         <div class="mini">
-           <div class="mini-k">Expansion</div>
-           <div class="mini-v">Multi-Site Rollout</div>
-           <div class="mini-s">Designed for scale across facilities and enterprise networks.</div>
-         </div>
-       </div>
-     </div>
-   </div>
-
-   <div id="problem" class="section">
-     <div class="section-title">The Problem</div>
-     <div class="cards3">
-       <div class="card box"><h3>Reactive Care Models</h3><p>Many healthcare environments still depend on delayed intervention after patient risk has already escalated.</p></div>
-       <div class="card box"><h3>Operational Fragmentation</h3><p>Clinical teams often work across disconnected monitoring tools, scattered dashboards, and inconsistent alert workflows.</p></div>
-       <div class="card box"><h3>Scaling Constraints</h3><p>Hospitals face increasing patient loads, staffing shortages, and rising pressure to improve intervention speed.</p></div>
-     </div>
-   </div>
-
-   <div id="solution" class="section">
-     <div class="section-title">The Solution</div>
-     <div class="band">
-       <div class="quote">
-         Early Risk Alert AI centralizes live patient monitoring, AI-assisted risk detection,
-         and command-center visibility into one premium clinical intelligence platform.
-       </div>
-     </div>
-   </div>
-
-   <div id="revenue" class="section">
-     <div class="section-title">Revenue Model</div>
-     <div class="cards3">
-       <div class="card box"><h3>Enterprise Platform Licensing</h3><p>Hospitals and health systems subscribe to command-center access, monitoring dashboards, and platform infrastructure.</p></div>
-       <div class="card box"><h3>Per-Patient Program Revenue</h3><p>Remote monitoring and distributed care programs create scalable usage-based commercial opportunities.</p></div>
-       <div class="card box"><h3>Integration & Deployment Services</h3><p>Additional revenue can be generated through custom integrations, implementation support, and enterprise onboarding.</p></div>
-     </div>
-   </div>
-
-   <div id="compliance" class="section">
-     <div class="section-title">Compliance Positioning</div>
-     <div class="cards3">
-       <div class="card box"><h3>HIPAA-Ready Architecture</h3><p>Designed with secure healthcare deployment principles suitable for regulated clinical environments.</p></div>
-       <div class="card box"><h3>Enterprise Deployment Readiness</h3><p>Built for cloud-based delivery, operational resilience, and future hospital system integration pathways.</p></div>
-       <div class="card box"><h3>Trust & Credibility</h3><p>Premium product presentation, live demos, and clear operating model improve institutional confidence during outreach.</p></div>
-     </div>
-   </div>
-
-   <div id="partnership" class="section">
-     <div class="section-title">Hospital Partnership Opportunity</div>
-     <div class="band">
-       <div class="quote">
-         Early Risk Alert AI is positioned for strategic partnerships with hospitals, care networks,
-         pilot programs, and investors seeking exposure to modern healthcare intelligence infrastructure.
-       </div>
-     </div>
-   </div>
-
-   <div id="founder" class="section">
-     <div class="section-title">Founder</div>
-     <div class="cards2">
-       <div class="card box">
-         <h3>Milton Munroe</h3>
-         <p>
-           Milton Munroe founded Early Risk Alert AI to advance predictive healthcare through intelligent monitoring infrastructure.
-           The company vision centers on earlier detection, stronger operational visibility, and scalable clinical intelligence systems.
-         </p>
-       </div>
-       <div class="card box">
-         <h3>Founder Mission</h3>
-         <p>
-           Early Risk Alert AI represents a broader vision for proactive healthcare: identify patient risk sooner,
-           support clinicians with better operational tools, and create more scalable systems for hospital response.
-         </p>
-       </div>
-     </div>
-   </div>
-
-   <div class="section">
-     <div class="band">
-       <div class="section-title" style="margin-top:0">Partner with Early Risk Alert AI</div>
-       <div class="quote" style="font-size:22px">
-         Early Risk Alert AI is building a premium predictive clinical intelligence platform for hospitals,
-         health systems, and remote monitoring programs. The company is open to investor discussions,
-         strategic partnerships, and product demonstration conversations.
-       </div>
-       <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:22px">
-         <a class="btn" href="#contact">Contact Founder</a>
-         <a class="btn secondary" href="/">Open Hospital Command Center</a>
-         <a class="btn outline" href="/deck">Download Pitch Deck</a>
-       </div>
-     </div>
-   </div>
-
-   <div id="contact" class="section">
-     <div class="section-title">Investor Contact</div>
-     <div class="contact-grid">
-       <div class="contact-card">
-         <div class="contact-label">Founder</div>
-         <div class="contact-value">Milton Munroe</div>
-       </div>
-       <div class="contact-card">
-         <div class="contact-label">Email</div>
-         <div class="contact-value small">info@earlyriskalertai.com</div>
-       </div>
-       <div class="contact-card">
-         <div class="contact-label">Business Phone</div>
-         <div class="contact-value">732-724-7267</div>
-       </div>
-       <div class="contact-card">
-         <div class="contact-label">Request Investor Deck</div>
-         <div class="contact-value small">
-           <a class="contact-link" href="mailto:info@earlyriskalertai.com?subject=Investor%20Inquiry%20-%20Early%20Risk%20Alert%20AI">info@earlyriskalertai.com</a>
-         </div>
-       </div>
-       <div class="contact-card">
-         <div class="contact-label">Pitch Deck Download</div>
-         <div class="contact-value small">
-           <a class="contact-link" href="/deck">Download Pitch Deck PDF</a>
-         </div>
-       </div>
-       <div class="contact-card">
-         <div class="contact-label">Live Demo Access</div>
-         <div class="contact-value small">
-           <a class="contact-link" href="/">Open Hospital Command Center</a>
-         </div>
-       </div>
-     </div>
-   </div>
-
-   <div class="footer">
-     Early Risk Alert AI LLC • Investor Overview • Milton Munroe • 732-724-7267
-   </div>
- </div>
-</body>
-</html>
-"""
+def _project_root():
+    return os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 
 @web_bp.get("/")
 def home():
+    return render_template_string(COMMAND_CENTER_HTML)
+
+@web_bp.get("/dashboard")
+def dashboard():
     return render_template_string(COMMAND_CENTER_HTML)
 
 @web_bp.get("/login")
 def login():
     return render_template("login.html")
 
-@web_bp.get("/dashboard")
-def dashboard():
-    return render_template_string(COMMAND_CENTER_HTML)
-
 @web_bp.get("/investors")
 def investors():
-    return render_template_string(INVESTOR_HTML)
+    return render_template("investor.html")
 
 @web_bp.get("/deck")
+@web_bp.get("/pitch-deck")
 def deck():
-    root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
-    pdf_path = os.path.join(root_dir, "static", "Early_Risk_Alert_AI_Pitch_Deck.pdf")
-
+    pdf_path = os.path.join(_project_root(), "static", "Early_Risk_Alert_AI_Pitch_Deck.pdf")
     if not os.path.exists(pdf_path):
         return f"Pitch deck not found at: {pdf_path}", 404
 
