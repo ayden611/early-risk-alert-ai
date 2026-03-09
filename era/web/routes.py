@@ -405,19 +405,19 @@ INVESTOR_HTML = """
 
 @web_bp.get("/")
 def home():
-return render_template_string(COMMAND_CENTER_HTML)
+    return render_template_string(COMMAND_CENTER_HTML)
 
 @web_bp.get("/login")
 def login():
-return render_template("login.html")
+    return render_template("login.html")
 
 @web_bp.get("/dashboard")
 def dashboard():
-return render_template_string(COMMAND_CENTER_HTML)
+    return render_template_string(COMMAND_CENTER_HTML)
 
 @web_bp.get("/investors")
 def investors():
-return render_template_string(INVESTOR_HTML)
+    return render_template_string(INVESTOR_HTML)
 
 @web_bp.get("/deck")
 def deck():
