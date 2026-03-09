@@ -1207,5 +1207,4 @@ def pitch_deck():
     return send_from_directory(
         static_dir,
         "Early_Risk_Alert_AI_Pitch_Deck.pdf",
-        as_attachment=True
-    )
+        as_attachment=True)
