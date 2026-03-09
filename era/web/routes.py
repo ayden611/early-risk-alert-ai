@@ -4,6 +4,9 @@ import os
 web_bp = Blueprint("web", __name__)
 
 YOUTUBE_EMBED_URL = "https://www.youtube.com/embed/HiidXiXifY4"
+BUSINESS_EMAIL = "info@earlyriskai.com"
+BUSINESS_PHONE = "732-724-7267"
+FOUNDER_NAME = "Milton Munroe"
 
 MAIN_HTML = r"""
 <!doctype html>
@@ -44,11 +47,12 @@ MAIN_HTML = r"""
     }
 
     a{color:inherit;text-decoration:none}
-    .shell{max-width:var(--max);margin:0 auto;padding:20px 16px 64px}
+    .shell{max-width:var(--max);margin:0 auto;padding:20px 16px 70px}
+
     .nav{
-      position:sticky;top:0;z-index:20;
-      backdrop-filter:blur(12px);
-      background:rgba(8,17,31,.72);
+      position:sticky;top:0;z-index:50;
+      backdrop-filter:blur(14px);
+      background:rgba(8,17,31,.74);
       border-bottom:1px solid var(--line);
     }
     .nav-inner{
@@ -60,10 +64,12 @@ MAIN_HTML = r"""
       font-size:11px;letter-spacing:.18em;text-transform:uppercase;
       color:#b9c9e7;font-weight:800;
     }
-    .brand-title{font-size:38px;font-weight:900;line-height:.95}
+    .brand-title{font-size:38px;font-weight:1000;line-height:.95}
     .brand-sub{font-size:14px;color:var(--muted);font-weight:700}
+
     .nav-links{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
     .nav-links a{font-weight:800;font-size:14px;color:#d7e4ff}
+
     .btn{
       display:inline-flex;align-items:center;justify-content:center;
       padding:13px 18px;border-radius:16px;font-weight:900;font-size:14px;
@@ -103,13 +109,24 @@ MAIN_HTML = r"""
     }
     .hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:24px}
     .hero-side{padding:24px}
+
     .live-pill{
       display:inline-flex;align-items:center;gap:8px;
       padding:8px 12px;border-radius:999px;background:rgba(56,211,159,.12);
       border:1px solid rgba(56,211,159,.25);font-weight:900;font-size:12px;color:#bff5df;
       text-transform:uppercase;letter-spacing:.08em;
     }
-    .dot{width:10px;height:10px;border-radius:999px;background:var(--green);box-shadow:0 0 18px rgba(56,211,159,.6)}
+    .dot{
+      width:10px;height:10px;border-radius:999px;background:var(--green);
+      box-shadow:0 0 18px rgba(56,211,159,.6);
+      animation:pulseDot 1.8s infinite;
+    }
+    @keyframes pulseDot{
+      0%{transform:scale(1);opacity:1}
+      50%{transform:scale(1.35);opacity:.65}
+      100%{transform:scale(1);opacity:1}
+    }
+
     .side-title{font-size:34px;font-weight:950;line-height:1;margin:18px 0 8px}
     .side-copy{color:#b8cae8;line-height:1.65;margin:0 0 18px}
     .mini-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
@@ -122,6 +139,31 @@ MAIN_HTML = r"""
     .mini-v{font-size:34px;font-weight:950;line-height:1;margin-top:10px}
     .mini-s{font-size:14px;color:#b7c9e7;margin-top:8px}
 
+    .ticker-wrap{
+      margin-top:18px;
+      border:1px solid rgba(91,212,255,.16);
+      background:linear-gradient(180deg, rgba(91,212,255,.06), rgba(91,212,255,.02));
+      border-radius:18px;padding:12px 14px;overflow:hidden;
+    }
+    .ticker-track{
+      display:flex;gap:26px;white-space:nowrap;min-width:max-content;
+      animation:tickerMove 24s linear infinite;
+      color:#d8e7ff;font-weight:800;
+    }
+    @keyframes tickerMove{
+      0%{transform:translateX(0)}
+      100%{transform:translateX(-50%)}
+    }
+    .ticker-item{display:inline-flex;align-items:center;gap:8px;font-size:14px}
+    .pulse-bar{
+      width:18px;height:10px;border-radius:999px;background:linear-gradient(90deg,var(--blue),var(--blue2));
+      animation:pulseBar 1.2s ease-in-out infinite alternate;
+    }
+    @keyframes pulseBar{
+      from{transform:scaleX(.65);opacity:.65}
+      to{transform:scaleX(1.1);opacity:1}
+    }
+
     .section{margin-top:22px}
     .section-title{
       font-size:40px;font-weight:1000;letter-spacing:-.04em;margin:0 0 8px;
@@ -133,7 +175,12 @@ MAIN_HTML = r"""
     .metrics-grid{
       display:grid;grid-template-columns:repeat(4,1fr);gap:14px;
     }
-    .metric{padding:22px}
+    .metric{padding:22px;position:relative;overflow:hidden}
+    .metric::after{
+      content:"";position:absolute;inset:auto -20% -40% auto;width:180px;height:180px;
+      background:radial-gradient(circle, rgba(122,162,255,.12), transparent 60%);
+      pointer-events:none;
+    }
     .metric-label{
       color:#a7bad9;font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.14em;
     }
@@ -154,13 +201,17 @@ MAIN_HTML = r"""
     .dashboard-grid{
       display:grid;grid-template-columns:1.1fr 1fr 1fr;gap:14px;
     }
-    .dash-card{padding:22px;min-height:360px}
+    .dash-card{padding:22px;min-height:390px}
     .dash-card h3{margin:0 0 6px;font-size:22px}
     .dash-card p{margin:0 0 16px;color:var(--muted);line-height:1.6}
     .feed{display:flex;flex-direction:column;gap:12px}
     .alert{
       background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.05);
-      border-radius:18px;padding:16px;
+      border-radius:18px;padding:16px;position:relative;overflow:hidden;
+    }
+    .alert::before{
+      content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:linear-gradient(180deg,var(--blue),var(--blue2));
+      opacity:.75;
     }
     .alert-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
     .alert-name{font-size:18px;font-weight:900}
@@ -219,6 +270,30 @@ MAIN_HTML = r"""
     .cred-card h3{margin:0 0 8px;font-size:22px}
     .cred-card p{margin:0;color:#bfd0ea;line-height:1.65}
 
+    .trust-grid{
+      display:grid;grid-template-columns:repeat(4,1fr);gap:14px;
+    }
+    .trust-card{padding:22px}
+    .trust-card h3{margin:0 0 8px;font-size:18px}
+    .trust-card p{margin:0;color:#bfd0ea;line-height:1.65}
+
+    .founder-grid{
+      display:grid;grid-template-columns:1.1fr .9fr;gap:14px;
+    }
+    .founder-card{padding:24px}
+    .founder-name{font-size:34px;font-weight:1000;line-height:1;margin:10px 0}
+    .founder-role{font-size:16px;color:#bcd0ec;font-weight:800;margin-bottom:16px}
+    .founder-copy{color:#d3e1f8;line-height:1.7}
+    .contact-box{
+      display:grid;gap:12px;margin-top:18px;
+    }
+    .contact-row{
+      background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.05);
+      border-radius:16px;padding:14px 16px;
+    }
+    .contact-label{font-size:12px;text-transform:uppercase;letter-spacing:.14em;color:#9eb4d6;font-weight:900}
+    .contact-value{font-size:18px;font-weight:900;margin-top:6px;word-break:break-word}
+
     .investor-banner{
       padding:24px;
       background:linear-gradient(180deg, rgba(122,162,255,.12), rgba(122,162,255,.04));
@@ -233,12 +308,12 @@ MAIN_HTML = r"""
     }
 
     @media (max-width:1100px){
-      .hero,.dashboard-grid,.two-col,.cred-grid,.metrics-grid{grid-template-columns:1fr 1fr}
+      .hero,.dashboard-grid,.two-col,.cred-grid,.metrics-grid,.trust-grid,.founder-grid{grid-template-columns:1fr 1fr}
       .dashboard-grid .dash-card:first-child{grid-column:1/-1}
       .hero h1{font-size:54px}
     }
     @media (max-width:760px){
-      .hero,.dashboard-grid,.two-col,.cred-grid,.metrics-grid,.mini-grid,.summary-list{grid-template-columns:1fr}
+      .hero,.dashboard-grid,.two-col,.cred-grid,.metrics-grid,.trust-grid,.mini-grid,.summary-list,.founder-grid{grid-template-columns:1fr}
       .brand-title{font-size:30px}
       .hero h1{font-size:42px}
       .section-title{font-size:32px}
@@ -273,13 +348,28 @@ MAIN_HTML = r"""
         <h1>Detect patient deterioration earlier. Strengthen hospital response at scale.</h1>
         <p>
           Early Risk Alert AI is a professional healthcare intelligence platform built to help hospitals,
-          care teams, and remote monitoring programs surface high-risk patients in real time, prioritize
-          action faster, and present enterprise-grade command-center visibility.
+          care teams, clinics, and remote monitoring programs surface high-risk patients in real time,
+          prioritize action faster, and present enterprise-grade command-center visibility.
         </p>
         <div class="hero-actions">
           <a class="btn" href="#dashboard">Open Live Dashboard</a>
           <a class="btn secondary" href="#demo">View Demo Section</a>
           <a class="btn ghost" href="/investors">Open Investor Portal</a>
+        </div>
+
+        <div class="ticker-wrap">
+          <div class="ticker-track">
+            <div class="ticker-item"><span class="pulse-bar"></span> Live alert routing active</div>
+            <div class="ticker-item"><span class="pulse-bar"></span> AI risk scoring connected</div>
+            <div class="ticker-item"><span class="pulse-bar"></span> Command-center visibility enabled</div>
+            <div class="ticker-item"><span class="pulse-bar"></span> Hospital-facing monitoring flow live</div>
+            <div class="ticker-item"><span class="pulse-bar"></span> Investor-ready demo platform active</div>
+            <div class="ticker-item"><span class="pulse-bar"></span> Live alert routing active</div>
+            <div class="ticker-item"><span class="pulse-bar"></span> AI risk scoring connected</div>
+            <div class="ticker-item"><span class="pulse-bar"></span> Command-center visibility enabled</div>
+            <div class="ticker-item"><span class="pulse-bar"></span> Hospital-facing monitoring flow live</div>
+            <div class="ticker-item"><span class="pulse-bar"></span> Investor-ready demo platform active</div>
+          </div>
         </div>
       </div>
 
@@ -288,7 +378,7 @@ MAIN_HTML = r"""
         <div class="side-title">Built for modern hospital operations</div>
         <p class="side-copy">
           Your public-facing platform now combines hospital product messaging, animated live metrics,
-          AI risk scoring, a command-center style dashboard, and investor-ready presentation in one polished experience.
+          AI risk scoring, command-center style monitoring, investor-ready presentation, and enterprise trust positioning in one polished experience.
         </p>
         <div class="mini-grid">
           <div class="mini">
@@ -318,7 +408,7 @@ MAIN_HTML = r"""
     <section class="section" id="metrics">
       <h2 class="section-title">Animated live metrics</h2>
       <p class="section-sub">
-        These metrics update from your bundled dashboard APIs to create a more professional, enterprise-style live experience.
+        These metrics refresh from your API layer to create a more professional enterprise experience for hospitals, clinics, and investors.
       </p>
       <div class="metrics-grid">
         <div class="card metric">
@@ -351,7 +441,7 @@ MAIN_HTML = r"""
     <section class="section" id="dashboard">
       <h2 class="section-title">Hospital command center dashboard</h2>
       <p class="section-sub">
-        A professional, hospital-facing layout showing alerts, patient detail, system health, and monitoring status in one place.
+        A professional command-center layout showing alerts, focused patient detail, system health, and monitoring state in one place.
       </p>
       <div class="dashboard-grid">
         <div class="card dash-card">
@@ -395,7 +485,7 @@ MAIN_HTML = r"""
         <div class="card demo-card">
           <h2 class="section-title" style="margin-top:0">Live Product Demo</h2>
           <p class="section-sub" style="margin-bottom:16px">
-            Replace the placeholder embed with your real YouTube demo link when ready.
+            Your live YouTube demo is embedded below for platform walkthroughs and investor presentations.
           </p>
           <iframe src="{{ youtube_embed_url }}" title="Early Risk Alert AI Demo" allowfullscreen></iframe>
         </div>
@@ -403,8 +493,8 @@ MAIN_HTML = r"""
         <div class="card summary-card">
           <h2 class="section-title" style="margin-top:0">Platform summary</h2>
           <p class="section-sub" style="margin-bottom:0">
-            This main page now combines your public-facing hospital pitch, professional navigation,
-            live system metrics, and command-center style interaction into one polished experience.
+            This main page now combines your hospital-facing product pitch, live metrics, command dashboard,
+            AI platform narrative, and professional business presentation into one unified platform experience.
           </p>
 
           <div class="summary-list">
@@ -425,21 +515,82 @@ MAIN_HTML = r"""
     <section class="section" id="credibility">
       <h2 class="section-title">Business credibility layer</h2>
       <p class="section-sub">
-        Early Risk Alert AI is no longer just an app concept. It is now positioned as a broader professional platform
-        serving hospitals, clinics, investors, and patients.
+        Early Risk Alert AI now presents as a broader multi-audience platform for hospitals, clinics, investors, and patients.
       </p>
       <div class="cred-grid">
         <div class="card cred-card">
           <h3>Professional presence</h3>
-          <p>Live domain, company branding, pitch materials, and a hospital-facing product experience create stronger institutional trust.</p>
+          <p>Live domain, company branding, demo materials, and a polished hospital-facing product experience strengthen institutional confidence.</p>
         </div>
         <div class="card cred-card">
           <h3>Command-center positioning</h3>
-          <p>Hospitals can see alerts, patient monitoring, AI scoring, and operational visibility in a format that feels enterprise-ready.</p>
+          <p>Hospitals can see alerts, vitals, patient focus, AI risk scoring, and operational visibility in an enterprise-style interface.</p>
         </div>
         <div class="card cred-card">
           <h3>Investor readiness</h3>
-          <p>Your investor portal, live demo, command dashboard, and polished narrative support stronger founder outreach and demo conversations.</p>
+          <p>Your investor portal, live demo, and command dashboard create a stronger story for outreach, demos, and future funding discussions.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2 class="section-title">Enterprise readiness</h2>
+      <p class="section-sub">
+        These trust signals help hospitals and healthcare buyers understand the platform as a serious operational solution.
+      </p>
+      <div class="trust-grid">
+        <div class="card trust-card">
+          <h3>HIPAA-ready architecture</h3>
+          <p>Structured for secure healthcare deployment workflows and enterprise-focused operational design.</p>
+        </div>
+        <div class="card trust-card">
+          <h3>Secure cloud infrastructure</h3>
+          <p>Cloud-based delivery model designed for live access, operational resilience, and scalable rollout.</p>
+        </div>
+        <div class="card trust-card">
+          <h3>Real-time clinical monitoring</h3>
+          <p>Built to support streaming vitals, alert prioritization, patient focus workflows, and command visibility.</p>
+        </div>
+        <div class="card trust-card">
+          <h3>Hospital command center fit</h3>
+          <p>Purpose-built presentation for hospital command teams, remote monitoring programs, and clinical operations visibility.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2 class="section-title">Founder credibility</h2>
+      <p class="section-sub">
+        Hospitals, partners, and investors trust the platform more when they can clearly see who is building it and why.
+      </p>
+      <div class="founder-grid">
+        <div class="card founder-card">
+          <div class="hero-kicker">Founder & Platform Architect</div>
+          <div class="founder-name">{{ founder_name }}</div>
+          <div class="founder-role">AI Systems Engineer • Founder • Clinical Intelligence Platform Builder</div>
+          <div class="founder-copy">
+            Early Risk Alert AI began as an app and evolved into a broader professional platform serving hospitals,
+            clinics, investors, and patients. The focus is now on platform quality, AI advancement, dashboard polish,
+            real-world usability, and enterprise presentation before moving deeper into funding.
+          </div>
+        </div>
+
+        <div class="card founder-card">
+          <div class="hero-kicker">Business Contact</div>
+          <div class="contact-box">
+            <div class="contact-row">
+              <div class="contact-label">Email</div>
+              <div class="contact-value">{{ business_email }}</div>
+            </div>
+            <div class="contact-row">
+              <div class="contact-label">Business Phone</div>
+              <div class="contact-value">{{ business_phone }}</div>
+            </div>
+            <div class="contact-row">
+              <div class="contact-label">Platform Access</div>
+              <div class="contact-value"><a href="/investors">Investor View</a> • <a href="/deck">Pitch Deck</a></div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -448,8 +599,8 @@ MAIN_HTML = r"""
       <div class="card investor-banner">
         <h3>Investor and partnership mode</h3>
         <p>
-          Early Risk Alert AI now presents a broader clinical intelligence platform for hospitals, health systems,
-          remote care programs, and investors seeking exposure to modern predictive healthcare infrastructure.
+          Early Risk Alert AI now presents as a scalable predictive clinical intelligence platform for hospitals,
+          health systems, remote care programs, strategic partners, and investors seeking exposure to modern healthcare infrastructure.
         </p>
         <div class="banner-actions">
           <a class="btn" href="/investors">Open Investor View</a>
@@ -460,7 +611,7 @@ MAIN_HTML = r"""
     </section>
 
     <div class="footer">
-      Early Risk Alert AI LLC • Main Platform • Milton Munroe • 732-724-7267
+      Early Risk Alert AI LLC • Main Platform • {{ founder_name }} • {{ business_phone }}
     </div>
   </div>
 
@@ -553,7 +704,10 @@ MAIN_HTML = r"""
         <div class="k" style="margin-bottom:10px">Patient rollups</div>
         <div class="kv"><span class="k">AI risk score</span><span class="v">${risk.risk_score ?? "--"}</span></div>
         <div class="kv"><span class="k">Confidence</span><span class="v">${risk.confidence ?? "--"}</span></div>
-        <div class="kv"><span class="k">Reasons</span><span class="v" style="text-align:right;max-width:58%">${(risk.reasons || []).slice(0,2).join(", ") || "--"}</span></div>
+        <div class="kv"><span class="k">Avg heart rate</span><span class="v">${roll.avg_heart_rate ?? "--"}</span></div>
+        <div class="kv"><span class="k">Avg systolic BP</span><span class="v">${roll.avg_systolic_bp ?? "--"}</span></div>
+        <div class="kv"><span class="k">Avg diastolic BP</span><span class="v">${roll.avg_diastolic_bp ?? "--"}</span></div>
+        <div class="kv"><span class="k">Avg SpO2</span><span class="v">${roll.avg_spo2 ?? "--"}</span></div>
       `;
     }
 
@@ -689,7 +843,7 @@ INVESTOR_HTML = r"""
         <h1>Built for hospital response, command-center visibility, and scalable enterprise deployment.</h1>
         <p>
           Early Risk Alert AI is positioned as a modern healthcare intelligence platform that helps hospitals,
-          health systems, and care networks identify deterioration risk earlier and prioritize action at scale.
+          health systems, clinics, and care networks identify deterioration risk earlier and prioritize action at scale.
         </p>
         <div class="actions" style="margin-top:20px">
           <a class="btn primary" href="/">Open Main Platform</a>
@@ -727,21 +881,21 @@ INVESTOR_HTML = r"""
       <div class="card">
         <div class="title" style="margin-top:0">Founder</div>
         <p>
-          Milton Munroe is building Early Risk Alert AI as a broader clinical intelligence platform for hospitals,
-          investors, clinics, and patients, with platform quality and operational polish prioritized before funding.
+          {{ founder_name }} is building Early Risk Alert AI as a broader clinical intelligence platform for hospitals,
+          investors, clinics, and patients, with platform quality, operational polish, and AI advancement prioritized first.
         </p>
       </div>
     </div>
 
     <div class="title">Investor contact</div>
     <div class="contact-grid">
-      <div class="contact-card"><div class="contact-label">Founder</div><div class="contact-value">Milton Munroe</div></div>
-      <div class="contact-card"><div class="contact-label">Email</div><div class="contact-value">info@earlyriskalertai.com</div></div>
-      <div class="contact-card"><div class="contact-label">Business Phone</div><div class="contact-value">732-724-7267</div></div>
+      <div class="contact-card"><div class="contact-label">Founder</div><div class="contact-value">{{ founder_name }}</div></div>
+      <div class="contact-card"><div class="contact-label">Email</div><div class="contact-value">{{ business_email }}</div></div>
+      <div class="contact-card"><div class="contact-label">Business Phone</div><div class="contact-value">{{ business_phone }}</div></div>
       <div class="contact-card"><div class="contact-label">Live Demo Access</div><div class="contact-value"><a href="/">Open Hospital Command Center</a></div></div>
     </div>
 
-    <div class="footer">Early Risk Alert AI LLC • Investor Overview</div>
+    <div class="footer">Early Risk Alert AI LLC • Investor Overview • {{ business_phone }}</div>
   </div>
 </body>
 </html>
@@ -749,15 +903,32 @@ INVESTOR_HTML = r"""
 
 @web_bp.get("/")
 def home():
-    return render_template_string(MAIN_HTML, youtube_embed_url=YOUTUBE_EMBED_URL)
+    return render_template_string(
+        MAIN_HTML,
+        youtube_embed_url=YOUTUBE_EMBED_URL,
+        business_email=BUSINESS_EMAIL,
+        business_phone=BUSINESS_PHONE,
+        founder_name=FOUNDER_NAME,
+    )
 
 @web_bp.get("/dashboard")
 def dashboard():
-    return render_template_string(MAIN_HTML, youtube_embed_url=YOUTUBE_EMBED_URL)
+    return render_template_string(
+        MAIN_HTML,
+        youtube_embed_url=YOUTUBE_EMBED_URL,
+        business_email=BUSINESS_EMAIL,
+        business_phone=BUSINESS_PHONE,
+        founder_name=FOUNDER_NAME,
+    )
 
 @web_bp.get("/investors")
 def investors():
-    return render_template_string(INVESTOR_HTML)
+    return render_template_string(
+        INVESTOR_HTML,
+        business_email=BUSINESS_EMAIL,
+        business_phone=BUSINESS_PHONE,
+        founder_name=FOUNDER_NAME,
+    )
 
 @web_bp.get("/deck")
 def deck():
