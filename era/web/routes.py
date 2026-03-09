@@ -1,4 +1,3 @@
-```python
 from flask import Blueprint, render_template, render_template_string, send_file
 import os
 
