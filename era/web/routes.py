@@ -18,7 +18,7 @@ def _template_exists(filename):
 
 @web_bp.route("/")
 def home():
-    return render_template("investor.html")
+    return render_template("command_center.html")
 
 
 @web_bp.route("/investors")
