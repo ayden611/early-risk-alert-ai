@@ -3,23 +3,23 @@ import os
 
 web_bp = Blueprint("web", __name__)
 
-
 def _project_root():
     return os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 
-
-def _template_exists(filename):
-    return os.path.exists(os.path.join(_project_root(), "templates", filename))
-
+def _template_exists(name):
+    return os.path.exists(os.path.join(_project_root(), "templates", name))
 
 @web_bp.route("/")
 def home():
+    if _template_exists("home.html"):
+        return render_template("home.html")
+    if _template_exists("landing.html"):
+        return render_template("landing.html")
     if _template_exists("command_center.html"):
         return render_template("command_center.html")
     if _template_exists("dashboard.html"):
         return render_template("dashboard.html")
-    return render_template("login.html")
-
+    return "No homepage template found.", 500
 
 @web_bp.route("/dashboard")
 def dashboard():
@@ -27,27 +27,24 @@ def dashboard():
         return render_template("command_center.html")
     if _template_exists("dashboard.html"):
         return render_template("dashboard.html")
-    return render_template("login.html")
-
-
-@web_bp.route("/login")
-def login():
-    return render_template("login.html")
-
+    return "No dashboard template found.", 500
 
 @web_bp.route("/investors")
 def investors():
     return render_template("investor.html")
 
+@web_bp.route("/login")
+def login():
+    if _template_exists("login.html"):
+        return render_template("login.html")
+    return "login.html not found.", 404
 
 @web_bp.route("/deck")
 @web_bp.route("/pitch-deck")
 def pitch_deck():
     pdf_path = os.path.join(_project_root(), "static", "Early_Risk_Alert_AI_Pitch_Deck.pdf")
-
     if not os.path.exists(pdf_path):
         return "Pitch deck not found.", 404
-
     return send_file(
         pdf_path,
         mimetype="application/pdf",
