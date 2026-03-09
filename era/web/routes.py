@@ -421,13 +421,15 @@ def investors():
 
 @web_bp.get("/deck")
 def deck():
-root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-pdf_path = os.path.join(root_dir, "static", "Early_Risk_Alert_AI_Pitch_Deck.pdf")
-if not os.path.exists(pdf_path):
-return f"Pitch deck not found at: {pdf_path}", 404
-return send_file(
-pdf_path,
-mimetype="application/pdf",
-as_attachment=True,
-download_name="Early_Risk_Alert_AI_Pitch_Deck.pdf",
-)
+    root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+    pdf_path = os.path.join(root_dir, "static", "Early_Risk_Alert_AI_Pitch_Deck.pdf")
+
+    if not os.path.exists(pdf_path):
+        return f"Pitch deck not found at: {pdf_path}", 404
+
+    return send_file(
+        pdf_path,
+        mimetype="application/pdf",
+        as_attachment=True,
+        download_name="Early_Risk_Alert_AI_Pitch_Deck.pdf",
+    )
