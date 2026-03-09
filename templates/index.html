@@ -1,67 +1,38 @@
-{% extends "base.html" %}
-{% block content %}
-  <div class="card">
-    <h1>Run Prediction</h1>
+from flask import Blueprint, render_template, send_file
+import os
 
-    <form method="POST" class="form">
-      <label>Age
-        <input name="age" type="number" step="1" min="1" required>
-      </label>
+web_bp = Blueprint("web", __name__)
 
-      <label>BMI
-        <input name="bmi" type="number" step="0.1" min="1" required>
-      </label>
+def _project_root():
+    return os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 
-      <label>Exercise Level
-        <select name="exercise_level" required>
-          <option value="Low">Low</option>
-          <option value="Medium">Medium</option>
-          <option value="High">High</option>
-        </select>
-      </label>
+@web_bp.route("/")
+def home():
+    return render_template("index.html")
 
-      <label>Systolic BP
-        <input name="systolic_bp" type="number" step="1" min="50" required>
-      </label>
+@web_bp.route("/dashboard")
+def dashboard():
+    return render_template("dashboard.html")
 
-      <label>Diastolic BP
-        <input name="diastolic_bp" type="number" step="1" min="30" required>
-      </label>
+@web_bp.route("/investors")
+def investors():
+    return render_template("investor.html")
 
-      <label>Heart Rate
-        <input name="heart_rate" type="number" step="1" min="30" required>
-      </label>
+@web_bp.route("/login")
+def login():
+    return render_template("login.html")
 
-      <button class="btn" type="submit">Run Prediction</button>
-    </form>
+@web_bp.route("/deck")
+@web_bp.route("/pitch-deck")
+def pitch_deck():
+    pdf_path = os.path.join(_project_root(), "static", "Early_Risk_Alert_AI_Pitch_Deck.pdf")
 
-    {% if prediction %}
-      <div class="result">
-        <div class="pill {{ 'bad' if prediction=='High Risk' else 'good' }}">
-          {{ prediction }}
-        </div>
-        <div class="muted">Probability (High Risk): <b>{{ probability }}%</b></div>
-        {% if current_user.is_authenticated %}
-          <div class="muted"><a href="{{ url_for('history') }}">View History</a></div>
-        {% else %}
-          <div class="muted"><a href="{{ url_for('login') }}">Login to view history</a></div>
-        {% endif %}
-      </div>
-    {% endif %}
-  </div>
+    if not os.path.exists(pdf_path):
+        return "Pitch deck not found.", 404
 
-  <div class="card">
-    <h2>API</h2>
-    <p class="muted">
-      POST <code>/api/predict</code> with JSON body:
-    </p>
-    <pre class="code">{
-  "age": 50,
-  "bmi": 25.0,
-  "exercise_level": "Low",
-  "systolic_bp": 120,
-  "diastolic_bp": 80,
-  "heart_rate": 70
-}</pre>
-  </div>
-{% endblock %}
+    return send_file(
+        pdf_path,
+        mimetype="application/pdf",
+        as_attachment=True,
+        download_name="Early_Risk_Alert_AI_Pitch_Deck.pdf",
+    )
