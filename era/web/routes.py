@@ -3,6 +3,14 @@ import os
 
 web_bp = Blueprint("web", __name__)
 
+@web_bp.route("/pitch-deck")
+def pitch_deck():
+    return send_from_directory(
+        "static",
+        "Early_Risk_Alert_AI_Pitch_Deck.pdf",
+        as_attachment=True
+    )
+
 COMMAND_CENTER_HTML = """
 <!doctype html>
 <html lang="en">
