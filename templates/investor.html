@@ -830,7 +830,6 @@
   </div>
 
   <script>
-    // animated metrics
     const counters = document.querySelectorAll("[data-target]");
     const animateCounter = (el) => {
       const target = Number(el.getAttribute("data-target")) || 0;
@@ -849,7 +848,6 @@
     };
     counters.forEach(animateCounter);
 
-    // investor form -> mailto draft
     document.getElementById("investorForm").addEventListener("submit", function(e){
       e.preventDefault();
 
