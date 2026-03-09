@@ -1,12 +1,14 @@
-from flask import Blueprint, render_template, render_template_string, send_file, send_from_directory
+from flask import Blueprint, send_from_directory
 import os
 
 web_bp = Blueprint("web", __name__)
 
 @web_bp.route("/pitch-deck")
 def pitch_deck():
+    base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+    static_dir = os.path.join(base_dir, "static")
     return send_from_directory(
-        "static",
+        static_dir,
         "Early_Risk_Alert_AI_Pitch_Deck.pdf",
         as_attachment=True
     )
