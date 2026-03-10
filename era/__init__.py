@@ -339,7 +339,6 @@ def _generate_pitch_deck_pdf_bytes() -> bytes:
     body.extend(trailer)
     return bytes(body)
 
-
 MAIN_HTML = """
 <!doctype html>
 <html lang="en">
@@ -349,302 +348,456 @@ MAIN_HTML = """
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     :root{
-      --bg:#060d19;--bg2:#0b1222;--panel:#0f1728;--panel2:#121f38;--panel3:#0d1628;
-      --line:rgba(255,255,255,.08);--line2:rgba(255,255,255,.05);--text:#edf4ff;--muted:#9ab0d3;
-      --blue:#7aa2ff;--blue2:#5bd4ff;--green:#38d39f;--red:#ff5c72;--amber:#f7be68;--violet:#a88bff;
-      --radius:24px;--max:1380px;--shadow:0 22px 65px rgba(0,0,0,.30);--shadow-soft:0 12px 34px rgba(0,0,0,.20)
+      --bg:#07101c;
+      --bg2:#0b1424;
+      --panel:#101a2d;
+      --panel2:#13203a;
+      --line:rgba(255,255,255,.08);
+      --line2:rgba(255,255,255,.05);
+      --text:#eef4ff;
+      --muted:#9fb4d6;
+      --blue:#7aa2ff;
+      --blue2:#5bd4ff;
+      --green:#38d39f;
+      --amber:#f4bd6a;
+      --red:#ff667d;
+      --violet:#a68cff;
+      --shadow:0 20px 60px rgba(0,0,0,.30);
+      --radius:24px;
+      --max:1360px;
     }
+
     *{box-sizing:border-box}
     html{scroll-behavior:smooth}
     body{
-      margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--text);
+      margin:0;
+      font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      color:var(--text);
       background:
-        radial-gradient(circle at top left, rgba(122,162,255,.14), transparent 24%),
-        radial-gradient(circle at 85% 10%, rgba(91,212,255,.10), transparent 22%),
-        linear-gradient(180deg, var(--bg), var(--bg2));
-      overflow-x:hidden
+        radial-gradient(circle at top left, rgba(122,162,255,.16), transparent 22%),
+        radial-gradient(circle at 85% 8%, rgba(91,212,255,.10), transparent 20%),
+        linear-gradient(180deg,var(--bg),var(--bg2));
+      overflow-x:hidden;
     }
-    a{color:inherit;text-decoration:none}
-    .nav{position:sticky;top:0;z-index:100;background:rgba(6,13,25,.84);backdrop-filter:blur(16px);border-bottom:1px solid var(--line)}
-    .nav-inner{max-width:var(--max);margin:0 auto;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:18px;flex-wrap:wrap}
-    .brand-kicker{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#bfd0ea;font-weight:900}
-    .brand-title{font-size:clamp(28px,3vw,42px);font-weight:1000;line-height:.95;letter-spacing:-.045em}
-    .brand-sub{font-size:14px;color:var(--muted);font-weight:800}
-    .nav-links{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
-    .nav-links a{font-weight:900;font-size:14px}
+    a{text-decoration:none;color:inherit}
+    img{max-width:100%;display:block}
+
+    .nav{
+      position:sticky;top:0;z-index:100;
+      background:rgba(7,16,28,.82);
+      backdrop-filter:blur(16px);
+      border-bottom:1px solid var(--line);
+    }
+    .nav-inner{
+      max-width:var(--max);margin:0 auto;padding:14px 16px;
+      display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;
+    }
+    .brand-kicker{
+      font-size:11px;font-weight:900;letter-spacing:.18em;text-transform:uppercase;color:#c8d7ef;
+    }
+    .brand-title{
+      font-size:clamp(26px,3vw,40px);font-weight:1000;line-height:.94;letter-spacing:-.045em;
+    }
+    .brand-sub{
+      font-size:14px;color:var(--muted);font-weight:800;
+    }
+    .nav-links{
+      display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+    }
+    .nav-links a{
+      font-size:14px;font-weight:900;
+    }
+
     .btn{
-      display:inline-flex;align-items:center;justify-content:center;padding:13px 18px;border-radius:16px;font-weight:900;font-size:14px;
-      background:linear-gradient(135deg,var(--blue),var(--blue2));color:#08111f;border:1px solid transparent;cursor:pointer;
-      box-shadow:var(--shadow-soft);transition:transform .2s ease, box-shadow .2s ease, opacity .2s ease, border-color .2s ease
+      display:inline-flex;align-items:center;justify-content:center;
+      padding:13px 18px;border-radius:16px;
+      font-size:14px;font-weight:900;cursor:pointer;
+      border:1px solid transparent;
+      transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease, opacity .18s ease;
     }
-    .btn:hover{transform:translateY(-2px) scale(1.01)}
-    .btn.secondary{background:#111b2f;color:var(--text);border-color:var(--line);box-shadow:none}
-    .btn.ghost{background:transparent;color:var(--text);border:1px solid var(--line);box-shadow:none}
-    .btn.cta-pop{animation:ctaPulse 2.6s ease-in-out infinite}
-    @keyframes ctaPulse{0%,100%{box-shadow:0 0 0 0 rgba(91,212,255,.12),var(--shadow-soft)}50%{box-shadow:0 0 0 10px rgba(91,212,255,0),0 10px 30px rgba(91,212,255,.18)}}
-
-    .shell{max-width:var(--max);margin:0 auto;padding:20px 16px 78px}
-    .card{
-      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015));
-      border:1px solid var(--line);border-radius:var(--radius);padding:28px;box-shadow:var(--shadow);
-      transition:transform .22s ease, border-color .22s ease, box-shadow .22s ease
+    .btn:hover{transform:translateY(-2px)}
+    .btn.primary{
+      background:linear-gradient(135deg,var(--blue),var(--blue2));
+      color:#07101c;
+      box-shadow:0 12px 30px rgba(91,212,255,.18);
+    }
+    .btn.secondary{
+      background:#111b2f;color:var(--text);border-color:var(--line);
+    }
+    .btn.ghost{
+      background:transparent;color:var(--text);border-color:var(--line);
     }
 
-    .cinematic-hero{
+    .shell{max-width:var(--max);margin:0 auto;padding:18px 16px 70px}
+
+    .hero{
       position:relative;
       min-height:88vh;
-      border:1px solid rgba(255,255,255,.08);
       border-radius:30px;
       overflow:hidden;
+      border:1px solid rgba(255,255,255,.08);
       box-shadow:var(--shadow);
       background:
-        linear-gradient(180deg, rgba(4,10,18,.18), rgba(4,10,18,.58)),
+        linear-gradient(180deg, rgba(5,12,22,.24), rgba(5,12,22,.70)),
         url('/static/images/ai-command-center.jpg') center center / cover no-repeat;
       isolation:isolate;
     }
-    .cinematic-hero:before{
+
+    .hero::before{
       content:"";
       position:absolute;inset:0;
       background:
-        radial-gradient(circle at center, rgba(91,212,255,.10), transparent 28%),
+        radial-gradient(circle at center, rgba(91,212,255,.10), transparent 26%),
         linear-gradient(rgba(122,162,255,.045) 1px, transparent 1px),
         linear-gradient(90deg, rgba(122,162,255,.045) 1px, transparent 1px);
       background-size:auto, 34px 34px, 34px 34px;
-      opacity:.42;
+      opacity:.36;
       pointer-events:none;
     }
-    .cinematic-hero:after{
+
+    .hero::after{
       content:"";
-      position:absolute;
-      inset:auto -10% -8% -10%;
-      height:38%;
-      background:radial-gradient(circle at 50% 50%, rgba(91,212,255,.18), transparent 60%);
-      filter:blur(20px);
-      animation:heroDrift 8s ease-in-out infinite;
+      position:absolute;left:-10%;right:-10%;bottom:-8%;
+      height:34%;
+      background:radial-gradient(circle at 50% 50%, rgba(91,212,255,.20), transparent 60%);
+      filter:blur(22px);
+      animation:heroGlow 8s ease-in-out infinite;
       pointer-events:none;
     }
-    @keyframes heroDrift{
-      0%,100%{transform:translateX(0) translateY(0) scale(1)}
-      50%{transform:translateX(2%) translateY(-2%) scale(1.04)}
+
+    @keyframes heroGlow{
+      0%,100%{transform:translateX(0) scale(1)}
+      50%{transform:translateX(2%) scale(1.04)}
     }
 
     .sweep{
-      position:absolute;inset:-20%;
+      position:absolute;inset:-22%;
       background:linear-gradient(105deg, transparent 38%, rgba(255,255,255,.06) 50%, transparent 62%);
       transform:translateX(-60%);
-      animation:lightSweep 8s linear infinite;
-      pointer-events:none;
-      z-index:1;
+      animation:sweep 8s linear infinite;
+      pointer-events:none;z-index:1;
     }
-    @keyframes lightSweep{
+    @keyframes sweep{
       0%{transform:translateX(-60%)}
       100%{transform:translateX(60%)}
     }
 
-    .pulse-rings{
-      position:absolute;right:10%;bottom:11%;width:280px;height:280px;pointer-events:none;z-index:1;opacity:.55
-    }
-    .pulse-rings span{
-      position:absolute;inset:0;border:1px solid rgba(91,212,255,.24);border-radius:999px;animation:ring 4.8s infinite
-    }
-    .pulse-rings span:nth-child(2){animation-delay:1.6s}
-    .pulse-rings span:nth-child(3){animation-delay:3.2s}
-    @keyframes ring{
-      0%{transform:scale(.62);opacity:.52}
-      100%{transform:scale(1.38);opacity:0}
+    .hero-inner{
+      position:relative;z-index:3;
+      min-height:88vh;
+      display:grid;
+      align-content:space-between;
+      gap:26px;
+      padding:28px;
     }
 
-    .hero-overlay{
-      position:relative;z-index:3;
-      display:grid;
-      grid-template-columns:1fr;
-      min-height:88vh;
-      padding:32px;
-      align-content:space-between;
+    .top-badges{
+      display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;
     }
-    .hero-topbar{
-      display:flex;justify-content:space-between;align-items:flex-start;gap:20px;flex-wrap:wrap
-    }
-    .hero-badge{
-      display:inline-flex;align-items:center;gap:8px;
+    .badge-top{
+      display:inline-flex;align-items:center;
       padding:10px 14px;border-radius:999px;
-      background:rgba(6,13,25,.58);border:1px solid rgba(255,255,255,.10);
-      backdrop-filter:blur(10px);font-size:12px;font-weight:900;letter-spacing:.12em;text-transform:uppercase
+      background:rgba(7,16,28,.56);
+      border:1px solid rgba(255,255,255,.10);
+      backdrop-filter:blur(10px);
+      font-size:12px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;
     }
-    .hero-center{
-      display:grid;
-      grid-template-columns:1.15fr .85fr;
-      gap:18px;
-      align-items:end;
+
+    .hero-grid{
+      display:grid;grid-template-columns:1.15fr .85fr;gap:18px;align-items:end;
     }
-    .hero-copy-card,.hero-side-card{
-      background:linear-gradient(180deg, rgba(7,15,28,.58), rgba(7,15,28,.76));
+
+    .glass{
+      background:linear-gradient(180deg, rgba(8,16,30,.58), rgba(8,16,30,.78));
       border:1px solid rgba(255,255,255,.09);
       border-radius:26px;
       padding:26px;
       backdrop-filter:blur(12px);
-      box-shadow:0 20px 50px rgba(0,0,0,.22);
+      box-shadow:0 16px 40px rgba(0,0,0,.20);
     }
+
     .hero-kicker{
-      font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:#d0def5;font-weight:900;margin-bottom:12px
+      font-size:12px;font-weight:900;letter-spacing:.18em;text-transform:uppercase;color:#d2dff4;margin-bottom:12px;
     }
     h1{
       margin:0 0 16px;
-      font-size:clamp(44px,6vw,88px);
+      font-size:clamp(44px,6vw,84px);
       line-height:.92;
       font-weight:1000;
       letter-spacing:-.06em;
-      text-shadow:0 0 24px rgba(0,0,0,.22);
+      text-shadow:0 0 22px rgba(0,0,0,.18);
+      max-width:980px;
     }
     .lead{
-      margin:0;color:#d3e2f8;font-size:clamp(16px,1.5vw,20px);line-height:1.62;max-width:920px
+      margin:0;
+      color:#d7e4f8;
+      font-size:clamp(16px,1.5vw,20px);
+      line-height:1.62;
+      max-width:920px;
     }
-    .hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:22px}
-    .hero-route-grid{
-      display:grid;
-      grid-template-columns:repeat(3,1fr);
-      gap:14px;
-      margin-top:18px;
+
+    .hero-actions{
+      display:flex;gap:12px;flex-wrap:wrap;margin-top:22px;
+    }
+
+    .route-grid{
+      display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:18px;
     }
     .route-card{
-      position:relative;
       background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.018));
       border:1px solid rgba(255,255,255,.08);
       border-radius:20px;
       padding:18px;
-      min-height:168px;
-      transition:transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+      min-height:170px;
+      transition:transform .18s ease, border-color .18s ease, box-shadow .18s ease;
     }
     .route-card:hover{
       transform:translateY(-3px);
       border-color:rgba(91,212,255,.24);
-      box-shadow:0 14px 34px rgba(0,0,0,.18);
+      box-shadow:0 12px 30px rgba(0,0,0,.16);
     }
-    .route-label{font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:#9db7da;font-weight:900}
-    .route-title{font-size:26px;font-weight:1000;line-height:1;margin-top:10px}
-    .route-copy{font-size:14px;color:#c5d7f0;line-height:1.58;margin-top:10px}
-    .route-arrow{margin-top:14px;font-size:14px;font-weight:900;color:#8edcff}
-    .route-hospital{box-shadow:0 0 0 1px rgba(91,212,255,.10)}
-    .route-demo{box-shadow:0 0 0 1px rgba(168,139,255,.10)}
-    .route-investor{box-shadow:0 0 0 1px rgba(56,211,159,.10)}
+    .route-label{
+      font-size:11px;font-weight:900;letter-spacing:.15em;text-transform:uppercase;color:#9fb7da;
+    }
+    .route-title{
+      font-size:26px;font-weight:1000;line-height:1;margin-top:10px;
+    }
+    .route-copy{
+      font-size:14px;line-height:1.56;color:#c7d7ef;margin-top:10px;
+    }
+    .route-arrow{
+      margin-top:14px;font-size:14px;font-weight:900;color:#99e2ff;
+    }
 
-    .hero-side-title{
+    .side-title{
+      margin:0 0 10px;
       font-size:clamp(28px,3vw,42px);
       line-height:1;
-      margin:0 0 10px;
       font-weight:1000;
-      letter-spacing:-.04em
+      letter-spacing:-.04em;
     }
-    .hero-side-copy{margin:0;color:#c4d6ef;line-height:1.65}
-    .hero-mini-grid{
-      display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:18px
+    .side-copy{
+      margin:0;color:#c7d7ef;line-height:1.65;
+    }
+    .mini-grid{
+      display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:18px;
     }
     .mini{
       background:rgba(255,255,255,.03);
       border:1px solid rgba(255,255,255,.06);
       border-radius:18px;
-      padding:16px
+      padding:16px;
     }
-    .mini-k{font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:#9fb7da;font-weight:900}
-    .mini-v{font-size:34px;font-weight:1000;line-height:1;margin-top:10px}
-    .mini-s{font-size:13px;color:#c3d5ef;margin-top:8px;line-height:1.5}
+    .mini-k{
+      font-size:11px;font-weight:900;letter-spacing:.15em;text-transform:uppercase;color:#9fb7da;
+    }
+    .mini-v{
+      font-size:34px;font-weight:1000;line-height:1;margin-top:10px;
+    }
+    .mini-s{
+      font-size:13px;color:#c7d7ef;line-height:1.5;margin-top:8px;
+    }
 
-    .ticker-wrap{margin-top:18px;border-top:1px solid rgba(255,255,255,.08);border-bottom:1px solid rgba(255,255,255,.08);overflow:hidden}
-    .ticker{display:flex;gap:28px;white-space:nowrap;padding:12px 0;color:#d9e9ff;font-weight:800;animation:ticker 18s linear infinite}
+    .ticker-wrap{
+      margin-top:18px;
+      overflow:hidden;
+      border-top:1px solid rgba(255,255,255,.08);
+      border-bottom:1px solid rgba(255,255,255,.08);
+    }
+    .ticker{
+      display:flex;gap:28px;white-space:nowrap;padding:12px 0;
+      color:#d9e9ff;font-weight:800;
+      animation:tickerMove 18s linear infinite;
+    }
     .ticker span{display:inline-flex;align-items:center;gap:8px}
-    .bullet{width:8px;height:8px;border-radius:999px;background:#7aa2ff}
-    @keyframes ticker{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+    .dot{width:8px;height:8px;border-radius:999px;background:#7aa2ff}
+    @keyframes tickerMove{
+      0%{transform:translateX(0)}
+      100%{transform:translateX(-50%)}
+    }
 
     .section{margin-top:34px}
-    .section-title{font-size:clamp(30px,3.1vw,44px);font-weight:1000;letter-spacing:-.04em;margin:0 0 8px;line-height:1.02}
-    .section-sub{font-size:16px;max-width:980px;margin:0 0 18px;color:var(--muted);line-height:1.6}
-
-    .metrics-grid,.trust-grid,.sim-grid,.mini-grid,.risk-panel-grid{display:grid;gap:14px}
-    .metrics-grid{grid-template-columns:repeat(4,1fr)}
-    .trust-grid{grid-template-columns:repeat(4,1fr)}
-    .sim-grid{grid-template-columns:repeat(3,1fr)}
-    .mini-grid{grid-template-columns:repeat(2,1fr)}
-    .risk-panel-grid{grid-template-columns:repeat(2,1fr);margin-top:12px}
-
-    .metric,.trust-card,.sim-card,.risk-panel,.panel-block{
-      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.018));
-      border:1px solid rgba(255,255,255,.06);border-radius:18px;padding:18px
+    .section-title{
+      margin:0 0 8px;
+      font-size:clamp(30px,3vw,44px);
+      line-height:1.04;
+      font-weight:1000;
+      letter-spacing:-.04em;
     }
-    .metric-label,.contact-label,.panel-title,.rk{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#9fb7da;font-weight:900}
-    .metric-value,.rv{font-size:clamp(28px,2.6vw,54px);font-weight:1000;line-height:1;margin-top:10px}
-    .metric-note,.section-sub,.rs{font-size:14px;color:#b7c9e7;margin-top:8px;line-height:1.55}
+    .section-sub{
+      margin:0 0 18px;
+      max-width:980px;
+      font-size:16px;
+      line-height:1.6;
+      color:var(--muted);
+    }
 
-    .dashboard-grid{display:grid;grid-template-columns:1.18fr 1fr 1fr;gap:14px}
-    .dash-card{padding:22px;min-height:520px}
+    .card{
+      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.016));
+      border:1px solid var(--line);
+      border-radius:22px;
+      padding:22px;
+      box-shadow:var(--shadow);
+    }
+
+    .metrics-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+    .metric-label,.panel-title,.contact-label{
+      font-size:11px;font-weight:900;letter-spacing:.16em;text-transform:uppercase;color:#9fb7da;
+    }
+    .metric-value{
+      font-size:clamp(28px,2.6vw,54px);
+      line-height:1;
+      font-weight:1000;
+      margin-top:10px;
+    }
+    .metric-note{
+      margin-top:8px;font-size:14px;line-height:1.55;color:#bdd0eb;
+    }
+
+    .dashboard-grid{
+      display:grid;grid-template-columns:1.18fr 1fr 1fr;gap:14px;
+    }
+    .dash-card{min-height:520px}
     .dash-card h3{margin:0 0 6px;font-size:22px}
     .dash-card p{margin:0 0 16px;color:var(--muted);line-height:1.6}
     .feed{display:flex;flex-direction:column;gap:12px}
+
     .alert{
       background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02));
-      border:1px solid rgba(255,255,255,.07);border-radius:20px;padding:16px;
-      transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease
+      border:1px solid rgba(255,255,255,.07);
+      border-radius:20px;
+      padding:16px;
+      transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
     }
     .alert:hover{transform:translateY(-2px)}
-    .alert-critical{box-shadow:0 0 0 1px rgba(255,92,114,.26), 0 0 34px rgba(255,92,114,.18);border-color:rgba(255,92,114,.32);background:linear-gradient(180deg, rgba(255,92,114,.10), rgba(255,255,255,.02))}
-    .alert-high{box-shadow:0 0 0 1px rgba(247,190,104,.18), 0 0 24px rgba(247,190,104,.09);border-color:rgba(247,190,104,.22);background:linear-gradient(180deg, rgba(247,190,104,.07), rgba(255,255,255,.02))}
-    .alert-moderate{border-color:rgba(122,162,255,.18);background:linear-gradient(180deg, rgba(122,162,255,.06), rgba(255,255,255,.02))}
-    .alert-top{display:flex;justify-content:space-between;gap:12px}
-    .alert-name{font-size:18px;font-weight:900;text-transform:capitalize}
-    .alert-patient{font-size:13px;color:#b6c8e8;font-weight:700}
-    .alert-msg{font-size:18px;font-weight:800;margin-top:6px;line-height:1.35}
-    .alert-time{font-size:13px;color:#9ab0d3;margin-top:6px}
-    .meta-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
-    .meta-pill{padding:7px 10px;border-radius:999px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);font-size:12px;font-weight:800;color:#d7e6ff}
-    .badge{display:inline-flex;align-items:center;justify-content:center;min-width:122px;padding:11px 16px;border-radius:999px;font-size:12px;text-transform:uppercase;letter-spacing:.12em;font-weight:1000}
-    .critical{background:rgba(255,92,114,.20);border:1px solid rgba(255,92,114,.38);color:#ffd3d9}
-    .high{background:rgba(247,190,104,.20);border:1px solid rgba(247,190,104,.38);color:#ffe3b2}
-    .moderate{background:rgba(122,162,255,.20);border:1px solid rgba(122,162,255,.38);color:#d8e6ff}
-    .stable{background:rgba(56,211,159,.18);border:1px solid rgba(56,211,159,.32);color:#c7ffe4}
+    .alert-critical{
+      box-shadow:0 0 0 1px rgba(255,102,125,.28), 0 0 30px rgba(255,102,125,.18);
+      border-color:rgba(255,102,125,.34);
+      background:linear-gradient(180deg, rgba(255,102,125,.10), rgba(255,255,255,.02));
+    }
+    .alert-high{
+      box-shadow:0 0 0 1px rgba(244,189,106,.18), 0 0 24px rgba(244,189,106,.10);
+      border-color:rgba(244,189,106,.24);
+      background:linear-gradient(180deg, rgba(244,189,106,.07), rgba(255,255,255,.02));
+    }
+    .alert-moderate{
+      border-color:rgba(122,162,255,.18);
+      background:linear-gradient(180deg, rgba(122,162,255,.06), rgba(255,255,255,.02));
+    }
 
-    .focus-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+    .alert-top{display:flex;justify-content:space-between;gap:12px}
+    .alert-name{font-size:18px;font-weight:900}
+    .alert-patient{font-size:13px;color:#bdd0eb;font-weight:700}
+    .alert-msg{font-size:18px;font-weight:800;line-height:1.35;margin-top:6px}
+    .alert-time{font-size:13px;color:#9fb4d6;margin-top:6px}
+
+    .meta-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    .meta-pill{
+      padding:7px 10px;border-radius:999px;
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.06);
+      font-size:12px;font-weight:800;color:#dbe7fb;
+    }
+
+    .severity{
+      display:inline-flex;align-items:center;justify-content:center;
+      min-width:122px;padding:11px 16px;border-radius:999px;
+      font-size:12px;letter-spacing:.12em;text-transform:uppercase;font-weight:1000;
+    }
+    .sev-critical{background:rgba(255,102,125,.20);border:1px solid rgba(255,102,125,.38);color:#ffd7de}
+    .sev-high{background:rgba(244,189,106,.20);border:1px solid rgba(244,189,106,.38);color:#ffe1ad}
+    .sev-moderate{background:rgba(122,162,255,.20);border:1px solid rgba(122,162,255,.38);color:#dce8ff}
+    .sev-stable{background:rgba(56,211,159,.18);border:1px solid rgba(56,211,159,.32);color:#cdfbe8}
+
+    .panel-block{
+      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.018));
+      border:1px solid rgba(255,255,255,.06);
+      border-radius:18px;
+      padding:16px;
+      margin-top:12px;
+    }
+
+    .focus-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}
     .focus-id{font-size:34px;font-weight:1000;line-height:1}
-    .kv{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+    .kv{
+      display:flex;justify-content:space-between;gap:12px;
+      padding:10px 0;border-bottom:1px solid rgba(255,255,255,.05);
+    }
     .kv:last-child{border-bottom:none}
-    .k{color:#b6c8e8;font-weight:700}
+    .k{color:#bdd0eb;font-weight:700}
     .v{font-weight:900}
-    .channels{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:#d7e5ff;font-size:13px;line-height:1.7}
-    .sim-title{font-size:16px;font-weight:900}
-    .sim-room{font-size:12px;color:#a7bddf;margin-top:4px}
-    .sim-risk{font-size:30px;font-weight:1000;margin:12px 0 6px}
-    .sim-copy{font-size:14px;color:#c6d7ef}
-    .contact-box{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:18px}
-    .contact-row{background:linear-gradient(180deg, rgba(255,255,255,.032), rgba(255,255,255,.022));border:1px solid rgba(122,162,255,.12);border-radius:18px;padding:16px 18px}
-    .contact-value{font-size:18px;font-weight:900;margin-top:6px;color:#f1f7ff}
+    .trend-up{color:#ff98a5}
+    .trend-mid{color:#ffd38f}
+    .trend-down{color:#98f1c8}
+
     .confidence-wrap{margin-top:10px;display:grid;gap:7px}
-    .confidence-label{display:flex;justify-content:space-between;gap:10px;font-size:12px;font-weight:900;color:#cfe0fb;text-transform:uppercase;letter-spacing:.08em}
-    .confidence-track{width:100%;height:10px;border-radius:999px;overflow:hidden;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.05)}
-    .confidence-bar{height:100%;border-radius:999px;background:linear-gradient(90deg, var(--blue), var(--blue2));box-shadow:0 0 18px rgba(91,212,255,.22)}
-    .trend-up{color:#ff98a5}.trend-mid{color:#ffd38f}.trend-down{color:#93f3c6}
-    .footer{margin-top:30px;padding:24px 12px 8px;color:#94a7c6;font-size:14px;text-align:center;line-height:1.6}
-    .audio-toggle{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:14px;background:#111b2f;border:1px solid var(--line);color:var(--text);font-weight:900;cursor:pointer}
-    iframe{width:100%;aspect-ratio:16/9;border:0;border-radius:18px;background:#0a0f18}
+    .confidence-label{
+      display:flex;justify-content:space-between;gap:10px;
+      font-size:12px;font-weight:900;color:#d3e2f9;text-transform:uppercase;letter-spacing:.08em;
+    }
+    .confidence-track{
+      width:100%;height:10px;border-radius:999px;overflow:hidden;
+      background:rgba(255,255,255,.07);
+      border:1px solid rgba(255,255,255,.05);
+    }
+    .confidence-bar{
+      height:100%;
+      border-radius:999px;
+      background:linear-gradient(90deg,var(--blue),var(--blue2));
+      box-shadow:0 0 18px rgba(91,212,255,.22);
+    }
+
+    .sim-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+    .sim-title{font-size:16px;font-weight:900}
+    .sim-room{font-size:12px;color:#a8bddf;margin-top:4px}
+    .sim-risk{font-size:30px;font-weight:1000;margin:12px 0 6px}
+    .sim-copy{font-size:14px;color:#c9d8ef}
+
+    .trust-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+    .contact-box{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:18px}
+    .contact-row{
+      background:linear-gradient(180deg, rgba(255,255,255,.032), rgba(255,255,255,.022));
+      border:1px solid rgba(122,162,255,.12);
+      border-radius:18px;
+      padding:16px 18px;
+    }
+    .contact-value{
+      font-size:18px;font-weight:900;margin-top:6px;color:#f1f7ff;
+    }
+
+    .footer{
+      margin-top:30px;
+      padding:24px 12px 8px;
+      color:#96a8c6;
+      font-size:14px;
+      line-height:1.6;
+      text-align:center;
+    }
+
+    .audio-toggle{
+      display:inline-flex;align-items:center;gap:8px;
+      padding:10px 14px;border-radius:14px;
+      background:#111b2f;border:1px solid var(--line);
+      color:var(--text);font-weight:900;cursor:pointer;
+    }
 
     @media (max-width:1180px){
-      .hero-center{grid-template-columns:1fr}
+      .hero-grid{grid-template-columns:1fr}
+      .route-grid,.metrics-grid,.sim-grid,.trust-grid,.contact-box,.mini-grid{grid-template-columns:repeat(2,1fr)}
       .dashboard-grid{grid-template-columns:1fr 1fr}
       .dashboard-grid .dash-card:first-child{grid-column:1/-1}
-      .metrics-grid,.trust-grid,.sim-grid,.hero-route-grid,.risk-panel-grid,.contact-box,.hero-mini-grid{grid-template-columns:repeat(2,1fr)}
     }
+
     @media (max-width:760px){
-      .metrics-grid,.dashboard-grid,.trust-grid,.sim-grid,.mini-grid,.hero-route-grid,.risk-panel-grid,.contact-box,.hero-mini-grid{grid-template-columns:1fr}
-      .nav-links{width:100%}
-      .btn,.audio-toggle{width:100%}
-      .alert-top,.kv,.focus-top{flex-direction:column}
+      .route-grid,.metrics-grid,.dashboard-grid,.sim-grid,.trust-grid,.contact-box,.mini-grid{grid-template-columns:1fr}
       .shell{padding:14px 10px 54px}
-      .card,.dash-card,.hero-copy-card,.hero-side-card{padding:16px}
-      .hero-overlay{padding:16px}
-      h1{font-size:clamp(34px,9vw,48px)}
-      .lead{font-size:15px;line-height:1.55}
-      .section-title{font-size:30px}
-      .pulse-rings{display:none}
-      .cinematic-hero{min-height:auto}
-      .hero-overlay{min-height:auto;gap:18px}
+      .hero-inner{padding:16px;min-height:auto}
+      .glass,.card{padding:16px}
       .hero-actions{flex-direction:column;align-items:stretch}
+      .btn,.audio-toggle{width:100%}
+      .alert-top,.focus-top,.kv{flex-direction:column}
+      h1{font-size:clamp(34px,9vw,48px)}
+      .lead{font-size:15px}
     }
   </style>
 </head>
@@ -662,24 +815,22 @@ MAIN_HTML = """
         <a href="#simulator">Simulator</a>
         <a href="/investors">Investor View</a>
         <a href="/hospital-demo">Hospital Demo</a>
-        <a class="btn cta-pop" href="/deck">Download Pitch Deck</a>
+        <a class="btn primary" href="/deck">Download Pitch Deck</a>
       </div>
     </div>
   </div>
 
   <div class="shell">
-    <section class="cinematic-hero" id="overview">
+    <section class="hero" id="overview">
       <div class="sweep"></div>
-      <div class="pulse-rings"><span></span><span></span><span></span></div>
-
-      <div class="hero-overlay">
-        <div class="hero-topbar">
-          <div class="hero-badge">Single-domain cinematic production experience</div>
-          <div class="hero-badge">Interactive hospital / demo / investor entry model</div>
+      <div class="hero-inner">
+        <div class="top-badges">
+          <div class="badge-top">Single production domain experience</div>
+          <div class="badge-top">Cinematic intro section with live platform paths</div>
         </div>
 
-        <div class="hero-center">
-          <div class="hero-copy-card">
+        <div class="hero-grid">
+          <div class="glass">
             <div class="hero-kicker">Predictive clinical intelligence</div>
             <h1>Step into the platform the way your users will.</h1>
             <p class="lead">
@@ -688,60 +839,75 @@ MAIN_HTML = """
             </p>
 
             <div class="hero-actions">
-              <a class="btn cta-pop" href="/hospital-demo">Hospital Path</a>
+              <a class="btn primary" href="/hospital-demo">Hospital Path</a>
               <a class="btn secondary" href="#dashboard">Live Demo Path</a>
               <a class="btn secondary" href="/investors">Investor Path</a>
               <button class="audio-toggle" id="audioToggle" type="button">🔔 Enable Alert Sound</button>
             </div>
 
-            <div class="hero-route-grid">
-              <a class="route-card route-hospital" href="/hospital-demo">
+            <div class="route-grid">
+              <a class="route-card" href="/hospital-demo">
                 <div class="route-label">Left path</div>
                 <div class="route-title">Hospital Demo</div>
                 <div class="route-copy">
-                  Treat the left clinical figure as your hospital buyer journey:
-                  request demo, evaluate workflow, and move into operational review.
+                  Request a hospital demo, capture operational interest, and guide health-system stakeholders into evaluation.
                 </div>
                 <div class="route-arrow">Open hospital intake →</div>
               </a>
 
-              <a class="route-card route-demo" href="#dashboard">
+              <a class="route-card" href="#dashboard">
                 <div class="route-label">Center path</div>
                 <div class="route-title">Live Product Demo</div>
                 <div class="route-copy">
-                  The center figure becomes the guided product walkthrough —
-                  command center, AI scoring, severity, confidence, and recommended action.
+                  Move directly into the clinical command center, AI risk scoring, confidence indicators, and recommended actions.
                 </div>
                 <div class="route-arrow">Jump to live command center →</div>
               </a>
 
-              <a class="route-card route-investor" href="/investors">
+              <a class="route-card" href="/investors">
                 <div class="route-label">Right path</div>
                 <div class="route-title">Investor Portal</div>
                 <div class="route-copy">
-                  The right-side figure becomes the investor path:
-                  review traction, positioning, intake flow, and branded deck delivery.
+                  Open the investor overview, download the pitch deck, and move into the investor intake workflow.
                 </div>
                 <div class="route-arrow">Open investor overview →</div>
               </a>
             </div>
 
-            <div class="ticker-wrap"><div class="ticker" id="opsTicker"></div></div>
+            <div class="ticker-wrap">
+              <div class="ticker" id="opsTicker"></div>
+            </div>
           </div>
 
-          <div class="hero-side-card">
-            <div class="hero-kicker">Cinematic operating layer</div>
-            <div class="hero-side-title">One visual. Three journeys. One production domain.</div>
-            <p class="hero-side-copy">
-              This intro does not try to be a movie yet. It turns your command-center image into a premium,
-              interactive navigation model that feels cinematic now and can later become a full AI video opener.
+          <div class="glass">
+            <div class="hero-kicker">Executive presentation layer</div>
+            <div class="side-title">One homepage. Three clear journeys. No blank routes.</div>
+            <p class="side-copy">
+              This is a cinematic hero experience built from your command-center image. It is not a literal AI video,
+              but it creates a premium production entry point while keeping every route pointed to the live platform.
             </p>
 
-            <div class="hero-mini-grid">
-              <div class="mini"><div class="mini-k">Hospital</div><div class="mini-v">Demo</div><div class="mini-s">Guide hospital operators into evaluation and intake.</div></div>
-              <div class="mini"><div class="mini-k">Center</div><div class="mini-v">Walkthrough</div><div class="mini-s">Guide viewers into the live dashboard experience.</div></div>
-              <div class="mini"><div class="mini-k">Investor</div><div class="mini-v">Portal</div><div class="mini-s">Guide capital and partner audiences into the investor flow.</div></div>
-              <div class="mini"><div class="mini-k">Branding</div><div class="mini-v">Premium</div><div class="mini-s">Unified cinematic presentation across the platform.</div></div>
+            <div class="mini-grid">
+              <div class="mini">
+                <div class="mini-k">Hospital</div>
+                <div class="mini-v">Demo</div>
+                <div class="mini-s">Request operational walkthroughs and demo interest directly from the homepage.</div>
+              </div>
+              <div class="mini">
+                <div class="mini-k">Command Center</div>
+                <div class="mini-v">Live</div>
+                <div class="mini-s">Show severity, AI score, confidence, trend direction, and recommended action.</div>
+              </div>
+              <div class="mini">
+                <div class="mini-k">Investor</div>
+                <div class="mini-v">Portal</div>
+                <div class="mini-s">Present credibility, product positioning, and branded pitch materials cleanly.</div>
+              </div>
+              <div class="mini">
+                <div class="mini-k">Production</div>
+                <div class="mini-v">Locked</div>
+                <div class="mini-s">One public homepage flow with cleaner links and stronger route behavior.</div>
+              </div>
             </div>
           </div>
         </div>
@@ -750,35 +916,57 @@ MAIN_HTML = """
 
     <section class="section">
       <h2 class="section-title">Animated live metrics</h2>
-      <p class="section-sub">Cleaner layout, stronger spacing, and executive-facing operational KPIs.</p>
+      <p class="section-sub">Operational KPIs update automatically with stronger dashboard presentation.</p>
       <div class="metrics-grid">
-        <div class="card metric"><div class="metric-label">Monitored Patients</div><div class="metric-value" id="metricPatients">0</div><div class="metric-note">Active patient population</div></div>
-        <div class="card metric"><div class="metric-label">Open Alerts</div><div class="metric-value" id="metricAlerts">0</div><div class="metric-note">Current command-center queue</div></div>
-        <div class="card metric"><div class="metric-label">Critical Alerts</div><div class="metric-value" id="metricCritical">0</div><div class="metric-note">Highest-priority interventions</div></div>
-        <div class="card metric"><div class="metric-label">Avg AI Risk Score</div><div class="metric-value" id="metricRisk">0</div><div class="metric-note">Enterprise scoring snapshot</div></div>
+        <div class="card">
+          <div class="metric-label">Monitored Patients</div>
+          <div class="metric-value" id="metricPatients">0</div>
+          <div class="metric-note">Active patient population</div>
+        </div>
+        <div class="card">
+          <div class="metric-label">Open Alerts</div>
+          <div class="metric-value" id="metricAlerts">0</div>
+          <div class="metric-note">Current command-center queue</div>
+        </div>
+        <div class="card">
+          <div class="metric-label">Critical Alerts</div>
+          <div class="metric-value" id="metricCritical">0</div>
+          <div class="metric-note">Highest-priority interventions</div>
+        </div>
+        <div class="card">
+          <div class="metric-label">Avg AI Risk Score</div>
+          <div class="metric-value" id="metricRisk">0</div>
+          <div class="metric-note">Enterprise scoring snapshot</div>
+        </div>
       </div>
     </section>
 
     <section class="section" id="dashboard">
       <h2 class="section-title">Clinical command center</h2>
-      <p class="section-sub">Premium dashboard styling with larger severity badges, confidence indicators, AI recommendation panels, clinical priority, and trend direction.</p>
+      <p class="section-sub">Larger severity badges, confidence indicators, AI recommendation panels, clinical priority, and trend direction.</p>
+
       <div class="dashboard-grid">
         <div class="card dash-card">
           <h3>Live Alerts Feed</h3>
           <p>Clinical alert prioritization with stronger severity emphasis and critical glow.</p>
           <div class="feed" id="alertsFeed"></div>
         </div>
+
         <div class="card dash-card">
           <h3>Patient Focus</h3>
           <p>AI score, confidence, recommendation, priority, and trend direction in one clinical view.</p>
           <div id="patientFocus"></div>
         </div>
+
         <div class="card dash-card">
           <h3>System Panels</h3>
           <p>Operational state, workflow readiness, stream channels, and live system activity.</p>
           <div class="panel-block" id="streamHealth"></div>
-          <div class="panel-block"><div class="panel-title">Live System Activity</div><div id="systemActivity"></div></div>
-          <div class="panel-block channels" id="streamChannels"></div>
+          <div class="panel-block">
+            <div class="panel-title">Live System Activity</div>
+            <div id="systemActivity"></div>
+          </div>
+          <div class="panel-block" id="streamChannels"></div>
         </div>
       </div>
     </section>
@@ -792,24 +980,40 @@ MAIN_HTML = """
     <section class="section">
       <h2 class="section-title">Business credibility layer</h2>
       <p class="section-sub">Professional positioning for hospitals, operators, and investors evaluating deployment readiness.</p>
+
       <div class="trust-grid">
-        <div class="card trust-card"><h3>Hospital operations focus</h3><p>Supports command-center visibility, prioritization workflows, and faster intervention escalation.</p></div>
-        <div class="card trust-card"><h3>Executive review flow</h3><p>Structured demo request and walkthrough capture for hospital leadership and operational stakeholders.</p></div>
-        <div class="card trust-card"><h3>Investor-ready presentation</h3><p>Unified platform, intake workflow, downloadable deck, and admin review layer.</p></div>
-        <div class="card trust-card"><h3>Founder credibility</h3><p>Built and led by __FOUNDER_NAME__ with a focused mission to advance predictive healthcare intelligence.</p></div>
+        <div class="card"><h3>Hospital operations focus</h3><p>Supports command-center visibility, prioritization workflows, and faster intervention escalation.</p></div>
+        <div class="card"><h3>Executive review flow</h3><p>Structured hospital demo and walkthrough capture for leadership and operational stakeholders.</p></div>
+        <div class="card"><h3>Investor-ready presentation</h3><p>Unified platform, investor intake workflow, downloadable deck, and admin review layer.</p></div>
+        <div class="card"><h3>Founder credibility</h3><p>Built and led by Milton Munroe to advance predictive healthcare intelligence for modern care operations.</p></div>
       </div>
+
       <div class="card" style="margin-top:14px;">
         <h3 style="margin-top:0;">Founder & Contact</h3>
         <div class="contact-box">
-          <div class="contact-row"><div class="contact-label">Founder</div><div class="contact-value">__FOUNDER_NAME__</div></div>
-          <div class="contact-row"><div class="contact-label">Role</div><div class="contact-value">__FOUNDER_ROLE__</div></div>
-          <div class="contact-row"><div class="contact-label">Email</div><div class="contact-value">__INFO_EMAIL__</div></div>
-          <div class="contact-row"><div class="contact-label">Business Phone</div><div class="contact-value">__BUSINESS_PHONE__</div></div>
+          <div class="contact-row">
+            <div class="contact-label">Founder</div>
+            <div class="contact-value">Milton Munroe</div>
+          </div>
+          <div class="contact-row">
+            <div class="contact-label">Role</div>
+            <div class="contact-value">Founder, Early Risk Alert AI</div>
+          </div>
+          <div class="contact-row">
+            <div class="contact-label">Email</div>
+            <div class="contact-value">info@earlyriskalertai.com</div>
+          </div>
+          <div class="contact-row">
+            <div class="contact-label">Business Phone</div>
+            <div class="contact-value">732-724-7267</div>
+          </div>
         </div>
       </div>
     </section>
 
-    <div class="footer">Early Risk Alert AI LLC • Professional healthcare intelligence platform • __INFO_EMAIL__ • __BUSINESS_PHONE__</div>
+    <div class="footer">
+      Early Risk Alert AI LLC • Professional healthcare intelligence platform • info@earlyriskalertai.com • 732-724-7267
+    </div>
   </div>
 
   <script>
@@ -830,24 +1034,27 @@ MAIN_HTML = """
       return await res.json();
     }
 
-    function badgeClass(sev) {
-      if (sev === "critical") return "badge critical";
-      if (sev === "high") return "badge high";
-      if (sev === "moderate") return "badge moderate";
-      return "badge stable";
+    function severityClass(sev) {
+      if (sev === "critical") return "severity sev-critical";
+      if (sev === "high") return "severity sev-high";
+      if (sev === "moderate") return "severity sev-moderate";
+      return "severity sev-stable";
     }
+
     function alertClass(sev) {
       if (sev === "critical") return "alert alert-critical";
       if (sev === "high") return "alert alert-high";
       if (sev === "moderate") return "alert alert-moderate";
       return "alert";
     }
+
     function trendClass(trend) {
       const t = (trend || "").toLowerCase();
       if (t === "worsening") return "trend-up";
       if (t === "elevated") return "trend-mid";
       return "trend-down";
     }
+
     function animateNumber(id, endValue) {
       const el = document.getElementById(id);
       if (!el) return;
@@ -863,6 +1070,7 @@ MAIN_HTML = """
       }
       requestAnimationFrame(frame);
     }
+
     function playAlertBeep() {
       if (!soundEnabled) return;
       const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -881,6 +1089,7 @@ MAIN_HTML = """
       osc.start(now);
       osc.stop(now + 0.23);
     }
+
     function renderAlerts(alerts) {
       const feed = document.getElementById("alertsFeed");
       feed.innerHTML = "";
@@ -893,7 +1102,7 @@ MAIN_HTML = """
               <div class="alert-name">${a.alert_type || "alert"}</div>
               <div class="alert-patient">${a.patient_name} • ${a.room}</div>
             </div>
-            <div class="${badgeClass(a.severity)}">${a.severity}</div>
+            <div class="${severityClass(a.severity)}">${a.severity}</div>
           </div>
           <div class="alert-msg">${a.message || "Clinical event detected"}</div>
           <div class="alert-time">Program: ${a.program} • live</div>
@@ -904,17 +1113,18 @@ MAIN_HTML = """
             <div class="meta-pill"><span class="${trendClass(a.trend_direction)}">${a.trend_arrow || ""}</span>&nbsp;${a.trend_direction}</div>
           </div>
           <div class="confidence-wrap">
-            <div class="confidence-label"><span>Confidence indicator</span><span>${a.confidence}%</span></div>
+            <div class="confidence-label"><span>Confidence Indicator</span><span>${a.confidence}%</span></div>
             <div class="confidence-track"><div class="confidence-bar" style="width:${a.confidence}%;"></div></div>
           </div>
-          <div class="panel-block" style="margin-top:12px;">
-            <div class="panel-title">Recommended action</div>
+          <div class="panel-block">
+            <div class="panel-title">Recommended Action</div>
             <div style="color:#dce8fb;line-height:1.6;">${a.recommended_action}</div>
           </div>
         `;
         feed.appendChild(div);
       });
     }
+
     function renderFocus(focus) {
       const el = document.getElementById("patientFocus");
       const v = focus.vitals || {};
@@ -928,40 +1138,49 @@ MAIN_HTML = """
               <div class="focus-id">${focus.patient_id || ""}</div>
               <div style="font-size:18px;font-weight:800;color:#dbe7fb;margin-top:8px;">${r.alert_message || "Vitals stable"}</div>
             </div>
-            <div class="${badgeClass(r.severity)}">${r.severity || "stable"}</div>
+            <div class="${severityClass(r.severity)}">${r.severity || "stable"}</div>
           </div>
         </div>
-        <div class="risk-panel-grid">
-          <div class="risk-panel"><div class="rk">AI Risk Score</div><div class="rv">${r.risk_score ?? "--"}</div><div class="rs">Current patient deterioration risk snapshot.</div></div>
-          <div class="risk-panel"><div class="rk">Clinical Priority</div><div class="rv">${r.clinical_priority ?? "--"}</div><div class="rs">Intervention priority level for operational response.</div></div>
-        </div>
+
         <div class="panel-block">
-          <div class="panel-title">Confidence indicator</div>
+          <div class="kv"><span class="k">AI Risk Score</span><span class="v">${r.risk_score ?? "--"}</span></div>
+          <div class="kv"><span class="k">Clinical Priority</span><span class="v">${r.clinical_priority ?? "--"}</span></div>
+          <div class="kv"><span class="k">Trend Direction</span><span class="v ${trendClass(r.trend_direction)}">${r.trend_arrow || ""} ${r.trend_direction ?? "--"}</span></div>
+        </div>
+
+        <div class="panel-block">
+          <div class="panel-title">Confidence Indicator</div>
           <div class="confidence-wrap">
             <div class="confidence-label"><span>Confidence</span><span>${r.confidence ?? "--"}%</span></div>
             <div class="confidence-track"><div class="confidence-bar" style="width:${r.confidence || 0}%;"></div></div>
           </div>
         </div>
+
         <div class="panel-block">
-          <div class="kv"><span class="k">Trend Direction</span><span class="v ${trendClass(r.trend_direction)}">${r.trend_arrow || ""} ${r.trend_direction ?? "--"}</span></div>
           <div class="kv"><span class="k">Heart Rate</span><span class="v">${v.heart_rate ?? "--"}</span></div>
           <div class="kv"><span class="k">Systolic BP</span><span class="v">${v.systolic_bp ?? "--"}</span></div>
           <div class="kv"><span class="k">Diastolic BP</span><span class="v">${v.diastolic_bp ?? "--"}</span></div>
           <div class="kv"><span class="k">SpO2</span><span class="v">${v.spo2 ?? "--"}</span></div>
           <div class="kv"><span class="k">Avg SpO2</span><span class="v">${roll.avg_spo2 ?? "--"}</span></div>
         </div>
-        <div class="panel-block"><div class="panel-title">Recommended action</div><div style="color:#dce8fb;line-height:1.65;">${r.recommended_action ?? "--"}</div></div>
+
+        <div class="panel-block">
+          <div class="panel-title">Recommended Action</div>
+          <div style="color:#dce8fb;line-height:1.65;">${r.recommended_action ?? "--"}</div>
+        </div>
       `;
     }
+
     function renderStreamHealth(data) {
       document.getElementById("streamHealth").innerHTML = `
-        <div class="panel-title">System health</div>
+        <div class="panel-title">System Health</div>
         <div class="kv"><span class="k">Status</span><span class="v">${data.status || "running"}</span></div>
         <div class="kv"><span class="k">Mode</span><span class="v">${data.mode || "realtime"}</span></div>
         <div class="kv"><span class="k">Worker</span><span class="v">${data.worker_status || "simulated"}</span></div>
         <div class="kv"><span class="k">Patients with alerts</span><span class="v">${data.patients_with_alerts ?? 0}</span></div>
       `;
     }
+
     function renderSystemActivity(overview, live) {
       const focus = live.focus_patient || {};
       const risk = focus.risk || {};
@@ -971,13 +1190,19 @@ MAIN_HTML = """
         `Critical queue ${overview.critical_alerts ?? 0}`,
         `Top focus ${focus.patient_id || "p101"}`,
         `AI risk ${risk.risk_score ?? 0}`,
-        `Confidence ${risk.confidence ?? 0}%`,
+        `Confidence ${risk.confidence ?? 0}%`
       ];
-      document.getElementById("systemActivity").innerHTML = items.map(i => `<div class="kv"><span class="k">Live activity</span><span class="v">${i}</span></div>`).join("");
+      document.getElementById("systemActivity").innerHTML =
+        items.map(i => `<div class="kv"><span class="k">Live Activity</span><span class="v">${i}</span></div>`).join("");
     }
+
     function renderChannels(data) {
-      document.getElementById("streamChannels").innerHTML = `<div class="panel-title">Stream channels</div>` + (data.channels || []).map(x => `<div>${x}</div>`).join("");
+      const channels = data.channels || [];
+      document.getElementById("streamChannels").innerHTML =
+        `<div class="panel-title">Stream Channels</div>` +
+        channels.map(c => `<div class="kv"><span class="k">Channel</span><span class="v">${c}</span></div>`).join("");
     }
+
     function renderSimulator(patients) {
       const grid = document.getElementById("simulatorGrid");
       grid.innerHTML = "";
@@ -985,12 +1210,12 @@ MAIN_HTML = """
         const v = p.vitals || {};
         const r = p.risk || {};
         const div = document.createElement("div");
-        div.className = "sim-card";
+        div.className = "card";
         div.innerHTML = `
           <div class="sim-title">${p.patient_name}</div>
           <div class="sim-room">${p.room} • ${p.program}</div>
           <div class="sim-risk">${r.risk_score}</div>
-          <div style="margin-bottom:10px;" class="${badgeClass(r.severity)}">${r.severity}</div>
+          <div style="margin-bottom:10px;" class="${severityClass(r.severity)}">${r.severity}</div>
           <div class="sim-copy">HR ${v.heart_rate} • BP ${v.systolic_bp}/${v.diastolic_bp} • SpO2 ${v.spo2}</div>
           <div class="meta-row">
             <div class="meta-pill">${r.clinical_priority}</div>
@@ -1001,6 +1226,7 @@ MAIN_HTML = """
         grid.appendChild(div);
       });
     }
+
     function renderTicker(overview, live) {
       const parts = [
         `Hospital journey active`,
@@ -1015,23 +1241,29 @@ MAIN_HTML = """
         `Recommended action engine active`
       ];
       const doubled = parts.concat(parts);
-      document.getElementById("opsTicker").innerHTML = doubled.map(p => `<span><i class="bullet"></i>${p}</span>`).join("");
+      document.getElementById("opsTicker").innerHTML =
+        doubled.map(p => `<span><i class="dot"></i>${p}</span>`).join("");
     }
+
     async function refreshDashboard() {
       try {
         const overview = await getJson(`/api/v1/dashboard/overview?tenant_id=${tenantId}`);
         const live = await getJson(`/api/v1/live-snapshot?tenant_id=${tenantId}&patient_id=${focusPatientId}`);
         const health = await getJson(`/api/v1/stream/health?tenant_id=${tenantId}`);
         const channels = await getJson(`/api/v1/stream/channels?tenant_id=${tenantId}&patient_id=${focusPatientId}`);
+
         animateNumber("metricPatients", overview.patient_count ?? 0);
         animateNumber("metricAlerts", overview.open_alerts ?? 0);
         animateNumber("metricCritical", overview.critical_alerts ?? 0);
         animateNumber("metricRisk", overview.avg_risk_score ?? 0);
+
         if ((overview.open_alerts ?? 0) > prevOpenAlerts || (overview.critical_alerts ?? 0) > prevCriticalAlerts) {
           playAlertBeep();
         }
+
         prevOpenAlerts = overview.open_alerts ?? 0;
         prevCriticalAlerts = overview.critical_alerts ?? 0;
+
         renderAlerts(live.alerts || []);
         renderFocus(live.focus_patient || {});
         renderStreamHealth(health || {});
@@ -1043,6 +1275,7 @@ MAIN_HTML = """
         console.error(err);
       }
     }
+
     refreshDashboard();
     setInterval(refreshDashboard, 5000);
   </script>
