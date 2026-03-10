@@ -390,6 +390,7 @@ MAIN_HTML = """
       --panel:#101a2d;
       --panel2:#13223d;
       --line:rgba(255,255,255,.08);
+      --line2:rgba(255,255,255,.05);
       --text:#edf4ff;
       --muted:#98afd2;
       --blue:#7aa2ff;
@@ -401,6 +402,7 @@ MAIN_HTML = """
       --radius:22px;
       --max:1320px;
       --shadow:0 18px 50px rgba(0,0,0,.24);
+      --shadow-soft:0 10px 28px rgba(0,0,0,.18);
     }
     *{box-sizing:border-box}
     html{scroll-behavior:smooth}
@@ -410,8 +412,9 @@ MAIN_HTML = """
       color:var(--text);
       background:
         radial-gradient(circle at top left, rgba(122,162,255,.14), transparent 22%),
-        radial-gradient(circle at top right, rgba(91,212,255,.10), transparent 20%),
+        radial-gradient(circle at top right, rgba(91,212,255,.1), transparent 20%),
         linear-gradient(180deg, var(--bg), var(--bg2));
+      overflow-x:hidden;
     }
     a{color:inherit;text-decoration:none}
     .nav{
@@ -433,30 +436,73 @@ MAIN_HTML = """
       display:inline-flex;align-items:center;justify-content:center;
       padding:13px 18px;border-radius:16px;font-weight:900;font-size:14px;
       background:linear-gradient(135deg,var(--blue),var(--blue2));color:#08111f;
-      border:1px solid transparent;cursor:pointer;box-shadow:var(--shadow);
+      border:1px solid transparent;cursor:pointer;box-shadow:var(--shadow-soft);
+      transition:transform .18s ease, box-shadow .18s ease, opacity .18s ease;
     }
+    .btn:hover{transform:translateY(-1px);opacity:.98}
     .btn.secondary{background:#111b2f;color:var(--text);border-color:var(--line);box-shadow:none}
     .btn.ghost{background:transparent;color:var(--text);border-color:var(--line);border:1px solid var(--line)}
     .shell{max-width:var(--max);margin:0 auto;padding:20px 16px 70px}
-    .hero{display:grid;grid-template-columns:1.1fr .9fr;gap:18px;padding-top:12px}
+
+    .hero{
+      display:grid;grid-template-columns:1.1fr .9fr;gap:18px;padding-top:12px;align-items:stretch;
+    }
     .card{
       background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015));
       border:1px solid var(--line);border-radius:var(--radius);padding:28px;
       box-shadow:var(--shadow);
     }
+    .hero-main{
+      position:relative;overflow:hidden;
+      background:
+        radial-gradient(circle at top left, rgba(122,162,255,.14), transparent 28%),
+        radial-gradient(circle at 78% 18%, rgba(91,212,255,.1), transparent 24%),
+        linear-gradient(180deg, rgba(18,31,54,.82), rgba(12,20,34,.86));
+    }
+    .hero-main:before{
+      content:"";
+      position:absolute;inset:0;
+      background:
+        linear-gradient(rgba(122,162,255,.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(122,162,255,.04) 1px, transparent 1px);
+      background-size:30px 30px;
+      opacity:.35;
+      pointer-events:none;
+    }
+    .hero-main:after{
+      content:"";
+      position:absolute;right:-120px;top:-120px;
+      width:320px;height:320px;border-radius:999px;
+      background:radial-gradient(circle, rgba(91,212,255,.22), transparent 68%);
+      filter:blur(12px);
+      pointer-events:none;
+    }
     .hero-kicker,.small-k{
       font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:#c8d7f1;font-weight:900;margin-bottom:12px
     }
     h1{margin:0 0 14px;font-size:clamp(38px,5vw,74px);line-height:.95;font-weight:1000;letter-spacing:-.055em}
-    .lead{margin:0;color:#c8d7f1;font-size:clamp(16px,1.5vw,20px);line-height:1.55}
+    .lead{margin:0;color:#c8d7f1;font-size:clamp(16px,1.5vw,20px);line-height:1.55;max-width:940px}
     .hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:24px}
+    .hero-strip{
+      display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:22px
+    }
+    .hero-stat{
+      background:rgba(255,255,255,.03);border:1px solid var(--line2);border-radius:18px;padding:14px 16px
+    }
+    .hero-stat .k{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#9fb7da;font-weight:900}
+    .hero-stat .v{font-size:28px;font-weight:1000;margin-top:8px;line-height:1}
+    .hero-stat .s{font-size:13px;color:#b7c9e7;margin-top:6px;line-height:1.4}
+
     .cta-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:18px}
     .cta-card{
-      border:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.028);border-radius:18px;padding:16px
+      border:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.028);border-radius:18px;padding:16px;
+      transition:transform .18s ease, border-color .18s ease;
     }
+    .cta-card:hover{transform:translateY(-2px);border-color:rgba(122,162,255,.22)}
     .cta-card h4{margin:0 0 8px;font-size:18px}
     .cta-card p{margin:0;color:#bdd0ec;line-height:1.5;font-size:14px}
     .cta-card .mini-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+
     .live-pill{
       display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;
       background:rgba(56,211,159,.12);border:1px solid rgba(56,211,159,.25);
@@ -475,9 +521,10 @@ MAIN_HTML = """
     }
     .mini-v,.metric-value{font-size:clamp(28px,2.6vw,54px);font-weight:1000;line-height:1;margin-top:10px}
     .mini-s,.metric-note{font-size:14px;color:#b7c9e7;margin-top:8px;line-height:1.45}
-    .section{margin-top:28px}
+    .section{margin-top:30px}
     .section-title{font-size:clamp(30px,3.1vw,42px);font-weight:1000;letter-spacing:-.04em;margin:0 0 8px;line-height:1.02}
     .section-sub{color:var(--muted);font-size:16px;line-height:1.65;margin:0 0 18px;max-width:980px}
+
     .ticker-wrap{
       margin-top:18px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);overflow:hidden
     }
@@ -493,7 +540,7 @@ MAIN_HTML = """
     }
 
     .dashboard-grid{display:grid;grid-template-columns:1.16fr 1fr 1fr;gap:14px}
-    .dash-card{padding:22px;min-height:420px}
+    .dash-card{padding:22px;min-height:440px}
     .dash-card h3{margin:0 0 6px;font-size:22px}
     .dash-card p{margin:0 0 16px;color:var(--muted);line-height:1.6}
     .feed{display:flex;flex-direction:column;gap:12px}
@@ -523,7 +570,7 @@ MAIN_HTML = """
       font-size:12px;font-weight:800;color:#d7e6ff
     }
     .badge{
-      display:inline-flex;align-items:center;justify-content:center;min-width:98px;padding:9px 13px;border-radius:999px;
+      display:inline-flex;align-items:center;justify-content:center;min-width:104px;padding:10px 14px;border-radius:999px;
       font-size:12px;text-transform:uppercase;letter-spacing:.1em;font-weight:1000
     }
     .critical{background:rgba(255,109,127,.16);border:1px solid rgba(255,109,127,.32);color:#ffd1d8}
@@ -538,7 +585,7 @@ MAIN_HTML = """
     .panel-block{
       background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.05);border-radius:18px;padding:16px;margin-top:12px
     }
-    .kv{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+    .kv{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.05)}
     .kv:last-child{border-bottom:none}
     .k{color:#b6c8e8;font-weight:700}
     .v{font-weight:900}
@@ -560,23 +607,97 @@ MAIN_HTML = """
     .audio-toggle{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:14px;background:#111b2f;border:1px solid var(--line);color:var(--text);font-weight:900;cursor:pointer}
     iframe{width:100%;aspect-ratio:16/9;border:0;border-radius:18px;background:#0a0f18}
 
+    .form-shell{
+      max-width:1120px;margin:0 auto;padding:40px 20px 60px;
+    }
+    .form-card{
+      background:
+        radial-gradient(circle at top left, rgba(122,162,255,.10), transparent 24%),
+        linear-gradient(180deg, rgba(16,26,45,.98), rgba(12,18,32,.98));
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:24px;
+      padding:30px;
+      box-shadow:var(--shadow);
+    }
+    .form-top{
+      display:flex;justify-content:space-between;gap:20px;align-items:flex-start;flex-wrap:wrap;
+      margin-bottom:22px;
+    }
+    .form-title{
+      font-size:clamp(38px,4vw,54px);font-weight:1000;line-height:.98;margin:0 0 10px;letter-spacing:-.045em;
+    }
+    .form-copy{
+      color:#c6d7ef;line-height:1.7;margin:0;max-width:760px;
+    }
+    .form-badge{
+      padding:10px 14px;border-radius:999px;background:rgba(56,211,159,.12);border:1px solid rgba(56,211,159,.22);
+      color:#c8ffe5;font-weight:900;font-size:12px;letter-spacing:.1em;text-transform:uppercase;
+    }
+    .form{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+    .full{grid-column:1/-1}
+    .field{display:flex;flex-direction:column;gap:8px}
+    .field label{
+      font-size:12px;text-transform:uppercase;letter-spacing:.14em;color:#9eb4d6;font-weight:900
+    }
+    .field input,.field select,.field textarea{
+      width:100%;
+      background:#0d1728;
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:16px;
+      color:#edf4ff;
+      padding:15px 15px;
+      font:inherit;
+      transition:border-color .18s ease, box-shadow .18s ease, background .18s ease;
+    }
+    .field input:focus,.field select:focus,.field textarea:focus{
+      outline:none;
+      border-color:rgba(122,162,255,.42);
+      box-shadow:0 0 0 3px rgba(122,162,255,.10);
+      background:#101b2f;
+    }
+    .field textarea{min-height:140px;resize:vertical}
+    .success-box{
+      margin-top:18px;
+      background:linear-gradient(180deg, rgba(56,211,159,.12), rgba(56,211,159,.06));
+      border:1px solid rgba(56,211,159,.18);
+      border-radius:20px;padding:18px 18px;color:#d7ffe9
+    }
+    .success-box h2{margin:0 0 8px;font-size:26px}
+    .success-box p{margin:0;color:#d7ffe9;line-height:1.65}
+    .admin-grid{
+      display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:18px 0 6px;
+    }
+    .admin-kpi{
+      background:rgba(255,255,255,.025);
+      border:1px solid rgba(255,255,255,.06);
+      border-radius:18px;padding:18px;
+    }
+    .admin-kpi .k{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#9eb4d6;font-weight:900}
+    .admin-kpi .v{font-size:36px;font-weight:1000;margin-top:10px;line-height:1}
+    table{width:100%;border-collapse:collapse;margin-top:18px;font-size:14px}
+    th,td{padding:12px;border-bottom:1px solid rgba(255,255,255,.08);text-align:left;vertical-align:top}
+    th{color:#9eb4d6;text-transform:uppercase;font-size:12px;letter-spacing:.12em}
+    tr:hover td{background:rgba(255,255,255,.02)}
+
     @media (max-width:1180px){
       .hero,.summary-list{grid-template-columns:1fr}
       .dashboard-grid{grid-template-columns:1fr 1fr}
       .dashboard-grid .dash-card:first-child{grid-column:1/-1}
-      .metrics-grid,.trust-grid,.sim-grid,.cta-grid{grid-template-columns:repeat(2,1fr)}
+      .metrics-grid,.trust-grid,.sim-grid,.cta-grid,.hero-strip{grid-template-columns:repeat(2,1fr)}
+      .admin-grid{grid-template-columns:1fr}
     }
     @media (max-width:760px){
-      .metrics-grid,.dashboard-grid,.trust-grid,.sim-grid,.mini-grid,.summary-list,.cta-grid{grid-template-columns:1fr}
+      .metrics-grid,.dashboard-grid,.trust-grid,.sim-grid,.mini-grid,.summary-list,.cta-grid,.hero-strip,.form{grid-template-columns:1fr}
       .nav-links{width:100%}
       .hero-actions{flex-direction:column;align-items:stretch}
       .btn,.audio-toggle{width:100%}
-      .alert-top,.kv,.focus-top{flex-direction:column}
-      .shell{padding:16px 12px 56px}
-      .card,.dash-card{padding:18px}
+      .alert-top,.kv,.focus-top,.form-top{flex-direction:column}
+      .shell,.form-shell{padding:16px 12px 56px}
+      .card,.dash-card,.form-card{padding:18px}
       h1{font-size:clamp(34px,9vw,48px)}
       .lead{font-size:16px}
       .section-title{font-size:32px}
+      .form-title{font-size:38px}
     }
   </style>
 </head>
@@ -601,7 +722,7 @@ MAIN_HTML = """
 
   <div class="shell">
     <section class="hero" id="overview">
-      <div class="card">
+      <div class="card hero-main">
         <div class="hero-kicker">Clinical command platform</div>
         <h1>Detect patient deterioration earlier. Strengthen response at scale.</h1>
         <p class="lead">
@@ -617,21 +738,26 @@ MAIN_HTML = """
           <button class="audio-toggle" id="audioToggle" type="button">🔔 Enable Alert Sound</button>
         </div>
 
-        <div class="cta-grid">
-          <div class="cta-card">
-            <h4>Request Hospital Demo</h4>
-            <p>Capture interest from hospital operators, RPM teams, and care leadership.</p>
-            <div class="mini-actions"><a class="btn secondary" href="/hospital-demo">Open Form</a></div>
+        <div class="hero-strip">
+          <div class="hero-stat">
+            <div class="k">Clinical View</div>
+            <div class="v">Live</div>
+            <div class="s">Hospital-facing command operations</div>
           </div>
-          <div class="cta-card">
-            <h4>Schedule Executive Walkthrough</h4>
-            <p>Collect executive outreach requests for product review, pilots, and command-center evaluation.</p>
-            <div class="mini-actions"><a class="btn secondary" href="/executive-walkthrough">Open Form</a></div>
+          <div class="hero-stat">
+            <div class="k">AI Layer</div>
+            <div class="v">Scored</div>
+            <div class="s">Risk, confidence, priority, direction</div>
           </div>
-          <div class="cta-card">
-            <h4>Investor-Ready Flow</h4>
-            <p>Present a clean investor portal, intake workflow, and downloadable pitch materials.</p>
-            <div class="mini-actions"><a class="btn secondary" href="/investors">Open Investor View</a></div>
+          <div class="hero-stat">
+            <div class="k">Executive Flow</div>
+            <div class="v">Ready</div>
+            <div class="s">Walkthrough and demo capture built in</div>
+          </div>
+          <div class="hero-stat">
+            <div class="k">Investor Flow</div>
+            <div class="v">Active</div>
+            <div class="s">Intake, pitch deck, admin review</div>
           </div>
         </div>
 
@@ -676,6 +802,24 @@ MAIN_HTML = """
             <div class="mini-k">Workflow</div>
             <div class="mini-v">Live</div>
             <div class="mini-s">Hospital demos, investor intake, CSV export, admin review</div>
+          </div>
+        </div>
+
+        <div class="cta-grid">
+          <div class="cta-card">
+            <h4>Request Hospital Demo</h4>
+            <p>Capture interest from hospital operators, RPM teams, and care leadership.</p>
+            <div class="mini-actions"><a class="btn secondary" href="/hospital-demo">Open Form</a></div>
+          </div>
+          <div class="cta-card">
+            <h4>Schedule Executive Walkthrough</h4>
+            <p>Collect executive outreach requests for pilots, evaluations, and enterprise review.</p>
+            <div class="mini-actions"><a class="btn secondary" href="/executive-walkthrough">Open Form</a></div>
+          </div>
+          <div class="cta-card">
+            <h4>Investor Flow</h4>
+            <p>Present a clean investor portal, intake workflow, deck, and admin review experience.</p>
+            <div class="mini-actions"><a class="btn secondary" href="/investors">Open Investor View</a></div>
           </div>
         </div>
       </div>
@@ -1033,12 +1177,33 @@ INVESTOR_HTML = """
   <title>Investor Overview — Early Risk Alert AI</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body{margin:0;font-family:Inter,Arial,sans-serif;background:#08111f;color:#edf4ff}
-    .wrap{max-width:1100px;margin:0 auto;padding:40px 20px}
-    .card{background:#101a2d;border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:28px}
-    h1{font-size:48px;line-height:1;margin:0 0 14px}
-    p{color:#bdd0ec;line-height:1.7}
-    .btn{display:inline-block;padding:13px 18px;border-radius:14px;background:linear-gradient(135deg,#7aa2ff,#5bd4ff);color:#08111f;font-weight:900;text-decoration:none;margin-right:10px;margin-bottom:10px}
+    :root{
+      --bg:#08111f;
+      --panel:#101a2d;
+      --line:rgba(255,255,255,.08);
+      --text:#edf4ff;
+      --muted:#bdd0ec;
+      --blue:#7aa2ff;
+      --blue2:#5bd4ff;
+      --shadow:0 18px 50px rgba(0,0,0,.24);
+    }
+    body{margin:0;font-family:Inter,Arial,sans-serif;background:#08111f;color:var(--text)}
+    .wrap{max-width:1160px;margin:0 auto;padding:40px 20px 60px}
+    .card{
+      background:
+        radial-gradient(circle at top right, rgba(91,212,255,.10), transparent 24%),
+        linear-gradient(180deg, rgba(16,26,45,.98), rgba(12,18,32,.98));
+      border:1px solid var(--line);border-radius:24px;padding:32px;box-shadow:var(--shadow)
+    }
+    h1{font-size:clamp(40px,4vw,60px);line-height:.98;margin:0 0 14px;letter-spacing:-.045em}
+    p{color:var(--muted);line-height:1.7}
+    .btn{display:inline-block;padding:13px 18px;border-radius:14px;background:linear-gradient(135deg,var(--blue),var(--blue2));color:#08111f;font-weight:900;text-decoration:none;margin-right:10px;margin-bottom:10px}
+    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:24px}
+    .mini{background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.06);border-radius:18px;padding:18px}
+    .k{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#9eb4d6;font-weight:900}
+    .v{font-size:28px;font-weight:1000;margin-top:10px}
+    .s{font-size:14px;color:#c4d6ef;margin-top:8px;line-height:1.5}
+    @media (max-width:900px){.grid{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
@@ -1058,6 +1223,24 @@ INVESTOR_HTML = """
         <a class="btn" href="/deck">Download Pitch Deck PDF</a>
         <a class="btn" href="/admin/review">Admin Review</a>
       </p>
+
+      <div class="grid">
+        <div class="mini">
+          <div class="k">Platform</div>
+          <div class="v">Clinical AI</div>
+          <div class="s">Command-center style hospital intelligence and predictive scoring.</div>
+        </div>
+        <div class="mini">
+          <div class="k">Commercial Flow</div>
+          <div class="v">Investor Ready</div>
+          <div class="s">Intake, deck delivery, follow-up capture, and admin review built in.</div>
+        </div>
+        <div class="mini">
+          <div class="k">Positioning</div>
+          <div class="v">Enterprise</div>
+          <div class="s">Built to present as a serious SaaS healthcare intelligence platform.</div>
+        </div>
+      </div>
     </div>
   </div>
 </body>
@@ -1072,31 +1255,75 @@ FORM_PAGE = """
   <title>__TITLE__</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body{margin:0;font-family:Inter,Arial,sans-serif;background:#08111f;color:#edf4ff}
-    .wrap{max-width:1100px;margin:0 auto;padding:40px 20px}
-    .card{background:#101a2d;border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:28px}
-    h1{font-size:42px;line-height:1;margin:0 0 14px}
-    p{color:#bdd0ec;line-height:1.7}
-    .form{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+    :root{
+      --bg:#08111f;
+      --panel:#101a2d;
+      --line:rgba(255,255,255,.08);
+      --text:#edf4ff;
+      --muted:#c6d7ef;
+      --blue:#7aa2ff;
+      --blue2:#5bd4ff;
+      --green:#38d39f;
+      --shadow:0 18px 50px rgba(0,0,0,.24);
+    }
+    body{margin:0;font-family:Inter,Arial,sans-serif;background:#08111f;color:var(--text)}
+    .form-shell{max-width:1120px;margin:0 auto;padding:40px 20px 60px}
+    .form-card{
+      background:
+        radial-gradient(circle at top left, rgba(122,162,255,.10), transparent 24%),
+        linear-gradient(180deg, rgba(16,26,45,.98), rgba(12,18,32,.98));
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:24px;
+      padding:30px;
+      box-shadow:var(--shadow);
+    }
+    .form-top{
+      display:flex;justify-content:space-between;gap:20px;align-items:flex-start;flex-wrap:wrap;
+      margin-bottom:22px;
+    }
+    .form-title{
+      font-size:clamp(38px,4vw,54px);font-weight:1000;line-height:.98;margin:0 0 10px;letter-spacing:-.045em;
+    }
+    .form-copy{color:var(--muted);line-height:1.7;margin:0;max-width:760px}
+    .form-badge{
+      padding:10px 14px;border-radius:999px;background:rgba(56,211,159,.12);border:1px solid rgba(56,211,159,.22);
+      color:#c8ffe5;font-weight:900;font-size:12px;letter-spacing:.1em;text-transform:uppercase;
+    }
+    .form{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
     .full{grid-column:1/-1}
     .field{display:flex;flex-direction:column;gap:8px}
     .field label{font-size:12px;text-transform:uppercase;letter-spacing:.14em;color:#9eb4d6;font-weight:900}
     .field input,.field select,.field textarea{
-      width:100%;background:#0d1728;border:1px solid rgba(255,255,255,.08);border-radius:14px;color:#edf4ff;
-      padding:14px 14px;font:inherit
+      width:100%;background:#0d1728;border:1px solid rgba(255,255,255,.08);border-radius:16px;color:#edf4ff;
+      padding:15px 15px;font:inherit;transition:border-color .18s ease, box-shadow .18s ease, background .18s ease;
     }
-    .field textarea{min-height:120px;resize:vertical}
-    .btn{display:inline-block;padding:13px 18px;border-radius:14px;background:linear-gradient(135deg,#7aa2ff,#5bd4ff);color:#08111f;font-weight:900;text-decoration:none;border:none;cursor:pointer}
-    .success{margin-top:12px;padding:14px 16px;border-radius:16px;border:1px solid rgba(56,211,159,.25);background:rgba(56,211,159,.12);color:#d0ffe8;font-weight:800}
-    @media (max-width:760px){.form{grid-template-columns:1fr}}
+    .field input:focus,.field select:focus,.field textarea:focus{
+      outline:none;border-color:rgba(122,162,255,.42);box-shadow:0 0 0 3px rgba(122,162,255,.10);background:#101b2f;
+    }
+    .field textarea{min-height:140px;resize:vertical}
+    .btn{
+      display:inline-flex;align-items:center;justify-content:center;padding:14px 18px;border-radius:16px;
+      background:linear-gradient(135deg,var(--blue),var(--blue2));color:#08111f;font-weight:1000;text-decoration:none;border:none;cursor:pointer
+    }
+    @media (max-width:760px){
+      .form{grid-template-columns:1fr}
+      .form-shell{padding:16px 12px 56px}
+      .form-card{padding:18px}
+      .form-top{flex-direction:column}
+      .form-title{font-size:38px}
+    }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="card">
-      <h1>__HEADING__</h1>
-      <p>__COPY__</p>
-      __SUCCESS_BLOCK__
+  <div class="form-shell">
+    <div class="form-card">
+      <div class="form-top">
+        <div>
+          <h1 class="form-title">__HEADING__</h1>
+          <p class="form-copy">__COPY__</p>
+        </div>
+        <div class="form-badge">Enterprise Intake</div>
+      </div>
       <form method="post" class="form">
         __FIELDS__
         <div class="field full">
@@ -1117,22 +1344,43 @@ THANK_YOU_PAGE = """
   <title>Thank You — Early Risk Alert AI</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body{margin:0;font-family:Inter,Arial,sans-serif;background:#08111f;color:#edf4ff}
-    .wrap{max-width:900px;margin:0 auto;padding:60px 20px}
-    .card{background:#101a2d;border:1px solid rgba(255,255,255,.08);border-radius:22px;padding:32px}
-    h1{margin:0 0 12px;font-size:44px}
-    p{color:#c0d2ec;line-height:1.7}
-    .btn{display:inline-block;padding:13px 18px;border-radius:14px;background:linear-gradient(135deg,#7aa2ff,#5bd4ff);color:#08111f;font-weight:900;text-decoration:none;margin-right:10px}
+    :root{
+      --bg:#08111f;
+      --panel:#101a2d;
+      --line:rgba(255,255,255,.08);
+      --text:#edf4ff;
+      --muted:#c6d7ef;
+      --blue:#7aa2ff;
+      --blue2:#5bd4ff;
+      --green:#38d39f;
+      --shadow:0 18px 50px rgba(0,0,0,.24);
+    }
+    body{margin:0;font-family:Inter,Arial,sans-serif;background:#08111f;color:var(--text)}
+    .wrap{max-width:920px;margin:0 auto;padding:60px 20px}
+    .card{
+      background:
+        radial-gradient(circle at top left, rgba(56,211,159,.12), transparent 24%),
+        linear-gradient(180deg, rgba(16,26,45,.98), rgba(12,18,32,.98));
+      border:1px solid var(--line);border-radius:24px;padding:34px;box-shadow:var(--shadow)
+    }
+    h1{margin:0 0 12px;font-size:clamp(38px,4vw,54px);letter-spacing:-.045em}
+    p{color:var(--muted);line-height:1.75}
+    .ok{
+      display:inline-flex;align-items:center;gap:10px;padding:10px 14px;border-radius:999px;
+      background:rgba(56,211,159,.12);border:1px solid rgba(56,211,159,.20);color:#d3ffe8;font-weight:900;font-size:12px;letter-spacing:.08em;text-transform:uppercase
+    }
+    .btn{display:inline-block;padding:13px 18px;border-radius:14px;background:linear-gradient(135deg,var(--blue),var(--blue2));color:#08111f;font-weight:900;text-decoration:none;margin-right:10px;margin-top:10px}
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="card">
+      <div class="ok">Submission received</div>
       <h1>Thank you</h1>
-      <p>Your request was submitted successfully. Our team can now follow up on your hospital demo, executive walkthrough, or investor inquiry.</p>
+      <p>Your request was submitted successfully. The workflow is now captured inside your platform and ready for follow-up through admin review and CSV export.</p>
       <p>
         <a class="btn" href="/">Return Home</a>
-        <a class="btn" href="/admin/review">Admin Review</a>
+        <a class="btn" href="/admin/review">Open Admin Review</a>
       </p>
     </div>
   </div>
@@ -1148,16 +1396,38 @@ ADMIN_HTML = """
   <title>Admin Review — Early Risk Alert AI</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body{margin:0;font-family:Inter,Arial,sans-serif;background:#08111f;color:#edf4ff}
-    .wrap{max-width:1200px;margin:0 auto;padding:40px 20px}
-    .card{background:#101a2d;border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:28px}
-    h1{font-size:42px;line-height:1;margin:0 0 14px}
-    p{color:#bdd0ec;line-height:1.7}
-    .btn{display:inline-block;padding:13px 18px;border-radius:14px;background:linear-gradient(135deg,#7aa2ff,#5bd4ff);color:#08111f;font-weight:900;text-decoration:none;margin-right:10px;margin-bottom:10px}
-    table{width:100%;border-collapse:collapse;margin-top:20px;font-size:14px}
+    :root{
+      --bg:#08111f;
+      --panel:#101a2d;
+      --line:rgba(255,255,255,.08);
+      --text:#edf4ff;
+      --muted:#bdd0ec;
+      --blue:#7aa2ff;
+      --blue2:#5bd4ff;
+      --shadow:0 18px 50px rgba(0,0,0,.24);
+    }
+    body{margin:0;font-family:Inter,Arial,sans-serif;background:#08111f;color:var(--text)}
+    .wrap{max-width:1240px;margin:0 auto;padding:40px 20px 60px}
+    .card{
+      background:
+        radial-gradient(circle at top right, rgba(91,212,255,.10), transparent 24%),
+        linear-gradient(180deg, rgba(16,26,45,.98), rgba(12,18,32,.98));
+      border:1px solid var(--line);border-radius:24px;padding:30px;box-shadow:var(--shadow)
+    }
+    h1{font-size:clamp(40px,4vw,56px);line-height:.98;margin:0 0 14px;letter-spacing:-.045em}
+    h2{margin:0 0 10px;font-size:32px;letter-spacing:-.03em}
+    p{color:var(--muted);line-height:1.7}
+    .btn{display:inline-block;padding:13px 18px;border-radius:14px;background:linear-gradient(135deg,var(--blue),var(--blue2));color:#08111f;font-weight:900;text-decoration:none;margin-right:10px;margin-bottom:10px}
+    .admin-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:18px 0 20px}
+    .admin-kpi{background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.06);border-radius:18px;padding:18px}
+    .admin-kpi .k{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#9eb4d6;font-weight:900}
+    .admin-kpi .v{font-size:36px;font-weight:1000;margin-top:10px;line-height:1}
+    table{width:100%;border-collapse:collapse;margin-top:18px;font-size:14px}
     th,td{padding:12px;border-bottom:1px solid rgba(255,255,255,.08);text-align:left;vertical-align:top}
     th{color:#9eb4d6;text-transform:uppercase;font-size:12px;letter-spacing:.12em}
-    .section{margin-top:24px}
+    tr:hover td{background:rgba(255,255,255,.02)}
+    .section{margin-top:28px}
+    @media (max-width:900px){.admin-grid{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
@@ -1169,6 +1439,12 @@ ADMIN_HTML = """
         <a class="btn" href="/admin/export.csv">Download CSV</a>
         <a class="btn" href="/">Return Home</a>
       </p>
+
+      <div class="admin-grid">
+        <div class="admin-kpi"><div class="k">Hospital Demo Requests</div><div class="v">__HOSPITAL_COUNT__</div></div>
+        <div class="admin-kpi"><div class="k">Executive Walkthrough Requests</div><div class="v">__EXEC_COUNT__</div></div>
+        <div class="admin-kpi"><div class="k">Investor Intake Requests</div><div class="v">__INVESTOR_COUNT__</div></div>
+      </div>
 
       <div class="section">
         <h2>Hospital Demo Requests</h2>
@@ -1294,7 +1570,6 @@ def create_app() -> Flask:
         html = FORM_PAGE.replace("__TITLE__", "Hospital Demo — Early Risk Alert AI")
         html = html.replace("__HEADING__", "Request Hospital Demo")
         html = html.replace("__COPY__", "Capture interest from hospital operations teams, clinical leaders, and remote monitoring stakeholders.")
-        html = html.replace("__SUCCESS_BLOCK__", "")
         html = html.replace("__FIELDS__", fields)
         html = html.replace("__BUTTON__", "Submit Hospital Demo Request")
         return render_template_string(html)
@@ -1343,7 +1618,6 @@ def create_app() -> Flask:
         html = FORM_PAGE.replace("__TITLE__", "Executive Walkthrough — Early Risk Alert AI")
         html = html.replace("__HEADING__", "Schedule Executive Walkthrough")
         html = html.replace("__COPY__", "Capture executive-level product review requests for hospital leadership, system operations, and strategic evaluation.")
-        html = html.replace("__SUCCESS_BLOCK__", "")
         html = html.replace("__FIELDS__", fields)
         html = html.replace("__BUTTON__", "Submit Executive Walkthrough Request")
         return render_template_string(html)
@@ -1395,7 +1669,6 @@ def create_app() -> Flask:
         html = FORM_PAGE.replace("__TITLE__", "Investor Intake — Early Risk Alert AI")
         html = html.replace("__HEADING__", "Investor Intake Form")
         html = html.replace("__COPY__", "Capture investor interest, timeline, and follow-up details directly from the platform.")
-        html = html.replace("__SUCCESS_BLOCK__", "")
         html = html.replace("__FIELDS__", fields)
         html = html.replace("__BUTTON__", "Submit Investor Intake")
         return render_template_string(html)
@@ -1407,6 +1680,9 @@ def create_app() -> Flask:
         investor_rows = read_jsonl(investor_file)
 
         html = ADMIN_HTML
+        html = html.replace("__HOSPITAL_COUNT__", str(len(hospital_rows)))
+        html = html.replace("__EXEC_COUNT__", str(len(exec_rows)))
+        html = html.replace("__INVESTOR_COUNT__", str(len(investor_rows)))
         html = html.replace("__HOSPITAL_TABLE__", _table_html(
             hospital_rows,
             ["submitted_at", "full_name", "organization", "role", "email", "facility_type", "timeline"]
