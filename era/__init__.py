@@ -12,7 +12,7 @@ from typing import Any, Dict, List
 from flask import Flask, jsonify, render_template_string, request, send_file
 
 
-INFO_EMAIL = "info@earlyriskai.com"
+INFO_EMAIL = "info@earlyriskalertai.com"
 BUSINESS_PHONE = "732-724-7267"
 YOUTUBE_EMBED_URL = "https://www.youtube.com/embed/HiidXiXifY4"
 
@@ -83,6 +83,15 @@ def _trend_direction(vitals: Dict[str, Any]) -> str:
     if score == 1:
         return "Elevated"
     return "Stable"
+
+
+def _trend_arrow(trend: str) -> str:
+    t = (trend or "").lower()
+    if t == "worsening":
+        return "↑"
+    if t == "elevated":
+        return "→"
+    return "↓"
 
 
 def _detect_risk(vitals: Dict[str, Any]) -> Dict[str, Any]:
@@ -162,6 +171,7 @@ def _detect_risk(vitals: Dict[str, Any]) -> Dict[str, Any]:
         "recommended_action": _recommended_action(severity, vitals),
         "clinical_priority": _clinical_priority(severity),
         "trend_direction": trend,
+        "trend_arrow": _trend_arrow(trend),
     }
 
 
@@ -296,6 +306,7 @@ def _build_alerts(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
                     "recommended_action": risk["recommended_action"],
                     "clinical_priority": risk["clinical_priority"],
                     "trend_direction": risk["trend_direction"],
+                    "trend_arrow": risk["trend_arrow"],
                     "created_at": row["event_ts"],
                 }
             )
@@ -385,23 +396,24 @@ MAIN_HTML = """
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     :root{
-      --bg:#07111e;
-      --bg2:#0d1526;
-      --panel:#101a2d;
-      --panel2:#13223d;
+      --bg:#060d19;
+      --bg2:#0b1222;
+      --panel:#0f1728;
+      --panel2:#121f38;
+      --panel3:#0d1628;
       --line:rgba(255,255,255,.08);
       --line2:rgba(255,255,255,.05);
       --text:#edf4ff;
-      --muted:#98afd2;
+      --muted:#9ab0d3;
       --blue:#7aa2ff;
       --blue2:#5bd4ff;
       --green:#38d39f;
-      --red:#ff6d7f;
-      --amber:#f5c06a;
-      --violet:#b58cff;
+      --red:#ff5c72;
+      --amber:#f7be68;
+      --violet:#a88bff;
       --radius:22px;
-      --max:1320px;
-      --shadow:0 18px 50px rgba(0,0,0,.24);
+      --max:1360px;
+      --shadow:0 20px 60px rgba(0,0,0,.28);
       --shadow-soft:0 10px 28px rgba(0,0,0,.18);
     }
     *{box-sizing:border-box}
@@ -412,15 +424,15 @@ MAIN_HTML = """
       color:var(--text);
       background:
         radial-gradient(circle at top left, rgba(122,162,255,.14), transparent 22%),
-        radial-gradient(circle at top right, rgba(91,212,255,.1), transparent 20%),
+        radial-gradient(circle at 80% 10%, rgba(91,212,255,.09), transparent 20%),
         linear-gradient(180deg, var(--bg), var(--bg2));
       overflow-x:hidden;
     }
     a{color:inherit;text-decoration:none}
     .nav{
       position:sticky;top:0;z-index:100;
-      backdrop-filter:blur(14px);
-      background:rgba(7,17,30,.82);
+      background:rgba(6,13,25,.84);
+      backdrop-filter:blur(16px);
       border-bottom:1px solid var(--line);
     }
     .nav-inner{
@@ -437,51 +449,52 @@ MAIN_HTML = """
       padding:13px 18px;border-radius:16px;font-weight:900;font-size:14px;
       background:linear-gradient(135deg,var(--blue),var(--blue2));color:#08111f;
       border:1px solid transparent;cursor:pointer;box-shadow:var(--shadow-soft);
-      transition:transform .18s ease, box-shadow .18s ease, opacity .18s ease;
+      transition:transform .18s ease, box-shadow .18s ease, opacity .18s ease, border-color .18s ease;
     }
     .btn:hover{transform:translateY(-1px);opacity:.98}
     .btn.secondary{background:#111b2f;color:var(--text);border-color:var(--line);box-shadow:none}
-    .btn.ghost{background:transparent;color:var(--text);border-color:var(--line);border:1px solid var(--line)}
+    .btn.ghost{background:transparent;color:var(--text);border:1px solid var(--line);box-shadow:none}
     .shell{max-width:var(--max);margin:0 auto;padding:20px 16px 70px}
 
-    .hero{
-      display:grid;grid-template-columns:1.1fr .9fr;gap:18px;padding-top:12px;align-items:stretch;
-    }
     .card{
       background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015));
       border:1px solid var(--line);border-radius:var(--radius);padding:28px;
       box-shadow:var(--shadow);
     }
+
+    .hero{
+      display:grid;grid-template-columns:1.06fr .94fr;gap:18px;padding-top:12px;align-items:stretch;
+    }
     .hero-main{
       position:relative;overflow:hidden;
       background:
-        radial-gradient(circle at top left, rgba(122,162,255,.14), transparent 28%),
-        radial-gradient(circle at 78% 18%, rgba(91,212,255,.1), transparent 24%),
-        linear-gradient(180deg, rgba(18,31,54,.82), rgba(12,20,34,.86));
+        radial-gradient(circle at top left, rgba(122,162,255,.16), transparent 30%),
+        radial-gradient(circle at 82% 18%, rgba(91,212,255,.12), transparent 24%),
+        linear-gradient(180deg, rgba(18,31,54,.88), rgba(11,18,31,.92));
     }
     .hero-main:before{
       content:"";
       position:absolute;inset:0;
       background:
-        linear-gradient(rgba(122,162,255,.04) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(122,162,255,.04) 1px, transparent 1px);
+        linear-gradient(rgba(122,162,255,.045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(122,162,255,.045) 1px, transparent 1px);
       background-size:30px 30px;
-      opacity:.35;
+      opacity:.36;
       pointer-events:none;
     }
     .hero-main:after{
       content:"";
-      position:absolute;right:-120px;top:-120px;
-      width:320px;height:320px;border-radius:999px;
-      background:radial-gradient(circle, rgba(91,212,255,.22), transparent 68%);
-      filter:blur(12px);
-      pointer-events:none;
+      position:absolute;right:-120px;top:-120px;width:340px;height:340px;border-radius:999px;
+      background:radial-gradient(circle, rgba(91,212,255,.24), transparent 68%);
+      filter:blur(12px);pointer-events:none;
     }
+
     .hero-kicker,.small-k{
       font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:#c8d7f1;font-weight:900;margin-bottom:12px
     }
-    h1{margin:0 0 14px;font-size:clamp(38px,5vw,74px);line-height:.95;font-weight:1000;letter-spacing:-.055em}
-    .lead{margin:0;color:#c8d7f1;font-size:clamp(16px,1.5vw,20px);line-height:1.55;max-width:940px}
+    h1{margin:0 0 14px;font-size:clamp(40px,5vw,76px);line-height:.94;font-weight:1000;letter-spacing:-.058em}
+    .lead{margin:0;color:#c8d7f1;font-size:clamp(16px,1.5vw,20px);line-height:1.58;max-width:950px}
+
     .hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:24px}
     .hero-strip{
       display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:22px
@@ -495,10 +508,16 @@ MAIN_HTML = """
 
     .cta-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:18px}
     .cta-card{
-      border:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.028);border-radius:18px;padding:16px;
-      transition:transform .18s ease, border-color .18s ease;
+      border:1px solid rgba(255,255,255,.07);
+      background:linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.02));
+      border-radius:18px;padding:16px;
+      transition:transform .18s ease, border-color .18s ease, box-shadow .18s ease;
     }
-    .cta-card:hover{transform:translateY(-2px);border-color:rgba(122,162,255,.22)}
+    .cta-card:hover{
+      transform:translateY(-2px);
+      border-color:rgba(122,162,255,.22);
+      box-shadow:0 10px 30px rgba(0,0,0,.18);
+    }
     .cta-card h4{margin:0 0 8px;font-size:18px}
     .cta-card p{margin:0;color:#bdd0ec;line-height:1.5;font-size:14px}
     .cta-card .mini-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
@@ -509,20 +528,26 @@ MAIN_HTML = """
       font-weight:900;font-size:12px;color:#bff5df;text-transform:uppercase;letter-spacing:.08em
     }
     .dot{width:10px;height:10px;border-radius:999px;background:var(--green);box-shadow:0 0 18px rgba(56,211,159,.6)}
-    .side-title{font-size:clamp(28px,2.8vw,38px);font-weight:950;line-height:1.02;margin:18px 0 8px;letter-spacing:-.04em}
+    .side-title{font-size:clamp(28px,2.8vw,40px);font-weight:950;line-height:1.02;margin:18px 0 8px;letter-spacing:-.04em}
     .side-copy{color:#b8cae8;line-height:1.65;margin:0 0 18px;font-size:15px}
+
     .mini-grid,.metrics-grid,.trust-grid{display:grid;gap:14px}
     .mini-grid{grid-template-columns:repeat(2,1fr)}
     .metrics-grid{grid-template-columns:repeat(4,1fr)}
     .trust-grid{grid-template-columns:repeat(4,1fr)}
-    .mini,.metric,.trust-card{border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.025);border-radius:18px;padding:18px}
+    .mini,.metric,.trust-card{
+      border:1px solid rgba(255,255,255,.06);
+      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.018));
+      border-radius:18px;padding:18px
+    }
     .mini-k,.metric-label,.contact-label{
       font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#9fb7da;font-weight:900
     }
     .mini-v,.metric-value{font-size:clamp(28px,2.6vw,54px);font-weight:1000;line-height:1;margin-top:10px}
     .mini-s,.metric-note{font-size:14px;color:#b7c9e7;margin-top:8px;line-height:1.45}
+
     .section{margin-top:30px}
-    .section-title{font-size:clamp(30px,3.1vw,42px);font-weight:1000;letter-spacing:-.04em;margin:0 0 8px;line-height:1.02}
+    .section-title{font-size:clamp(30px,3.1vw,44px);font-weight:1000;letter-spacing:-.04em;margin:0 0 8px;line-height:1.02}
     .section-sub{color:var(--muted);font-size:16px;line-height:1.65;margin:0 0 18px;max-width:980px}
 
     .ticker-wrap{
@@ -539,26 +564,35 @@ MAIN_HTML = """
       100%{transform:translateX(-50%)}
     }
 
-    .dashboard-grid{display:grid;grid-template-columns:1.16fr 1fr 1fr;gap:14px}
-    .dash-card{padding:22px;min-height:440px}
+    .dashboard-grid{display:grid;grid-template-columns:1.18fr 1fr 1fr;gap:14px}
+    .dash-card{padding:22px;min-height:470px}
     .dash-card h3{margin:0 0 6px;font-size:22px}
     .dash-card p{margin:0 0 16px;color:var(--muted);line-height:1.6}
     .feed{display:flex;flex-direction:column;gap:12px}
+
     .alert{
-      background:rgba(255,255,255,.028);
-      border:1px solid rgba(255,255,255,.06);
-      border-radius:18px;
+      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02));
+      border:1px solid rgba(255,255,255,.07);
+      border-radius:20px;
       padding:16px;
       transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
     }
     .alert:hover{transform:translateY(-2px)}
     .alert-critical{
-      box-shadow:0 0 0 1px rgba(255,109,127,.25), 0 0 30px rgba(255,109,127,.16);
-      border-color:rgba(255,109,127,.26);
+      box-shadow:0 0 0 1px rgba(255,92,114,.26), 0 0 34px rgba(255,92,114,.18);
+      border-color:rgba(255,92,114,.32);
+      background:linear-gradient(180deg, rgba(255,92,114,.10), rgba(255,255,255,.02));
     }
     .alert-high{
-      box-shadow:0 0 0 1px rgba(245,192,106,.16), 0 0 22px rgba(245,192,106,.08);
+      box-shadow:0 0 0 1px rgba(247,190,104,.18), 0 0 24px rgba(247,190,104,.09);
+      border-color:rgba(247,190,104,.22);
+      background:linear-gradient(180deg, rgba(247,190,104,.07), rgba(255,255,255,.02));
     }
+    .alert-moderate{
+      border-color:rgba(122,162,255,.18);
+      background:linear-gradient(180deg, rgba(122,162,255,.06), rgba(255,255,255,.02));
+    }
+
     .alert-top{display:flex;justify-content:space-between;gap:12px}
     .alert-name{font-size:18px;font-weight:900;text-transform:capitalize}
     .alert-patient{font-size:13px;color:#b6c8e8;font-weight:700}
@@ -569,47 +603,112 @@ MAIN_HTML = """
       padding:7px 10px;border-radius:999px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);
       font-size:12px;font-weight:800;color:#d7e6ff
     }
-    .badge{
-      display:inline-flex;align-items:center;justify-content:center;min-width:104px;padding:10px 14px;border-radius:999px;
-      font-size:12px;text-transform:uppercase;letter-spacing:.1em;font-weight:1000
-    }
-    .critical{background:rgba(255,109,127,.16);border:1px solid rgba(255,109,127,.32);color:#ffd1d8}
-    .high{background:rgba(245,192,106,.16);border:1px solid rgba(245,192,106,.32);color:#ffe3b2}
-    .moderate{background:rgba(122,162,255,.16);border:1px solid rgba(122,162,255,.32);color:#d6e4ff}
-    .stable{background:rgba(56,211,159,.16);border:1px solid rgba(56,211,159,.32);color:#c7ffe4}
 
-    .focus-top{
-      display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap
+    .badge{
+      display:inline-flex;align-items:center;justify-content:center;min-width:122px;padding:11px 16px;border-radius:999px;
+      font-size:12px;text-transform:uppercase;letter-spacing:.12em;font-weight:1000
     }
+    .critical{background:rgba(255,92,114,.20);border:1px solid rgba(255,92,114,.38);color:#ffd3d9}
+    .high{background:rgba(247,190,104,.20);border:1px solid rgba(247,190,104,.38);color:#ffe3b2}
+    .moderate{background:rgba(122,162,255,.20);border:1px solid rgba(122,162,255,.38);color:#d8e6ff}
+    .stable{background:rgba(56,211,159,.18);border:1px solid rgba(56,211,159,.32);color:#c7ffe4}
+
+    .focus-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
     .focus-id{font-size:34px;font-weight:1000;line-height:1}
     .panel-block{
-      background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.05);border-radius:18px;padding:16px;margin-top:12px
+      background:linear-gradient(180deg, rgba(255,255,255,.028), rgba(255,255,255,.02));
+      border:1px solid rgba(255,255,255,.06);border-radius:18px;padding:16px;margin-top:12px
     }
-    .kv{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+    .panel-title{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#a4badb;font-weight:900;margin-bottom:10px}
+    .kv{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.05)}
     .kv:last-child{border-bottom:none}
     .k{color:#b6c8e8;font-weight:700}
     .v{font-weight:900}
     .channels{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:#d7e5ff;font-size:13px;line-height:1.7}
     .sim-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-    .sim-card{padding:16px;border-radius:18px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.05)}
+    .sim-card{
+      padding:16px;border-radius:18px;background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02));
+      border:1px solid rgba(255,255,255,.06)
+    }
     .sim-title{font-size:16px;font-weight:900}
     .sim-room{font-size:12px;color:#a7bddf;margin-top:4px}
-    .sim-risk{font-size:28px;font-weight:1000;margin:12px 0 6px}
+    .sim-risk{font-size:30px;font-weight:1000;margin:12px 0 6px}
     .sim-copy{font-size:14px;color:#c6d7ef}
+
     .summary-list{display:grid;grid-template-columns:1fr 1fr;gap:10px 18px;margin-top:16px}
     .summary-item .sk{font-size:12px;text-transform:uppercase;letter-spacing:.14em;color:#9db3d5;font-weight:900}
     .summary-item .sv{font-size:20px;font-weight:900}
+
     .contact-box{display:grid;gap:12px;margin-top:18px}
     .contact-row{background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.05);border-radius:16px;padding:14px 16px}
+
     .trust-card h3{margin:0 0 8px;font-size:18px}
     .trust-card p{margin:0;color:#bfd0ea;line-height:1.65}
+
+    .confidence-wrap{
+      margin-top:10px;
+      display:grid;
+      gap:7px;
+    }
+    .confidence-label{
+      display:flex;justify-content:space-between;gap:10px;
+      font-size:12px;font-weight:900;color:#cfe0fb;text-transform:uppercase;letter-spacing:.08em
+    }
+    .confidence-track{
+      width:100%;height:10px;border-radius:999px;overflow:hidden;
+      background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.05)
+    }
+    .confidence-bar{
+      height:100%;
+      border-radius:999px;
+      background:linear-gradient(90deg, var(--blue), var(--blue2));
+      box-shadow:0 0 18px rgba(91,212,255,.22);
+    }
+
+    .risk-panel-grid{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:12px;
+      margin-top:12px;
+    }
+    .risk-panel{
+      border:1px solid rgba(255,255,255,.06);
+      background:linear-gradient(180deg, rgba(255,255,255,.028), rgba(255,255,255,.018));
+      border-radius:18px;
+      padding:14px;
+    }
+    .risk-panel .rk{
+      font-size:11px;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+      color:#9fb7da;
+      font-weight:900;
+      margin-bottom:8px;
+    }
+    .risk-panel .rv{
+      font-size:28px;
+      font-weight:1000;
+      line-height:1;
+    }
+    .risk-panel .rs{
+      margin-top:6px;
+      color:#bfd0ea;
+      font-size:13px;
+      line-height:1.45;
+    }
+
+    .trend-up{color:#ff98a5}
+    .trend-mid{color:#ffd38f}
+    .trend-down{color:#93f3c6}
+
     .footer{margin-top:24px;padding:24px 12px 8px;color:#94a7c6;font-size:14px;text-align:center;line-height:1.6}
-    .audio-toggle{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:14px;background:#111b2f;border:1px solid var(--line);color:var(--text);font-weight:900;cursor:pointer}
+    .audio-toggle{
+      display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:14px;
+      background:#111b2f;border:1px solid var(--line);color:var(--text);font-weight:900;cursor:pointer
+    }
     iframe{width:100%;aspect-ratio:16/9;border:0;border-radius:18px;background:#0a0f18}
 
-    .form-shell{
-      max-width:1120px;margin:0 auto;padding:40px 20px 60px;
-    }
+    .form-shell{max-width:1120px;margin:0 auto;padding:40px 20px 60px}
     .form-card{
       background:
         radial-gradient(circle at top left, rgba(122,162,255,.10), transparent 24%),
@@ -623,12 +722,8 @@ MAIN_HTML = """
       display:flex;justify-content:space-between;gap:20px;align-items:flex-start;flex-wrap:wrap;
       margin-bottom:22px;
     }
-    .form-title{
-      font-size:clamp(38px,4vw,54px);font-weight:1000;line-height:.98;margin:0 0 10px;letter-spacing:-.045em;
-    }
-    .form-copy{
-      color:#c6d7ef;line-height:1.7;margin:0;max-width:760px;
-    }
+    .form-title{font-size:clamp(38px,4vw,54px);font-weight:1000;line-height:.98;margin:0 0 10px;letter-spacing:-.045em}
+    .form-copy{color:#c6d7ef;line-height:1.7;margin:0;max-width:760px}
     .form-badge{
       padding:10px 14px;border-radius:999px;background:rgba(56,211,159,.12);border:1px solid rgba(56,211,159,.22);
       color:#c8ffe5;font-weight:900;font-size:12px;letter-spacing:.1em;text-transform:uppercase;
@@ -636,39 +731,39 @@ MAIN_HTML = """
     .form{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
     .full{grid-column:1/-1}
     .field{display:flex;flex-direction:column;gap:8px}
-    .field label{
-      font-size:12px;text-transform:uppercase;letter-spacing:.14em;color:#9eb4d6;font-weight:900
-    }
+    .field label{font-size:12px;text-transform:uppercase;letter-spacing:.14em;color:#9eb4d6;font-weight:900}
     .field input,.field select,.field textarea{
-      width:100%;
-      background:#0d1728;
-      border:1px solid rgba(255,255,255,.08);
-      border-radius:16px;
-      color:#edf4ff;
-      padding:15px 15px;
-      font:inherit;
-      transition:border-color .18s ease, box-shadow .18s ease, background .18s ease;
+      width:100%;background:#0d1728;border:1px solid rgba(255,255,255,.08);border-radius:16px;color:#edf4ff;
+      padding:15px 15px;font:inherit;transition:border-color .18s ease, box-shadow .18s ease, background .18s ease;
     }
     .field input:focus,.field select:focus,.field textarea:focus{
-      outline:none;
-      border-color:rgba(122,162,255,.42);
-      box-shadow:0 0 0 3px rgba(122,162,255,.10);
-      background:#101b2f;
+      outline:none;border-color:rgba(122,162,255,.42);box-shadow:0 0 0 3px rgba(122,162,255,.10);background:#101b2f;
     }
     .field textarea{min-height:140px;resize:vertical}
-    .success-box{
-      margin-top:18px;
-      background:linear-gradient(180deg, rgba(56,211,159,.12), rgba(56,211,159,.06));
-      border:1px solid rgba(56,211,159,.18);
-      border-radius:20px;padding:18px 18px;color:#d7ffe9
+
+    .success-card{
+      max-width:980px;margin:0 auto;padding:40px 20px 60px;
     }
-    .success-box h2{margin:0 0 8px;font-size:26px}
-    .success-box p{margin:0;color:#d7ffe9;line-height:1.65}
+    .success-box{
+      background:
+        radial-gradient(circle at top left, rgba(56,211,159,.14), transparent 24%),
+        linear-gradient(180deg, rgba(16,26,45,.98), rgba(12,18,32,.98));
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:24px;
+      padding:32px;
+      box-shadow:var(--shadow);
+    }
+    .success-box h1{margin:0 0 10px}
+    .ok{
+      display:inline-flex;align-items:center;gap:10px;padding:10px 14px;border-radius:999px;
+      background:rgba(56,211,159,.12);border:1px solid rgba(56,211,159,.20);color:#d3ffe8;font-weight:900;font-size:12px;letter-spacing:.08em;text-transform:uppercase
+    }
+
     .admin-grid{
-      display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:18px 0 6px;
+      display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:18px 0 20px;
     }
     .admin-kpi{
-      background:rgba(255,255,255,.025);
+      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02));
       border:1px solid rgba(255,255,255,.06);
       border-radius:18px;padding:18px;
     }
@@ -679,21 +774,52 @@ MAIN_HTML = """
     th{color:#9eb4d6;text-transform:uppercase;font-size:12px;letter-spacing:.12em}
     tr:hover td{background:rgba(255,255,255,.02)}
 
+    .investor-hero{
+      position:relative;
+      overflow:hidden;
+      background:
+        radial-gradient(circle at top left, rgba(122,162,255,.16), transparent 28%),
+        radial-gradient(circle at 82% 12%, rgba(91,212,255,.12), transparent 24%),
+        linear-gradient(180deg, rgba(16,26,45,.98), rgba(10,16,28,.98));
+    }
+    .investor-hero:before{
+      content:"";
+      position:absolute;inset:0;
+      background:
+        linear-gradient(rgba(122,162,255,.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(122,162,255,.04) 1px, transparent 1px);
+      background-size:32px 32px;
+      opacity:.28;
+      pointer-events:none;
+    }
+    .investor-grid{
+      display:grid;
+      grid-template-columns:1.1fr .9fr;
+      gap:16px;
+      margin-top:20px;
+    }
+    .investor-mini-grid{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:14px;
+      margin-top:20px;
+    }
+
     @media (max-width:1180px){
       .hero,.summary-list{grid-template-columns:1fr}
       .dashboard-grid{grid-template-columns:1fr 1fr}
       .dashboard-grid .dash-card:first-child{grid-column:1/-1}
-      .metrics-grid,.trust-grid,.sim-grid,.cta-grid,.hero-strip{grid-template-columns:repeat(2,1fr)}
-      .admin-grid{grid-template-columns:1fr}
+      .metrics-grid,.trust-grid,.sim-grid,.cta-grid,.hero-strip,.investor-mini-grid,.risk-panel-grid{grid-template-columns:repeat(2,1fr)}
+      .investor-grid,.admin-grid{grid-template-columns:1fr}
     }
     @media (max-width:760px){
-      .metrics-grid,.dashboard-grid,.trust-grid,.sim-grid,.mini-grid,.summary-list,.cta-grid,.hero-strip,.form{grid-template-columns:1fr}
+      .metrics-grid,.dashboard-grid,.trust-grid,.sim-grid,.mini-grid,.summary-list,.cta-grid,.hero-strip,.form,.investor-mini-grid,.risk-panel-grid{grid-template-columns:1fr}
       .nav-links{width:100%}
       .hero-actions{flex-direction:column;align-items:stretch}
       .btn,.audio-toggle{width:100%}
       .alert-top,.kv,.focus-top,.form-top{flex-direction:column}
-      .shell,.form-shell{padding:16px 12px 56px}
-      .card,.dash-card,.form-card{padding:18px}
+      .shell,.form-shell,.success-card{padding:16px 12px 56px}
+      .card,.dash-card,.form-card,.success-box{padding:18px}
       h1{font-size:clamp(34px,9vw,48px)}
       .lead{font-size:16px}
       .section-title{font-size:32px}
@@ -728,7 +854,7 @@ MAIN_HTML = """
         <p class="lead">
           Early Risk Alert AI is a professional healthcare intelligence platform built for hospitals, clinics,
           investors, care teams, and remote monitoring programs. The platform combines live patient activity,
-          AI risk scoring, executive-ready workflow visibility, and polished command-center presentation in one experience.
+          AI risk scoring, executive-ready workflow visibility, and premium command-center presentation in one experience.
         </p>
 
         <div class="hero-actions">
@@ -854,7 +980,7 @@ MAIN_HTML = """
 
     <section class="section" id="dashboard">
       <h2 class="section-title">Clinical command center</h2>
-      <p class="section-sub">Better dashboard styling with stronger priority visuals, larger badges, and clearer AI guidance.</p>
+      <p class="section-sub">Premium dashboard styling with larger severity badges, confidence indicators, AI recommendation panels, clinical priority, and trend direction.</p>
       <div class="dashboard-grid">
         <div class="card dash-card">
           <h3>Live Alerts Feed</h3>
@@ -870,8 +996,12 @@ MAIN_HTML = """
 
         <div class="card dash-card">
           <h3>System Panels</h3>
-          <p>Operational state, workflow readiness, and stream channels.</p>
+          <p>Operational state, workflow readiness, stream channels, and live system activity.</p>
           <div class="panel-block" id="streamHealth"></div>
+          <div class="panel-block">
+            <div class="panel-title">Live System Activity</div>
+            <div id="systemActivity"></div>
+          </div>
           <div class="panel-block channels" id="streamChannels"></div>
         </div>
       </div>
@@ -981,7 +1111,15 @@ MAIN_HTML = """
     function alertClass(sev) {
       if (sev === "critical") return "alert alert-critical";
       if (sev === "high") return "alert alert-high";
+      if (sev === "moderate") return "alert alert-moderate";
       return "alert";
+    }
+
+    function trendClass(trend) {
+      const t = (trend || "").toLowerCase();
+      if (t === "worsening") return "trend-up";
+      if (t === "elevated") return "trend-mid";
+      return "trend-down";
     }
 
     function animateNumber(id, endValue) {
@@ -1039,7 +1177,15 @@ MAIN_HTML = """
             <div class="meta-pill">AI score ${a.risk_score}</div>
             <div class="meta-pill">Confidence ${a.confidence}%</div>
             <div class="meta-pill">${a.clinical_priority}</div>
-            <div class="meta-pill">Trend ${a.trend_direction}</div>
+            <div class="meta-pill" style="font-weight:900;"><span class="${trendClass(a.trend_direction)}">${a.trend_arrow || ""}</span>&nbsp;${a.trend_direction}</div>
+          </div>
+          <div class="confidence-wrap">
+            <div class="confidence-label"><span>Confidence indicator</span><span>${a.confidence}%</span></div>
+            <div class="confidence-track"><div class="confidence-bar" style="width:${a.confidence}%;"></div></div>
+          </div>
+          <div class="panel-block" style="margin-top:12px;">
+            <div class="panel-title">Recommended action</div>
+            <div style="color:#dce8fb;line-height:1.6;">${a.recommended_action}</div>
           </div>
         `;
         feed.appendChild(div);
@@ -1062,25 +1208,47 @@ MAIN_HTML = """
             <div class="${badgeClass(r.severity)}">${r.severity || "stable"}</div>
           </div>
         </div>
-        <div class="panel-block">
-          <div class="kv"><span class="k">AI Risk Score</span><span class="v">${r.risk_score ?? "--"}</span></div>
-          <div class="kv"><span class="k">Confidence</span><span class="v">${r.confidence ?? "--"}%</span></div>
-          <div class="kv"><span class="k">Clinical Priority</span><span class="v">${r.clinical_priority ?? "--"}</span></div>
-          <div class="kv"><span class="k">Trend Direction</span><span class="v">${r.trend_direction ?? "--"}</span></div>
-          <div class="kv"><span class="k">Recommended Action</span><span class="v" style="max-width:58%;text-align:right;">${r.recommended_action ?? "--"}</span></div>
+
+        <div class="risk-panel-grid">
+          <div class="risk-panel">
+            <div class="rk">AI Risk Score</div>
+            <div class="rv">${r.risk_score ?? "--"}</div>
+            <div class="rs">Current patient deterioration risk snapshot.</div>
+          </div>
+          <div class="risk-panel">
+            <div class="rk">Clinical Priority</div>
+            <div class="rv">${r.clinical_priority ?? "--"}</div>
+            <div class="rs">Intervention priority level for operational response.</div>
+          </div>
         </div>
+
         <div class="panel-block">
+          <div class="panel-title">Confidence indicator</div>
+          <div class="confidence-wrap">
+            <div class="confidence-label"><span>Confidence</span><span>${r.confidence ?? "--"}%</span></div>
+            <div class="confidence-track"><div class="confidence-bar" style="width:${r.confidence || 0}%;"></div></div>
+          </div>
+        </div>
+
+        <div class="panel-block">
+          <div class="kv"><span class="k">Trend Direction</span><span class="v ${trendClass(r.trend_direction)}">${r.trend_arrow || ""} ${r.trend_direction ?? "--"}</span></div>
           <div class="kv"><span class="k">Heart Rate</span><span class="v">${v.heart_rate ?? "--"}</span></div>
           <div class="kv"><span class="k">Systolic BP</span><span class="v">${v.systolic_bp ?? "--"}</span></div>
           <div class="kv"><span class="k">Diastolic BP</span><span class="v">${v.diastolic_bp ?? "--"}</span></div>
           <div class="kv"><span class="k">SpO2</span><span class="v">${v.spo2 ?? "--"}</span></div>
           <div class="kv"><span class="k">Avg SpO2</span><span class="v">${roll.avg_spo2 ?? "--"}</span></div>
         </div>
+
+        <div class="panel-block">
+          <div class="panel-title">Recommended action</div>
+          <div style="color:#dce8fb;line-height:1.65;">${r.recommended_action ?? "--"}</div>
+        </div>
       `;
     }
 
     function renderStreamHealth(data) {
       document.getElementById("streamHealth").innerHTML = `
+        <div class="panel-title">System health</div>
         <div class="kv"><span class="k">Status</span><span class="v">${data.status || "running"}</span></div>
         <div class="kv"><span class="k">Mode</span><span class="v">${data.mode || "realtime"}</span></div>
         <div class="kv"><span class="k">Worker</span><span class="v">${data.worker_status || "simulated"}</span></div>
@@ -1088,8 +1256,22 @@ MAIN_HTML = """
       `;
     }
 
+    function renderSystemActivity(overview, live) {
+      const focus = live.focus_patient || {};
+      const risk = focus.risk || {};
+      const items = [
+        `Monitored patients ${overview.patient_count ?? 0}`,
+        `Open alert queue ${overview.open_alerts ?? 0}`,
+        `Critical queue ${overview.critical_alerts ?? 0}`,
+        `Top focus ${focus.patient_id || "p101"}`,
+        `AI risk ${risk.risk_score ?? 0}`,
+        `Confidence ${risk.confidence ?? 0}%`,
+      ];
+      document.getElementById("systemActivity").innerHTML = items.map(i => `<div class="kv"><span class="k">Live activity</span><span class="v">${i}</span></div>`).join("");
+    }
+
     function renderChannels(data) {
-      document.getElementById("streamChannels").innerHTML = (data.channels || []).map(x => `<div>${x}</div>`).join("");
+      document.getElementById("streamChannels").innerHTML = `<div class="panel-title">Stream channels</div>` + (data.channels || []).map(x => `<div>${x}</div>`).join("");
     }
 
     function renderSimulator(patients) {
@@ -1111,7 +1293,7 @@ MAIN_HTML = """
           <div class="meta-row">
             <div class="meta-pill">${r.clinical_priority}</div>
             <div class="meta-pill">${r.confidence}% confidence</div>
-            <div class="meta-pill">${r.trend_direction}</div>
+            <div class="meta-pill"><span class="${trendClass(r.trend_direction)}">${r.trend_arrow || ""}</span>&nbsp;${r.trend_direction}</div>
           </div>
         `;
         grid.appendChild(div);
@@ -1127,7 +1309,9 @@ MAIN_HTML = """
         `Top focus ${live.focus_patient?.patient_id || "p101"}`,
         `Hospital demo requests enabled`,
         `Executive walkthrough flow active`,
-        `Investor intake workflow active`
+        `Investor intake workflow active`,
+        `Confidence scoring visible`,
+        `Recommended action engine active`
       ];
       const doubled = parts.concat(parts);
       document.getElementById("opsTicker").innerHTML = doubled.map(p => `<span><i class="bullet"></i>${p}</span>`).join("");
@@ -1154,6 +1338,7 @@ MAIN_HTML = """
         renderAlerts(live.alerts || []);
         renderFocus(live.focus_patient || {});
         renderStreamHealth(health || {});
+        renderSystemActivity(overview, live);
         renderChannels(channels || {});
         renderSimulator(live.patients || []);
         renderTicker(overview, live);
@@ -1178,7 +1363,7 @@ INVESTOR_HTML = """
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     :root{
-      --bg:#08111f;
+      --bg:#07101d;
       --panel:#101a2d;
       --line:rgba(255,255,255,.08);
       --text:#edf4ff;
@@ -1187,44 +1372,112 @@ INVESTOR_HTML = """
       --blue2:#5bd4ff;
       --shadow:0 18px 50px rgba(0,0,0,.24);
     }
-    body{margin:0;font-family:Inter,Arial,sans-serif;background:#08111f;color:var(--text)}
-    .wrap{max-width:1160px;margin:0 auto;padding:40px 20px 60px}
-    .card{
+    body{
+      margin:0;
+      font-family:Inter,Arial,sans-serif;
       background:
-        radial-gradient(circle at top right, rgba(91,212,255,.10), transparent 24%),
-        linear-gradient(180deg, rgba(16,26,45,.98), rgba(12,18,32,.98));
-      border:1px solid var(--line);border-radius:24px;padding:32px;box-shadow:var(--shadow)
+        radial-gradient(circle at top left, rgba(122,162,255,.14), transparent 24%),
+        radial-gradient(circle at 80% 10%, rgba(91,212,255,.10), transparent 20%),
+        linear-gradient(180deg, #07101d, #0b1324);
+      color:var(--text)
     }
-    h1{font-size:clamp(40px,4vw,60px);line-height:.98;margin:0 0 14px;letter-spacing:-.045em}
-    p{color:var(--muted);line-height:1.7}
-    .btn{display:inline-block;padding:13px 18px;border-radius:14px;background:linear-gradient(135deg,var(--blue),var(--blue2));color:#08111f;font-weight:900;text-decoration:none;margin-right:10px;margin-bottom:10px}
-    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:24px}
-    .mini{background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.06);border-radius:18px;padding:18px}
+    .wrap{max-width:1240px;margin:0 auto;padding:40px 20px 60px}
+    .hero{
+      position:relative;
+      overflow:hidden;
+      background:
+        radial-gradient(circle at top left, rgba(122,162,255,.16), transparent 28%),
+        radial-gradient(circle at 82% 12%, rgba(91,212,255,.12), transparent 24%),
+        linear-gradient(180deg, rgba(16,26,45,.98), rgba(10,16,28,.98));
+      border:1px solid var(--line);
+      border-radius:26px;
+      padding:32px;
+      box-shadow:var(--shadow)
+    }
+    .hero:before{
+      content:"";
+      position:absolute;inset:0;
+      background:
+        linear-gradient(rgba(122,162,255,.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(122,162,255,.04) 1px, transparent 1px);
+      background-size:32px 32px;
+      opacity:.28;
+      pointer-events:none;
+    }
+    .grid{display:grid;grid-template-columns:1.08fr .92fr;gap:16px}
+    .card{
+      position:relative;
+      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02));
+      border:1px solid rgba(255,255,255,.07);
+      border-radius:22px;
+      padding:22px;
+    }
+    .kicker{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#bfd0ea;font-weight:900}
+    h1{font-size:clamp(40px,4vw,64px);line-height:.95;margin:10px 0 14px;letter-spacing:-.05em}
+    p{color:var(--muted);line-height:1.72}
+    .btn{
+      display:inline-block;padding:13px 18px;border-radius:14px;background:linear-gradient(135deg,var(--blue),var(--blue2));
+      color:#08111f;font-weight:900;text-decoration:none;margin-right:10px;margin-bottom:10px
+    }
+    .btn.secondary{
+      background:#111b2f;color:#edf4ff;border:1px solid rgba(255,255,255,.08)
+    }
+    .mini-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:20px}
+    .mini{
+      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02));
+      border:1px solid rgba(255,255,255,.06);
+      border-radius:18px;padding:18px
+    }
     .k{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#9eb4d6;font-weight:900}
     .v{font-size:28px;font-weight:1000;margin-top:10px}
     .s{font-size:14px;color:#c4d6ef;margin-top:8px;line-height:1.5}
-    @media (max-width:900px){.grid{grid-template-columns:1fr}}
+    .list{display:grid;gap:10px;margin-top:14px}
+    .li{
+      padding:12px 14px;border-radius:16px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.05);color:#dce8fb
+    }
+    @media (max-width:980px){
+      .grid,.mini-grid{grid-template-columns:1fr}
+      .wrap{padding:18px 12px 56px}
+      .hero,.card{padding:18px}
+    }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <div class="card">
-      <h1>Investor Overview</h1>
-      <p>
-        Early Risk Alert AI is a professional predictive healthcare platform built for hospitals, clinics,
-        command centers, investors, and modern remote monitoring operations.
-      </p>
-      <p>
-        The platform combines AI risk scoring, a live hospital-facing dashboard, hospital demo capture,
-        executive walkthrough requests, investor intake, and presentation architecture in one branded software experience.
-      </p>
-      <p>
-        <a class="btn" href="/investor-intake">Investor Intake Form</a>
-        <a class="btn" href="/deck">Download Pitch Deck PDF</a>
-        <a class="btn" href="/admin/review">Admin Review</a>
-      </p>
-
+    <div class="hero">
       <div class="grid">
+        <div class="card">
+          <div class="kicker">Investor view</div>
+          <h1>Healthcare AI platform with real clinical command-center presentation.</h1>
+          <p>
+            Early Risk Alert AI is a predictive healthcare intelligence platform built for hospitals, clinics,
+            command centers, investors, and modern remote monitoring operations.
+          </p>
+          <p>
+            The platform combines AI risk scoring, a live hospital-facing dashboard, hospital demo capture,
+            executive walkthrough requests, investor intake, downloadable pitch materials, and admin review architecture in one branded experience.
+          </p>
+          <p>
+            <a class="btn" href="/investor-intake">Investor Intake Form</a>
+            <a class="btn" href="/deck">Download Pitch Deck PDF</a>
+            <a class="btn secondary" href="/admin/review">Admin Review</a>
+          </p>
+        </div>
+
+        <div class="card">
+          <div class="k">Commercial positioning</div>
+          <div class="v">Enterprise</div>
+          <div class="s">Built to present as a serious SaaS healthcare intelligence platform.</div>
+          <div class="list">
+            <div class="li">AI risk scoring with confidence indicators</div>
+            <div class="li">Hospital-facing command center workflow</div>
+            <div class="li">Executive walkthrough and hospital demo capture</div>
+            <div class="li">Investor intake, deck delivery, admin review, CSV export</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mini-grid">
         <div class="mini">
           <div class="k">Platform</div>
           <div class="v">Clinical AI</div>
@@ -1236,9 +1489,9 @@ INVESTOR_HTML = """
           <div class="s">Intake, deck delivery, follow-up capture, and admin review built in.</div>
         </div>
         <div class="mini">
-          <div class="k">Positioning</div>
-          <div class="v">Enterprise</div>
-          <div class="s">Built to present as a serious SaaS healthcare intelligence platform.</div>
+          <div class="k">Deployment</div>
+          <div class="v">SaaS</div>
+          <div class="s">Enterprise-ready software experience for healthcare buyers and investors.</div>
         </div>
       </div>
     </div>
@@ -1281,10 +1534,8 @@ FORM_PAGE = """
       display:flex;justify-content:space-between;gap:20px;align-items:flex-start;flex-wrap:wrap;
       margin-bottom:22px;
     }
-    .form-title{
-      font-size:clamp(38px,4vw,54px);font-weight:1000;line-height:.98;margin:0 0 10px;letter-spacing:-.045em;
-    }
-    .form-copy{color:var(--muted);line-height:1.7;margin:0;max-width:760px}
+    .form-title{font-size:clamp(38px,4vw,54px);font-weight:1000;line-height:.98;margin:0 0 10px;letter-spacing:-.045em}
+    .form-copy{color:#c6d7ef;line-height:1.7;margin:0;max-width:760px}
     .form-badge{
       padding:10px 14px;border-radius:999px;background:rgba(56,211,159,.12);border:1px solid rgba(56,211,159,.22);
       color:#c8ffe5;font-weight:900;font-size:12px;letter-spacing:.1em;text-transform:uppercase;
@@ -1346,35 +1597,34 @@ THANK_YOU_PAGE = """
   <style>
     :root{
       --bg:#08111f;
-      --panel:#101a2d;
-      --line:rgba(255,255,255,.08);
       --text:#edf4ff;
       --muted:#c6d7ef;
       --blue:#7aa2ff;
       --blue2:#5bd4ff;
-      --green:#38d39f;
+      --line:rgba(255,255,255,.08);
       --shadow:0 18px 50px rgba(0,0,0,.24);
     }
     body{margin:0;font-family:Inter,Arial,sans-serif;background:#08111f;color:var(--text)}
-    .wrap{max-width:920px;margin:0 auto;padding:60px 20px}
-    .card{
+    .success-card{max-width:980px;margin:0 auto;padding:40px 20px 60px}
+    .success-box{
       background:
-        radial-gradient(circle at top left, rgba(56,211,159,.12), transparent 24%),
+        radial-gradient(circle at top left, rgba(56,211,159,.14), transparent 24%),
         linear-gradient(180deg, rgba(16,26,45,.98), rgba(12,18,32,.98));
-      border:1px solid var(--line);border-radius:24px;padding:34px;box-shadow:var(--shadow)
+      border:1px solid var(--line);
+      border-radius:24px;padding:32px;box-shadow:var(--shadow)
     }
-    h1{margin:0 0 12px;font-size:clamp(38px,4vw,54px);letter-spacing:-.045em}
-    p{color:var(--muted);line-height:1.75}
     .ok{
       display:inline-flex;align-items:center;gap:10px;padding:10px 14px;border-radius:999px;
       background:rgba(56,211,159,.12);border:1px solid rgba(56,211,159,.20);color:#d3ffe8;font-weight:900;font-size:12px;letter-spacing:.08em;text-transform:uppercase
     }
+    h1{margin:12px 0 10px;font-size:clamp(38px,4vw,54px);letter-spacing:-.045em}
+    p{color:var(--muted);line-height:1.75}
     .btn{display:inline-block;padding:13px 18px;border-radius:14px;background:linear-gradient(135deg,var(--blue),var(--blue2));color:#08111f;font-weight:900;text-decoration:none;margin-right:10px;margin-top:10px}
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="card">
+  <div class="success-card">
+    <div class="success-box">
       <div class="ok">Submission received</div>
       <h1>Thank you</h1>
       <p>Your request was submitted successfully. The workflow is now captured inside your platform and ready for follow-up through admin review and CSV export.</p>
@@ -1419,7 +1669,7 @@ ADMIN_HTML = """
     p{color:var(--muted);line-height:1.7}
     .btn{display:inline-block;padding:13px 18px;border-radius:14px;background:linear-gradient(135deg,var(--blue),var(--blue2));color:#08111f;font-weight:900;text-decoration:none;margin-right:10px;margin-bottom:10px}
     .admin-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:18px 0 20px}
-    .admin-kpi{background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.06);border-radius:18px;padding:18px}
+    .admin-kpi{background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.06);border-radius:18px;padding:18px}
     .admin-kpi .k{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#9eb4d6;font-weight:900}
     .admin-kpi .v{font-size:36px;font-weight:1000;margin-top:10px;line-height:1}
     table{width:100%;border-collapse:collapse;margin-top:18px;font-size:14px}
