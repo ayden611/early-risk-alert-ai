@@ -382,79 +382,198 @@ MAIN_HTML = """
     .btn.ghost{background:transparent;color:var(--text);border:1px solid var(--line);box-shadow:none}
     .btn.cta-pop{animation:ctaPulse 2.6s ease-in-out infinite}
     @keyframes ctaPulse{0%,100%{box-shadow:0 0 0 0 rgba(91,212,255,.12),var(--shadow-soft)}50%{box-shadow:0 0 0 10px rgba(91,212,255,0),0 10px 30px rgba(91,212,255,.18)}}
+
     .shell{max-width:var(--max);margin:0 auto;padding:20px 16px 78px}
     .card{
       background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015));
       border:1px solid var(--line);border-radius:var(--radius);padding:28px;box-shadow:var(--shadow);
       transition:transform .22s ease, border-color .22s ease, box-shadow .22s ease
     }
-    .card:hover{border-color:rgba(122,162,255,.15)}
-    .hero{display:grid;grid-template-columns:1.06fr .94fr;gap:18px;padding-top:12px;align-items:stretch}
-    .hero-main{
-      position:relative;overflow:hidden;
+
+    .cinematic-hero{
+      position:relative;
+      min-height:88vh;
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:30px;
+      overflow:hidden;
+      box-shadow:var(--shadow);
       background:
-        radial-gradient(circle at top left, rgba(122,162,255,.18), transparent 30%),
-        radial-gradient(circle at 82% 18%, rgba(91,212,255,.13), transparent 24%),
-        linear-gradient(180deg, rgba(18,31,54,.90), rgba(11,18,31,.94))
+        linear-gradient(180deg, rgba(4,10,18,.18), rgba(4,10,18,.58)),
+        url('/static/images/ai-command-center.jpg') center center / cover no-repeat;
+      isolation:isolate;
     }
-    .hero-main:before{
-      content:"";position:absolute;inset:0;
-      background:linear-gradient(rgba(122,162,255,.04) 1px, transparent 1px),linear-gradient(90deg, rgba(122,162,255,.04) 1px, transparent 1px);
-      background-size:30px 30px;opacity:.36;pointer-events:none
+    .cinematic-hero:before{
+      content:"";
+      position:absolute;inset:0;
+      background:
+        radial-gradient(circle at center, rgba(91,212,255,.10), transparent 28%),
+        linear-gradient(rgba(122,162,255,.045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(122,162,255,.045) 1px, transparent 1px);
+      background-size:auto, 34px 34px, 34px 34px;
+      opacity:.42;
+      pointer-events:none;
     }
-    .hero-main:after{
-      content:"";position:absolute;right:-120px;top:-120px;width:380px;height:380px;border-radius:999px;
-      background:radial-gradient(circle, rgba(91,212,255,.26), transparent 68%);
-      filter:blur(10px);pointer-events:none;animation:heroGlow 8s ease-in-out infinite
+    .cinematic-hero:after{
+      content:"";
+      position:absolute;
+      inset:auto -10% -8% -10%;
+      height:38%;
+      background:radial-gradient(circle at 50% 50%, rgba(91,212,255,.18), transparent 60%);
+      filter:blur(20px);
+      animation:heroDrift 8s ease-in-out infinite;
+      pointer-events:none;
     }
-    @keyframes heroGlow{0%,100%{transform:scale(1) translateY(0);opacity:.92}50%{transform:scale(1.08) translateY(10px);opacity:1}}
-    .pulse-rings{position:absolute;right:48px;bottom:48px;width:160px;height:160px;pointer-events:none;opacity:.42}
-    .pulse-rings span{position:absolute;inset:0;border:1px solid rgba(91,212,255,.25);border-radius:999px;animation:ring 4.2s infinite}
-    .pulse-rings span:nth-child(2){animation-delay:1.4s}
-    .pulse-rings span:nth-child(3){animation-delay:2.8s}
-    @keyframes ring{0%{transform:scale(.62);opacity:.55}100%{transform:scale(1.28);opacity:0}}
-    .hero-kicker,.small-k{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:#c8d7f1;font-weight:900;margin-bottom:12px}
-    h1{margin:0 0 18px;font-size:clamp(40px,5vw,76px);line-height:.94;font-weight:1000;letter-spacing:-.058em}
-    .lead{margin:0;color:#c8d7f1;font-size:clamp(16px,1.5vw,20px);line-height:1.62;max-width:950px}
-    .hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:28px}
-    .hero-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:24px}
-    .hero-stat{background:rgba(255,255,255,.03);border:1px solid var(--line2);border-radius:18px;padding:14px 16px}
-    .hero-stat .k{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#9fb7da;font-weight:900}
-    .hero-stat .v{font-size:28px;font-weight:1000;margin-top:8px;line-height:1}
-    .hero-stat .s{font-size:13px;color:#b7c9e7;margin-top:6px;line-height:1.4}
-    .cta-grid,.metrics-grid,.trust-grid,.sim-grid,.mini-grid,.risk-panel-grid{display:grid;gap:14px}
-    .cta-grid{grid-template-columns:repeat(3,1fr);margin-top:18px}
+    @keyframes heroDrift{
+      0%,100%{transform:translateX(0) translateY(0) scale(1)}
+      50%{transform:translateX(2%) translateY(-2%) scale(1.04)}
+    }
+
+    .sweep{
+      position:absolute;inset:-20%;
+      background:linear-gradient(105deg, transparent 38%, rgba(255,255,255,.06) 50%, transparent 62%);
+      transform:translateX(-60%);
+      animation:lightSweep 8s linear infinite;
+      pointer-events:none;
+      z-index:1;
+    }
+    @keyframes lightSweep{
+      0%{transform:translateX(-60%)}
+      100%{transform:translateX(60%)}
+    }
+
+    .pulse-rings{
+      position:absolute;right:10%;bottom:11%;width:280px;height:280px;pointer-events:none;z-index:1;opacity:.55
+    }
+    .pulse-rings span{
+      position:absolute;inset:0;border:1px solid rgba(91,212,255,.24);border-radius:999px;animation:ring 4.8s infinite
+    }
+    .pulse-rings span:nth-child(2){animation-delay:1.6s}
+    .pulse-rings span:nth-child(3){animation-delay:3.2s}
+    @keyframes ring{
+      0%{transform:scale(.62);opacity:.52}
+      100%{transform:scale(1.38);opacity:0}
+    }
+
+    .hero-overlay{
+      position:relative;z-index:3;
+      display:grid;
+      grid-template-columns:1fr;
+      min-height:88vh;
+      padding:32px;
+      align-content:space-between;
+    }
+    .hero-topbar{
+      display:flex;justify-content:space-between;align-items:flex-start;gap:20px;flex-wrap:wrap
+    }
+    .hero-badge{
+      display:inline-flex;align-items:center;gap:8px;
+      padding:10px 14px;border-radius:999px;
+      background:rgba(6,13,25,.58);border:1px solid rgba(255,255,255,.10);
+      backdrop-filter:blur(10px);font-size:12px;font-weight:900;letter-spacing:.12em;text-transform:uppercase
+    }
+    .hero-center{
+      display:grid;
+      grid-template-columns:1.15fr .85fr;
+      gap:18px;
+      align-items:end;
+    }
+    .hero-copy-card,.hero-side-card{
+      background:linear-gradient(180deg, rgba(7,15,28,.58), rgba(7,15,28,.76));
+      border:1px solid rgba(255,255,255,.09);
+      border-radius:26px;
+      padding:26px;
+      backdrop-filter:blur(12px);
+      box-shadow:0 20px 50px rgba(0,0,0,.22);
+    }
+    .hero-kicker{
+      font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:#d0def5;font-weight:900;margin-bottom:12px
+    }
+    h1{
+      margin:0 0 16px;
+      font-size:clamp(44px,6vw,88px);
+      line-height:.92;
+      font-weight:1000;
+      letter-spacing:-.06em;
+      text-shadow:0 0 24px rgba(0,0,0,.22);
+    }
+    .lead{
+      margin:0;color:#d3e2f8;font-size:clamp(16px,1.5vw,20px);line-height:1.62;max-width:920px
+    }
+    .hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:22px}
+    .hero-route-grid{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:14px;
+      margin-top:18px;
+    }
+    .route-card{
+      position:relative;
+      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.018));
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:20px;
+      padding:18px;
+      min-height:168px;
+      transition:transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+    }
+    .route-card:hover{
+      transform:translateY(-3px);
+      border-color:rgba(91,212,255,.24);
+      box-shadow:0 14px 34px rgba(0,0,0,.18);
+    }
+    .route-label{font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:#9db7da;font-weight:900}
+    .route-title{font-size:26px;font-weight:1000;line-height:1;margin-top:10px}
+    .route-copy{font-size:14px;color:#c5d7f0;line-height:1.58;margin-top:10px}
+    .route-arrow{margin-top:14px;font-size:14px;font-weight:900;color:#8edcff}
+    .route-hospital{box-shadow:0 0 0 1px rgba(91,212,255,.10)}
+    .route-demo{box-shadow:0 0 0 1px rgba(168,139,255,.10)}
+    .route-investor{box-shadow:0 0 0 1px rgba(56,211,159,.10)}
+
+    .hero-side-title{
+      font-size:clamp(28px,3vw,42px);
+      line-height:1;
+      margin:0 0 10px;
+      font-weight:1000;
+      letter-spacing:-.04em
+    }
+    .hero-side-copy{margin:0;color:#c4d6ef;line-height:1.65}
+    .hero-mini-grid{
+      display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:18px
+    }
+    .mini{
+      background:rgba(255,255,255,.03);
+      border:1px solid rgba(255,255,255,.06);
+      border-radius:18px;
+      padding:16px
+    }
+    .mini-k{font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:#9fb7da;font-weight:900}
+    .mini-v{font-size:34px;font-weight:1000;line-height:1;margin-top:10px}
+    .mini-s{font-size:13px;color:#c3d5ef;margin-top:8px;line-height:1.5}
+
+    .ticker-wrap{margin-top:18px;border-top:1px solid rgba(255,255,255,.08);border-bottom:1px solid rgba(255,255,255,.08);overflow:hidden}
+    .ticker{display:flex;gap:28px;white-space:nowrap;padding:12px 0;color:#d9e9ff;font-weight:800;animation:ticker 18s linear infinite}
+    .ticker span{display:inline-flex;align-items:center;gap:8px}
+    .bullet{width:8px;height:8px;border-radius:999px;background:#7aa2ff}
+    @keyframes ticker{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+
+    .section{margin-top:34px}
+    .section-title{font-size:clamp(30px,3.1vw,44px);font-weight:1000;letter-spacing:-.04em;margin:0 0 8px;line-height:1.02}
+    .section-sub{font-size:16px;max-width:980px;margin:0 0 18px;color:var(--muted);line-height:1.6}
+
+    .metrics-grid,.trust-grid,.sim-grid,.mini-grid,.risk-panel-grid{display:grid;gap:14px}
     .metrics-grid{grid-template-columns:repeat(4,1fr)}
     .trust-grid{grid-template-columns:repeat(4,1fr)}
     .sim-grid{grid-template-columns:repeat(3,1fr)}
     .mini-grid{grid-template-columns:repeat(2,1fr)}
     .risk-panel-grid{grid-template-columns:repeat(2,1fr);margin-top:12px}
-    .cta-card,.mini,.metric,.trust-card,.sim-card,.risk-panel{
-      border:1px solid rgba(255,255,255,.06);
+
+    .metric,.trust-card,.sim-card,.risk-panel,.panel-block{
       background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.018));
-      border-radius:18px;padding:18px
+      border:1px solid rgba(255,255,255,.06);border-radius:18px;padding:18px
     }
-    .cta-card{transition:transform .18s ease, border-color .18s ease, box-shadow .18s ease}
-    .cta-card:hover{transform:translateY(-2px);border-color:rgba(122,162,255,.22);box-shadow:0 10px 30px rgba(0,0,0,.18)}
-    .cta-card h4,.trust-card h3{margin:0 0 8px}
-    .cta-card p,.trust-card p{margin:0;color:#bfd0ea;line-height:1.65}
-    .cta-card .mini-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
-    .live-pill{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;background:rgba(56,211,159,.12);border:1px solid rgba(56,211,159,.25);font-weight:900;font-size:12px;color:#bff5df;text-transform:uppercase;letter-spacing:.08em}
-    .dot{width:10px;height:10px;border-radius:999px;background:var(--green);box-shadow:0 0 18px rgba(56,211,159,.6)}
-    .side-title{font-size:clamp(28px,2.8vw,40px);font-weight:950;line-height:1.02;margin:18px 0 8px;letter-spacing:-.04em}
-    .side-copy{color:#b8cae8;line-height:1.65;margin:0 0 18px;font-size:15px}
-    .mini-k,.metric-label,.contact-label,.panel-title{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#9fb7da;font-weight:900}
-    .mini-v,.metric-value{font-size:clamp(28px,2.6vw,54px);font-weight:1000;line-height:1;margin-top:10px}
-    .mini-s,.metric-note,.section-sub{font-size:14px;color:#b7c9e7;margin-top:8px;line-height:1.55}
-    .section{margin-top:34px;animation:sectionReveal .55s ease both}
-    @keyframes sectionReveal{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
-    .section-title{font-size:clamp(30px,3.1vw,44px);font-weight:1000;letter-spacing:-.04em;margin:0 0 8px;line-height:1.02}
-    .section-sub{font-size:16px;max-width:980px;margin:0 0 18px;color:var(--muted)}
-    .ticker-wrap{margin-top:18px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);overflow:hidden}
-    .ticker{display:flex;gap:28px;white-space:nowrap;padding:12px 0;color:#d3e4ff;font-weight:800;animation:ticker 18s linear infinite}
-    .ticker span{display:inline-flex;align-items:center;gap:8px}
-    .bullet{width:8px;height:8px;border-radius:999px;background:#7aa2ff}
-    @keyframes ticker{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+    .metric-label,.contact-label,.panel-title,.rk{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#9fb7da;font-weight:900}
+    .metric-value,.rv{font-size:clamp(28px,2.6vw,54px);font-weight:1000;line-height:1;margin-top:10px}
+    .metric-note,.section-sub,.rs{font-size:14px;color:#b7c9e7;margin-top:8px;line-height:1.55}
+
     .dashboard-grid{display:grid;grid-template-columns:1.18fr 1fr 1fr;gap:14px}
     .dash-card{padding:22px;min-height:520px}
     .dash-card h3{margin:0 0 6px;font-size:22px}
@@ -481,9 +600,9 @@ MAIN_HTML = """
     .high{background:rgba(247,190,104,.20);border:1px solid rgba(247,190,104,.38);color:#ffe3b2}
     .moderate{background:rgba(122,162,255,.20);border:1px solid rgba(122,162,255,.38);color:#d8e6ff}
     .stable{background:rgba(56,211,159,.18);border:1px solid rgba(56,211,159,.32);color:#c7ffe4}
+
     .focus-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
     .focus-id{font-size:34px;font-weight:1000;line-height:1}
-    .panel-block{background:linear-gradient(180deg, rgba(255,255,255,.028), rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.06);border-radius:18px;padding:16px;margin-top:12px}
     .kv{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.05)}
     .kv:last-child{border-bottom:none}
     .k{color:#b6c8e8;font-weight:700}
@@ -493,9 +612,6 @@ MAIN_HTML = """
     .sim-room{font-size:12px;color:#a7bddf;margin-top:4px}
     .sim-risk{font-size:30px;font-weight:1000;margin:12px 0 6px}
     .sim-copy{font-size:14px;color:#c6d7ef}
-    .summary-list{display:grid;grid-template-columns:1fr 1fr;gap:10px 18px;margin-top:16px}
-    .summary-item .sk{font-size:12px;text-transform:uppercase;letter-spacing:.14em;color:#9db3d5;font-weight:900}
-    .summary-item .sv{font-size:20px;font-weight:900}
     .contact-box{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:18px}
     .contact-row{background:linear-gradient(180deg, rgba(255,255,255,.032), rgba(255,255,255,.022));border:1px solid rgba(122,162,255,.12);border-radius:18px;padding:16px 18px}
     .contact-value{font-size:18px;font-weight:900;margin-top:6px;color:#f1f7ff}
@@ -503,35 +619,32 @@ MAIN_HTML = """
     .confidence-label{display:flex;justify-content:space-between;gap:10px;font-size:12px;font-weight:900;color:#cfe0fb;text-transform:uppercase;letter-spacing:.08em}
     .confidence-track{width:100%;height:10px;border-radius:999px;overflow:hidden;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.05)}
     .confidence-bar{height:100%;border-radius:999px;background:linear-gradient(90deg, var(--blue), var(--blue2));box-shadow:0 0 18px rgba(91,212,255,.22)}
-    .risk-panel .rk{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#9fb7da;font-weight:900;margin-bottom:8px}
-    .risk-panel .rv{font-size:28px;font-weight:1000;line-height:1}
-    .risk-panel .rs{margin-top:6px;color:#bfd0ea;font-size:13px;line-height:1.45}
     .trend-up{color:#ff98a5}.trend-mid{color:#ffd38f}.trend-down{color:#93f3c6}
     .footer{margin-top:30px;padding:24px 12px 8px;color:#94a7c6;font-size:14px;text-align:center;line-height:1.6}
     .audio-toggle{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:14px;background:#111b2f;border:1px solid var(--line);color:var(--text);font-weight:900;cursor:pointer}
     iframe{width:100%;aspect-ratio:16/9;border:0;border-radius:18px;background:#0a0f18}
+
     @media (max-width:1180px){
-      .hero,.summary-list{grid-template-columns:1fr}
+      .hero-center{grid-template-columns:1fr}
       .dashboard-grid{grid-template-columns:1fr 1fr}
       .dashboard-grid .dash-card:first-child{grid-column:1/-1}
-      .metrics-grid,.trust-grid,.sim-grid,.cta-grid,.hero-strip,.risk-panel-grid,.contact-box{grid-template-columns:repeat(2,1fr)}
+      .metrics-grid,.trust-grid,.sim-grid,.hero-route-grid,.risk-panel-grid,.contact-box,.hero-mini-grid{grid-template-columns:repeat(2,1fr)}
     }
     @media (max-width:760px){
-      .metrics-grid,.dashboard-grid,.trust-grid,.sim-grid,.mini-grid,.summary-list,.cta-grid,.hero-strip,.risk-panel-grid,.contact-box{grid-template-columns:1fr}
+      .metrics-grid,.dashboard-grid,.trust-grid,.sim-grid,.mini-grid,.hero-route-grid,.risk-panel-grid,.contact-box,.hero-mini-grid{grid-template-columns:1fr}
       .nav-links{width:100%}
-      .hero-actions{flex-direction:column;align-items:stretch}
       .btn,.audio-toggle{width:100%}
       .alert-top,.kv,.focus-top{flex-direction:column}
       .shell{padding:14px 10px 54px}
-      .card,.dash-card{padding:16px}
+      .card,.dash-card,.hero-copy-card,.hero-side-card{padding:16px}
+      .hero-overlay{padding:16px}
       h1{font-size:clamp(34px,9vw,48px)}
       .lead{font-size:15px;line-height:1.55}
       .section-title{font-size:30px}
       .pulse-rings{display:none}
-      .nav-inner{padding:12px 10px}
-      .hero-actions{gap:10px}
-      .hero-strip{gap:10px}
-      .section{margin-top:24px}
+      .cinematic-hero{min-height:auto}
+      .hero-overlay{min-height:auto;gap:18px}
+      .hero-actions{flex-direction:column;align-items:stretch}
     }
   </style>
 </head>
@@ -555,50 +668,82 @@ MAIN_HTML = """
   </div>
 
   <div class="shell">
-    <section class="hero" id="overview">
-      <div class="card hero-main">
-        <div class="hero-kicker">Clinical command platform</div>
-        <h1>Detect patient deterioration earlier. Strengthen response at scale.</h1>
-        <p class="lead">
-          Early Risk Alert AI is a professional healthcare intelligence platform built for hospitals, clinics,
-          investors, care teams, and remote monitoring programs. The platform combines live patient activity,
-          AI risk scoring, executive-ready workflow visibility, and premium command-center presentation in one experience.
-        </p>
-        <div class="hero-actions">
-          <a class="btn cta-pop" href="/hospital-demo">Request Hospital Demo</a>
-          <a class="btn secondary" href="/executive-walkthrough">Schedule Executive Walkthrough</a>
-          <a class="btn secondary" href="#dashboard">View Clinical Command Center</a>
-          <button class="audio-toggle" id="audioToggle" type="button">🔔 Enable Alert Sound</button>
+    <section class="cinematic-hero" id="overview">
+      <div class="sweep"></div>
+      <div class="pulse-rings"><span></span><span></span><span></span></div>
+
+      <div class="hero-overlay">
+        <div class="hero-topbar">
+          <div class="hero-badge">Single-domain cinematic production experience</div>
+          <div class="hero-badge">Interactive hospital / demo / investor entry model</div>
         </div>
 
-        <div class="hero-strip">
-          <div class="hero-stat"><div class="k">Clinical View</div><div class="v">Live</div><div class="s">Hospital-facing command operations</div></div>
-          <div class="hero-stat"><div class="k">AI Layer</div><div class="v">Scored</div><div class="s">Risk, confidence, priority, direction</div></div>
-          <div class="hero-stat"><div class="k">Executive Flow</div><div class="v">Ready</div><div class="s">Walkthrough and demo capture built in</div></div>
-          <div class="hero-stat"><div class="k">Investor Flow</div><div class="v">Active</div><div class="s">Intake, pitch deck, admin review</div></div>
-        </div>
+        <div class="hero-center">
+          <div class="hero-copy-card">
+            <div class="hero-kicker">Predictive clinical intelligence</div>
+            <h1>Step into the platform the way your users will.</h1>
+            <p class="lead">
+              This cinematic entry experience guides hospital teams into demo capture, investors into the commercial portal,
+              and product viewers into the live command-center walkthrough — all from one branded production homepage.
+            </p>
 
-        <div class="ticker-wrap"><div class="ticker" id="opsTicker"></div></div>
-        <div class="pulse-rings"><span></span><span></span><span></span></div>
-      </div>
+            <div class="hero-actions">
+              <a class="btn cta-pop" href="/hospital-demo">Hospital Path</a>
+              <a class="btn secondary" href="#dashboard">Live Demo Path</a>
+              <a class="btn secondary" href="/investors">Investor Path</a>
+              <button class="audio-toggle" id="audioToggle" type="button">🔔 Enable Alert Sound</button>
+            </div>
 
-      <div class="card">
-        <div class="live-pill"><span class="dot"></span> Live system</div>
-        <div class="side-title">Built for hospital operations and executive review</div>
-        <p class="side-copy">
-          Your platform now combines hospital demo intake, executive walkthrough capture, animated metrics,
-          AI recommendation logic, patient simulation, command-center visibility, and investor follow-up tools.
-        </p>
-        <div class="mini-grid">
-          <div class="mini"><div class="mini-k">Model</div><div class="mini-v">AI</div><div class="mini-s">Risk detection with confidence scoring</div></div>
-          <div class="mini"><div class="mini-k">Deployment</div><div class="mini-v">SaaS</div><div class="mini-s">Enterprise-ready command-center presentation</div></div>
-          <div class="mini"><div class="mini-k">Buyer</div><div class="mini-v">Hospitals</div><div class="mini-s">Health systems, clinics, RPM, executive stakeholders</div></div>
-          <div class="mini"><div class="mini-k">Workflow</div><div class="mini-v">Live</div><div class="mini-s">Hospital demos, investor intake, CSV export, admin review</div></div>
-        </div>
-        <div class="cta-grid">
-          <div class="cta-card"><h4>Request Hospital Demo</h4><p>Capture interest from hospital operators, RPM teams, and care leadership.</p><div class="mini-actions"><a class="btn secondary" href="/hospital-demo">Open Form</a></div></div>
-          <div class="cta-card"><h4>Schedule Executive Walkthrough</h4><p>Collect executive outreach requests for pilots, evaluations, and enterprise review.</p><div class="mini-actions"><a class="btn secondary" href="/executive-walkthrough">Open Form</a></div></div>
-          <div class="cta-card"><h4>Investor Flow</h4><p>Present a clean investor portal, intake workflow, deck, and admin review experience.</p><div class="mini-actions"><a class="btn secondary" href="/investors">Open Investor View</a></div></div>
+            <div class="hero-route-grid">
+              <a class="route-card route-hospital" href="/hospital-demo">
+                <div class="route-label">Left path</div>
+                <div class="route-title">Hospital Demo</div>
+                <div class="route-copy">
+                  Treat the left clinical figure as your hospital buyer journey:
+                  request demo, evaluate workflow, and move into operational review.
+                </div>
+                <div class="route-arrow">Open hospital intake →</div>
+              </a>
+
+              <a class="route-card route-demo" href="#dashboard">
+                <div class="route-label">Center path</div>
+                <div class="route-title">Live Product Demo</div>
+                <div class="route-copy">
+                  The center figure becomes the guided product walkthrough —
+                  command center, AI scoring, severity, confidence, and recommended action.
+                </div>
+                <div class="route-arrow">Jump to live command center →</div>
+              </a>
+
+              <a class="route-card route-investor" href="/investors">
+                <div class="route-label">Right path</div>
+                <div class="route-title">Investor Portal</div>
+                <div class="route-copy">
+                  The right-side figure becomes the investor path:
+                  review traction, positioning, intake flow, and branded deck delivery.
+                </div>
+                <div class="route-arrow">Open investor overview →</div>
+              </a>
+            </div>
+
+            <div class="ticker-wrap"><div class="ticker" id="opsTicker"></div></div>
+          </div>
+
+          <div class="hero-side-card">
+            <div class="hero-kicker">Cinematic operating layer</div>
+            <div class="hero-side-title">One visual. Three journeys. One production domain.</div>
+            <p class="hero-side-copy">
+              This intro does not try to be a movie yet. It turns your command-center image into a premium,
+              interactive navigation model that feels cinematic now and can later become a full AI video opener.
+            </p>
+
+            <div class="hero-mini-grid">
+              <div class="mini"><div class="mini-k">Hospital</div><div class="mini-v">Demo</div><div class="mini-s">Guide hospital operators into evaluation and intake.</div></div>
+              <div class="mini"><div class="mini-k">Center</div><div class="mini-v">Walkthrough</div><div class="mini-s">Guide viewers into the live dashboard experience.</div></div>
+              <div class="mini"><div class="mini-k">Investor</div><div class="mini-v">Portal</div><div class="mini-s">Guide capital and partner audiences into the investor flow.</div></div>
+              <div class="mini"><div class="mini-k">Branding</div><div class="mini-v">Premium</div><div class="mini-s">Unified cinematic presentation across the platform.</div></div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -642,32 +787,6 @@ MAIN_HTML = """
       <h2 class="section-title">Live patient simulator</h2>
       <p class="section-sub">Simulated patient activity with stronger severity colors and AI scoring clarity.</p>
       <div class="sim-grid" id="simulatorGrid"></div>
-    </section>
-
-    <section class="section">
-      <h2 class="section-title">Live product demo</h2>
-      <p class="section-sub">Polished product messaging for hospital demos, executive walkthroughs, and investor review.</p>
-      <div class="dashboard-grid" style="grid-template-columns:1.1fr .9fr;">
-        <div class="card"><iframe src="__YOUTUBE_EMBED_URL__" allowfullscreen></iframe></div>
-        <div class="card">
-          <h3 style="margin-top:0;">Executive summary</h3>
-          <p class="side-copy">
-            Early Risk Alert AI combines hospital-facing command visibility, patient simulation, AI risk scoring,
-            hospital demo capture, executive walkthrough requests, investor intake, and branded pitch materials into one platform.
-          </p>
-          <div class="summary-list">
-            <div class="summary-item"><div class="sk">Primary use case</div><div class="sv">Clinical command</div></div>
-            <div class="summary-item"><div class="sk">Secondary use case</div><div class="sv">Executive evaluation</div></div>
-            <div class="summary-item"><div class="sk">Delivery model</div><div class="sv">Enterprise SaaS</div></div>
-            <div class="summary-item"><div class="sk">Commercial layer</div><div class="sv">Investor-ready</div></div>
-          </div>
-          <div class="hero-actions" style="margin-top:18px;">
-            <a class="btn cta-pop" href="/hospital-demo">Hospital Demo Form</a>
-            <a class="btn secondary" href="/executive-walkthrough">Executive Walkthrough</a>
-            <a class="btn secondary" href="/investors">Investor Portal</a>
-          </div>
-        </div>
-      </div>
     </section>
 
     <section class="section">
@@ -884,14 +1003,14 @@ MAIN_HTML = """
     }
     function renderTicker(overview, live) {
       const parts = [
+        `Hospital journey active`,
+        `Live demo journey active`,
+        `Investor journey active`,
         `Monitored patients ${overview.patient_count ?? 0}`,
         `Open alerts ${overview.open_alerts ?? 0}`,
         `Critical alerts ${overview.critical_alerts ?? 0}`,
         `Average risk ${overview.avg_risk_score ?? 0}`,
         `Top focus ${live.focus_patient?.patient_id || "p101"}`,
-        `Hospital demo requests enabled`,
-        `Executive walkthrough flow active`,
-        `Investor intake workflow active`,
         `Confidence scoring visible`,
         `Recommended action engine active`
       ];
