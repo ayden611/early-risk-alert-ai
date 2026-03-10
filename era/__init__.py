@@ -1,14 +1,14 @@
 from __future__ import annotations
 
 import csv
+import html
 import io
 import json
 import os
 import random
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List
-from urllib.parse import urlencode
+from typing import Any, Dict, List, Tuple
 
 from flask import Flask, jsonify, redirect, render_template_string, request, send_file
 
@@ -18,9 +18,6 @@ BUSINESS_PHONE = "732-724-7267"
 FOUNDER_NAME = "Milton Munroe"
 FOUNDER_ROLE = "Founder, Early Risk Alert AI"
 YOUTUBE_EMBED_URL = "https://www.youtube.com/embed/HiidXiXifY4"
-
-# Set this in Render for your ONE public service:
-# CANONICAL_HOST=early-risk-alert-ai-1.onrender.com
 CANONICAL_HOST = os.getenv("CANONICAL_HOST", "").strip().lower()
 
 
@@ -38,12 +35,29 @@ def _safe_float(value: Any, default: float = 0.0) -> float:
 
 
 def _severity_rank(severity: str) -> int:
-    order = {"critical": 4, "high": 3, "moderate": 2, "stable": 1}
-    return order.get((severity or "").lower(), 0)
+    return {"critical": 4, "high": 3, "moderate": 2, "stable": 1}.get((severity or "").lower(), 0)
 
 
 def _clamp(n: float, low: float, high: float) -> float:
     return max(low, min(high, n))
+
+
+def _status_norm(value: str) -> str:
+    v = (value or "New").strip().lower()
+    if v == "contacted":
+        return "Contacted"
+    if v == "scheduled":
+        return "Scheduled"
+    return "New"
+
+
+def _status_class(value: str) -> str:
+    v = _status_norm(value).lower()
+    if v == "contacted":
+        return "status-pill status-contacted"
+    if v == "scheduled":
+        return "status-pill status-scheduled"
+    return "status-pill status-new"
 
 
 def _recommended_action(severity: str, vitals: Dict[str, Any]) -> str:
@@ -67,13 +81,12 @@ def _recommended_action(severity: str, vitals: Dict[str, Any]) -> str:
 
 
 def _clinical_priority(severity: str) -> str:
-    mapping = {
+    return {
         "critical": "Priority 1",
         "high": "Priority 2",
         "moderate": "Priority 3",
         "stable": "Priority 4",
-    }
-    return mapping.get(severity, "Priority 4")
+    }.get(severity, "Priority 4")
 
 
 def _trend_direction(vitals: Dict[str, Any]) -> str:
@@ -183,50 +196,13 @@ def _detect_risk(vitals: Dict[str, Any]) -> Dict[str, Any]:
 
 def _build_demo_patients() -> List[Dict[str, Any]]:
     seed = [
-        {
-            "patient_id": "p101",
-            "patient_name": "Patient p101",
-            "room": "ICU-12",
-            "program": "Cardiac",
-            "vitals": {"heart_rate": 126, "systolic_bp": 172, "diastolic_bp": 104, "spo2": 92, "temperature": 99.4, "resp_rate": 20},
-        },
-        {
-            "patient_id": "p202",
-            "patient_name": "Patient p202",
-            "room": "Stepdown-04",
-            "program": "Pulmonary",
-            "vitals": {"heart_rate": 98, "systolic_bp": 146, "diastolic_bp": 92, "spo2": 88, "temperature": 100.2, "resp_rate": 24},
-        },
-        {
-            "patient_id": "p303",
-            "patient_name": "Patient p303",
-            "room": "Telemetry-09",
-            "program": "Cardiac",
-            "vitals": {"heart_rate": 112, "systolic_bp": 164, "diastolic_bp": 98, "spo2": 95, "temperature": 98.9, "resp_rate": 18},
-        },
-        {
-            "patient_id": "p404",
-            "patient_name": "Patient p404",
-            "room": "Ward-21",
-            "program": "Recovery",
-            "vitals": {"heart_rate": 84, "systolic_bp": 128, "diastolic_bp": 82, "spo2": 97, "temperature": 98.6, "resp_rate": 16},
-        },
-        {
-            "patient_id": "p505",
-            "patient_name": "Patient p505",
-            "room": "ICU-05",
-            "program": "Stroke",
-            "vitals": {"heart_rate": 118, "systolic_bp": 156, "diastolic_bp": 96, "spo2": 93, "temperature": 99.8, "resp_rate": 22},
-        },
-        {
-            "patient_id": "p606",
-            "patient_name": "Patient p606",
-            "room": "RPM-Home",
-            "program": "Remote Monitoring",
-            "vitals": {"heart_rate": 89, "systolic_bp": 138, "diastolic_bp": 86, "spo2": 96, "temperature": 98.4, "resp_rate": 17},
-        },
+        {"patient_id": "p101", "patient_name": "Patient p101", "room": "ICU-12", "program": "Cardiac", "vitals": {"heart_rate": 126, "systolic_bp": 172, "diastolic_bp": 104, "spo2": 92, "temperature": 99.4, "resp_rate": 20}},
+        {"patient_id": "p202", "patient_name": "Patient p202", "room": "Stepdown-04", "program": "Pulmonary", "vitals": {"heart_rate": 98, "systolic_bp": 146, "diastolic_bp": 92, "spo2": 88, "temperature": 100.2, "resp_rate": 24}},
+        {"patient_id": "p303", "patient_name": "Patient p303", "room": "Telemetry-09", "program": "Cardiac", "vitals": {"heart_rate": 112, "systolic_bp": 164, "diastolic_bp": 98, "spo2": 95, "temperature": 98.9, "resp_rate": 18}},
+        {"patient_id": "p404", "patient_name": "Patient p404", "room": "Ward-21", "program": "Recovery", "vitals": {"heart_rate": 84, "systolic_bp": 128, "diastolic_bp": 82, "spo2": 97, "temperature": 98.6, "resp_rate": 16}},
+        {"patient_id": "p505", "patient_name": "Patient p505", "room": "ICU-05", "program": "Stroke", "vitals": {"heart_rate": 118, "systolic_bp": 156, "diastolic_bp": 96, "spo2": 93, "temperature": 99.8, "resp_rate": 22}},
+        {"patient_id": "p606", "patient_name": "Patient p606", "room": "RPM-Home", "program": "Remote Monitoring", "vitals": {"heart_rate": 89, "systolic_bp": 138, "diastolic_bp": 86, "spo2": 96, "temperature": 98.4, "resp_rate": 17}},
     ]
-
     rows: List[Dict[str, Any]] = []
     for patient in seed:
         v = dict(patient["vitals"])
@@ -288,28 +264,32 @@ def _build_rollups(row: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+def _escape(s: Any) -> str:
+    return html.escape("" if s is None else str(s))
+
+
 def _generate_pitch_deck_pdf_bytes() -> bytes:
     lines = [
         "Early Risk Alert AI",
         "Predictive Clinical Intelligence Platform",
         "",
         "Executive Summary",
-        "Early Risk Alert AI is a professional healthcare intelligence platform",
-        "built for hospitals, clinics, command centers, and remote monitoring programs.",
-        "The platform combines AI risk scoring, live dashboards, alert prioritization,",
-        "executive review workflows, and investor-ready presentation architecture.",
+        "Early Risk Alert AI is a professional healthcare intelligence platform built for",
+        "hospitals, clinics, command centers, executive buyers, and remote monitoring programs.",
+        "The platform combines AI risk scoring, clinical visibility, hospital demo capture,",
+        "executive walkthrough flow, investor intake, and branded presentation architecture.",
         "",
-        "Hospitals",
+        "Hospital Value",
         "- Detect patient deterioration earlier",
-        "- Surface high-risk patients in real time",
-        "- Enable command-center visibility",
-        "- Support enterprise healthcare operations",
+        "- Prioritize alerts by severity and confidence",
+        "- Present enterprise-grade command-center visibility",
+        "- Support hospital demo and executive evaluation workflows",
         "",
-        "Investors",
+        "Investor Value",
         "- Enterprise SaaS positioning",
-        "- Hospital and health system expansion potential",
-        "- Built-in intake and admin workflow",
-        "- Branded pitch materials and follow-up layer",
+        "- Hospital and RPM market exposure",
+        "- Built-in investor intake and admin review flow",
+        "- Real branded deck delivery and pipeline export",
         "",
         "Founder",
         f"- {FOUNDER_NAME}",
@@ -323,40 +303,38 @@ def _generate_pitch_deck_pdf_bytes() -> bytes:
     def esc(text: str) -> str:
         return text.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
 
-    y = 780
-    content_parts = ["BT", "/F1 22 Tf", "50 805 Td", f"({esc('Early Risk Alert AI — Branded Pitch Deck')}) Tj"]
+    y = 790
+    content = ["BT", "/F1 24 Tf", "50 810 Td", f"({esc('Early Risk Alert AI — Executive Pitch Deck')}) Tj"]
     for line in lines:
         y -= 24
-        if line == "":
+        if not line:
             continue
-        font_size = 11 if line.startswith("-") else 13
-        if line in {"Early Risk Alert AI", "Executive Summary", "Hospitals", "Investors", "Founder", "Contact"}:
-            font_size = 16
-        content_parts.extend([f"/F1 {font_size} Tf", f"50 {y} Td", f"({esc(line)}) Tj"])
-    content_parts.append("ET")
-    stream = "\n".join(content_parts).encode("latin-1", errors="replace")
+        size = 12
+        if line in {"Early Risk Alert AI", "Executive Summary", "Hospital Value", "Investor Value", "Founder", "Contact"}:
+            size = 17
+        content.extend([f"/F1 {size} Tf", f"50 {y} Td", f"({esc(line)}) Tj"])
+    content.append("ET")
+    stream = "\n".join(content).encode("latin-1", errors="replace")
 
-    objects = []
-    objects.append(b"1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj\n")
-    objects.append(b"2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj\n")
-    objects.append(
-        b"3 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 842] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >> endobj\n"
-    )
-    objects.append(b"4 0 obj << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> endobj\n")
-    objects.append(f"5 0 obj << /Length {len(stream)} >> stream\n".encode("latin-1") + stream + b"\nendstream endobj\n")
+    objs = []
+    objs.append(b"1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj\n")
+    objs.append(b"2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj\n")
+    objs.append(b"3 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 842] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >> endobj\n")
+    objs.append(b"4 0 obj << /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >> endobj\n")
+    objs.append(f"5 0 obj << /Length {len(stream)} >> stream\n".encode("latin-1") + stream + b"\nendstream endobj\n")
 
     header = b"%PDF-1.4\n%\xe2\xe3\xcf\xd3\n"
     body = bytearray(header)
     offsets = [0]
-    for obj in objects:
+    for obj in objs:
         offsets.append(len(body))
         body.extend(obj)
 
     xref_offset = len(body)
-    xref = [b"xref\n", f"0 {len(objects)+1}\n".encode("latin-1"), b"0000000000 65535 f \n"]
+    xref = [b"xref\n", f"0 {len(objs)+1}\n".encode("latin-1"), b"0000000000 65535 f \n"]
     for off in offsets[1:]:
         xref.append(f"{off:010d} 00000 n \n".encode("latin-1"))
-    trailer = f"trailer << /Size {len(objects)+1} /Root 1 0 R >>\nstartxref\n{xref_offset}\n%%EOF\n".encode("latin-1")
+    trailer = f"trailer << /Size {len(objs)+1} /Root 1 0 R >>\nstartxref\n{xref_offset}\n%%EOF\n".encode("latin-1")
     body.extend(b"".join(xref))
     body.extend(trailer)
     return bytes(body)
@@ -374,14 +352,17 @@ MAIN_HTML = """
       --bg:#060d19;--bg2:#0b1222;--panel:#0f1728;--panel2:#121f38;--panel3:#0d1628;
       --line:rgba(255,255,255,.08);--line2:rgba(255,255,255,.05);--text:#edf4ff;--muted:#9ab0d3;
       --blue:#7aa2ff;--blue2:#5bd4ff;--green:#38d39f;--red:#ff5c72;--amber:#f7be68;--violet:#a88bff;
-      --radius:22px;--max:1360px;--shadow:0 20px 60px rgba(0,0,0,.28);--shadow-soft:0 10px 28px rgba(0,0,0,.18);
+      --radius:24px;--max:1380px;--shadow:0 22px 65px rgba(0,0,0,.30);--shadow-soft:0 12px 34px rgba(0,0,0,.20)
     }
     *{box-sizing:border-box}
     html{scroll-behavior:smooth}
     body{
       margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--text);
-      background:radial-gradient(circle at top left, rgba(122,162,255,.14), transparent 22%),radial-gradient(circle at 80% 10%, rgba(91,212,255,.09), transparent 20%),linear-gradient(180deg, var(--bg), var(--bg2));
-      overflow-x:hidden;
+      background:
+        radial-gradient(circle at top left, rgba(122,162,255,.14), transparent 24%),
+        radial-gradient(circle at 85% 10%, rgba(91,212,255,.10), transparent 22%),
+        linear-gradient(180deg, var(--bg), var(--bg2));
+      overflow-x:hidden
     }
     a{color:inherit;text-decoration:none}
     .nav{position:sticky;top:0;z-index:100;background:rgba(6,13,25,.84);backdrop-filter:blur(16px);border-bottom:1px solid var(--line)}
@@ -391,24 +372,47 @@ MAIN_HTML = """
     .brand-sub{font-size:14px;color:var(--muted);font-weight:800}
     .nav-links{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
     .nav-links a{font-weight:900;font-size:14px}
-    .btn{display:inline-flex;align-items:center;justify-content:center;padding:13px 18px;border-radius:16px;font-weight:900;font-size:14px;background:linear-gradient(135deg,var(--blue),var(--blue2));color:#08111f;border:1px solid transparent;cursor:pointer;box-shadow:var(--shadow-soft);transition:transform .18s ease, box-shadow .18s ease, opacity .18s ease, border-color .18s ease}
-    .btn:hover{transform:translateY(-1px);opacity:.98}
+    .btn{
+      display:inline-flex;align-items:center;justify-content:center;padding:13px 18px;border-radius:16px;font-weight:900;font-size:14px;
+      background:linear-gradient(135deg,var(--blue),var(--blue2));color:#08111f;border:1px solid transparent;cursor:pointer;
+      box-shadow:var(--shadow-soft);transition:transform .2s ease, box-shadow .2s ease, opacity .2s ease, border-color .2s ease
+    }
+    .btn:hover{transform:translateY(-2px) scale(1.01)}
     .btn.secondary{background:#111b2f;color:var(--text);border-color:var(--line);box-shadow:none}
     .btn.ghost{background:transparent;color:var(--text);border:1px solid var(--line);box-shadow:none}
-    .shell{max-width:var(--max);margin:0 auto;padding:20px 16px 70px}
-    .fade-up{animation:fadeUp .55s ease}
-    @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-    .card{background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015));border:1px solid var(--line);border-radius:var(--radius);padding:28px;box-shadow:var(--shadow)}
+    .btn.cta-pop{animation:ctaPulse 2.6s ease-in-out infinite}
+    @keyframes ctaPulse{0%,100%{box-shadow:0 0 0 0 rgba(91,212,255,.12),var(--shadow-soft)}50%{box-shadow:0 0 0 10px rgba(91,212,255,0),0 10px 30px rgba(91,212,255,.18)}}
+    .shell{max-width:var(--max);margin:0 auto;padding:20px 16px 78px}
+    .card{
+      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015));
+      border:1px solid var(--line);border-radius:var(--radius);padding:28px;box-shadow:var(--shadow);
+      transition:transform .22s ease, border-color .22s ease, box-shadow .22s ease
+    }
+    .card:hover{border-color:rgba(122,162,255,.15)}
     .hero{display:grid;grid-template-columns:1.06fr .94fr;gap:18px;padding-top:12px;align-items:stretch}
-    .hero-main{position:relative;overflow:hidden;background:radial-gradient(circle at top left, rgba(122,162,255,.16), transparent 30%),radial-gradient(circle at 82% 18%, rgba(91,212,255,.12), transparent 24%),linear-gradient(180deg, rgba(18,31,54,.88), rgba(11,18,31,.92))}
-    .hero-main:before{content:"";position:absolute;inset:0;background:linear-gradient(rgba(122,162,255,.045) 1px, transparent 1px),linear-gradient(90deg, rgba(122,162,255,.045) 1px, transparent 1px);background-size:30px 30px;opacity:.36;pointer-events:none}
-    .hero-main:after{content:"";position:absolute;right:-120px;top:-120px;width:340px;height:340px;border-radius:999px;background:radial-gradient(circle, rgba(91,212,255,.24), transparent 68%);filter:blur(12px);pointer-events:none;animation:heroGlow 7s ease-in-out infinite}
-    @keyframes heroGlow{0%,100%{transform:scale(1);opacity:.9}50%{transform:scale(1.08);opacity:1}}
+    .hero-main{
+      position:relative;overflow:hidden;
+      background:
+        radial-gradient(circle at top left, rgba(122,162,255,.18), transparent 30%),
+        radial-gradient(circle at 82% 18%, rgba(91,212,255,.13), transparent 24%),
+        linear-gradient(180deg, rgba(18,31,54,.90), rgba(11,18,31,.94))
+    }
+    .hero-main:before{
+      content:"";position:absolute;inset:0;
+      background:linear-gradient(rgba(122,162,255,.04) 1px, transparent 1px),linear-gradient(90deg, rgba(122,162,255,.04) 1px, transparent 1px);
+      background-size:30px 30px;opacity:.36;pointer-events:none
+    }
+    .hero-main:after{
+      content:"";position:absolute;right:-120px;top:-120px;width:380px;height:380px;border-radius:999px;
+      background:radial-gradient(circle, rgba(91,212,255,.26), transparent 68%);
+      filter:blur(10px);pointer-events:none;animation:heroGlow 8s ease-in-out infinite
+    }
+    @keyframes heroGlow{0%,100%{transform:scale(1) translateY(0);opacity:.92}50%{transform:scale(1.08) translateY(10px);opacity:1}}
     .pulse-rings{position:absolute;right:48px;bottom:48px;width:160px;height:160px;pointer-events:none;opacity:.42}
     .pulse-rings span{position:absolute;inset:0;border:1px solid rgba(91,212,255,.25);border-radius:999px;animation:ring 4.2s infinite}
     .pulse-rings span:nth-child(2){animation-delay:1.4s}
     .pulse-rings span:nth-child(3){animation-delay:2.8s}
-    @keyframes ring{0%{transform:scale(.6);opacity:.55}100%{transform:scale(1.25);opacity:0}}
+    @keyframes ring{0%{transform:scale(.62);opacity:.55}100%{transform:scale(1.28);opacity:0}}
     .hero-kicker,.small-k{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:#c8d7f1;font-weight:900;margin-bottom:12px}
     h1{margin:0 0 18px;font-size:clamp(40px,5vw,76px);line-height:.94;font-weight:1000;letter-spacing:-.058em}
     .lead{margin:0;color:#c8d7f1;font-size:clamp(16px,1.5vw,20px);line-height:1.62;max-width:950px}
@@ -418,38 +422,49 @@ MAIN_HTML = """
     .hero-stat .k{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#9fb7da;font-weight:900}
     .hero-stat .v{font-size:28px;font-weight:1000;margin-top:8px;line-height:1}
     .hero-stat .s{font-size:13px;color:#b7c9e7;margin-top:6px;line-height:1.4}
-    .cta-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:18px}
-    .cta-card{border:1px solid rgba(255,255,255,.07);background:linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.02));border-radius:18px;padding:16px;transition:transform .18s ease, border-color .18s ease, box-shadow .18s ease}
+    .cta-grid,.metrics-grid,.trust-grid,.sim-grid,.mini-grid,.risk-panel-grid{display:grid;gap:14px}
+    .cta-grid{grid-template-columns:repeat(3,1fr);margin-top:18px}
+    .metrics-grid{grid-template-columns:repeat(4,1fr)}
+    .trust-grid{grid-template-columns:repeat(4,1fr)}
+    .sim-grid{grid-template-columns:repeat(3,1fr)}
+    .mini-grid{grid-template-columns:repeat(2,1fr)}
+    .risk-panel-grid{grid-template-columns:repeat(2,1fr);margin-top:12px}
+    .cta-card,.mini,.metric,.trust-card,.sim-card,.risk-panel{
+      border:1px solid rgba(255,255,255,.06);
+      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.018));
+      border-radius:18px;padding:18px
+    }
+    .cta-card{transition:transform .18s ease, border-color .18s ease, box-shadow .18s ease}
     .cta-card:hover{transform:translateY(-2px);border-color:rgba(122,162,255,.22);box-shadow:0 10px 30px rgba(0,0,0,.18)}
-    .cta-card h4{margin:0 0 8px;font-size:18px}
-    .cta-card p{margin:0;color:#bdd0ec;line-height:1.5;font-size:14px}
+    .cta-card h4,.trust-card h3{margin:0 0 8px}
+    .cta-card p,.trust-card p{margin:0;color:#bfd0ea;line-height:1.65}
     .cta-card .mini-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
     .live-pill{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;background:rgba(56,211,159,.12);border:1px solid rgba(56,211,159,.25);font-weight:900;font-size:12px;color:#bff5df;text-transform:uppercase;letter-spacing:.08em}
     .dot{width:10px;height:10px;border-radius:999px;background:var(--green);box-shadow:0 0 18px rgba(56,211,159,.6)}
     .side-title{font-size:clamp(28px,2.8vw,40px);font-weight:950;line-height:1.02;margin:18px 0 8px;letter-spacing:-.04em}
     .side-copy{color:#b8cae8;line-height:1.65;margin:0 0 18px;font-size:15px}
-    .mini-grid,.metrics-grid,.trust-grid{display:grid;gap:14px}
-    .mini-grid{grid-template-columns:repeat(2,1fr)}
-    .metrics-grid{grid-template-columns:repeat(4,1fr)}
-    .trust-grid{grid-template-columns:repeat(4,1fr)}
-    .mini,.metric,.trust-card{border:1px solid rgba(255,255,255,.06);background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.018));border-radius:18px;padding:18px}
-    .mini-k,.metric-label,.contact-label{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#9fb7da;font-weight:900}
+    .mini-k,.metric-label,.contact-label,.panel-title{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#9fb7da;font-weight:900}
     .mini-v,.metric-value{font-size:clamp(28px,2.6vw,54px);font-weight:1000;line-height:1;margin-top:10px}
-    .mini-s,.metric-note{font-size:14px;color:#b7c9e7;margin-top:8px;line-height:1.45}
-    .section{margin-top:30px}
+    .mini-s,.metric-note,.section-sub{font-size:14px;color:#b7c9e7;margin-top:8px;line-height:1.55}
+    .section{margin-top:34px;animation:sectionReveal .55s ease both}
+    @keyframes sectionReveal{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
     .section-title{font-size:clamp(30px,3.1vw,44px);font-weight:1000;letter-spacing:-.04em;margin:0 0 8px;line-height:1.02}
-    .section-sub{color:var(--muted);font-size:16px;line-height:1.65;margin:0 0 18px;max-width:980px}
+    .section-sub{font-size:16px;max-width:980px;margin:0 0 18px;color:var(--muted)}
     .ticker-wrap{margin-top:18px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);overflow:hidden}
     .ticker{display:flex;gap:28px;white-space:nowrap;padding:12px 0;color:#d3e4ff;font-weight:800;animation:ticker 18s linear infinite}
     .ticker span{display:inline-flex;align-items:center;gap:8px}
     .bullet{width:8px;height:8px;border-radius:999px;background:#7aa2ff}
     @keyframes ticker{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
     .dashboard-grid{display:grid;grid-template-columns:1.18fr 1fr 1fr;gap:14px}
-    .dash-card{padding:22px;min-height:470px}
+    .dash-card{padding:22px;min-height:520px}
     .dash-card h3{margin:0 0 6px;font-size:22px}
     .dash-card p{margin:0 0 16px;color:var(--muted);line-height:1.6}
     .feed{display:flex;flex-direction:column;gap:12px}
-    .alert{background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.07);border-radius:20px;padding:16px;transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease}
+    .alert{
+      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02));
+      border:1px solid rgba(255,255,255,.07);border-radius:20px;padding:16px;
+      transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease
+    }
     .alert:hover{transform:translateY(-2px)}
     .alert-critical{box-shadow:0 0 0 1px rgba(255,92,114,.26), 0 0 34px rgba(255,92,114,.18);border-color:rgba(255,92,114,.32);background:linear-gradient(180deg, rgba(255,92,114,.10), rgba(255,255,255,.02))}
     .alert-high{box-shadow:0 0 0 1px rgba(247,190,104,.18), 0 0 24px rgba(247,190,104,.09);border-color:rgba(247,190,104,.22);background:linear-gradient(180deg, rgba(247,190,104,.07), rgba(255,255,255,.02))}
@@ -469,14 +484,11 @@ MAIN_HTML = """
     .focus-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
     .focus-id{font-size:34px;font-weight:1000;line-height:1}
     .panel-block{background:linear-gradient(180deg, rgba(255,255,255,.028), rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.06);border-radius:18px;padding:16px;margin-top:12px}
-    .panel-title{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#a4badb;font-weight:900;margin-bottom:10px}
     .kv{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.05)}
     .kv:last-child{border-bottom:none}
     .k{color:#b6c8e8;font-weight:700}
     .v{font-weight:900}
     .channels{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:#d7e5ff;font-size:13px;line-height:1.7}
-    .sim-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-    .sim-card{padding:16px;border-radius:18px;background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.06)}
     .sim-title{font-size:16px;font-weight:900}
     .sim-room{font-size:12px;color:#a7bddf;margin-top:4px}
     .sim-risk{font-size:30px;font-weight:1000;margin:12px 0 6px}
@@ -484,26 +496,43 @@ MAIN_HTML = """
     .summary-list{display:grid;grid-template-columns:1fr 1fr;gap:10px 18px;margin-top:16px}
     .summary-item .sk{font-size:12px;text-transform:uppercase;letter-spacing:.14em;color:#9db3d5;font-weight:900}
     .summary-item .sv{font-size:20px;font-weight:900}
-    .contact-box{display:grid;gap:12px;margin-top:18px}
-    .contact-row{background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.05);border-radius:18px;padding:16px 18px}
+    .contact-box{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:18px}
+    .contact-row{background:linear-gradient(180deg, rgba(255,255,255,.032), rgba(255,255,255,.022));border:1px solid rgba(122,162,255,.12);border-radius:18px;padding:16px 18px}
     .contact-value{font-size:18px;font-weight:900;margin-top:6px;color:#f1f7ff}
-    .trust-card h3{margin:0 0 8px;font-size:18px}
-    .trust-card p{margin:0;color:#bfd0ea;line-height:1.65}
     .confidence-wrap{margin-top:10px;display:grid;gap:7px}
     .confidence-label{display:flex;justify-content:space-between;gap:10px;font-size:12px;font-weight:900;color:#cfe0fb;text-transform:uppercase;letter-spacing:.08em}
     .confidence-track{width:100%;height:10px;border-radius:999px;overflow:hidden;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.05)}
     .confidence-bar{height:100%;border-radius:999px;background:linear-gradient(90deg, var(--blue), var(--blue2));box-shadow:0 0 18px rgba(91,212,255,.22)}
-    .risk-panel-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:12px}
-    .risk-panel{border:1px solid rgba(255,255,255,.06);background:linear-gradient(180deg, rgba(255,255,255,.028), rgba(255,255,255,.018));border-radius:18px;padding:14px}
     .risk-panel .rk{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#9fb7da;font-weight:900;margin-bottom:8px}
     .risk-panel .rv{font-size:28px;font-weight:1000;line-height:1}
     .risk-panel .rs{margin-top:6px;color:#bfd0ea;font-size:13px;line-height:1.45}
     .trend-up{color:#ff98a5}.trend-mid{color:#ffd38f}.trend-down{color:#93f3c6}
-    .footer{margin-top:24px;padding:24px 12px 8px;color:#94a7c6;font-size:14px;text-align:center;line-height:1.6}
+    .footer{margin-top:30px;padding:24px 12px 8px;color:#94a7c6;font-size:14px;text-align:center;line-height:1.6}
     .audio-toggle{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:14px;background:#111b2f;border:1px solid var(--line);color:var(--text);font-weight:900;cursor:pointer}
     iframe{width:100%;aspect-ratio:16/9;border:0;border-radius:18px;background:#0a0f18}
-    @media (max-width:1180px){.hero,.summary-list{grid-template-columns:1fr}.dashboard-grid{grid-template-columns:1fr 1fr}.dashboard-grid .dash-card:first-child{grid-column:1/-1}.metrics-grid,.trust-grid,.sim-grid,.cta-grid,.hero-strip,.risk-panel-grid{grid-template-columns:repeat(2,1fr)}}
-    @media (max-width:760px){.metrics-grid,.dashboard-grid,.trust-grid,.sim-grid,.mini-grid,.summary-list,.cta-grid,.hero-strip,.risk-panel-grid{grid-template-columns:1fr}.nav-links{width:100%}.hero-actions{flex-direction:column;align-items:stretch}.btn,.audio-toggle{width:100%}.alert-top,.kv,.focus-top{flex-direction:column}.shell{padding:16px 12px 56px}.card,.dash-card{padding:18px}h1{font-size:clamp(34px,9vw,48px)}.lead{font-size:16px}.section-title{font-size:32px}.pulse-rings{display:none}}
+    @media (max-width:1180px){
+      .hero,.summary-list{grid-template-columns:1fr}
+      .dashboard-grid{grid-template-columns:1fr 1fr}
+      .dashboard-grid .dash-card:first-child{grid-column:1/-1}
+      .metrics-grid,.trust-grid,.sim-grid,.cta-grid,.hero-strip,.risk-panel-grid,.contact-box{grid-template-columns:repeat(2,1fr)}
+    }
+    @media (max-width:760px){
+      .metrics-grid,.dashboard-grid,.trust-grid,.sim-grid,.mini-grid,.summary-list,.cta-grid,.hero-strip,.risk-panel-grid,.contact-box{grid-template-columns:1fr}
+      .nav-links{width:100%}
+      .hero-actions{flex-direction:column;align-items:stretch}
+      .btn,.audio-toggle{width:100%}
+      .alert-top,.kv,.focus-top{flex-direction:column}
+      .shell{padding:14px 10px 54px}
+      .card,.dash-card{padding:16px}
+      h1{font-size:clamp(34px,9vw,48px)}
+      .lead{font-size:15px;line-height:1.55}
+      .section-title{font-size:30px}
+      .pulse-rings{display:none}
+      .nav-inner{padding:12px 10px}
+      .hero-actions{gap:10px}
+      .hero-strip{gap:10px}
+      .section{margin-top:24px}
+    }
   </style>
 </head>
 <body>
@@ -520,12 +549,12 @@ MAIN_HTML = """
         <a href="#simulator">Simulator</a>
         <a href="/investors">Investor View</a>
         <a href="/hospital-demo">Hospital Demo</a>
-        <a class="btn" href="/deck">Download Pitch Deck</a>
+        <a class="btn cta-pop" href="/deck">Download Pitch Deck</a>
       </div>
     </div>
   </div>
 
-  <div class="shell fade-up">
+  <div class="shell">
     <section class="hero" id="overview">
       <div class="card hero-main">
         <div class="hero-kicker">Clinical command platform</div>
@@ -535,9 +564,8 @@ MAIN_HTML = """
           investors, care teams, and remote monitoring programs. The platform combines live patient activity,
           AI risk scoring, executive-ready workflow visibility, and premium command-center presentation in one experience.
         </p>
-
         <div class="hero-actions">
-          <a class="btn" href="/hospital-demo">Request Hospital Demo</a>
+          <a class="btn cta-pop" href="/hospital-demo">Request Hospital Demo</a>
           <a class="btn secondary" href="/executive-walkthrough">Schedule Executive Walkthrough</a>
           <a class="btn secondary" href="#dashboard">View Clinical Command Center</a>
           <button class="audio-toggle" id="audioToggle" type="button">🔔 Enable Alert Sound</button>
@@ -567,7 +595,6 @@ MAIN_HTML = """
           <div class="mini"><div class="mini-k">Buyer</div><div class="mini-v">Hospitals</div><div class="mini-s">Health systems, clinics, RPM, executive stakeholders</div></div>
           <div class="mini"><div class="mini-k">Workflow</div><div class="mini-v">Live</div><div class="mini-s">Hospital demos, investor intake, CSV export, admin review</div></div>
         </div>
-
         <div class="cta-grid">
           <div class="cta-card"><h4>Request Hospital Demo</h4><p>Capture interest from hospital operators, RPM teams, and care leadership.</p><div class="mini-actions"><a class="btn secondary" href="/hospital-demo">Open Form</a></div></div>
           <div class="cta-card"><h4>Schedule Executive Walkthrough</h4><p>Collect executive outreach requests for pilots, evaluations, and enterprise review.</p><div class="mini-actions"><a class="btn secondary" href="/executive-walkthrough">Open Form</a></div></div>
@@ -635,7 +662,7 @@ MAIN_HTML = """
             <div class="summary-item"><div class="sk">Commercial layer</div><div class="sv">Investor-ready</div></div>
           </div>
           <div class="hero-actions" style="margin-top:18px;">
-            <a class="btn" href="/hospital-demo">Hospital Demo Form</a>
+            <a class="btn cta-pop" href="/hospital-demo">Hospital Demo Form</a>
             <a class="btn secondary" href="/executive-walkthrough">Executive Walkthrough</a>
             <a class="btn secondary" href="/investors">Investor Portal</a>
           </div>
@@ -652,7 +679,6 @@ MAIN_HTML = """
         <div class="card trust-card"><h3>Investor-ready presentation</h3><p>Unified platform, intake workflow, downloadable deck, and admin review layer.</p></div>
         <div class="card trust-card"><h3>Founder credibility</h3><p>Built and led by __FOUNDER_NAME__ with a focused mission to advance predictive healthcare intelligence.</p></div>
       </div>
-
       <div class="card" style="margin-top:14px;">
         <h3 style="margin-top:0;">Founder & Contact</h3>
         <div class="contact-box">
@@ -915,31 +941,62 @@ INVESTOR_HTML = """
   <style>
     :root{
       --bg:#07101d;--panel:#101a2d;--line:rgba(255,255,255,.08);--text:#edf4ff;--muted:#bdd0ec;
-      --blue:#7aa2ff;--blue2:#5bd4ff;--shadow:0 18px 50px rgba(0,0,0,.24)
+      --blue:#7aa2ff;--blue2:#5bd4ff;--green:#38d39f;--amber:#f7be68;--shadow:0 18px 50px rgba(0,0,0,.24)
     }
-    body{margin:0;font-family:Inter,Arial,sans-serif;background:radial-gradient(circle at top left, rgba(122,162,255,.14), transparent 24%),radial-gradient(circle at 80% 10%, rgba(91,212,255,.10), transparent 20%),linear-gradient(180deg, #07101d, #0b1324);color:var(--text)}
-    .wrap{max-width:1240px;margin:0 auto;padding:40px 20px 60px}
-    .hero{position:relative;overflow:hidden;background:radial-gradient(circle at top left, rgba(122,162,255,.16), transparent 28%),radial-gradient(circle at 82% 12%, rgba(91,212,255,.12), transparent 24%),linear-gradient(180deg, rgba(16,26,45,.98), rgba(10,16,28,.98));border:1px solid var(--line);border-radius:26px;padding:32px;box-shadow:var(--shadow)}
-    .hero:before{content:"";position:absolute;inset:0;background:linear-gradient(rgba(122,162,255,.04) 1px, transparent 1px),linear-gradient(90deg, rgba(122,162,255,.04) 1px, transparent 1px);background-size:32px 32px;opacity:.28;pointer-events:none}
-    .grid{display:grid;grid-template-columns:1.08fr .92fr;gap:16px}
+    *{box-sizing:border-box}
+    body{
+      margin:0;font-family:Inter,Arial,sans-serif;color:var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(122,162,255,.14), transparent 24%),
+        radial-gradient(circle at 82% 12%, rgba(91,212,255,.10), transparent 22%),
+        linear-gradient(180deg, #07101d, #0b1324)
+    }
+    .wrap{max-width:1280px;margin:0 auto;padding:36px 18px 60px}
+    .hero{
+      position:relative;overflow:hidden;
+      background:
+        radial-gradient(circle at top left, rgba(122,162,255,.16), transparent 28%),
+        radial-gradient(circle at 82% 12%, rgba(91,212,255,.12), transparent 24%),
+        linear-gradient(180deg, rgba(16,26,45,.98), rgba(10,16,28,.98));
+      border:1px solid var(--line);border-radius:26px;padding:32px;box-shadow:var(--shadow)
+    }
+    .hero:before{
+      content:"";position:absolute;inset:0;
+      background:linear-gradient(rgba(122,162,255,.035) 1px, transparent 1px),linear-gradient(90deg, rgba(122,162,255,.035) 1px, transparent 1px);
+      background-size:34px 34px;opacity:.28;pointer-events:none
+    }
+    .grid{display:grid;grid-template-columns:1.05fr .95fr;gap:16px}
     .card{position:relative;background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.07);border-radius:22px;padding:22px}
     .kicker{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#bfd0ea;font-weight:900}
     h1{font-size:clamp(40px,4vw,64px);line-height:.95;margin:10px 0 14px;letter-spacing:-.05em}
     p{color:var(--muted);line-height:1.72}
-    .btn{display:inline-block;padding:13px 18px;border-radius:14px;background:linear-gradient(135deg,var(--blue),var(--blue2));color:#08111f;font-weight:900;text-decoration:none;margin-right:10px;margin-bottom:10px}
-    .btn.secondary{background:#111b2f;color:#edf4ff;border:1px solid rgba(255,255,255,.08)}
+    .btn{display:inline-block;padding:13px 18px;border-radius:14px;background:linear-gradient(135deg,var(--blue),var(--blue2));color:#08111f;font-weight:900;text-decoration:none;margin-right:10px;margin-bottom:10px;box-shadow:0 10px 28px rgba(0,0,0,.18)}
+    .btn.secondary{background:#111b2f;color:#edf4ff;border:1px solid rgba(255,255,255,.08);box-shadow:none}
     .mini-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:20px}
     .mini{background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.06);border-radius:18px;padding:18px}
     .k{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#9eb4d6;font-weight:900}
     .v{font-size:28px;font-weight:1000;margin-top:10px}
-    .s{font-size:14px;color:#c4d6ef;margin-top:8px;line-height:1.5}
+    .s{font-size:14px;color:#c4d6ef;margin-top:8px;line-height:1.55}
     .list{display:grid;gap:10px;margin-top:14px}
     .li{padding:12px 14px;border-radius:16px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.05);color:#dce8fb}
-    .founder{margin-top:20px;border-top:1px solid rgba(255,255,255,.08);padding-top:18px;display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
-    .contact-card{background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:14px 16px}
+    .founder{
+      margin-top:20px;border-top:1px solid rgba(255,255,255,.08);padding-top:18px;
+      display:grid;grid-template-columns:repeat(2,1fr);gap:12px
+    }
+    .contact-card{
+      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.022));
+      border:1px solid rgba(122,162,255,.12);border-radius:18px;padding:16px 18px
+    }
     .contact-label{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#9eb4d6;font-weight:900}
     .contact-value{margin-top:6px;font-size:18px;font-weight:900;color:#f3f8ff}
-    @media (max-width:980px){.grid,.mini-grid,.founder{grid-template-columns:1fr}.wrap{padding:18px 12px 56px}.hero,.card{padding:18px}}
+    .deck-panel{
+      margin-top:18px;padding:18px;border-radius:18px;
+      background:linear-gradient(135deg, rgba(122,162,255,.14), rgba(91,212,255,.08));
+      border:1px solid rgba(91,212,255,.16)
+    }
+    .deck-panel h3{margin:0 0 8px;font-size:22px}
+    .deck-panel p{margin:0 0 14px}
+    @media (max-width:980px){.grid,.mini-grid,.founder{grid-template-columns:1fr}.wrap{padding:16px 10px 54px}.hero,.card{padding:16px}}
   </style>
 </head>
 <body>
@@ -969,6 +1026,12 @@ INVESTOR_HTML = """
             <div class="contact-card"><div class="contact-label">Email</div><div class="contact-value">__INFO_EMAIL__</div></div>
             <div class="contact-card"><div class="contact-label">Phone</div><div class="contact-value">__BUSINESS_PHONE__</div></div>
           </div>
+
+          <div class="deck-panel">
+            <h3>Investor materials ready</h3>
+            <p>Download the branded pitch deck directly from the platform, review hospital traction positioning, and capture investor follow-up in one workflow.</p>
+            <a class="btn" href="/deck">Download Branded Deck</a>
+          </div>
         </div>
 
         <div class="card">
@@ -980,14 +1043,15 @@ INVESTOR_HTML = """
             <div class="li">Command-center style dashboard with AI risk scoring and confidence indicators</div>
             <div class="li">Executive walkthrough capture, hospital demo requests, and investor intake workflows</div>
             <div class="li">Admin review and CSV export for a real operating pipeline</div>
+            <div class="li">Founder-led product with investor-facing commercial positioning</div>
           </div>
         </div>
       </div>
 
       <div class="mini-grid">
-        <div class="mini"><div class="k">Traction Angle</div><div class="v">Product Live</div><div class="s">Core public platform, forms, admin review, and investor flow are already operational.</div></div>
-        <div class="mini"><div class="k">Market</div><div class="v">Hospitals / RPM</div><div class="s">Targets hospital command centers, clinics, remote monitoring, and enterprise care workflows.</div></div>
-        <div class="mini"><div class="k">Revenue Model</div><div class="v">Enterprise SaaS</div><div class="s">Structured for hospital deployments, clinical dashboards, and enterprise healthcare subscriptions.</div></div>
+        <div class="mini"><div class="k">Traction Angle</div><div class="v">Product Live</div><div class="s">Core public platform, forms, admin review, and investor flow are operational now.</div></div>
+        <div class="mini"><div class="k">Market</div><div class="v">Hospitals / RPM</div><div class="s">Targets command centers, clinics, remote monitoring, and enterprise healthcare workflows.</div></div>
+        <div class="mini"><div class="k">Revenue Model</div><div class="v">Enterprise SaaS</div><div class="s">Structured for hospital deployments, command dashboards, and recurring software contracts.</div></div>
       </div>
     </div>
   </div>
@@ -1004,22 +1068,29 @@ FORM_PAGE = """
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     :root{--bg:#08111f;--panel:#101a2d;--line:rgba(255,255,255,.08);--text:#edf4ff;--muted:#c6d7ef;--blue:#7aa2ff;--blue2:#5bd4ff;--green:#38d39f;--shadow:0 18px 50px rgba(0,0,0,.24)}
+    *{box-sizing:border-box}
     body{margin:0;font-family:Inter,Arial,sans-serif;background:#08111f;color:var(--text)}
-    .form-shell{max-width:1120px;margin:0 auto;padding:40px 20px 60px}
-    .form-card{background:radial-gradient(circle at top left, rgba(122,162,255,.10), transparent 24%),linear-gradient(180deg, rgba(16,26,45,.98), rgba(12,18,32,.98));border:1px solid rgba(255,255,255,.08);border-radius:24px;padding:30px;box-shadow:var(--shadow)}
+    .form-shell{max-width:1120px;margin:0 auto;padding:36px 18px 54px}
+    .form-card{
+      background:radial-gradient(circle at top left, rgba(122,162,255,.10), transparent 24%),linear-gradient(180deg, rgba(16,26,45,.98), rgba(12,18,32,.98));
+      border:1px solid rgba(255,255,255,.08);border-radius:24px;padding:30px;box-shadow:var(--shadow)
+    }
     .form-top{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;flex-wrap:wrap;margin-bottom:22px}
     .form-title{font-size:clamp(38px,4vw,54px);font-weight:1000;line-height:.98;margin:0 0 10px;letter-spacing:-.045em}
     .form-copy{color:#c6d7ef;line-height:1.7;margin:0;max-width:760px}
     .form-badge{padding:10px 14px;border-radius:999px;background:rgba(56,211,159,.12);border:1px solid rgba(56,211,159,.22);color:#c8ffe5;font-weight:900;font-size:12px;letter-spacing:.1em;text-transform:uppercase}
-    .form{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+    .form{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
     .full{grid-column:1/-1}
     .field{display:flex;flex-direction:column;gap:8px}
     .field label{font-size:12px;text-transform:uppercase;letter-spacing:.14em;color:#9eb4d6;font-weight:900}
-    .field input,.field select,.field textarea{width:100%;background:#0d1728;border:1px solid rgba(255,255,255,.08);border-radius:16px;color:#edf4ff;padding:15px 15px;font:inherit;transition:border-color .18s ease, box-shadow .18s ease, background .18s ease}
+    .field input,.field select,.field textarea{
+      width:100%;background:#0d1728;border:1px solid rgba(255,255,255,.08);border-radius:16px;color:#edf4ff;padding:15px 15px;font:inherit;
+      transition:border-color .18s ease, box-shadow .18s ease, background .18s ease
+    }
     .field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:rgba(122,162,255,.42);box-shadow:0 0 0 3px rgba(122,162,255,.10);background:#101b2f}
     .field textarea{min-height:140px;resize:vertical}
     .btn{display:inline-flex;align-items:center;justify-content:center;padding:14px 18px;border-radius:16px;background:linear-gradient(135deg,var(--blue),var(--blue2));color:#08111f;font-weight:1000;text-decoration:none;border:none;cursor:pointer}
-    @media (max-width:760px){.form{grid-template-columns:1fr}.form-shell{padding:16px 12px 56px}.form-card{padding:18px}.form-top{flex-direction:column}.form-title{font-size:38px}}
+    @media (max-width:760px){.form{grid-template-columns:1fr}.form-shell{padding:14px 10px 48px}.form-card{padding:16px}.form-top{flex-direction:column}.form-title{font-size:36px}}
   </style>
 </head>
 <body>
@@ -1050,11 +1121,21 @@ THANK_YOU_PAGE = """
   <title>Thank You — Early Risk Alert AI</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    :root{--bg:#08111f;--text:#edf4ff;--muted:#c6d7ef;--blue:#7aa2ff;--blue2:#5bd4ff;--line:rgba(255,255,255,.08);--shadow:0 18px 50px rgba(0,0,0,.24)}
+    :root{
+      --bg:#08111f;--text:#edf4ff;--muted:#c6d7ef;--blue:#7aa2ff;--blue2:#5bd4ff;--line:rgba(255,255,255,.08);
+      --green:#38d39f;--amber:#f7be68;--violet:#a88bff;--shadow:0 18px 50px rgba(0,0,0,.24)
+    }
+    *{box-sizing:border-box}
     body{margin:0;font-family:Inter,Arial,sans-serif;background:#08111f;color:var(--text)}
-    .success-card{max-width:980px;margin:0 auto;padding:40px 20px 60px}
-    .success-box{background:radial-gradient(circle at top left, rgba(56,211,159,.14), transparent 24%),linear-gradient(180deg, rgba(16,26,45,.98), rgba(12,18,32,.98));border:1px solid var(--line);border-radius:24px;padding:32px;box-shadow:var(--shadow)}
-    .ok{display:inline-flex;align-items:center;gap:10px;padding:10px 14px;border-radius:999px;background:rgba(56,211,159,.12);border:1px solid rgba(56,211,159,.20);color:#d3ffe8;font-weight:900;font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+    .success-card{max-width:980px;margin:0 auto;padding:36px 18px 54px}
+    .success-box{
+      background:__BG__;
+      border:1px solid var(--line);border-radius:24px;padding:32px;box-shadow:var(--shadow)
+    }
+    .ok{
+      display:inline-flex;align-items:center;gap:10px;padding:10px 14px;border-radius:999px;background:__BADGE_BG__;
+      border:1px solid __BADGE_BORDER__;color:__BADGE_TEXT__;font-weight:900;font-size:12px;letter-spacing:.08em;text-transform:uppercase
+    }
     h1{margin:12px 0 10px;font-size:clamp(38px,4vw,54px);letter-spacing:-.045em}
     p{color:var(--muted);line-height:1.75}
     .detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:18px}
@@ -1062,13 +1143,13 @@ THANK_YOU_PAGE = """
     .dk{font-size:11px;text-transform:uppercase;letter-spacing:.14em;color:#9eb4d6;font-weight:900}
     .dv{margin-top:6px;color:#edf4ff;line-height:1.5}
     .btn{display:inline-block;padding:13px 18px;border-radius:14px;background:linear-gradient(135deg,var(--blue),var(--blue2));color:#08111f;font-weight:900;text-decoration:none;margin-right:10px;margin-top:10px}
-    @media (max-width:760px){.detail-grid{grid-template-columns:1fr}.success-card{padding:16px 12px 56px}.success-box{padding:18px}}
+    @media (max-width:760px){.detail-grid{grid-template-columns:1fr}.success-card{padding:14px 10px 48px}.success-box{padding:16px}}
   </style>
 </head>
 <body>
   <div class="success-card">
     <div class="success-box">
-      <div class="ok">Submission received</div>
+      <div class="ok">__TYPE_LABEL__ received</div>
       <h1>Thank you</h1>
       <p>__THANK_YOU_COPY__</p>
       <div class="detail-grid">__DETAILS__</div>
@@ -1091,47 +1172,63 @@ ADMIN_HTML = """
       --bg:#08111f;--panel:#101a2d;--line:rgba(255,255,255,.08);--text:#edf4ff;--muted:#bdd0ec;
       --blue:#7aa2ff;--blue2:#5bd4ff;--green:#38d39f;--amber:#f7be68;--red:#ff5c72;--shadow:0 18px 50px rgba(0,0,0,.24)
     }
+    *{box-sizing:border-box}
     body{margin:0;font-family:Inter,Arial,sans-serif;background:#08111f;color:var(--text)}
-    .wrap{max-width:1320px;margin:0 auto;padding:40px 20px 60px}
-    .card{background:radial-gradient(circle at top right, rgba(91,212,255,.10), transparent 24%),linear-gradient(180deg, rgba(16,26,45,.98), rgba(12,18,32,.98));border:1px solid var(--line);border-radius:24px;padding:30px;box-shadow:var(--shadow)}
+    .wrap{max-width:1380px;margin:0 auto;padding:36px 18px 60px}
+    .card{
+      background:radial-gradient(circle at top right, rgba(91,212,255,.10), transparent 24%),linear-gradient(180deg, rgba(16,26,45,.98), rgba(12,18,32,.98));
+      border:1px solid var(--line);border-radius:24px;padding:30px;box-shadow:var(--shadow)
+    }
     h1{font-size:clamp(40px,4vw,56px);line-height:.98;margin:0 0 14px;letter-spacing:-.045em}
     h2{margin:0 0 10px;font-size:32px;letter-spacing:-.03em}
     p{color:var(--muted);line-height:1.7}
     .btn{display:inline-block;padding:13px 18px;border-radius:14px;background:linear-gradient(135deg,var(--blue),var(--blue2));color:#08111f;font-weight:900;text-decoration:none;margin-right:10px;margin-bottom:10px}
     .admin-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:20px 0 24px}
-    .admin-kpi{background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.06);border-radius:20px;padding:24px;min-height:136px;display:flex;flex-direction:column;justify-content:space-between}
+    .admin-kpi{
+      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02));
+      border:1px solid rgba(255,255,255,.06);border-radius:20px;padding:24px;min-height:154px;display:flex;flex-direction:column;justify-content:space-between
+    }
     .admin-kpi .k{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#9eb4d6;font-weight:900}
-    .admin-kpi .v{font-size:42px;font-weight:1000;line-height:1;margin-top:14px}
+    .admin-kpi .v{font-size:44px;font-weight:1000;line-height:1;margin-top:14px}
     .admin-kpi.hospital{box-shadow:0 0 0 1px rgba(91,212,255,.12)}
     .admin-kpi.exec{box-shadow:0 0 0 1px rgba(247,190,104,.12)}
     .admin-kpi.investor{box-shadow:0 0 0 1px rgba(56,211,159,.12)}
+    .admin-kpi .hint{font-size:13px;color:#c6d7ef;line-height:1.5}
     .section{margin-top:34px}
     .lead-row{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:14px}
     .lead-type{flex:1 1 260px;background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.06);border-radius:20px;padding:22px;min-height:130px}
     .lead-type h3{margin:0 0 8px;font-size:24px}
     .lead-type p{margin:0;color:#c9daf0;line-height:1.65}
-    table{width:100%;border-collapse:collapse;margin-top:18px;font-size:14px}
-    th,td{padding:13px 12px;border-bottom:1px solid rgba(255,255,255,.08);text-align:left;vertical-align:top}
-    th{color:#9eb4d6;text-transform:uppercase;font-size:12px;letter-spacing:.12em}
+    .table-wrap{overflow:auto;border:1px solid rgba(255,255,255,.06);border-radius:18px;background:rgba(255,255,255,.02)}
+    table{width:100%;border-collapse:collapse;font-size:14px;min-width:920px}
+    th,td{padding:14px 12px;border-bottom:1px solid rgba(255,255,255,.08);text-align:left;vertical-align:top}
+    th{color:#9eb4d6;text-transform:uppercase;font-size:12px;letter-spacing:.12em;background:rgba(255,255,255,.02);position:sticky;top:0}
     tr:hover td{background:rgba(255,255,255,.02)}
-    .status{display:inline-flex;align-items:center;justify-content:center;min-width:108px;padding:9px 12px;border-radius:999px;font-size:12px;font-weight:1000;letter-spacing:.08em;text-transform:uppercase}
+    .empty{padding:18px;color:#c9daf0}
+    .status-pill{
+      display:inline-flex;align-items:center;justify-content:center;min-width:108px;padding:9px 12px;border-radius:999px;font-size:12px;font-weight:1000;letter-spacing:.08em;text-transform:uppercase
+    }
     .status-new{background:rgba(91,212,255,.16);border:1px solid rgba(91,212,255,.28);color:#d6f4ff}
     .status-contacted{background:rgba(247,190,104,.16);border:1px solid rgba(247,190,104,.28);color:#ffe3b2}
     .status-scheduled{background:rgba(56,211,159,.16);border:1px solid rgba(56,211,159,.28);color:#d3ffe8}
-    @media (max-width:980px){.admin-grid{grid-template-columns:1fr}.wrap{padding:18px 12px 56px}.card{padding:18px}}
+    .action-row{display:flex;gap:8px;flex-wrap:wrap}
+    .mini-btn{
+      display:inline-flex;align-items:center;justify-content:center;padding:9px 12px;border-radius:12px;background:#111b2f;border:1px solid rgba(255,255,255,.08);color:#edf4ff;font-weight:900;text-decoration:none;font-size:12px
+    }
+    @media (max-width:980px){.admin-grid{grid-template-columns:1fr}.wrap{padding:14px 10px 48px}.card{padding:16px}}
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="card">
       <h1>Admin Review</h1>
-      <p>Review hospital demo requests, executive walkthrough requests, and investor intake submissions. Export CSV when needed.</p>
+      <p>Review hospital demo requests, executive walkthrough requests, and investor intake submissions. Update lead status, export CSV, and manage follow-up pipeline from one page.</p>
       <p><a class="btn" href="/admin/export.csv">Download CSV</a><a class="btn" href="/">Return Home</a></p>
 
       <div class="admin-grid">
-        <div class="admin-kpi hospital"><div class="k">Hospital Demo Requests</div><div class="v">__HOSPITAL_COUNT__</div></div>
-        <div class="admin-kpi exec"><div class="k">Executive Walkthrough Requests</div><div class="v">__EXEC_COUNT__</div></div>
-        <div class="admin-kpi investor"><div class="k">Investor Intake Requests</div><div class="v">__INVESTOR_COUNT__</div></div>
+        <div class="admin-kpi hospital"><div class="k">Hospital Demo Requests</div><div class="v">__HOSPITAL_COUNT__</div><div class="hint">Clinical buyer and operator pipeline</div></div>
+        <div class="admin-kpi exec"><div class="k">Executive Walkthrough Requests</div><div class="v">__EXEC_COUNT__</div><div class="hint">Leadership and pilot evaluation requests</div></div>
+        <div class="admin-kpi investor"><div class="k">Investor Intake Requests</div><div class="v">__INVESTOR_COUNT__</div><div class="hint">Commercial and investor follow-up flow</div></div>
       </div>
 
       <div class="lead-row">
@@ -1150,30 +1247,46 @@ ADMIN_HTML = """
 """
 
 
-def _status_class(status: str) -> str:
-    s = (status or "new").lower()
-    if s == "contacted":
-        return "status status-contacted"
-    if s == "scheduled":
-        return "status status-scheduled"
-    return "status status-new"
+def _save_jsonl(path: Path, payload: Dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(payload) + "\n")
 
 
-def _table_html(rows: List[Dict[str, Any]], columns: List[str], labels: Dict[str, str]) -> str:
-    if not rows:
-        return "<p>No submissions yet.</p>"
-    head = "".join(f"<th>{labels.get(c, c.replace('_', ' ').title())}</th>" for c in columns)
-    body_rows = []
+def _read_jsonl(path: Path) -> List[Dict[str, Any]]:
+    if not path.exists():
+        return []
+    rows: List[Dict[str, Any]] = []
+    with path.open("r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if line:
+                try:
+                    rows.append(json.loads(line))
+                except Exception:
+                    pass
+    rows.sort(key=lambda x: x.get("submitted_at", ""), reverse=True)
+    return rows
+
+
+def _write_jsonl(path: Path, rows: List[Dict[str, Any]]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8") as f:
+        for row in rows:
+            f.write(json.dumps(row) + "\n")
+
+
+def _update_row_status(path: Path, submitted_at: str, new_status: str) -> bool:
+    rows = _read_jsonl(path)
+    updated = False
     for row in rows:
-        tds = []
-        for c in columns:
-            value = row.get(c, "")
-            if c == "status":
-                tds.append(f"<td><span class='{_status_class(str(value))}'>{value or 'New'}</span></td>")
-            else:
-                tds.append(f"<td>{value}</td>")
-        body_rows.append("<tr>" + "".join(tds) + "</tr>")
-    return f"<table><thead><tr>{head}</tr></thead><tbody>{''.join(body_rows)}</tbody></table>"
+        if row.get("submitted_at") == submitted_at:
+            row["status"] = _status_norm(new_status)
+            updated = True
+            break
+    if updated:
+        _write_jsonl(path, rows)
+    return updated
 
 
 def _detail_html(payload: Dict[str, Any], keys: List[str]) -> str:
@@ -1182,9 +1295,79 @@ def _detail_html(payload: Dict[str, Any], keys: List[str]) -> str:
         value = payload.get(key, "")
         if not value:
             continue
-        label = key.replace("_", " ").title()
-        blocks.append(f"<div class='detail'><div class='dk'>{label}</div><div class='dv'>{value}</div></div>")
+        blocks.append(
+            "<div class='detail'>"
+            f"<div class='dk'>{_escape(key.replace('_', ' ').title())}</div>"
+            f"<div class='dv'>{_escape(value)}</div>"
+            "</div>"
+        )
     return "".join(blocks)
+
+
+def _thank_you_theme(kind: str) -> Tuple[str, str, str, str, str]:
+    k = (kind or "").lower()
+    if k == "hospital":
+        return (
+            "radial-gradient(circle at top left, rgba(91,212,255,.14), transparent 24%),linear-gradient(180deg, rgba(16,26,45,.98), rgba(12,18,32,.98))",
+            "rgba(91,212,255,.12)",
+            "rgba(91,212,255,.20)",
+            "#d6f4ff",
+            "Hospital Demo Request",
+        )
+    if k == "executive":
+        return (
+            "radial-gradient(circle at top left, rgba(247,190,104,.14), transparent 24%),linear-gradient(180deg, rgba(16,26,45,.98), rgba(12,18,32,.98))",
+            "rgba(247,190,104,.14)",
+            "rgba(247,190,104,.22)",
+            "#ffe3b2",
+            "Executive Walkthrough",
+        )
+    return (
+        "radial-gradient(circle at top left, rgba(56,211,159,.14), transparent 24%),linear-gradient(180deg, rgba(16,26,45,.98), rgba(12,18,32,.98))",
+        "rgba(56,211,159,.12)",
+        "rgba(56,211,159,.20)",
+        "#d3ffe8",
+        "Investor Intake",
+    )
+
+
+def _render_thank_you(kind: str, copy_text: str, details: str) -> str:
+    bg, badge_bg, badge_border, badge_text, type_label = _thank_you_theme(kind)
+    html_out = THANK_YOU_PAGE.replace("__BG__", bg)
+    html_out = html_out.replace("__BADGE_BG__", badge_bg)
+    html_out = html_out.replace("__BADGE_BORDER__", badge_border)
+    html_out = html_out.replace("__BADGE_TEXT__", badge_text)
+    html_out = html_out.replace("__TYPE_LABEL__", type_label)
+    html_out = html_out.replace("__THANK_YOU_COPY__", copy_text)
+    html_out = html_out.replace("__DETAILS__", details)
+    return html_out
+
+
+def _table_html(rows: List[Dict[str, Any]], columns: List[str], labels: Dict[str, str], route_prefix: str) -> str:
+    if not rows:
+        return "<div class='table-wrap'><div class='empty'>No submissions yet.</div></div>"
+    head = "".join(f"<th>{_escape(labels.get(c, c.replace('_', ' ').title()))}</th>" for c in columns + ["actions"])
+    body_rows = []
+    for row in rows:
+        tds = []
+        for c in columns:
+            value = row.get(c, "")
+            if c == "status":
+                tds.append(f"<td><span class='{_status_class(str(value))}'>{_escape(_status_norm(str(value)))}</span></td>")
+            else:
+                tds.append(f"<td>{_escape(value)}</td>")
+        submitted_at = _escape(row.get("submitted_at", ""))
+        action_cell = (
+            "<td>"
+            "<div class='action-row'>"
+            f"<a class='mini-btn' href='/admin/status/{route_prefix}?submitted_at={submitted_at}&status=New'>New</a>"
+            f"<a class='mini-btn' href='/admin/status/{route_prefix}?submitted_at={submitted_at}&status=Contacted'>Contacted</a>"
+            f"<a class='mini-btn' href='/admin/status/{route_prefix}?submitted_at={submitted_at}&status=Scheduled'>Scheduled</a>"
+            "</div>"
+            "</td>"
+        )
+        body_rows.append("<tr>" + "".join(tds) + action_cell + "</tr>")
+    return f"<div class='table-wrap'><table><thead><tr>{head}</tr></thead><tbody>{''.join(body_rows)}</tbody></table></div>"
 
 
 def create_app() -> Flask:
@@ -1197,25 +1380,6 @@ def create_app() -> Flask:
     investor_file = data_dir / "investor_intake.jsonl"
     hospital_file = data_dir / "hospital_demo_requests.jsonl"
     exec_file = data_dir / "executive_walkthrough_requests.jsonl"
-
-    def save_jsonl(path: Path, payload: Dict[str, Any]) -> None:
-        with path.open("a", encoding="utf-8") as f:
-            f.write(json.dumps(payload) + "\n")
-
-    def read_jsonl(path: Path) -> List[Dict[str, Any]]:
-        if not path.exists():
-            return []
-        rows = []
-        with path.open("r", encoding="utf-8") as f:
-            for line in f:
-                line = line.strip()
-                if line:
-                    try:
-                        rows.append(json.loads(line))
-                    except Exception:
-                        pass
-        rows.sort(key=lambda x: x.get("submitted_at", ""), reverse=True)
-        return rows
 
     @app.before_request
     def force_single_domain():
@@ -1230,38 +1394,29 @@ def create_app() -> Flask:
             return redirect(target, code=302)
         return None
 
-    @app.context_processor
-    def inject_globals():
-        return {
-            "INFO_EMAIL": INFO_EMAIL,
-            "BUSINESS_PHONE": BUSINESS_PHONE,
-            "FOUNDER_NAME": FOUNDER_NAME,
-            "FOUNDER_ROLE": FOUNDER_ROLE,
-        }
-
     @app.get("/healthz")
     def healthz():
         return jsonify({"status": "ok", "service": "early-risk-alert-ai", "canonical_host": CANONICAL_HOST or None})
 
     @app.get("/")
     def home():
-        html = MAIN_HTML.replace("__YOUTUBE_EMBED_URL__", YOUTUBE_EMBED_URL)
-        html = html.replace("__INFO_EMAIL__", INFO_EMAIL).replace("__BUSINESS_PHONE__", BUSINESS_PHONE)
-        html = html.replace("__FOUNDER_NAME__", FOUNDER_NAME).replace("__FOUNDER_ROLE__", FOUNDER_ROLE)
-        return render_template_string(html)
+        html_out = MAIN_HTML.replace("__YOUTUBE_EMBED_URL__", YOUTUBE_EMBED_URL)
+        html_out = html_out.replace("__INFO_EMAIL__", INFO_EMAIL).replace("__BUSINESS_PHONE__", BUSINESS_PHONE)
+        html_out = html_out.replace("__FOUNDER_NAME__", FOUNDER_NAME).replace("__FOUNDER_ROLE__", FOUNDER_ROLE)
+        return render_template_string(html_out)
 
     @app.get("/dashboard")
     def dashboard():
-        html = MAIN_HTML.replace("__YOUTUBE_EMBED_URL__", YOUTUBE_EMBED_URL)
-        html = html.replace("__INFO_EMAIL__", INFO_EMAIL).replace("__BUSINESS_PHONE__", BUSINESS_PHONE)
-        html = html.replace("__FOUNDER_NAME__", FOUNDER_NAME).replace("__FOUNDER_ROLE__", FOUNDER_ROLE)
-        return render_template_string(html)
+        html_out = MAIN_HTML.replace("__YOUTUBE_EMBED_URL__", YOUTUBE_EMBED_URL)
+        html_out = html_out.replace("__INFO_EMAIL__", INFO_EMAIL).replace("__BUSINESS_PHONE__", BUSINESS_PHONE)
+        html_out = html_out.replace("__FOUNDER_NAME__", FOUNDER_NAME).replace("__FOUNDER_ROLE__", FOUNDER_ROLE)
+        return render_template_string(html_out)
 
     @app.get("/investors")
     def investors():
-        html = INVESTOR_HTML.replace("__INFO_EMAIL__", INFO_EMAIL).replace("__BUSINESS_PHONE__", BUSINESS_PHONE)
-        html = html.replace("__FOUNDER_NAME__", FOUNDER_NAME).replace("__FOUNDER_ROLE__", FOUNDER_ROLE)
-        return render_template_string(html)
+        html_out = INVESTOR_HTML.replace("__INFO_EMAIL__", INFO_EMAIL).replace("__BUSINESS_PHONE__", BUSINESS_PHONE)
+        html_out = html_out.replace("__FOUNDER_NAME__", FOUNDER_NAME).replace("__FOUNDER_ROLE__", FOUNDER_ROLE)
+        return render_template_string(html_out)
 
     @app.route("/hospital-demo", methods=["GET", "POST"])
     def hospital_demo():
@@ -1278,13 +1433,14 @@ def create_app() -> Flask:
                 "timeline": request.form.get("timeline", "").strip(),
                 "message": request.form.get("message", "").strip(),
             }
-            save_jsonl(hospital_file, payload)
-            html = THANK_YOU_PAGE.replace(
-                "__THANK_YOU_COPY__",
-                "Your hospital demo request was submitted successfully. The request is now visible in admin review and ready for follow-up."
+            _save_jsonl(hospital_file, payload)
+            return render_template_string(
+                _render_thank_you(
+                    "hospital",
+                    "Your hospital demo request was submitted successfully. The request is now visible in admin review and ready for follow-up.",
+                    _detail_html(payload, ["full_name", "organization", "role", "email", "facility_type", "timeline"]),
+                )
             )
-            html = html.replace("__DETAILS__", _detail_html(payload, ["full_name", "organization", "role", "email", "facility_type", "timeline"]))
-            return render_template_string(html)
 
         fields = """
         <div class="field"><label>Full Name</label><input name="full_name" required></div>
@@ -1310,12 +1466,12 @@ def create_app() -> Flask:
         </div>
         <div class="field full"><label>What would you like to see in the demo?</label><textarea name="message"></textarea></div>
         """
-        html = FORM_PAGE.replace("__TITLE__", "Hospital Demo — Early Risk Alert AI")
-        html = html.replace("__HEADING__", "Request Hospital Demo")
-        html = html.replace("__COPY__", "Capture interest from hospital operations teams, clinical leaders, and remote monitoring stakeholders.")
-        html = html.replace("__FIELDS__", fields)
-        html = html.replace("__BUTTON__", "Submit Hospital Demo Request")
-        return render_template_string(html)
+        html_out = FORM_PAGE.replace("__TITLE__", "Hospital Demo — Early Risk Alert AI")
+        html_out = html_out.replace("__HEADING__", "Request Hospital Demo")
+        html_out = html_out.replace("__COPY__", "Capture interest from hospital operations teams, clinical leaders, and remote monitoring stakeholders.")
+        html_out = html_out.replace("__FIELDS__", fields)
+        html_out = html_out.replace("__BUTTON__", "Submit Hospital Demo Request")
+        return render_template_string(html_out)
 
     @app.route("/executive-walkthrough", methods=["GET", "POST"])
     def executive_walkthrough():
@@ -1332,13 +1488,14 @@ def create_app() -> Flask:
                 "timeline": request.form.get("timeline", "").strip(),
                 "message": request.form.get("message", "").strip(),
             }
-            save_jsonl(exec_file, payload)
-            html = THANK_YOU_PAGE.replace(
-                "__THANK_YOU_COPY__",
-                "Your executive walkthrough request was submitted successfully. The request is now visible in admin review and ready for scheduling follow-up."
+            _save_jsonl(exec_file, payload)
+            return render_template_string(
+                _render_thank_you(
+                    "executive",
+                    "Your executive walkthrough request was submitted successfully. The request is now visible in admin review and ready for scheduling follow-up.",
+                    _detail_html(payload, ["full_name", "organization", "title", "email", "priority", "timeline"]),
+                )
             )
-            html = html.replace("__DETAILS__", _detail_html(payload, ["full_name", "organization", "title", "email", "priority", "timeline"]))
-            return render_template_string(html)
 
         fields = """
         <div class="field"><label>Full Name</label><input name="full_name" required></div>
@@ -1364,12 +1521,12 @@ def create_app() -> Flask:
         </div>
         <div class="field full"><label>Walkthrough Focus</label><textarea name="message"></textarea></div>
         """
-        html = FORM_PAGE.replace("__TITLE__", "Executive Walkthrough — Early Risk Alert AI")
-        html = html.replace("__HEADING__", "Schedule Executive Walkthrough")
-        html = html.replace("__COPY__", "Capture executive-level product review requests for hospital leadership, system operations, and strategic evaluation.")
-        html = html.replace("__FIELDS__", fields)
-        html = html.replace("__BUTTON__", "Submit Executive Walkthrough Request")
-        return render_template_string(html)
+        html_out = FORM_PAGE.replace("__TITLE__", "Executive Walkthrough — Early Risk Alert AI")
+        html_out = html_out.replace("__HEADING__", "Schedule Executive Walkthrough")
+        html_out = html_out.replace("__COPY__", "Capture executive-level product review requests for hospital leadership, system operations, and strategic evaluation.")
+        html_out = html_out.replace("__FIELDS__", fields)
+        html_out = html_out.replace("__BUTTON__", "Submit Executive Walkthrough Request")
+        return render_template_string(html_out)
 
     @app.route("/investor-intake", methods=["GET", "POST"])
     def investor_intake():
@@ -1387,13 +1544,14 @@ def create_app() -> Flask:
                 "timeline": request.form.get("timeline", "").strip(),
                 "message": request.form.get("message", "").strip(),
             }
-            save_jsonl(investor_file, payload)
-            html = THANK_YOU_PAGE.replace(
-                "__THANK_YOU_COPY__",
-                "Your investor intake was submitted successfully. The request is now visible in admin review and ready for follow-up and export."
+            _save_jsonl(investor_file, payload)
+            return render_template_string(
+                _render_thank_you(
+                    "investor",
+                    "Your investor intake was submitted successfully. The request is now visible in admin review and ready for follow-up and export.",
+                    _detail_html(payload, ["full_name", "organization", "role", "email", "investor_type", "timeline"]),
+                )
             )
-            html = html.replace("__DETAILS__", _detail_html(payload, ["full_name", "organization", "role", "email", "investor_type", "timeline"]))
-            return render_template_string(html)
 
         fields = """
         <div class="field"><label>Full Name</label><input name="full_name" required></div>
@@ -1421,18 +1579,39 @@ def create_app() -> Flask:
         </div>
         <div class="field full"><label>Interest / Notes</label><textarea name="message" placeholder="What are you interested in learning more about?"></textarea></div>
         """
-        html = FORM_PAGE.replace("__TITLE__", "Investor Intake — Early Risk Alert AI")
-        html = html.replace("__HEADING__", "Investor Intake Form")
-        html = html.replace("__COPY__", "Capture investor interest, timeline, and follow-up details directly from the platform.")
-        html = html.replace("__FIELDS__", fields)
-        html = html.replace("__BUTTON__", "Submit Investor Intake")
-        return render_template_string(html)
+        html_out = FORM_PAGE.replace("__TITLE__", "Investor Intake — Early Risk Alert AI")
+        html_out = html_out.replace("__HEADING__", "Investor Intake Form")
+        html_out = html_out.replace("__COPY__", "Capture investor interest, timeline, and follow-up details directly from the platform.")
+        html_out = html_out.replace("__FIELDS__", fields)
+        html_out = html_out.replace("__BUTTON__", "Submit Investor Intake")
+        return render_template_string(html_out)
+
+    @app.get("/admin/status/hospital")
+    def admin_status_hospital():
+        submitted_at = request.args.get("submitted_at", "")
+        status = request.args.get("status", "New")
+        _update_row_status(hospital_file, submitted_at, status)
+        return redirect("/admin/review")
+
+    @app.get("/admin/status/executive")
+    def admin_status_executive():
+        submitted_at = request.args.get("submitted_at", "")
+        status = request.args.get("status", "New")
+        _update_row_status(exec_file, submitted_at, status)
+        return redirect("/admin/review")
+
+    @app.get("/admin/status/investor")
+    def admin_status_investor():
+        submitted_at = request.args.get("submitted_at", "")
+        status = request.args.get("status", "New")
+        _update_row_status(investor_file, submitted_at, status)
+        return redirect("/admin/review")
 
     @app.get("/admin/review")
     def admin_review():
-        hospital_rows = read_jsonl(hospital_file)
-        exec_rows = read_jsonl(exec_file)
-        investor_rows = read_jsonl(investor_file)
+        hospital_rows = _read_jsonl(hospital_file)
+        exec_rows = _read_jsonl(exec_file)
+        investor_rows = _read_jsonl(investor_file)
 
         labels_h = {
             "submitted_at": "Submitted",
@@ -1466,33 +1645,33 @@ def create_app() -> Flask:
             "timeline": "Timeline",
         }
 
-        html = ADMIN_HTML
-        html = html.replace("__HOSPITAL_COUNT__", str(len(hospital_rows)))
-        html = html.replace("__EXEC_COUNT__", str(len(exec_rows)))
-        html = html.replace("__INVESTOR_COUNT__", str(len(investor_rows)))
-        html = html.replace("__HOSPITAL_TABLE__", _table_html(hospital_rows, ["submitted_at", "status", "full_name", "organization", "role", "email", "facility_type", "timeline"], labels_h))
-        html = html.replace("__EXEC_TABLE__", _table_html(exec_rows, ["submitted_at", "status", "full_name", "organization", "title", "email", "priority", "timeline"], labels_e))
-        html = html.replace("__INVESTOR_TABLE__", _table_html(investor_rows, ["submitted_at", "status", "full_name", "organization", "role", "email", "investor_type", "check_size", "timeline"], labels_i))
-        return render_template_string(html)
+        html_out = ADMIN_HTML
+        html_out = html_out.replace("__HOSPITAL_COUNT__", str(len(hospital_rows)))
+        html_out = html_out.replace("__EXEC_COUNT__", str(len(exec_rows)))
+        html_out = html_out.replace("__INVESTOR_COUNT__", str(len(investor_rows)))
+        html_out = html_out.replace("__HOSPITAL_TABLE__", _table_html(hospital_rows, ["submitted_at", "status", "full_name", "organization", "role", "email", "facility_type", "timeline"], labels_h, "hospital"))
+        html_out = html_out.replace("__EXEC_TABLE__", _table_html(exec_rows, ["submitted_at", "status", "full_name", "organization", "title", "email", "priority", "timeline"], labels_e, "executive"))
+        html_out = html_out.replace("__INVESTOR_TABLE__", _table_html(investor_rows, ["submitted_at", "status", "full_name", "organization", "role", "email", "investor_type", "check_size", "timeline"], labels_i, "investor"))
+        return render_template_string(html_out)
 
     @app.get("/admin/export.csv")
     def admin_export_csv():
-        hospital_rows = read_jsonl(hospital_file)
-        exec_rows = read_jsonl(exec_file)
-        investor_rows = read_jsonl(investor_file)
+        hospital_rows = _read_jsonl(hospital_file)
+        exec_rows = _read_jsonl(exec_file)
+        investor_rows = _read_jsonl(investor_file)
 
         output = io.StringIO()
         writer = csv.writer(output)
         writer.writerow([
             "Lead Source",
             "Submitted At",
-            "Status",
+            "Lead Status",
             "Full Name",
             "Organization",
-            "Role / Title",
-            "Email",
-            "Phone",
-            "Lead Type / Priority",
+            "Role Or Title",
+            "Email Address",
+            "Phone Number",
+            "Lead Type Or Priority",
             "Timeline",
             "Notes",
         ])
@@ -1501,7 +1680,7 @@ def create_app() -> Flask:
             writer.writerow([
                 "Hospital Demo",
                 row.get("submitted_at", ""),
-                row.get("status", "New"),
+                _status_norm(row.get("status", "New")),
                 row.get("full_name", ""),
                 row.get("organization", ""),
                 row.get("role", ""),
@@ -1516,7 +1695,7 @@ def create_app() -> Flask:
             writer.writerow([
                 "Executive Walkthrough",
                 row.get("submitted_at", ""),
-                row.get("status", "New"),
+                _status_norm(row.get("status", "New")),
                 row.get("full_name", ""),
                 row.get("organization", ""),
                 row.get("title", ""),
@@ -1531,7 +1710,7 @@ def create_app() -> Flask:
             writer.writerow([
                 "Investor Intake",
                 row.get("submitted_at", ""),
-                row.get("status", "New"),
+                _status_norm(row.get("status", "New")),
                 row.get("full_name", ""),
                 row.get("organization", ""),
                 row.get("role", ""),
@@ -1562,7 +1741,14 @@ def create_app() -> Flask:
         rows = _build_demo_patients()
         alerts = _build_alerts(rows)
         avg_risk = round(sum(r["risk"]["risk_score"] for r in rows) / len(rows))
-        return jsonify({"tenant_id": tenant_id, "patient_count": len(rows), "open_alerts": len(alerts), "critical_alerts": sum(1 for a in alerts if a["severity"] == "critical"), "events_last_hour": len(rows) * 3, "avg_risk_score": avg_risk})
+        return jsonify({
+            "tenant_id": tenant_id,
+            "patient_count": len(rows),
+            "open_alerts": len(alerts),
+            "critical_alerts": sum(1 for a in alerts if a["severity"] == "critical"),
+            "events_last_hour": len(rows) * 3,
+            "avg_risk_score": avg_risk,
+        })
 
     @app.get("/api/v1/live-snapshot")
     def live_snapshot():
@@ -1579,19 +1765,30 @@ def create_app() -> Flask:
         tenant_id = request.args.get("tenant_id", "demo")
         rows = _build_demo_patients()
         alerts = _build_alerts(rows)
-        return jsonify({"tenant_id": tenant_id, "status": "running", "redis_ok": True, "mode": "realtime", "worker_status": "simulated", "patients_with_alerts": len({a["patient_id"] for a in alerts})})
+        return jsonify({
+            "tenant_id": tenant_id,
+            "status": "running",
+            "redis_ok": True,
+            "mode": "realtime",
+            "worker_status": "simulated",
+            "patients_with_alerts": len({a["patient_id"] for a in alerts}),
+        })
 
     @app.get("/api/v1/stream/channels")
     def stream_channels():
         tenant_id = request.args.get("tenant_id", "demo")
         patient_id = request.args.get("patient_id", "p101")
-        return jsonify({"tenant_id": tenant_id, "patient_id": patient_id, "channels": [
-            "stream:vitals",
-            f"stream:vitals:{tenant_id}",
-            f"stream:vitals:{tenant_id}:{patient_id}",
-            "stream:alerts",
-            f"stream:alerts:{tenant_id}",
-            f"stream:alerts:{tenant_id}:{patient_id}",
-        ]})
+        return jsonify({
+            "tenant_id": tenant_id,
+            "patient_id": patient_id,
+            "channels": [
+                "stream:vitals",
+                f"stream:vitals:{tenant_id}",
+                f"stream:vitals:{tenant_id}:{patient_id}",
+                "stream:alerts",
+                f"stream:alerts:{tenant_id}",
+                f"stream:alerts:{tenant_id}:{patient_id}",
+            ],
+        })
 
     return app
