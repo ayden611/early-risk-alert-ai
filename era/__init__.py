@@ -14,6 +14,8 @@ from flask import Flask, jsonify, render_template_string, request, send_file
 
 INFO_EMAIL = "info@earlyriskalertai.com"
 BUSINESS_PHONE = "732-724-7267"
+FOUNDER_NAME = "Milton MUNROE"
+FOUNDER_ROLE = "Founder, Early Risk Alert AI"
 YOUTUBE_EMBED_URL = "https://www.youtube.com/embed/HiidXiXifY4"
 
 
@@ -77,7 +79,6 @@ def _trend_direction(vitals: Dict[str, Any]) -> str:
         score += 1
     if _safe_float(vitals.get("systolic_bp")) > 150:
         score += 1
-
     if score >= 2:
         return "Worsening"
     if score == 1:
@@ -327,18 +328,28 @@ def _build_rollups(row: Dict[str, Any]) -> Dict[str, Any]:
 def _generate_pitch_deck_pdf_bytes() -> bytes:
     lines = [
         "Early Risk Alert AI",
-        "Professional Healthcare Intelligence Platform",
+        "Predictive Clinical Intelligence Platform",
         "",
-        "Company Overview",
-        "Early Risk Alert AI is a command-center style platform for hospitals, clinics,",
-        "investors, and remote monitoring operations. The platform combines AI risk scoring,",
-        "live dashboards, alert prioritization, investor demonstration flow, and enterprise presentation.",
+        "Executive Summary",
+        "Early Risk Alert AI is a professional healthcare intelligence platform",
+        "built for hospitals, clinics, command centers, and remote monitoring programs.",
+        "The platform combines AI risk scoring, live dashboards, alert prioritization,",
+        "executive review workflows, and investor-ready presentation architecture.",
         "",
         "Core Value",
         "- Detect patient deterioration earlier",
         "- Surface high-risk patients in real time",
         "- Enable command-center visibility",
-        "- Support hospital and RPM operations",
+        "- Support enterprise healthcare operations",
+        "",
+        "Commercial Positioning",
+        "- Enterprise SaaS delivery model",
+        "- Hospital and health system expansion potential",
+        "- Investor-ready workflow and admin review layer",
+        "",
+        "Founder",
+        f"- {FOUNDER_NAME}",
+        f"- {FOUNDER_ROLE}",
         "",
         "Contact",
         f"- Email: {INFO_EMAIL}",
@@ -348,12 +359,24 @@ def _generate_pitch_deck_pdf_bytes() -> bytes:
     def esc(text: str) -> str:
         return text.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
 
-    y = 760
-    content_parts = ["BT", "/F1 20 Tf", "50 800 Td", f"({esc('Early Risk Alert AI - Pitch Deck')}) Tj"]
+    y = 770
+    content_parts = [
+        "BT",
+        "/F1 22 Tf",
+        "50 805 Td",
+        f"({esc('Early Risk Alert AI — Executive Pitch Deck')}) Tj",
+    ]
     for line in lines:
         y -= 24
-        font_size = 11 if line.startswith("-") or not line else 13
-        if line in {"Early Risk Alert AI", "Company Overview", "Core Value", "Contact"}:
+        font_size = 11 if line.startswith("-") else 13
+        if line in {
+            "Early Risk Alert AI",
+            "Executive Summary",
+            "Core Value",
+            "Commercial Positioning",
+            "Founder",
+            "Contact",
+        }:
             font_size = 16
         if line == "":
             continue
@@ -455,6 +478,11 @@ MAIN_HTML = """
     .btn.secondary{background:#111b2f;color:var(--text);border-color:var(--line);box-shadow:none}
     .btn.ghost{background:transparent;color:var(--text);border:1px solid var(--line);box-shadow:none}
     .shell{max-width:var(--max);margin:0 auto;padding:20px 16px 70px}
+    .fade-up{animation:fadeUp .55s ease}
+    @keyframes fadeUp{
+      from{opacity:0;transform:translateY(8px)}
+      to{opacity:1;transform:translateY(0)}
+    }
 
     .card{
       background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015));
@@ -487,17 +515,35 @@ MAIN_HTML = """
       position:absolute;right:-120px;top:-120px;width:340px;height:340px;border-radius:999px;
       background:radial-gradient(circle, rgba(91,212,255,.24), transparent 68%);
       filter:blur(12px);pointer-events:none;
+      animation:heroGlow 7s ease-in-out infinite;
+    }
+    @keyframes heroGlow{
+      0%,100%{transform:scale(1);opacity:.9}
+      50%{transform:scale(1.08);opacity:1}
+    }
+
+    .pulse-rings{
+      position:absolute;right:48px;bottom:48px;width:160px;height:160px;pointer-events:none;opacity:.42;
+    }
+    .pulse-rings span{
+      position:absolute;inset:0;border:1px solid rgba(91,212,255,.25);border-radius:999px;animation:ring 4.2s infinite;
+    }
+    .pulse-rings span:nth-child(2){animation-delay:1.4s}
+    .pulse-rings span:nth-child(3){animation-delay:2.8s}
+    @keyframes ring{
+      0%{transform:scale(.6);opacity:.55}
+      100%{transform:scale(1.25);opacity:0}
     }
 
     .hero-kicker,.small-k{
       font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:#c8d7f1;font-weight:900;margin-bottom:12px
     }
-    h1{margin:0 0 14px;font-size:clamp(40px,5vw,76px);line-height:.94;font-weight:1000;letter-spacing:-.058em}
-    .lead{margin:0;color:#c8d7f1;font-size:clamp(16px,1.5vw,20px);line-height:1.58;max-width:950px}
+    h1{margin:0 0 18px;font-size:clamp(40px,5vw,76px);line-height:.94;font-weight:1000;letter-spacing:-.058em}
+    .lead{margin:0;color:#c8d7f1;font-size:clamp(16px,1.5vw,20px);line-height:1.62;max-width:950px}
 
-    .hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:24px}
+    .hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:28px}
     .hero-strip{
-      display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:22px
+      display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:24px
     }
     .hero-stat{
       background:rgba(255,255,255,.03);border:1px solid var(--line2);border-radius:18px;padding:14px 16px
@@ -708,122 +754,24 @@ MAIN_HTML = """
     }
     iframe{width:100%;aspect-ratio:16/9;border:0;border-radius:18px;background:#0a0f18}
 
-    .form-shell{max-width:1120px;margin:0 auto;padding:40px 20px 60px}
-    .form-card{
-      background:
-        radial-gradient(circle at top left, rgba(122,162,255,.10), transparent 24%),
-        linear-gradient(180deg, rgba(16,26,45,.98), rgba(12,18,32,.98));
-      border:1px solid rgba(255,255,255,.08);
-      border-radius:24px;
-      padding:30px;
-      box-shadow:var(--shadow);
-    }
-    .form-top{
-      display:flex;justify-content:space-between;gap:20px;align-items:flex-start;flex-wrap:wrap;
-      margin-bottom:22px;
-    }
-    .form-title{font-size:clamp(38px,4vw,54px);font-weight:1000;line-height:.98;margin:0 0 10px;letter-spacing:-.045em}
-    .form-copy{color:#c6d7ef;line-height:1.7;margin:0;max-width:760px}
-    .form-badge{
-      padding:10px 14px;border-radius:999px;background:rgba(56,211,159,.12);border:1px solid rgba(56,211,159,.22);
-      color:#c8ffe5;font-weight:900;font-size:12px;letter-spacing:.1em;text-transform:uppercase;
-    }
-    .form{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
-    .full{grid-column:1/-1}
-    .field{display:flex;flex-direction:column;gap:8px}
-    .field label{font-size:12px;text-transform:uppercase;letter-spacing:.14em;color:#9eb4d6;font-weight:900}
-    .field input,.field select,.field textarea{
-      width:100%;background:#0d1728;border:1px solid rgba(255,255,255,.08);border-radius:16px;color:#edf4ff;
-      padding:15px 15px;font:inherit;transition:border-color .18s ease, box-shadow .18s ease, background .18s ease;
-    }
-    .field input:focus,.field select:focus,.field textarea:focus{
-      outline:none;border-color:rgba(122,162,255,.42);box-shadow:0 0 0 3px rgba(122,162,255,.10);background:#101b2f;
-    }
-    .field textarea{min-height:140px;resize:vertical}
-
-    .success-card{
-      max-width:980px;margin:0 auto;padding:40px 20px 60px;
-    }
-    .success-box{
-      background:
-        radial-gradient(circle at top left, rgba(56,211,159,.14), transparent 24%),
-        linear-gradient(180deg, rgba(16,26,45,.98), rgba(12,18,32,.98));
-      border:1px solid rgba(255,255,255,.08);
-      border-radius:24px;
-      padding:32px;
-      box-shadow:var(--shadow);
-    }
-    .success-box h1{margin:0 0 10px}
-    .ok{
-      display:inline-flex;align-items:center;gap:10px;padding:10px 14px;border-radius:999px;
-      background:rgba(56,211,159,.12);border:1px solid rgba(56,211,159,.20);color:#d3ffe8;font-weight:900;font-size:12px;letter-spacing:.08em;text-transform:uppercase
-    }
-
-    .admin-grid{
-      display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:18px 0 20px;
-    }
-    .admin-kpi{
-      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02));
-      border:1px solid rgba(255,255,255,.06);
-      border-radius:18px;padding:18px;
-    }
-    .admin-kpi .k{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#9eb4d6;font-weight:900}
-    .admin-kpi .v{font-size:36px;font-weight:1000;margin-top:10px;line-height:1}
-    table{width:100%;border-collapse:collapse;margin-top:18px;font-size:14px}
-    th,td{padding:12px;border-bottom:1px solid rgba(255,255,255,.08);text-align:left;vertical-align:top}
-    th{color:#9eb4d6;text-transform:uppercase;font-size:12px;letter-spacing:.12em}
-    tr:hover td{background:rgba(255,255,255,.02)}
-
-    .investor-hero{
-      position:relative;
-      overflow:hidden;
-      background:
-        radial-gradient(circle at top left, rgba(122,162,255,.16), transparent 28%),
-        radial-gradient(circle at 82% 12%, rgba(91,212,255,.12), transparent 24%),
-        linear-gradient(180deg, rgba(16,26,45,.98), rgba(10,16,28,.98));
-    }
-    .investor-hero:before{
-      content:"";
-      position:absolute;inset:0;
-      background:
-        linear-gradient(rgba(122,162,255,.04) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(122,162,255,.04) 1px, transparent 1px);
-      background-size:32px 32px;
-      opacity:.28;
-      pointer-events:none;
-    }
-    .investor-grid{
-      display:grid;
-      grid-template-columns:1.1fr .9fr;
-      gap:16px;
-      margin-top:20px;
-    }
-    .investor-mini-grid{
-      display:grid;
-      grid-template-columns:repeat(3,1fr);
-      gap:14px;
-      margin-top:20px;
-    }
-
     @media (max-width:1180px){
       .hero,.summary-list{grid-template-columns:1fr}
       .dashboard-grid{grid-template-columns:1fr 1fr}
       .dashboard-grid .dash-card:first-child{grid-column:1/-1}
-      .metrics-grid,.trust-grid,.sim-grid,.cta-grid,.hero-strip,.investor-mini-grid,.risk-panel-grid{grid-template-columns:repeat(2,1fr)}
-      .investor-grid,.admin-grid{grid-template-columns:1fr}
+      .metrics-grid,.trust-grid,.sim-grid,.cta-grid,.hero-strip,.risk-panel-grid{grid-template-columns:repeat(2,1fr)}
     }
     @media (max-width:760px){
-      .metrics-grid,.dashboard-grid,.trust-grid,.sim-grid,.mini-grid,.summary-list,.cta-grid,.hero-strip,.form,.investor-mini-grid,.risk-panel-grid{grid-template-columns:1fr}
+      .metrics-grid,.dashboard-grid,.trust-grid,.sim-grid,.mini-grid,.summary-list,.cta-grid,.hero-strip,.risk-panel-grid{grid-template-columns:1fr}
       .nav-links{width:100%}
       .hero-actions{flex-direction:column;align-items:stretch}
       .btn,.audio-toggle{width:100%}
-      .alert-top,.kv,.focus-top,.form-top{flex-direction:column}
-      .shell,.form-shell,.success-card{padding:16px 12px 56px}
-      .card,.dash-card,.form-card,.success-box{padding:18px}
+      .alert-top,.kv,.focus-top{flex-direction:column}
+      .shell{padding:16px 12px 56px}
+      .card,.dash-card{padding:18px}
       h1{font-size:clamp(34px,9vw,48px)}
       .lead{font-size:16px}
       .section-title{font-size:32px}
-      .form-title{font-size:38px}
+      .pulse-rings{display:none}
     }
   </style>
 </head>
@@ -846,7 +794,7 @@ MAIN_HTML = """
     </div>
   </div>
 
-  <div class="shell">
+  <div class="shell fade-up">
     <section class="hero" id="overview">
       <div class="card hero-main">
         <div class="hero-kicker">Clinical command platform</div>
@@ -888,16 +836,11 @@ MAIN_HTML = """
         </div>
 
         <div class="ticker-wrap">
-          <div class="ticker" id="opsTicker">
-            <span><i class="bullet"></i>System activity rotating</span>
-            <span><i class="bullet"></i>Clinical operations visible</span>
-            <span><i class="bullet"></i>AI prioritization enabled</span>
-            <span><i class="bullet"></i>Investor workflow active</span>
-            <span><i class="bullet"></i>System activity rotating</span>
-            <span><i class="bullet"></i>Clinical operations visible</span>
-            <span><i class="bullet"></i>AI prioritization enabled</span>
-            <span><i class="bullet"></i>Investor workflow active</span>
-          </div>
+          <div class="ticker" id="opsTicker"></div>
+        </div>
+
+        <div class="pulse-rings">
+          <span></span><span></span><span></span>
         </div>
       </div>
 
@@ -1024,7 +967,7 @@ MAIN_HTML = """
           <h3 style="margin-top:0;">Executive summary</h3>
           <p class="side-copy">
             Early Risk Alert AI combines hospital-facing command visibility, patient simulation, AI risk scoring,
-            hospital demo capture, executive walkthrough requests, investor intake, and pitch materials into one branded platform.
+            hospital demo capture, executive walkthrough requests, investor intake, and branded pitch materials into one platform.
           </p>
           <div class="summary-list">
             <div class="summary-item"><div class="sk">Primary use case</div><div class="sv">Clinical command</div></div>
@@ -1058,14 +1001,18 @@ MAIN_HTML = """
           <p>Unified platform, intake workflow, downloadable deck, and admin review layer.</p>
         </div>
         <div class="card trust-card">
-          <h3>Professional contact path</h3>
-          <p>Direct channel for hospital partnerships, investor inquiries, and product demonstration requests.</p>
+          <h3>Founder credibility</h3>
+          <p>Built and led by Milton MUNROE with a focused mission to advance predictive healthcare intelligence.</p>
         </div>
       </div>
 
       <div class="card" style="margin-top:14px;">
-        <h3 style="margin-top:0;">Contact</h3>
+        <h3 style="margin-top:0;">Founder & Contact</h3>
         <div class="contact-box">
+          <div class="contact-row">
+            <div class="contact-label">Founder</div>
+            <div>__FOUNDER_NAME__ • __FOUNDER_ROLE__</div>
+          </div>
           <div class="contact-row">
             <div class="contact-label">Email</div>
             <div>__INFO_EMAIL__</div>
@@ -1177,7 +1124,7 @@ MAIN_HTML = """
             <div class="meta-pill">AI score ${a.risk_score}</div>
             <div class="meta-pill">Confidence ${a.confidence}%</div>
             <div class="meta-pill">${a.clinical_priority}</div>
-            <div class="meta-pill" style="font-weight:900;"><span class="${trendClass(a.trend_direction)}">${a.trend_arrow || ""}</span>&nbsp;${a.trend_direction}</div>
+            <div class="meta-pill"><span class="${trendClass(a.trend_direction)}">${a.trend_arrow || ""}</span>&nbsp;${a.trend_direction}</div>
           </div>
           <div class="confidence-wrap">
             <div class="confidence-label"><span>Confidence indicator</span><span>${a.confidence}%</span></div>
@@ -1435,6 +1382,12 @@ INVESTOR_HTML = """
     .li{
       padding:12px 14px;border-radius:16px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.05);color:#dce8fb
     }
+    .founder{
+      margin-top:20px;
+      border-top:1px solid rgba(255,255,255,.08);
+      padding-top:18px;
+      color:#dce8fb;
+    }
     @media (max-width:980px){
       .grid,.mini-grid{grid-template-columns:1fr}
       .wrap{padding:18px 12px 56px}
@@ -1462,36 +1415,42 @@ INVESTOR_HTML = """
             <a class="btn" href="/deck">Download Pitch Deck PDF</a>
             <a class="btn secondary" href="/admin/review">Admin Review</a>
           </p>
+          <div class="founder">
+            <strong>Founder:</strong> __FOUNDER_NAME__<br>
+            <strong>Role:</strong> __FOUNDER_ROLE__<br>
+            <strong>Email:</strong> __INFO_EMAIL__<br>
+            <strong>Phone:</strong> __BUSINESS_PHONE__
+          </div>
         </div>
 
         <div class="card">
-          <div class="k">Commercial positioning</div>
-          <div class="v">Enterprise</div>
-          <div class="s">Built to present as a serious SaaS healthcare intelligence platform.</div>
+          <div class="k">Investor summary</div>
+          <div class="v">Enterprise Ready</div>
+          <div class="s">A hospital-facing clinical intelligence platform with executive review workflows, investor intake, and branded pitch delivery.</div>
           <div class="list">
-            <div class="li">AI risk scoring with confidence indicators</div>
-            <div class="li">Hospital-facing command center workflow</div>
-            <div class="li">Executive walkthrough and hospital demo capture</div>
-            <div class="li">Investor intake, deck delivery, admin review, CSV export</div>
+            <div class="li">Predictive clinical intelligence for hospitals and care operations</div>
+            <div class="li">Command-center style dashboard with AI risk scoring and confidence indicators</div>
+            <div class="li">Executive walkthrough capture, hospital demo requests, and investor intake workflows</div>
+            <div class="li">Admin review and CSV export for a real operating pipeline</div>
           </div>
         </div>
       </div>
 
       <div class="mini-grid">
         <div class="mini">
-          <div class="k">Platform</div>
-          <div class="v">Clinical AI</div>
-          <div class="s">Command-center style hospital intelligence and predictive scoring.</div>
+          <div class="k">Traction Angle</div>
+          <div class="v">Product Live</div>
+          <div class="s">Core public platform, forms, admin review, and investor flow are already operational.</div>
         </div>
         <div class="mini">
-          <div class="k">Commercial Flow</div>
-          <div class="v">Investor Ready</div>
-          <div class="s">Intake, deck delivery, follow-up capture, and admin review built in.</div>
+          <div class="k">Market</div>
+          <div class="v">Hospitals / RPM</div>
+          <div class="s">Targets hospital command centers, clinics, remote monitoring, and enterprise care workflows.</div>
         </div>
         <div class="mini">
-          <div class="k">Deployment</div>
-          <div class="v">SaaS</div>
-          <div class="s">Enterprise-ready software experience for healthcare buyers and investors.</div>
+          <div class="k">Revenue Model</div>
+          <div class="v">Enterprise SaaS</div>
+          <div class="s">Structured for hospital deployments, clinical dashboards, and enterprise healthcare subscriptions.</div>
         </div>
       </div>
     </div>
@@ -1619,7 +1578,12 @@ THANK_YOU_PAGE = """
     }
     h1{margin:12px 0 10px;font-size:clamp(38px,4vw,54px);letter-spacing:-.045em}
     p{color:var(--muted);line-height:1.75}
+    .detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:18px}
+    .detail{background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.05);border-radius:16px;padding:14px}
+    .dk{font-size:11px;text-transform:uppercase;letter-spacing:.14em;color:#9eb4d6;font-weight:900}
+    .dv{margin-top:6px;color:#edf4ff;line-height:1.5}
     .btn{display:inline-block;padding:13px 18px;border-radius:14px;background:linear-gradient(135deg,var(--blue),var(--blue2));color:#08111f;font-weight:900;text-decoration:none;margin-right:10px;margin-top:10px}
+    @media (max-width:760px){.detail-grid{grid-template-columns:1fr}.success-card{padding:16px 12px 56px}.success-box{padding:18px}}
   </style>
 </head>
 <body>
@@ -1627,7 +1591,10 @@ THANK_YOU_PAGE = """
     <div class="success-box">
       <div class="ok">Submission received</div>
       <h1>Thank you</h1>
-      <p>Your request was submitted successfully. The workflow is now captured inside your platform and ready for follow-up through admin review and CSV export.</p>
+      <p>__THANK_YOU_COPY__</p>
+      <div class="detail-grid">
+        __DETAILS__
+      </div>
       <p>
         <a class="btn" href="/">Return Home</a>
         <a class="btn" href="/admin/review">Open Admin Review</a>
@@ -1654,10 +1621,13 @@ ADMIN_HTML = """
       --muted:#bdd0ec;
       --blue:#7aa2ff;
       --blue2:#5bd4ff;
+      --green:#38d39f;
+      --amber:#f7be68;
+      --red:#ff5c72;
       --shadow:0 18px 50px rgba(0,0,0,.24);
     }
     body{margin:0;font-family:Inter,Arial,sans-serif;background:#08111f;color:var(--text)}
-    .wrap{max-width:1240px;margin:0 auto;padding:40px 20px 60px}
+    .wrap{max-width:1320px;margin:0 auto;padding:40px 20px 60px}
     .card{
       background:
         radial-gradient(circle at top right, rgba(91,212,255,.10), transparent 24%),
@@ -1669,15 +1639,39 @@ ADMIN_HTML = """
     p{color:var(--muted);line-height:1.7}
     .btn{display:inline-block;padding:13px 18px;border-radius:14px;background:linear-gradient(135deg,var(--blue),var(--blue2));color:#08111f;font-weight:900;text-decoration:none;margin-right:10px;margin-bottom:10px}
     .admin-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:18px 0 20px}
-    .admin-kpi{background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.06);border-radius:18px;padding:18px}
+    .admin-kpi{
+      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02));
+      border:1px solid rgba(255,255,255,.06);
+      border-radius:18px;padding:18px;
+    }
     .admin-kpi .k{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#9eb4d6;font-weight:900}
     .admin-kpi .v{font-size:36px;font-weight:1000;margin-top:10px;line-height:1}
+    .admin-kpi.hospital{box-shadow:0 0 0 1px rgba(91,212,255,.12)}
+    .admin-kpi.exec{box-shadow:0 0 0 1px rgba(247,190,104,.12)}
+    .admin-kpi.investor{box-shadow:0 0 0 1px rgba(56,211,159,.12)}
+    .section{margin-top:28px}
+    .lead-row{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:10px}
+    .lead-type{
+      flex:1 1 260px;
+      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02));
+      border:1px solid rgba(255,255,255,.06);
+      border-radius:18px;padding:18px;
+    }
+    .lead-type h3{margin:0 0 6px;font-size:22px}
+    .lead-type p{margin:0;color:#c9daf0}
     table{width:100%;border-collapse:collapse;margin-top:18px;font-size:14px}
     th,td{padding:12px;border-bottom:1px solid rgba(255,255,255,.08);text-align:left;vertical-align:top}
     th{color:#9eb4d6;text-transform:uppercase;font-size:12px;letter-spacing:.12em}
     tr:hover td{background:rgba(255,255,255,.02)}
-    .section{margin-top:28px}
-    @media (max-width:900px){.admin-grid{grid-template-columns:1fr}}
+    .status{
+      display:inline-flex;align-items:center;justify-content:center;
+      min-width:96px;padding:8px 12px;border-radius:999px;
+      font-size:12px;font-weight:1000;letter-spacing:.08em;text-transform:uppercase
+    }
+    .status-new{background:rgba(91,212,255,.16);border:1px solid rgba(91,212,255,.28);color:#d6f4ff}
+    .status-contacted{background:rgba(247,190,104,.16);border:1px solid rgba(247,190,104,.28);color:#ffe3b2}
+    .status-scheduled{background:rgba(56,211,159,.16);border:1px solid rgba(56,211,159,.28);color:#d3ffe8}
+    @media (max-width:980px){.admin-grid{grid-template-columns:1fr}.wrap{padding:18px 12px 56px}.card{padding:18px}}
   </style>
 </head>
 <body>
@@ -1691,9 +1685,15 @@ ADMIN_HTML = """
       </p>
 
       <div class="admin-grid">
-        <div class="admin-kpi"><div class="k">Hospital Demo Requests</div><div class="v">__HOSPITAL_COUNT__</div></div>
-        <div class="admin-kpi"><div class="k">Executive Walkthrough Requests</div><div class="v">__EXEC_COUNT__</div></div>
-        <div class="admin-kpi"><div class="k">Investor Intake Requests</div><div class="v">__INVESTOR_COUNT__</div></div>
+        <div class="admin-kpi hospital"><div class="k">Hospital Demo Requests</div><div class="v">__HOSPITAL_COUNT__</div></div>
+        <div class="admin-kpi exec"><div class="k">Executive Walkthrough Requests</div><div class="v">__EXEC_COUNT__</div></div>
+        <div class="admin-kpi investor"><div class="k">Investor Intake Requests</div><div class="v">__INVESTOR_COUNT__</div></div>
+      </div>
+
+      <div class="lead-row">
+        <div class="lead-type"><h3>Hospital Leads</h3><p>Clinical buyers, hospital operators, RPM teams, and health systems.</p></div>
+        <div class="lead-type"><h3>Executive Leads</h3><p>Leadership-facing walkthrough requests for evaluations, pilots, and strategic review.</p></div>
+        <div class="lead-type"><h3>Investor Leads</h3><p>Investor pipeline capture with contact details, timing, and opportunity notes.</p></div>
       </div>
 
       <div class="section">
@@ -1717,14 +1717,43 @@ ADMIN_HTML = """
 """
 
 
-def _table_html(rows: List[Dict[str, Any]], columns: List[str]) -> str:
+def _status_class(status: str) -> str:
+    s = (status or "new").lower()
+    if s == "contacted":
+        return "status status-contacted"
+    if s == "scheduled":
+        return "status status-scheduled"
+    return "status status-new"
+
+
+def _table_html(rows: List[Dict[str, Any]], columns: List[str], labels: Dict[str, str]) -> str:
     if not rows:
         return "<p>No submissions yet.</p>"
-    head = "".join(f"<th>{c.replace('_', ' ')}</th>" for c in columns)
+    head = "".join(f"<th>{labels.get(c, c.replace('_', ' ').title())}</th>" for c in columns)
     body_rows = []
     for row in rows:
-        body_rows.append("<tr>" + "".join(f"<td>{row.get(c, '')}</td>" for c in columns) + "</tr>")
+        tds = []
+        for c in columns:
+            value = row.get(c, "")
+            if c == "status":
+                tds.append(f"<td><span class='{_status_class(str(value))}'>{value or 'New'}</span></td>")
+            else:
+                tds.append(f"<td>{value}</td>")
+        body_rows.append("<tr>" + "".join(tds) + "</tr>")
     return f"<table><thead><tr>{head}</tr></thead><tbody>{''.join(body_rows)}</tbody></table>"
+
+
+def _detail_html(payload: Dict[str, Any], keys: List[str]) -> str:
+    blocks = []
+    for key in keys:
+        value = payload.get(key, "")
+        if not value:
+            continue
+        label = key.replace("_", " ").title()
+        blocks.append(
+            f"<div class='detail'><div class='dk'>{label}</div><div class='dv'>{value}</div></div>"
+        )
+    return "".join(blocks)
 
 
 def create_app() -> Flask:
@@ -1754,6 +1783,7 @@ def create_app() -> Flask:
                         rows.append(json.loads(line))
                     except Exception:
                         pass
+        rows.sort(key=lambda x: x.get("submitted_at", ""), reverse=True)
         return rows
 
     @app.get("/healthz")
@@ -1764,23 +1794,28 @@ def create_app() -> Flask:
     def home():
         html = MAIN_HTML.replace("__YOUTUBE_EMBED_URL__", YOUTUBE_EMBED_URL)
         html = html.replace("__INFO_EMAIL__", INFO_EMAIL).replace("__BUSINESS_PHONE__", BUSINESS_PHONE)
+        html = html.replace("__FOUNDER_NAME__", FOUNDER_NAME).replace("__FOUNDER_ROLE__", FOUNDER_ROLE)
         return render_template_string(html)
 
     @app.get("/dashboard")
     def dashboard():
         html = MAIN_HTML.replace("__YOUTUBE_EMBED_URL__", YOUTUBE_EMBED_URL)
         html = html.replace("__INFO_EMAIL__", INFO_EMAIL).replace("__BUSINESS_PHONE__", BUSINESS_PHONE)
+        html = html.replace("__FOUNDER_NAME__", FOUNDER_NAME).replace("__FOUNDER_ROLE__", FOUNDER_ROLE)
         return render_template_string(html)
 
     @app.get("/investors")
     def investors():
-        return render_template_string(INVESTOR_HTML)
+        html = INVESTOR_HTML.replace("__INFO_EMAIL__", INFO_EMAIL).replace("__BUSINESS_PHONE__", BUSINESS_PHONE)
+        html = html.replace("__FOUNDER_NAME__", FOUNDER_NAME).replace("__FOUNDER_ROLE__", FOUNDER_ROLE)
+        return render_template_string(html)
 
     @app.route("/hospital-demo", methods=["GET", "POST"])
     def hospital_demo():
         if request.method == "POST":
             payload = {
                 "submitted_at": _utc_now_iso(),
+                "status": "New",
                 "full_name": request.form.get("full_name", "").strip(),
                 "organization": request.form.get("organization", "").strip(),
                 "role": request.form.get("role", "").strip(),
@@ -1791,7 +1826,15 @@ def create_app() -> Flask:
                 "message": request.form.get("message", "").strip(),
             }
             save_jsonl(hospital_file, payload)
-            return render_template_string(THANK_YOU_PAGE)
+            html = THANK_YOU_PAGE.replace(
+                "__THANK_YOU_COPY__",
+                "Your hospital demo request was submitted successfully. The request is now visible in admin review and ready for follow-up."
+            )
+            html = html.replace(
+                "__DETAILS__",
+                _detail_html(payload, ["full_name", "organization", "role", "email", "facility_type", "timeline"])
+            )
+            return render_template_string(html)
 
         fields = """
         <div class="field"><label>Full Name</label><input name="full_name" required></div>
@@ -1829,6 +1872,7 @@ def create_app() -> Flask:
         if request.method == "POST":
             payload = {
                 "submitted_at": _utc_now_iso(),
+                "status": "New",
                 "full_name": request.form.get("full_name", "").strip(),
                 "organization": request.form.get("organization", "").strip(),
                 "title": request.form.get("title", "").strip(),
@@ -1839,7 +1883,15 @@ def create_app() -> Flask:
                 "message": request.form.get("message", "").strip(),
             }
             save_jsonl(exec_file, payload)
-            return render_template_string(THANK_YOU_PAGE)
+            html = THANK_YOU_PAGE.replace(
+                "__THANK_YOU_COPY__",
+                "Your executive walkthrough request was submitted successfully. The request is now visible in admin review and ready for scheduling follow-up."
+            )
+            html = html.replace(
+                "__DETAILS__",
+                _detail_html(payload, ["full_name", "organization", "title", "email", "priority", "timeline"])
+            )
+            return render_template_string(html)
 
         fields = """
         <div class="field"><label>Full Name</label><input name="full_name" required></div>
@@ -1877,6 +1929,7 @@ def create_app() -> Flask:
         if request.method == "POST":
             payload = {
                 "submitted_at": _utc_now_iso(),
+                "status": "New",
                 "full_name": request.form.get("full_name", "").strip(),
                 "organization": request.form.get("organization", "").strip(),
                 "role": request.form.get("role", "").strip(),
@@ -1888,7 +1941,15 @@ def create_app() -> Flask:
                 "message": request.form.get("message", "").strip(),
             }
             save_jsonl(investor_file, payload)
-            return render_template_string(THANK_YOU_PAGE)
+            html = THANK_YOU_PAGE.replace(
+                "__THANK_YOU_COPY__",
+                "Your investor intake was submitted successfully. The request is now visible in admin review and ready for follow-up and export."
+            )
+            html = html.replace(
+                "__DETAILS__",
+                _detail_html(payload, ["full_name", "organization", "role", "email", "investor_type", "timeline"])
+            )
+            return render_template_string(html)
 
         fields = """
         <div class="field"><label>Full Name</label><input name="full_name" required></div>
@@ -1929,22 +1990,54 @@ def create_app() -> Flask:
         exec_rows = read_jsonl(exec_file)
         investor_rows = read_jsonl(investor_file)
 
+        labels_h = {
+            "submitted_at": "Submitted",
+            "status": "Status",
+            "full_name": "Name",
+            "organization": "Organization",
+            "role": "Role",
+            "email": "Email",
+            "facility_type": "Facility Type",
+            "timeline": "Timeline",
+        }
+        labels_e = {
+            "submitted_at": "Submitted",
+            "status": "Status",
+            "full_name": "Name",
+            "organization": "Organization",
+            "title": "Executive Title",
+            "email": "Email",
+            "priority": "Priority",
+            "timeline": "Timeline",
+        }
+        labels_i = {
+            "submitted_at": "Submitted",
+            "status": "Status",
+            "full_name": "Name",
+            "organization": "Organization",
+            "role": "Role",
+            "email": "Email",
+            "investor_type": "Investor Type",
+            "check_size": "Check Size",
+            "timeline": "Timeline",
+        }
+
         html = ADMIN_HTML
         html = html.replace("__HOSPITAL_COUNT__", str(len(hospital_rows)))
         html = html.replace("__EXEC_COUNT__", str(len(exec_rows)))
         html = html.replace("__INVESTOR_COUNT__", str(len(investor_rows)))
-        html = html.replace("__HOSPITAL_TABLE__", _table_html(
-            hospital_rows,
-            ["submitted_at", "full_name", "organization", "role", "email", "facility_type", "timeline"]
-        ))
-        html = html.replace("__EXEC_TABLE__", _table_html(
-            exec_rows,
-            ["submitted_at", "full_name", "organization", "title", "email", "priority", "timeline"]
-        ))
-        html = html.replace("__INVESTOR_TABLE__", _table_html(
-            investor_rows,
-            ["submitted_at", "full_name", "organization", "role", "email", "investor_type", "check_size", "timeline"]
-        ))
+        html = html.replace(
+            "__HOSPITAL_TABLE__",
+            _table_html(hospital_rows, ["submitted_at", "status", "full_name", "organization", "role", "email", "facility_type", "timeline"], labels_h),
+        )
+        html = html.replace(
+            "__EXEC_TABLE__",
+            _table_html(exec_rows, ["submitted_at", "status", "full_name", "organization", "title", "email", "priority", "timeline"], labels_e),
+        )
+        html = html.replace(
+            "__INVESTOR_TABLE__",
+            _table_html(investor_rows, ["submitted_at", "status", "full_name", "organization", "role", "email", "investor_type", "check_size", "timeline"], labels_i),
+        )
         return render_template_string(html)
 
     @app.get("/admin/export.csv")
@@ -1955,12 +2048,25 @@ def create_app() -> Flask:
 
         output = io.StringIO()
         writer = csv.writer(output)
-        writer.writerow(["source", "submitted_at", "full_name", "organization", "role_or_title", "email", "phone", "type_or_priority", "timeline", "message"])
+        writer.writerow([
+            "Lead Source",
+            "Submitted At",
+            "Status",
+            "Full Name",
+            "Organization",
+            "Role / Title",
+            "Email",
+            "Phone",
+            "Lead Type / Priority",
+            "Timeline",
+            "Notes",
+        ])
 
         for row in hospital_rows:
             writer.writerow([
-                "hospital_demo",
+                "Hospital Demo",
                 row.get("submitted_at", ""),
+                row.get("status", "New"),
                 row.get("full_name", ""),
                 row.get("organization", ""),
                 row.get("role", ""),
@@ -1973,8 +2079,9 @@ def create_app() -> Flask:
 
         for row in exec_rows:
             writer.writerow([
-                "executive_walkthrough",
+                "Executive Walkthrough",
                 row.get("submitted_at", ""),
+                row.get("status", "New"),
                 row.get("full_name", ""),
                 row.get("organization", ""),
                 row.get("title", ""),
@@ -1987,8 +2094,9 @@ def create_app() -> Flask:
 
         for row in investor_rows:
             writer.writerow([
-                "investor_intake",
+                "Investor Intake",
                 row.get("submitted_at", ""),
+                row.get("status", "New"),
                 row.get("full_name", ""),
                 row.get("organization", ""),
                 row.get("role", ""),
@@ -2002,7 +2110,7 @@ def create_app() -> Flask:
         mem = io.BytesIO()
         mem.write(output.getvalue().encode("utf-8"))
         mem.seek(0)
-        return send_file(mem, mimetype="text/csv", as_attachment=True, download_name="early_risk_alert_admin_export.csv")
+        return send_file(mem, mimetype="text/csv", as_attachment=True, download_name="early_risk_alert_pipeline_export.csv")
 
     @app.get("/deck")
     def deck():
