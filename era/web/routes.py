@@ -512,6 +512,22 @@ def login():
 def dashboard():
     return render_template_string(MAIN_HTML)
 
+    @web_bp.get("/hospital-demo")
+def hospital_demo():
+    return render_template_string(MAIN_HTML)
+
+@web_bp.get("/hospital-intake")
+def hospital_intake():
+    return render_template_string(MAIN_HTML)
+
+@web_bp.get("/command-center")
+def command_center():
+    return render_template_string(MAIN_HTML)
+
+@web_bp.get("/investor-path")
+def investor_path():
+    return render_template_string(INVESTOR_HTML)
+
 
 @web_bp.get("/deck")
 def deck():
