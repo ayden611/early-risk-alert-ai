@@ -1280,20 +1280,21 @@ MAIN_HTML = """
     refreshDashboard();
     setInterval(refreshDashboard, 5000);
   </script>
-  <section id="cinematic-pathways" style="max-width:1360px;margin:34px auto 0;padding:0 16px 40px;">
+ <section id="cinematic-pathways" style="max-width:1360px;margin:34px auto 0;padding:0 16px 40px;">
   <style>
     .cp-wrap{
       position:relative;
       border:1px solid rgba(255,255,255,.08);
-      border-radius:30px;
+      border-radius:32px;
       overflow:hidden;
       background:
         radial-gradient(circle at 14% 18%, rgba(91,212,255,.14), transparent 24%),
-        radial-gradient(circle at 50% 10%, rgba(166,140,255,.08), transparent 20%),
+        radial-gradient(circle at 50% 10%, rgba(166,140,255,.07), transparent 20%),
         radial-gradient(circle at 84% 18%, rgba(122,162,255,.14), transparent 24%),
-        linear-gradient(180deg, rgba(13,21,38,.98), rgba(7,16,28,.99));
-      box-shadow:0 24px 80px rgba(0,0,0,.34);
+        linear-gradient(180deg, rgba(13,21,38,.985), rgba(7,16,28,.995));
+      box-shadow:0 28px 90px rgba(0,0,0,.36);
       isolation:isolate;
+      transform:translateZ(0);
     }
 
     .cp-wrap::before{
@@ -1301,34 +1302,32 @@ MAIN_HTML = """
       position:absolute;
       inset:0;
       background:
-        linear-gradient(rgba(122,162,255,.035) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(122,162,255,.035) 1px, transparent 1px);
+        linear-gradient(rgba(122,162,255,.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(122,162,255,.03) 1px, transparent 1px);
       background-size:34px 34px;
-      opacity:.45;
+      opacity:.38;
       pointer-events:none;
     }
 
     .cp-wrap::after{
       content:"";
       position:absolute;
-      inset:auto -10% -16% -10%;
-      height:220px;
-      background:radial-gradient(circle at center, rgba(91,212,255,.16), transparent 62%);
-      filter:blur(18px);
-      animation:cpAmbientGlow 7s ease-in-out infinite;
+      inset:-8%;
+      background:radial-gradient(circle at center, rgba(91,212,255,.06), transparent 58%);
+      animation:cpAmbientPulse 8s ease-in-out infinite;
       pointer-events:none;
       z-index:0;
     }
 
-    @keyframes cpAmbientGlow{
-      0%,100%{transform:translateY(0) scale(1);opacity:.55}
-      50%{transform:translateY(-8px) scale(1.05);opacity:.9}
+    @keyframes cpAmbientPulse{
+      0%,100%{transform:scale(1);opacity:.5}
+      50%{transform:scale(1.06);opacity:.95}
     }
 
     .cp-top{
       position:relative;
       z-index:2;
-      padding:30px 30px 10px;
+      padding:34px 32px 10px;
     }
 
     .cp-kicker{
@@ -1337,31 +1336,32 @@ MAIN_HTML = """
       letter-spacing:.16em;
       text-transform:uppercase;
       color:#8fd7ff;
-      margin-bottom:10px;
+      margin-bottom:12px;
     }
 
     .cp-title{
       margin:0;
-      font-size:clamp(34px,5vw,64px);
-      line-height:.95;
-      letter-spacing:-.05em;
+      font-size:clamp(36px,5vw,68px);
+      line-height:.93;
+      letter-spacing:-.055em;
       font-weight:1000;
-      max-width:980px;
+      max-width:1020px;
       color:#eef4ff;
+      text-wrap:balance;
     }
 
     .cp-sub{
-      max-width:960px;
-      margin:14px 0 0;
-      color:#a9bddc;
+      max-width:980px;
+      margin:16px 0 0;
+      color:#abc0de;
       font-size:18px;
-      line-height:1.65;
+      line-height:1.68;
     }
 
     .cp-stage{
       position:relative;
       z-index:2;
-      padding:18px 30px 6px;
+      padding:20px 32px 8px;
     }
 
     .cp-rail{
@@ -1372,23 +1372,98 @@ MAIN_HTML = """
       align-items:stretch;
     }
 
+    .cp-connector{
+      position:absolute;
+      left:7%;
+      right:7%;
+      top:54%;
+      height:2px;
+      background:linear-gradient(90deg, transparent, rgba(91,212,255,.18), rgba(122,162,255,.22), rgba(91,212,255,.18), transparent);
+      pointer-events:none;
+      z-index:1;
+    }
+
+    .cp-connector::before{
+      content:"";
+      position:absolute;
+      inset:-14px 0;
+      background:radial-gradient(circle at center, rgba(91,212,255,.12), transparent 60%);
+      filter:blur(18px);
+      opacity:.6;
+    }
+
+    .cp-doctor{
+      position:absolute;
+      top:50%;
+      width:20px;
+      height:20px;
+      margin-top:-10px;
+      border-radius:50%;
+      background:linear-gradient(135deg,#7aa2ff,#5bd4ff);
+      box-shadow:0 0 20px rgba(91,212,255,.85);
+      z-index:2;
+      left:8%;
+      animation:doctorTravel 9s linear infinite;
+    }
+
+    .cp-doctor::before{
+      content:"";
+      position:absolute;
+      inset:-12px;
+      border-radius:50%;
+      border:1px solid rgba(91,212,255,.24);
+      animation:doctorRing 2.8s ease-out infinite;
+    }
+
+    .cp-doctor::after{
+      content:"";
+      position:absolute;
+      top:50%;
+      right:100%;
+      width:110px;
+      height:2px;
+      transform:translateY(-50%);
+      background:linear-gradient(90deg, rgba(91,212,255,0), rgba(91,212,255,.6), rgba(91,212,255,0));
+      filter:blur(.2px);
+    }
+
+    .cp-doctor.two{
+      animation-delay:3s;
+      opacity:.78;
+    }
+
+    @keyframes doctorTravel{
+      0%{left:8%;opacity:0;transform:scale(.8)}
+      8%{opacity:1;transform:scale(1)}
+      32%{left:34%}
+      66%{left:64%}
+      92%{opacity:1;transform:scale(1)}
+      100%{left:92%;opacity:0;transform:scale(.84)}
+    }
+
+    @keyframes doctorRing{
+      0%{transform:scale(.5);opacity:1}
+      100%{transform:scale(1.9);opacity:0}
+    }
+
     .cp-card{
       position:relative;
-      min-height:340px;
-      border-radius:26px;
+      min-height:360px;
+      border-radius:28px;
       border:1px solid rgba(255,255,255,.08);
       background:
-        linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.02)),
-        linear-gradient(180deg, rgba(12,22,38,.74), rgba(9,16,30,.86));
+        linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.018)),
+        linear-gradient(180deg, rgba(12,22,38,.76), rgba(9,16,30,.88));
       overflow:hidden;
-      box-shadow:0 16px 44px rgba(0,0,0,.24);
-      transition:transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+      box-shadow:0 16px 46px rgba(0,0,0,.24);
+      transition:transform .24s ease, border-color .24s ease, box-shadow .24s ease;
+      z-index:2;
     }
 
     .cp-card:hover{
-      transform:translateY(-5px);
-      border-color:rgba(91,212,255,.28);
-      box-shadow:0 20px 54px rgba(0,0,0,.30), 0 0 26px rgba(91,212,255,.12);
+      transform:translateY(-7px) scale(1.01);
+      border-color:rgba(91,212,255,.30);
+      box-shadow:0 22px 58px rgba(0,0,0,.34), 0 0 28px rgba(91,212,255,.12);
     }
 
     .cp-card::before{
@@ -1399,40 +1474,15 @@ MAIN_HTML = """
       pointer-events:none;
     }
 
-    .cp-story-rail{
-      position:absolute;
-      inset:auto 0 76px 0;
-      height:2px;
-      background:linear-gradient(90deg, transparent, rgba(91,212,255,.35), rgba(122,162,255,.28), transparent);
-      opacity:.65;
-      pointer-events:none;
-    }
-
-    .cp-story-rail::before,
-    .cp-story-rail::after{
+    .cp-card::after{
       content:"";
       position:absolute;
-      top:50%;
-      width:16px;
-      height:16px;
-      margin-top:-8px;
-      border-radius:50%;
-      background:linear-gradient(135deg,#7aa2ff,#5bd4ff);
-      box-shadow:0 0 20px rgba(91,212,255,.75);
-      animation:cpDoctorMove 5.4s linear infinite;
-    }
-
-    .cp-story-rail::after{
-      animation-delay:2.2s;
-      opacity:.8;
-    }
-
-    @keyframes cpDoctorMove{
-      0%{left:4%;opacity:0}
-      8%{opacity:1}
-      50%{left:50%;opacity:.95}
-      92%{opacity:1}
-      100%{left:94%;opacity:0}
+      inset:auto -18% -28% -18%;
+      height:180px;
+      background:radial-gradient(circle at center, rgba(91,212,255,.14), transparent 62%);
+      filter:blur(18px);
+      opacity:.55;
+      pointer-events:none;
     }
 
     .cp-orb{
@@ -1467,7 +1517,7 @@ MAIN_HTML = """
       right:18px;
       padding:8px 12px;
       border-radius:999px;
-      background:rgba(7,16,28,.58);
+      background:rgba(7,16,28,.62);
       border:1px solid rgba(255,255,255,.08);
       color:#d9e8ff;
       font-size:11px;
@@ -1481,7 +1531,7 @@ MAIN_HTML = """
     .cp-body{
       position:relative;
       z-index:2;
-      padding:56px 22px 22px;
+      padding:58px 22px 22px;
       height:100%;
       display:flex;
       flex-direction:column;
@@ -1498,8 +1548,8 @@ MAIN_HTML = """
     }
 
     .cp-card-title{
-      font-size:32px;
-      line-height:1;
+      font-size:34px;
+      line-height:.98;
       font-weight:1000;
       color:#f2f7ff;
       margin-top:10px;
@@ -1509,9 +1559,9 @@ MAIN_HTML = """
     .cp-copy{
       color:#c8d8ef;
       font-size:15px;
-      line-height:1.65;
+      line-height:1.68;
       margin-top:10px;
-      min-height:108px;
+      min-height:114px;
     }
 
     .cp-mini-flow{
@@ -1574,8 +1624,8 @@ MAIN_HTML = """
     .cp-band{
       position:relative;
       z-index:2;
-      margin:10px 30px 30px;
-      border-radius:28px;
+      margin:12px 32px 32px;
+      border-radius:30px;
       border:1px solid rgba(255,255,255,.07);
       background:
         radial-gradient(circle at 20% 50%, rgba(91,212,255,.08), transparent 26%),
@@ -1602,10 +1652,10 @@ MAIN_HTML = """
 
     .cp-band-inner{
       display:grid;
-      grid-template-columns:1.1fr .9fr;
-      gap:20px;
+      grid-template-columns:1.08fr .92fr;
+      gap:22px;
       align-items:center;
-      padding:26px;
+      padding:28px;
       position:relative;
       z-index:2;
     }
@@ -1621,18 +1671,19 @@ MAIN_HTML = """
 
     .cp-band-title{
       margin:0;
-      font-size:clamp(30px,4vw,56px);
+      font-size:clamp(30px,4vw,58px);
       line-height:.96;
       font-weight:1000;
       letter-spacing:-.05em;
       color:#eef4ff;
+      text-wrap:balance;
     }
 
     .cp-band-copy{
       margin:12px 0 0;
       color:#b8cbe6;
       font-size:17px;
-      line-height:1.65;
+      line-height:1.68;
       max-width:760px;
     }
 
@@ -1649,14 +1700,20 @@ MAIN_HTML = """
       color:#e5efff;
       font-size:14px;
       font-weight:800;
-      line-height:1.5;
+      line-height:1.54;
+      transition:transform .18s ease, border-color .18s ease;
+    }
+
+    .cp-band-point:hover{
+      transform:translateY(-2px);
+      border-color:rgba(91,212,255,.22);
     }
 
     .tour-modal{
       position:fixed;
       inset:0;
-      background:rgba(4,8,16,.74);
-      backdrop-filter:blur(8px);
+      background:rgba(4,8,16,.76);
+      backdrop-filter:blur(10px);
       display:none;
       align-items:center;
       justify-content:center;
@@ -1668,11 +1725,17 @@ MAIN_HTML = """
 
     .tour-panel{
       width:min(760px, 100%);
-      border-radius:26px;
+      border-radius:28px;
       border:1px solid rgba(255,255,255,.08);
-      background:linear-gradient(180deg, rgba(16,26,45,.98), rgba(9,16,30,.98));
-      box-shadow:0 24px 80px rgba(0,0,0,.42);
+      background:linear-gradient(180deg, rgba(16,26,45,.99), rgba(9,16,30,.995));
+      box-shadow:0 28px 90px rgba(0,0,0,.44);
       overflow:hidden;
+      animation:tourZoom .24s ease;
+    }
+
+    @keyframes tourZoom{
+      from{transform:scale(.97);opacity:0}
+      to{transform:scale(1);opacity:1}
     }
 
     .tour-head{
@@ -1784,45 +1847,47 @@ MAIN_HTML = """
       border-radius:18px;
       box-shadow:0 0 0 9999px rgba(3,8,16,.18), 0 0 28px rgba(91,212,255,.24);
       transition:outline .18s ease, box-shadow .18s ease;
+      scroll-margin-top:110px;
     }
 
     @media (max-width:1080px){
-      .cp-rail{ grid-template-columns:1fr; }
-      .cp-copy{ min-height:auto; }
-      .cp-story-rail{ display:none; }
-      .cp-band-inner{ grid-template-columns:1fr; }
-      .tour-meta{ grid-template-columns:1fr; }
+      .cp-rail{grid-template-columns:1fr}
+      .cp-copy{min-height:auto}
+      .cp-connector,.cp-doctor{display:none}
+      .cp-band-inner{grid-template-columns:1fr}
+      .tour-meta{grid-template-columns:1fr}
     }
 
     @media (max-width:760px){
-      .cp-top,.cp-stage{ padding-left:16px; padding-right:16px; }
-      .cp-top{ padding-top:20px; }
-      .cp-band{ margin:10px 16px 18px; }
-      .cp-band-inner{ padding:18px; }
-      .cp-card-title{ font-size:28px; }
-      .tour-title{ font-size:28px; }
-      .tour-step-title{ font-size:24px; }
-      .tour-actions{ flex-direction:column; }
-      .tour-actions .cp-btn{ width:100%; }
-      .cp-actions{ flex-direction:column; }
-      .cp-actions .cp-btn{ width:100%; }
+      .cp-top,.cp-stage{padding-left:16px;padding-right:16px}
+      .cp-top{padding-top:20px}
+      .cp-band{margin:12px 16px 18px}
+      .cp-band-inner{padding:18px}
+      .cp-card-title{font-size:28px}
+      .tour-title{font-size:28px}
+      .tour-step-title{font-size:24px}
+      .tour-actions{flex-direction:column}
+      .tour-actions .cp-btn{width:100%}
+      .cp-actions{flex-direction:column}
+      .cp-actions .cp-btn{width:100%}
     }
   </style>
 
   <div class="cp-wrap">
     <div class="cp-top">
-      <div class="cp-kicker">Cinematic Guided Entry</div>
+      <div class="cp-kicker">Apple-Style Guided Entry</div>
       <h2 class="cp-title">Choose the right path. Then let the platform guide the experience.</h2>
       <p class="cp-sub">
-        Hospital Demo becomes the left guided story. Live Platform becomes the center product walkthrough.
-        Investor Portal becomes the right commercial path. The lower cinematic explainer band ties the whole
-        experience together as one polished enterprise presentation.
+        Hospital Demo is the left guided story. Live Platform is the center product walkthrough.
+        Investor Portal is the right commercial path. Motion cues, guided modal flow, and cinematic polish now work together as one premium entry experience.
       </p>
     </div>
 
     <div class="cp-stage">
       <div class="cp-rail">
-        <div class="cp-story-rail"></div>
+        <div class="cp-connector"></div>
+        <div class="cp-doctor"></div>
+        <div class="cp-doctor two"></div>
 
         <div class="cp-card" id="tour-hospital-card">
           <div class="cp-orb"></div>
@@ -1832,18 +1897,18 @@ MAIN_HTML = """
               <div class="cp-label">Hospital Guided Story</div>
               <div class="cp-card-title">Hospital Demo</div>
               <div class="cp-copy">
-                This is the hospital buyer journey. Clinical operators move from demo request into workflow review,
-                command-center visibility, and operational follow-up.
+                This path is for clinical buyers, operators, RPM teams, and hospital stakeholders who need to understand workflow value and request a real demo.
               </div>
               <div class="cp-mini-flow">
                 <span class="cp-step">Request demo</span>
                 <span class="cp-step">Review workflow</span>
-                <span class="cp-step">Operational follow-up</span>
+                <span class="cp-step">Operational fit</span>
               </div>
             </div>
             <div class="cp-actions">
               <a class="cp-btn primary" href="/hospital-demo">Open Hospital Path</a>
               <button class="cp-btn tour" type="button" onclick="startGuidedTour('hospital')">Launch Hospital Tour</button>
+              <button class="cp-btn" type="button" onclick="autoJourney('hospital')">Auto Guide</button>
             </div>
           </div>
         </div>
@@ -1856,8 +1921,7 @@ MAIN_HTML = """
               <div class="cp-label">Interactive Product Walkthrough</div>
               <div class="cp-card-title">Live Platform</div>
               <div class="cp-copy">
-                This is the guided live tour. The platform walks viewers through metrics, alerts, patient focus,
-                simulation behavior, AI scoring, and command-center logic in sequence.
+                This path is the product story: metrics, alerts, patient focus, simulator flow, AI scoring, and command-center logic presented in sequence.
               </div>
               <div class="cp-mini-flow">
                 <span class="cp-step">Metrics</span>
@@ -1869,6 +1933,7 @@ MAIN_HTML = """
             <div class="cp-actions">
               <a class="cp-btn primary" href="#overview">Open Live Platform</a>
               <button class="cp-btn tour" type="button" onclick="startGuidedTour('live')">Start Walkthrough</button>
+              <button class="cp-btn" type="button" onclick="autoJourney('live')">Auto Guide</button>
             </div>
           </div>
         </div>
@@ -1881,19 +1946,19 @@ MAIN_HTML = """
               <div class="cp-label">Investor Commercial Story</div>
               <div class="cp-card-title">Investor Portal</div>
               <div class="cp-copy">
-                This is the investor route. Viewers move through positioning, traction, founder credibility,
-                deck access, intake flow, and commercial readiness from one premium portal.
+                This path is for investors and strategic partners: positioning, traction, founder credibility, pitch access, intake workflow, and commercial readiness.
               </div>
               <div class="cp-mini-flow">
                 <span class="cp-step">Positioning</span>
                 <span class="cp-step">Pitch deck</span>
                 <span class="cp-step">Founder credibility</span>
-                <span class="cp-step">Intake workflow</span>
+                <span class="cp-step">Investor intake</span>
               </div>
             </div>
             <div class="cp-actions">
               <a class="cp-btn primary" href="/investors">Open Investor Path</a>
               <button class="cp-btn tour" type="button" onclick="startGuidedTour('investor')">Launch Investor Tour</button>
+              <button class="cp-btn" type="button" onclick="autoJourney('investor')">Auto Guide</button>
             </div>
           </div>
         </div>
@@ -1906,16 +1971,16 @@ MAIN_HTML = """
           <div class="cp-band-kicker">Cinematic Explainer Band</div>
           <h3 class="cp-band-title">Three audience paths. One guided platform story.</h3>
           <p class="cp-band-copy">
-            Hospitals can move into demo capture and command-center evaluation. Product viewers can launch a live walkthrough.
-            Investors can enter the commercial portal with a guided summary of traction, positioning, founder credibility, and next steps.
+            Hospitals move into demo capture and command-center review. Product viewers launch a guided walkthrough.
+            Investors enter the commercial portal with a guided summary of traction, positioning, founder credibility, and next steps.
           </p>
         </div>
 
         <div class="cp-band-points">
-          <div class="cp-band-point">Hospital Demo is the left-side guided buyer story.</div>
-          <div class="cp-band-point">Live Platform is the center interactive product walkthrough.</div>
-          <div class="cp-band-point">Investor Portal is the right-side commercial and pitch path.</div>
-          <div class="cp-band-point">Guided tours launch directly from the buttons for tighter flow.</div>
+          <div class="cp-band-point">Hospital Demo is the left buyer story with workflow and demo capture.</div>
+          <div class="cp-band-point">Live Platform is the center guided product walkthrough with AI scoring and alerts.</div>
+          <div class="cp-band-point">Investor Portal is the right commercial path with positioning, deck flow, and intake.</div>
+          <div class="cp-band-point">Auto Guide buttons now open the right journey without manual navigation.</div>
         </div>
       </div>
     </div>
@@ -1962,41 +2027,41 @@ MAIN_HTML = """
           {
             target: "#overview",
             title: "Hero + Guided Entry",
-            copy: "Start at the cinematic homepage layer. This section introduces the platform as a premium clinical intelligence experience and routes viewers into the right product path.",
+            copy: "Start at the cinematic homepage layer. This introduces the platform and routes viewers into the correct experience path.",
             meta: [
               ["Area", "Homepage overview"],
-              ["Focus", "Hospital, live, and investor routing"],
+              ["Focus", "Guided routing"],
               ["Outcome", "Stronger first impression"]
             ]
           },
           {
             target: "#dashboard",
             title: "Clinical Command Center",
-            copy: "This section presents the live operational experience: alerts, patient focus, AI scoring, confidence indicators, recommended action, and system activity.",
+            copy: "Review alerts, patient focus, AI score, confidence, trend direction, and recommended action in the operational command-center view.",
             meta: [
               ["Area", "Command center"],
-              ["Focus", "Operational decision support"],
-              ["Outcome", "Response visibility at scale"]
+              ["Focus", "Operational AI visibility"],
+              ["Outcome", "Faster understanding"]
             ]
           },
           {
             target: "#simulator",
             title: "Patient Simulator",
-            copy: "The simulator demonstrates how the platform behaves in motion: live patients, changing risk, and scenario flow for product storytelling.",
+            copy: "Show how the platform behaves in motion with live patients, shifting severity, scenario flow, and monitoring behavior.",
             meta: [
               ["Area", "Simulator"],
-              ["Focus", "Scenario-based demo"],
-              ["Outcome", "More believable product narrative"]
+              ["Focus", "Demo storytelling"],
+              ["Outcome", "More believable product flow"]
             ]
           },
           {
             target: "#investor-view",
-            title: "Investor + Commercial Layer",
-            copy: "The investor layer packages the same product into a commercial story with positioning, credibility, contact flow, and pitch delivery.",
+            title: "Commercial Layer",
+            copy: "The investor layer reframes the same product into a premium enterprise healthcare AI commercial story.",
             meta: [
               ["Area", "Investor view"],
-              ["Focus", "Commercial readiness"],
-              ["Outcome", "Investor-facing polish"]
+              ["Focus", "Commercial credibility"],
+              ["Outcome", "Investor-ready presentation"]
             ]
           }
         ]
@@ -2006,42 +2071,42 @@ MAIN_HTML = """
         steps: [
           {
             target: "#tour-hospital-card",
-            title: "Hospital Guided Story",
-            copy: "The hospital route is designed for clinical buyers, RPM operators, and hospital decision-makers who want to see workflow value and real demo capture.",
+            title: "Hospital Demo Path",
+            copy: "This is the hospital journey for clinical operators, RPM teams, and hospital buyers evaluating operational fit.",
             meta: [
-              ["Entry", "Left hospital path"],
-              ["Buyer", "Clinical operations"],
-              ["Goal", "Move toward a demo request"]
+              ["Entry", "Left story path"],
+              ["Buyer", "Clinical decision-makers"],
+              ["Goal", "Move toward demo request"]
             ]
           },
           {
             target: "#dashboard",
-            title: "Review Live Workflow",
-            copy: "Show the buyer the command center first. This is where alert prioritization, patient severity, AI scoring, and recommended action become operational value.",
+            title: "Workflow Review",
+            copy: "Show command-center visibility first so buyers understand how alerts, severity, confidence, and clinical priority work together.",
             meta: [
-              ["Area", "Live dashboard"],
-              ["Focus", "Workflow visibility"],
-              ["Value", "Operational review"]
+              ["Area", "Dashboard"],
+              ["Focus", "Workflow value"],
+              ["Outcome", "Operational relevance"]
             ]
           },
           {
             target: "#hospital-demo",
-            title: "Capture Hospital Interest",
-            copy: "The hospital demo workflow collects organization, facility type, timeline, and interest so follow-up can happen like a real enterprise demo process.",
+            title: "Request Hospital Demo",
+            copy: "Capture organization, role, facility type, timeline, and demo interest through the hospital intake flow.",
             meta: [
               ["Area", "Hospital demo form"],
               ["Focus", "Lead capture"],
-              ["Outcome", "Qualified request"]
+              ["Outcome", "Qualified hospital request"]
             ]
           },
           {
             target: "#admin-review",
-            title: "Admin Review + Status Management",
-            copy: "Submitted leads can be reviewed, exported, and later moved through statuses like New, Contacted, and Scheduled.",
+            title: "Admin Review",
+            copy: "The lead moves into admin review where it can later be managed through New, Contacted, and Scheduled statuses.",
             meta: [
               ["Area", "Admin review"],
-              ["Focus", "Lead workflow"],
-              ["Outcome", "Structured follow-up"]
+              ["Focus", "Follow-up workflow"],
+              ["Outcome", "Operational pipeline"]
             ]
           }
         ]
@@ -2051,42 +2116,42 @@ MAIN_HTML = """
         steps: [
           {
             target: "#tour-investor-card",
-            title: "Investor Commercial Story",
-            copy: "The investor route frames the platform as an enterprise-ready healthcare AI company with operational credibility, founder clarity, and commercial flow.",
+            title: "Investor Entry Path",
+            copy: "This is the investor commercial route for platform positioning, traction, founder credibility, and next-step commercial follow-up.",
             meta: [
-              ["Entry", "Right investor path"],
-              ["Buyer", "Investors and strategic partners"],
+              ["Entry", "Right commercial path"],
+              ["Buyer", "Investors and partners"],
               ["Goal", "Commercial confidence"]
             ]
           },
           {
             target: "#investor-view",
-            title: "Investor Summary + Positioning",
-            copy: "This section explains the product in investor language: enterprise positioning, clinical relevance, founder-led execution, and traction narrative.",
+            title: "Investor Summary",
+            copy: "Explain the platform in investor language: enterprise positioning, product readiness, founder-led execution, and strategic relevance.",
             meta: [
               ["Area", "Investor summary"],
-              ["Focus", "Positioning + credibility"],
-              ["Outcome", "Stronger investor framing"]
+              ["Focus", "Narrative and positioning"],
+              ["Outcome", "Sharper investor framing"]
             ]
           },
           {
             target: "#investor-intake",
             title: "Investor Intake Workflow",
-            copy: "The intake flow captures interest, check size, timeline, and notes so the platform behaves like a real investor follow-up system instead of a static page.",
+            copy: "Capture interest, check size, timeline, and notes to create a real investor follow-up pipeline inside the platform.",
             meta: [
               ["Area", "Investor intake"],
               ["Focus", "Pipeline capture"],
-              ["Outcome", "Commercial workflow"]
+              ["Outcome", "Commercial process"]
             ]
           },
           {
             target: "#admin-review",
-            title: "Deck + Review Layer",
-            copy: "Pitch delivery and admin review connect the investor flow to a real operating pipeline with exports and later follow-up control.",
+            title: "Deck + Review Flow",
+            copy: "Pitch delivery and admin review connect the investor journey to a real operating workflow with export and lead visibility.",
             meta: [
               ["Area", "Admin review"],
-              ["Focus", "Deck + lead workflow"],
-              ["Outcome", "Investor process readiness"]
+              ["Focus", "Commercial management"],
+              ["Outcome", "Investor workflow readiness"]
             ]
           }
         ]
@@ -2095,6 +2160,7 @@ MAIN_HTML = """
 
     let tourMode = "live";
     let tourIndex = 0;
+    let autoGuideTimer = null;
 
     const modal = document.getElementById("tourModal");
     const modeTitle = document.getElementById("tourModeTitle");
@@ -2106,6 +2172,7 @@ MAIN_HTML = """
     const nextBtn = document.getElementById("tourNextBtn");
 
     window.startGuidedTour = function(mode){
+      clearAutoGuide();
       tourMode = mode;
       tourIndex = 0;
       modal.classList.add("active");
@@ -2115,6 +2182,7 @@ MAIN_HTML = """
     window.closeGuidedTour = function(){
       modal.classList.remove("active");
       clearHighlights();
+      clearAutoGuide();
     };
 
     window.nextTourStep = function(){
@@ -2133,6 +2201,31 @@ MAIN_HTML = """
         renderTour();
       }
     };
+
+    window.autoJourney = function(mode){
+      clearAutoGuide();
+      startGuidedTour(mode);
+      autoGuideTimer = setInterval(function(){
+        const steps = tourData[tourMode].steps;
+        if (!modal.classList.contains("active")){
+          clearAutoGuide();
+          return;
+        }
+        if (tourIndex < steps.length - 1){
+          tourIndex += 1;
+          renderTour();
+        } else {
+          clearAutoGuide();
+        }
+      }, 3200);
+    };
+
+    function clearAutoGuide(){
+      if (autoGuideTimer){
+        clearInterval(autoGuideTimer);
+        autoGuideTimer = null;
+      }
+    }
 
     function clearHighlights(){
       document.querySelectorAll(".tour-highlight").forEach(el => el.classList.remove("tour-highlight"));
