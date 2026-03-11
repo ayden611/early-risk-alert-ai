@@ -147,13 +147,13 @@ MAIN_HTML = f"""
         <div class="brand-sub">Hospitals · Clinics · Investors · Patients</div>
       </div>
       <div class="nav-links">
-        <a href="#overview">Overview</a>
-        <a href="#metrics">Metrics</a>
-        <a href="#dashboard">Live Dashboard</a>
-        <a href="#credibility">Credibility</a>
-        <a href="#demo">Demo</a>
-        <a href="/investors">Investor View</a>
-        <a class="btn" href="/deck">Download Pitch Deck</a>
+        <a <div class="nav-links">
+  <a href="https://early-risk-alert-ai-1.onrender.com/investors">Investor View</a>
+  <a href="https://early-risk-alert-ai-1.onrender.com/hospital-demo">Hospital Demo</a>
+  <a href="https://early-risk-alert-ai-1.onrender.com/hospital-intake">Hospital Intake</a>
+  <a href="https://early-risk-alert-ai-1.onrender.com/command-center">Command Center</a>
+  <a class="btn primary" href="/deck">Download Pitch Deck</a>
+</div>
       </div>
     </div>
   </div>
