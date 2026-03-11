@@ -1,24 +1,22 @@
 from flask import Blueprint, render_template_string
+import era
 
 web_bp = Blueprint("web", __name__)
 
-# These HTML strings must already exist in your project.
-# MAIN_HTML should be your full working homepage/platform page.
-# INVESTOR_HTML should be your investor page HTML.
-# If you already have HOSPITAL_HTML or COMMAND_CENTER_HTML, use them below.
-# If not, the routes safely fall back to MAIN_HTML so nothing breaks.
+MAIN_HTML = getattr(era, "MAIN_HTML", """
+<!doctype html>
+<html>
+<head><title>Early Risk Alert AI</title></head>
+<body style="font-family:Arial;padding:40px;background:#07101c;color:white;">
+  <h1>Early Risk Alert AI</h1>
+  <p>Main page is loading, but MAIN_HTML was not found.</p>
+</body>
+</html>
+""")
 
-from era.__init__ import MAIN_HTML, INVESTOR_HTML
-
-try:
-    from era.__init__ import HOSPITAL_HTML
-except Exception:
-    HOSPITAL_HTML = MAIN_HTML
-
-try:
-    from era.__init__ import COMMAND_CENTER_HTML
-except Exception:
-    COMMAND_CENTER_HTML = MAIN_HTML
+INVESTOR_HTML = getattr(era, "INVESTOR_HTML", MAIN_HTML)
+HOSPITAL_HTML = getattr(era, "HOSPITAL_HTML", MAIN_HTML)
+COMMAND_CENTER_HTML = getattr(era, "COMMAND_CENTER_HTML", MAIN_HTML)
 
 
 @web_bp.get("/")
@@ -29,16 +27,6 @@ def home():
 @web_bp.get("/overview")
 def overview():
     return render_template_string(MAIN_HTML)
-
-
-@web_bp.get("/dashboard")
-def dashboard():
-    return render_template_string(COMMAND_CENTER_HTML)
-
-
-@web_bp.get("/command-center")
-def command_center():
-    return render_template_string(COMMAND_CENTER_HTML)
 
 
 @web_bp.get("/simulator")
@@ -76,9 +64,14 @@ def hospital_intake():
     return render_template_string(HOSPITAL_HTML)
 
 
-@web_bp.get("/demo")
-def demo():
-    return render_template_string(MAIN_HTML)
+@web_bp.get("/dashboard")
+def dashboard():
+    return render_template_string(COMMAND_CENTER_HTML)
+
+
+@web_bp.get("/command-center")
+def command_center():
+    return render_template_string(COMMAND_CENTER_HTML)
 
 
 @web_bp.get("/admin")
@@ -93,6 +86,11 @@ def admin_review():
 
 @web_bp.get("/login")
 def login():
+    return render_template_string(MAIN_HTML)
+
+
+@web_bp.get("/demo")
+def demo():
     return render_template_string(MAIN_HTML)
 
 
