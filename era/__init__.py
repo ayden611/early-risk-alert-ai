@@ -1280,28 +1280,21 @@ MAIN_HTML = """
     refreshDashboard();
     setInterval(refreshDashboard, 5000);
   </script>
- <section id="cinematic-video" class="cv-shell">
+ <section id="demo-center" style="max-width:1360px;margin:34px auto 0;padding:0 16px 48px;">
   <style>
-    .cv-shell{
-      max-width:1400px;
-      margin:34px auto 80px;
-      padding:0 20px;
-      position:relative;
-    }
-
-    .cv-panel{
+    .demo-wrap{
       position:relative;
       overflow:hidden;
-      border-radius:30px;
       border:1px solid rgba(255,255,255,.08);
+      border-radius:32px;
       background:
         radial-gradient(circle at 15% 20%, rgba(91,212,255,.10), transparent 24%),
         radial-gradient(circle at 85% 20%, rgba(122,162,255,.10), transparent 24%),
         linear-gradient(180deg, rgba(18,28,48,.96), rgba(8,14,26,.98));
-      box-shadow:0 30px 90px rgba(0,0,0,.42);
+      box-shadow:0 28px 90px rgba(0,0,0,.36);
     }
 
-    .cv-panel::before{
+    .demo-wrap::before{
       content:"";
       position:absolute;
       inset:0;
@@ -1313,13 +1306,13 @@ MAIN_HTML = """
       pointer-events:none;
     }
 
-    .cv-top{
+    .demo-top{
       position:relative;
       z-index:2;
       padding:30px 30px 14px;
     }
 
-    .cv-kicker{
+    .demo-kicker{
       font-size:11px;
       font-weight:900;
       letter-spacing:.16em;
@@ -1328,25 +1321,25 @@ MAIN_HTML = """
       margin-bottom:10px;
     }
 
-    .cv-title{
+    .demo-title{
       margin:0;
       font-size:clamp(34px,5vw,62px);
       line-height:.95;
       letter-spacing:-.05em;
       font-weight:1000;
       color:#eef4ff;
-      max-width:960px;
+      max-width:980px;
     }
 
-    .cv-sub{
+    .demo-sub{
       margin:14px 0 0;
-      max-width:900px;
+      max-width:920px;
       color:#afc3df;
       font-size:18px;
       line-height:1.66;
     }
 
-    .cv-grid{
+    .demo-grid{
       position:relative;
       z-index:2;
       display:grid;
@@ -1356,7 +1349,7 @@ MAIN_HTML = """
       align-items:start;
     }
 
-    .cv-player{
+    .demo-player{
       border-radius:28px;
       overflow:hidden;
       border:1px solid rgba(255,255,255,.08);
@@ -1366,12 +1359,12 @@ MAIN_HTML = """
       box-shadow:0 18px 52px rgba(0,0,0,.30);
     }
 
-    .cv-stage{
+    .demo-thumb{
       position:relative;
       aspect-ratio:16 / 9;
       min-height:320px;
       background:
-        linear-gradient(180deg, rgba(0,0,0,.14), rgba(0,0,0,.42)),
+        linear-gradient(180deg, rgba(0,0,0,.12), rgba(0,0,0,.42)),
         url('/static/images/ai-command-center.jpg') center/cover no-repeat;
       display:flex;
       align-items:flex-end;
@@ -1379,47 +1372,32 @@ MAIN_HTML = """
       overflow:hidden;
     }
 
-    .cv-stage::before{
+    .demo-thumb::before{
       content:"";
       position:absolute;
       inset:auto -20% -26% -20%;
       height:220px;
       background:radial-gradient(circle at center, rgba(91,212,255,.16), transparent 62%);
       filter:blur(18px);
-      animation:cvPulse 6s ease-in-out infinite;
       pointer-events:none;
     }
 
-    .cv-stage::after{
+    .demo-thumb::after{
       content:"";
       position:absolute;
       inset:0;
       background:linear-gradient(110deg, transparent 35%, rgba(255,255,255,.08) 50%, transparent 65%);
       transform:translateX(-70%);
-      animation:cvSweep 7s linear infinite;
+      animation:demoSweep 7s linear infinite;
       pointer-events:none;
     }
 
-    @keyframes cvPulse{
-      0%,100%{transform:scale(1);opacity:.45}
-      50%{transform:scale(1.05);opacity:.9}
-    }
-
-    @keyframes cvSweep{
+    @keyframes demoSweep{
       0%{transform:translateX(-70%)}
       100%{transform:translateX(70%)}
     }
 
-    .cv-overlay{
-      position:absolute;
-      inset:0;
-      background:
-        radial-gradient(circle at 50% 16%, rgba(91,212,255,.18), transparent 24%),
-        linear-gradient(180deg, rgba(5,10,18,.08), rgba(5,10,18,.52));
-      pointer-events:none;
-    }
-
-    .cv-poster-badge{
+    .demo-badge{
       position:absolute;
       top:18px;
       left:18px;
@@ -1436,22 +1414,7 @@ MAIN_HTML = """
       backdrop-filter:blur(12px);
     }
 
-    .cv-duration{
-      position:absolute;
-      top:18px;
-      right:18px;
-      z-index:3;
-      padding:9px 13px;
-      border-radius:999px;
-      background:rgba(7,16,28,.58);
-      border:1px solid rgba(255,255,255,.10);
-      color:#eaf3ff;
-      font-size:12px;
-      font-weight:900;
-      backdrop-filter:blur(12px);
-    }
-
-    .cv-play{
+    .demo-play{
       position:absolute;
       inset:0;
       display:flex;
@@ -1460,12 +1423,12 @@ MAIN_HTML = """
       z-index:3;
     }
 
-    .cv-play-btn{
-      width:92px;
-      height:92px;
+    .demo-play-btn{
+      width:96px;
+      height:96px;
       border-radius:50%;
       border:1px solid rgba(255,255,255,.18);
-      background:rgba(7,16,28,.56);
+      background:rgba(7,16,28,.58);
       backdrop-filter:blur(12px);
       box-shadow:0 20px 50px rgba(0,0,0,.32), 0 0 34px rgba(91,212,255,.18);
       display:flex;
@@ -1474,36 +1437,37 @@ MAIN_HTML = """
       cursor:pointer;
       transition:transform .22s ease, box-shadow .22s ease, border-color .22s ease;
       position:relative;
+      text-decoration:none;
     }
 
-    .cv-play-btn:hover{
+    .demo-play-btn:hover{
       transform:scale(1.05);
       border-color:rgba(91,212,255,.38);
       box-shadow:0 24px 60px rgba(0,0,0,.36), 0 0 40px rgba(91,212,255,.24);
     }
 
-    .cv-play-btn::before{
+    .demo-play-btn::before{
       content:"";
       position:absolute;
       inset:-14px;
       border-radius:50%;
       border:1px solid rgba(91,212,255,.20);
-      animation:cvRing 2.8s ease-out infinite;
+      animation:demoRing 2.8s ease-out infinite;
     }
 
-    @keyframes cvRing{
+    @keyframes demoRing{
       0%{transform:scale(.7);opacity:1}
       100%{transform:scale(1.35);opacity:0}
     }
 
-    .cv-play-btn svg{
+    .demo-play-btn svg{
       width:34px;
       height:34px;
       margin-left:5px;
       fill:#eef4ff;
     }
 
-    .cv-caption{
+    .demo-caption{
       position:relative;
       z-index:2;
       width:100%;
@@ -1514,7 +1478,7 @@ MAIN_HTML = """
       flex-wrap:wrap;
     }
 
-    .cv-caption-text h3{
+    .demo-caption-text h3{
       margin:0 0 8px;
       font-size:30px;
       line-height:1;
@@ -1523,7 +1487,7 @@ MAIN_HTML = """
       color:#eef4ff;
     }
 
-    .cv-caption-text p{
+    .demo-caption-text p{
       margin:0;
       color:#d4e2f3;
       font-size:15px;
@@ -1531,130 +1495,30 @@ MAIN_HTML = """
       max-width:720px;
     }
 
-    .cv-chips{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-      margin-top:14px;
-    }
-
-    .cv-chip{
-      padding:8px 11px;
-      border-radius:999px;
-      background:rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.07);
-      color:#e6f0ff;
-      font-size:12px;
-      font-weight:800;
-    }
-
-    .cv-chapters{
+    .demo-actions{
       padding:18px;
-      display:grid;
-      grid-template-columns:repeat(3,1fr);
-      gap:12px;
-      border-top:1px solid rgba(255,255,255,.06);
-      background:rgba(255,255,255,.02);
-    }
-
-    .cv-chapter{
-      border-radius:18px;
-      border:1px solid rgba(255,255,255,.08);
-      background:rgba(255,255,255,.035);
-      padding:14px;
-      cursor:pointer;
-      transition:transform .18s ease, border-color .18s ease, box-shadow .18s ease;
-    }
-
-    .cv-chapter:hover{
-      transform:translateY(-2px);
-      border-color:rgba(91,212,255,.24);
-      box-shadow:0 10px 26px rgba(0,0,0,.18);
-    }
-
-    .cv-chapter .t{
-      font-size:11px;
-      font-weight:900;
-      letter-spacing:.14em;
-      text-transform:uppercase;
-      color:#8fd7ff;
-      margin-bottom:8px;
-    }
-
-    .cv-chapter .h{
-      font-size:20px;
-      line-height:1.05;
-      font-weight:1000;
-      color:#eef4ff;
-      letter-spacing:-.03em;
-    }
-
-    .cv-chapter .d{
-      margin-top:8px;
-      color:#bfd2ec;
-      font-size:13px;
-      line-height:1.55;
-    }
-
-    .cv-side{
-      display:grid;
-      gap:14px;
-    }
-
-    .cv-card{
-      border-radius:24px;
-      border:1px solid rgba(255,255,255,.08);
-      background:
-        linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.018)),
-        linear-gradient(180deg, rgba(12,22,38,.76), rgba(9,16,30,.88));
-      box-shadow:0 16px 42px rgba(0,0,0,.24);
-      padding:20px;
-      position:relative;
-      overflow:hidden;
-    }
-
-    .cv-card::before{
-      content:"";
-      position:absolute;
-      inset:auto -10% -30% -10%;
-      height:140px;
-      background:radial-gradient(circle at center, rgba(91,212,255,.12), transparent 62%);
-      filter:blur(18px);
-      pointer-events:none;
-    }
-
-    .cv-label{
-      font-size:11px;
-      font-weight:900;
-      letter-spacing:.14em;
-      text-transform:uppercase;
-      color:#8fd7ff;
-    }
-
-    .cv-card h4{
-      margin:10px 0 8px;
-      font-size:28px;
-      line-height:1;
-      font-weight:1000;
-      letter-spacing:-.03em;
-      color:#eef4ff;
-    }
-
-    .cv-card p{
-      margin:0;
-      color:#c7d8ef;
-      font-size:15px;
-      line-height:1.64;
-    }
-
-    .cv-actions{
       display:flex;
       gap:10px;
       flex-wrap:wrap;
-      margin-top:16px;
+      justify-content:space-between;
+      align-items:center;
+      border-top:1px solid rgba(255,255,255,.06);
     }
 
-    .cv-btn{
+    .demo-note{
+      color:#bdd0eb;
+      font-size:14px;
+      line-height:1.55;
+      max-width:540px;
+    }
+
+    .demo-btns{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .demo-btn{
       display:inline-flex;
       align-items:center;
       justify-content:center;
@@ -1671,19 +1535,58 @@ MAIN_HTML = """
       transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
     }
 
-    .cv-btn:hover{
+    .demo-btn:hover{
       transform:translateY(-2px);
       border-color:rgba(91,212,255,.28);
     }
 
-    .cv-btn.primary{
+    .demo-btn.primary{
       background:linear-gradient(135deg,#7aa2ff,#5bd4ff);
       color:#07101c;
       border-color:transparent;
       box-shadow:0 12px 28px rgba(91,212,255,.22);
     }
 
-    .cv-meta{
+    .demo-side{
+      display:grid;
+      gap:14px;
+    }
+
+    .demo-card{
+      border-radius:24px;
+      border:1px solid rgba(255,255,255,.08);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.018)),
+        linear-gradient(180deg, rgba(12,22,38,.76), rgba(9,16,30,.88));
+      box-shadow:0 16px 42px rgba(0,0,0,.24);
+      padding:20px;
+    }
+
+    .demo-label{
+      font-size:11px;
+      font-weight:900;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+      color:#8fd7ff;
+    }
+
+    .demo-card h4{
+      margin:10px 0 8px;
+      font-size:28px;
+      line-height:1;
+      font-weight:1000;
+      letter-spacing:-.03em;
+      color:#eef4ff;
+    }
+
+    .demo-card p{
+      margin:0;
+      color:#c7d8ef;
+      font-size:15px;
+      line-height:1.64;
+    }
+
+    .demo-meta{
       display:grid;
       grid-template-columns:repeat(3,1fr);
       gap:14px;
@@ -1692,14 +1595,14 @@ MAIN_HTML = """
       z-index:2;
     }
 
-    .cv-mini{
+    .demo-mini{
       border-radius:22px;
       border:1px solid rgba(255,255,255,.07);
       background:rgba(255,255,255,.03);
       padding:18px;
     }
 
-    .cv-mini .k{
+    .demo-mini .k{
       font-size:11px;
       font-weight:900;
       letter-spacing:.14em;
@@ -1707,7 +1610,7 @@ MAIN_HTML = """
       color:#8fd7ff;
     }
 
-    .cv-mini .v{
+    .demo-mini .v{
       display:block;
       margin-top:10px;
       font-size:22px;
@@ -1717,284 +1620,116 @@ MAIN_HTML = """
       letter-spacing:-.03em;
     }
 
-    .cv-mini p{
+    .demo-mini p{
       margin:10px 0 0;
       color:#c7d8ef;
       font-size:14px;
       line-height:1.6;
     }
 
-    .cv-modal{
-      position:fixed;
-      inset:0;
-      background:rgba(3,8,16,.82);
-      backdrop-filter:blur(10px);
-      display:none;
-      align-items:center;
-      justify-content:center;
-      z-index:99999;
-      padding:18px;
-    }
-
-    .cv-modal.active{ display:flex; }
-
-    .cv-modal-panel{
-      width:min(1200px,100%);
-      border-radius:28px;
-      border:1px solid rgba(255,255,255,.08);
-      background:linear-gradient(180deg, rgba(16,26,45,.98), rgba(9,16,30,.99));
-      box-shadow:0 28px 90px rgba(0,0,0,.46);
-      overflow:hidden;
-      animation:cvZoom .22s ease;
-    }
-
-    @keyframes cvZoom{
-      from{transform:scale(.97);opacity:0}
-      to{transform:scale(1);opacity:1}
-    }
-
-    .cv-modal-head{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      padding:18px 18px 14px;
-      border-bottom:1px solid rgba(255,255,255,.06);
-    }
-
-    .cv-modal-head h3{
-      margin:0;
-      font-size:24px;
-      line-height:1;
-      font-weight:1000;
-      color:#eef4ff;
-    }
-
-    .cv-close{
-      width:42px;
-      height:42px;
-      border-radius:12px;
-      border:1px solid rgba(255,255,255,.10);
-      background:rgba(255,255,255,.04);
-      color:#eef4ff;
-      font-size:20px;
-      font-weight:900;
-      cursor:pointer;
-    }
-
-    .cv-embed-wrap{
-      position:relative;
-      width:100%;
-      padding-top:56.25%;
-      background:#08111f;
-    }
-
-    .cv-embed-wrap iframe{
-      position:absolute;
-      inset:0;
-      width:100%;
-      height:100%;
-      border:0;
-    }
-
     @media (max-width:1100px){
-      .cv-grid{grid-template-columns:1fr}
-      .cv-meta{grid-template-columns:1fr}
-      .cv-chapters{grid-template-columns:1fr}
+      .demo-grid{grid-template-columns:1fr}
+      .demo-meta{grid-template-columns:1fr}
     }
 
     @media (max-width:760px){
-      .cv-top,.cv-grid,.cv-meta{padding-left:16px;padding-right:16px}
-      .cv-top{padding-top:20px}
-      .cv-grid{padding-bottom:18px}
-      .cv-meta{padding-bottom:18px}
-      .cv-actions{flex-direction:column}
-      .cv-actions .cv-btn{width:100%}
-      .cv-stage{min-height:260px;padding:18px}
-      .cv-caption-text h3{font-size:24px}
-      .cv-title{font-size:clamp(30px,9vw,46px)}
-      .cv-chapters{padding:16px}
+      .demo-top,.demo-grid,.demo-meta{padding-left:16px;padding-right:16px}
+      .demo-top{padding-top:20px}
+      .demo-grid{padding-bottom:18px}
+      .demo-meta{padding-bottom:18px}
+      .demo-actions{flex-direction:column;align-items:stretch}
+      .demo-btns{flex-direction:column}
+      .demo-btn{width:100%}
+      .demo-thumb{min-height:260px;padding:18px}
+      .demo-caption-text h3{font-size:24px}
+      .demo-title{font-size:clamp(30px,9vw,46px)}
     }
   </style>
 
-  <div class="cv-panel">
-    <div class="cv-top">
-      <div class="cv-kicker">Cinematic Master Demo</div>
-      <h2 class="cv-title">See the full platform story in one premium launch-style video experience.</h2>
-      <p class="cv-sub">
-        Your master recording now sits inside the platform as a polished demo center for hospitals, investors,
-        and strategic partners. Open the cinematic player, present the full story, and route viewers into the right next step.
+  <div class="demo-wrap">
+    <div class="demo-top">
+      <div class="demo-kicker">Platform Demo</div>
+      <h2 class="demo-title">See Early Risk Alert AI in action.</h2>
+      <p class="demo-sub">
+        A guided walkthrough of the hospital journey, live platform experience, and investor-facing commercial story.
       </p>
     </div>
 
-    <div class="cv-grid">
-      <div class="cv-player">
-        <div class="cv-stage">
-          <div class="cv-overlay"></div>
-          <div class="cv-poster-badge">Master Demo Center</div>
-          <div class="cv-duration">01:01</div>
+    <div class="demo-grid">
+      <div class="demo-player">
+        <div class="demo-thumb">
+          <div class="demo-badge">Watch Demo</div>
 
-          <div class="cv-play">
-            <button class="cv-play-btn" type="button" onclick="openCinematicDemo(0)">
+          <div class="demo-play">
+            <a class="demo-play-btn" href="https://youtu.be/z4SbeYwwm7k" target="_blank" rel="noopener noreferrer" aria-label="Watch demo video">
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M8 5v14l11-7z"></path>
               </svg>
-            </button>
+            </a>
           </div>
 
-          <div class="cv-caption">
-            <div class="cv-caption-text">
+          <div class="demo-caption">
+            <div class="demo-caption-text">
               <h3>Early Risk Alert AI Master Demo</h3>
               <p>
-                A single cinematic walkthrough covering the hospital journey, live command-center platform,
-                and investor commercial pathway in one polished presentation.
+                A single premium walkthrough covering hospitals, the live command center, and the investor story.
               </p>
-              <div class="cv-chips">
-                <span class="cv-chip">Hospital story</span>
-                <span class="cv-chip">Live platform</span>
-                <span class="cv-chip">Investor path</span>
-                <span class="cv-chip">Master recording</span>
-              </div>
             </div>
           </div>
         </div>
 
-        <div class="cv-chapters">
-          <div class="cv-chapter" onclick="openCinematicDemo(0)">
-            <div class="t">Chapter 01</div>
-            <div class="h">Hospital Demo</div>
-            <div class="d">Start with the hospital buyer story, workflow review, and demo capture flow.</div>
+        <div class="demo-actions">
+          <div class="demo-note">
+            Use this thumbnail section as your clean public-facing demo entry. Clicking play opens the full video in YouTube.
           </div>
-          <div class="cv-chapter" onclick="openCinematicDemo(20)">
-            <div class="t">Chapter 02</div>
-            <div class="h">Live Platform</div>
-            <div class="d">Jump into the command center, alerts, patient focus, and AI scoring walkthrough.</div>
-          </div>
-          <div class="cv-chapter" onclick="openCinematicDemo(42)">
-            <div class="t">Chapter 03</div>
-            <div class="h">Investor Story</div>
-            <div class="d">Open the investor commercial path with positioning, traction, and pitch flow.</div>
-          </div>
-        </div>
-
-        <div style="padding:18px;display:flex;gap:10px;flex-wrap:wrap;justify-content:space-between;align-items:center;border-top:1px solid rgba(255,255,255,.06);">
-          <div style="color:#bdd0eb;font-size:14px;line-height:1.55;max-width:520px;">
-            Use one master demo for meetings, investor outreach, hospital introductions, and product presentations without switching between separate recordings.
-          </div>
-          <div class="cv-actions">
-            <button class="cv-btn primary" type="button" onclick="openCinematicDemo(0)">Play Demo</button>
-            <button class="cv-btn" type="button" onclick="openCinematicDemo(20)">Play Platform Chapter</button>
-            <button class="cv-btn" type="button" onclick="openCinematicDemo(42)">Play Investor Chapter</button>
+          <div class="demo-btns">
+            <a class="demo-btn primary" href="https://youtu.be/z4SbeYwwm7k" target="_blank" rel="noopener noreferrer">Play Demo</a>
+            <a class="demo-btn" href="/hospital-demo">Hospital Demo</a>
+            <a class="demo-btn" href="/investors">Investor View</a>
           </div>
         </div>
       </div>
 
-      <div class="cv-side">
-        <div class="cv-card">
-          <div class="cv-label">Hospital Demo Flow</div>
-          <h4>Clinical Buyer Story</h4>
-          <p>
-            Present the hospital journey first: workflow value, command-center visibility, AI scoring, and real demo capture for operational stakeholders.
-          </p>
-          <div class="cv-actions">
-            <a class="cv-btn primary" href="/hospital-demo">Open Hospital Demo</a>
-          </div>
+      <div class="demo-side">
+        <div class="demo-card">
+          <div class="demo-label">Hospital Story</div>
+          <h4>Clinical Buyer Path</h4>
+          <p>Show workflows, command-center visibility, AI risk scoring, and operational value for hospitals and care teams.</p>
         </div>
 
-        <div class="cv-card">
-          <div class="cv-label">Live Platform Story</div>
-          <h4>Interactive Walkthrough</h4>
-          <p>
-            Show the product in motion through alerts, patient focus, simulator flow, AI confidence, recommended action, and system activity.
-          </p>
-          <div class="cv-actions">
-            <a class="cv-btn primary" href="#dashboard">Open Live Platform</a>
-          </div>
+        <div class="demo-card">
+          <div class="demo-label">Live Platform</div>
+          <h4>Product Walkthrough</h4>
+          <p>Present alerts, patient focus, confidence indicators, recommended action, and the live platform experience.</p>
         </div>
 
-        <div class="cv-card">
-          <div class="cv-label">Investor Commercial Story</div>
-          <h4>Premium Investor Path</h4>
-          <p>
-            Guide investors through platform positioning, founder credibility, pitch delivery, intake workflow, and commercial readiness.
-          </p>
-          <div class="cv-actions">
-            <a class="cv-btn primary" href="/investors">Open Investor View</a>
-          </div>
+        <div class="demo-card">
+          <div class="demo-label">Investor Story</div>
+          <h4>Commercial Path</h4>
+          <p>Guide investors through product readiness, founder credibility, market relevance, and enterprise SaaS positioning.</p>
         </div>
       </div>
     </div>
 
-    <div class="cv-meta">
-      <div class="cv-mini">
+    <div class="demo-meta">
+      <div class="demo-mini">
         <div class="k">Audience One</div>
         <span class="v">Hospitals</span>
-        <p>Use the video before demos to give operators and buyers immediate workflow context.</p>
+        <p>Share before meetings to give operators and buyers immediate workflow context.</p>
       </div>
-      <div class="cv-mini">
+      <div class="demo-mini">
         <div class="k">Audience Two</div>
         <span class="v">Investors</span>
-        <p>Use the same premium recording in pitch outreach and strategic conversations.</p>
+        <p>Use the same walkthrough in pitch outreach and strategic conversations.</p>
       </div>
-      <div class="cv-mini">
+      <div class="demo-mini">
         <div class="k">Audience Three</div>
         <span class="v">Partners</span>
-        <p>Share one polished enterprise story across RPM, advisors, and healthcare partnerships.</p>
+        <p>Present one polished enterprise story across RPM, advisors, and healthcare partnerships.</p>
       </div>
     </div>
   </div>
 </section>
-
-<div id="cinematicDemoModal" class="cv-modal">
-  <div class="cv-modal-panel">
-    <div class="cv-modal-head">
-      <h3>Early Risk Alert AI — Master Demo</h3>
-      <button class="cv-close" type="button" onclick="closeCinematicDemo()">×</button>
-    </div>
-    <div class="cv-embed-wrap">
-      <iframe
-        id="cinematicDemoFrame"
-        src=""
-        title="Early Risk Alert AI Master Demo"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-        allowfullscreen>
-      </iframe>
-    </div>
-  </div>
-</div>
-
-<script>
-  function openCinematicDemo(startAt){
-    const start = Number(startAt || 0);
-    const modal = document.getElementById('cinematicDemoModal');
-    const frame = document.getElementById('cinematicDemoFrame');
-    frame.src = 'https://www.youtube.com/embed/z4SbeYwwm7k?autoplay=1&start=' + start + '&rel=0&modestbranding=1';
-    modal.classList.add('active');
-  }
-
-  function closeCinematicDemo(){
-    const modal = document.getElementById('cinematicDemoModal');
-    const frame = document.getElementById('cinematicDemoFrame');
-    modal.classList.remove('active');
-    frame.src = '';
-  }
-
-  document.addEventListener('keydown', function(e){
-    if(e.key === 'Escape'){
-      const modal = document.getElementById('cinematicDemoModal');
-      if(modal && modal.classList.contains('active')){
-        closeCinematicDemo();
-      }
-    }
-  });
-
-  document.addEventListener('click', function(e){
-    const modal = document.getElementById('cinematicDemoModal');
-    if(e.target === modal){
-      closeCinematicDemo();
-    }
-  });
-</script>
 </body>
 </html>
 """
