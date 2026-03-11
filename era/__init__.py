@@ -1280,22 +1280,28 @@ MAIN_HTML = """
     refreshDashboard();
     setInterval(refreshDashboard, 5000);
   </script>
- <section id="demo-center" style="max-width:1360px;margin:34px auto 0;padding:0 16px 48px;">
+ <section id="cinematic-video" class="cv-shell">
   <style>
-    .dc-wrap{
+    .cv-shell{
+      max-width:1400px;
+      margin:34px auto 80px;
+      padding:0 20px;
       position:relative;
-      border:1px solid rgba(255,255,255,.08);
-      border-radius:32px;
+    }
+
+    .cv-panel{
+      position:relative;
       overflow:hidden;
+      border-radius:30px;
+      border:1px solid rgba(255,255,255,.08);
       background:
         radial-gradient(circle at 15% 20%, rgba(91,212,255,.10), transparent 24%),
         radial-gradient(circle at 85% 20%, rgba(122,162,255,.10), transparent 24%),
-        linear-gradient(180deg, rgba(13,21,38,.985), rgba(7,16,28,.995));
-      box-shadow:0 28px 90px rgba(0,0,0,.36);
-      isolation:isolate;
+        linear-gradient(180deg, rgba(18,28,48,.96), rgba(8,14,26,.98));
+      box-shadow:0 30px 90px rgba(0,0,0,.42);
     }
 
-    .dc-wrap::before{
+    .cv-panel::before{
       content:"";
       position:absolute;
       inset:0;
@@ -1303,17 +1309,17 @@ MAIN_HTML = """
         linear-gradient(rgba(122,162,255,.03) 1px, transparent 1px),
         linear-gradient(90deg, rgba(122,162,255,.03) 1px, transparent 1px);
       background-size:34px 34px;
-      opacity:.35;
+      opacity:.32;
       pointer-events:none;
     }
 
-    .dc-top{
+    .cv-top{
       position:relative;
       z-index:2;
-      padding:30px 30px 12px;
+      padding:30px 30px 14px;
     }
 
-    .dc-kicker{
+    .cv-kicker{
       font-size:11px;
       font-weight:900;
       letter-spacing:.16em;
@@ -1322,36 +1328,35 @@ MAIN_HTML = """
       margin-bottom:10px;
     }
 
-    .dc-title{
+    .cv-title{
       margin:0;
-      font-size:clamp(34px,5vw,64px);
-      line-height:.94;
+      font-size:clamp(34px,5vw,62px);
+      line-height:.95;
       letter-spacing:-.05em;
       font-weight:1000;
       color:#eef4ff;
-      max-width:1000px;
-      text-wrap:balance;
+      max-width:960px;
     }
 
-    .dc-sub{
-      max-width:950px;
+    .cv-sub{
       margin:14px 0 0;
-      color:#acc0de;
+      max-width:900px;
+      color:#afc3df;
       font-size:18px;
       line-height:1.66;
     }
 
-    .dc-shell{
+    .cv-grid{
       position:relative;
       z-index:2;
       display:grid;
-      grid-template-columns:1.2fr .8fr;
+      grid-template-columns:1.18fr .82fr;
       gap:18px;
-      padding:20px 30px 30px;
+      padding:18px 30px 30px;
       align-items:start;
     }
 
-    .dc-player{
+    .cv-player{
       border-radius:28px;
       overflow:hidden;
       border:1px solid rgba(255,255,255,.08);
@@ -1361,43 +1366,242 @@ MAIN_HTML = """
       box-shadow:0 18px 52px rgba(0,0,0,.30);
     }
 
-    .dc-video-wrap{
+    .cv-stage{
       position:relative;
-      width:100%;
-      padding-top:56.25%;
-      background:#08111f;
+      aspect-ratio:16 / 9;
+      min-height:320px;
+      background:
+        linear-gradient(180deg, rgba(0,0,0,.14), rgba(0,0,0,.42)),
+        url('/static/images/ai-command-center.jpg') center/cover no-repeat;
+      display:flex;
+      align-items:flex-end;
+      padding:26px;
+      overflow:hidden;
     }
 
-    .dc-video-wrap iframe{
+    .cv-stage::before{
+      content:"";
+      position:absolute;
+      inset:auto -20% -26% -20%;
+      height:220px;
+      background:radial-gradient(circle at center, rgba(91,212,255,.16), transparent 62%);
+      filter:blur(18px);
+      animation:cvPulse 6s ease-in-out infinite;
+      pointer-events:none;
+    }
+
+    .cv-stage::after{
+      content:"";
       position:absolute;
       inset:0;
-      width:100%;
-      height:100%;
-      border:0;
+      background:linear-gradient(110deg, transparent 35%, rgba(255,255,255,.08) 50%, transparent 65%);
+      transform:translateX(-70%);
+      animation:cvSweep 7s linear infinite;
+      pointer-events:none;
     }
 
-    .dc-player-foot{
-      padding:18px;
+    @keyframes cvPulse{
+      0%,100%{transform:scale(1);opacity:.45}
+      50%{transform:scale(1.05);opacity:.9}
+    }
+
+    @keyframes cvSweep{
+      0%{transform:translateX(-70%)}
+      100%{transform:translateX(70%)}
+    }
+
+    .cv-overlay{
+      position:absolute;
+      inset:0;
+      background:
+        radial-gradient(circle at 50% 16%, rgba(91,212,255,.18), transparent 24%),
+        linear-gradient(180deg, rgba(5,10,18,.08), rgba(5,10,18,.52));
+      pointer-events:none;
+    }
+
+    .cv-poster-badge{
+      position:absolute;
+      top:18px;
+      left:18px;
+      z-index:3;
+      padding:9px 13px;
+      border-radius:999px;
+      background:rgba(7,16,28,.58);
+      border:1px solid rgba(255,255,255,.10);
+      color:#eaf3ff;
+      font-size:11px;
+      font-weight:900;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+      backdrop-filter:blur(12px);
+    }
+
+    .cv-duration{
+      position:absolute;
+      top:18px;
+      right:18px;
+      z-index:3;
+      padding:9px 13px;
+      border-radius:999px;
+      background:rgba(7,16,28,.58);
+      border:1px solid rgba(255,255,255,.10);
+      color:#eaf3ff;
+      font-size:12px;
+      font-weight:900;
+      backdrop-filter:blur(12px);
+    }
+
+    .cv-play{
+      position:absolute;
+      inset:0;
       display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      justify-content:space-between;
       align-items:center;
+      justify-content:center;
+      z-index:3;
     }
 
-    .dc-note{
-      color:#bdd0eb;
-      font-size:14px;
+    .cv-play-btn{
+      width:92px;
+      height:92px;
+      border-radius:50%;
+      border:1px solid rgba(255,255,255,.18);
+      background:rgba(7,16,28,.56);
+      backdrop-filter:blur(12px);
+      box-shadow:0 20px 50px rgba(0,0,0,.32), 0 0 34px rgba(91,212,255,.18);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      transition:transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+      position:relative;
+    }
+
+    .cv-play-btn:hover{
+      transform:scale(1.05);
+      border-color:rgba(91,212,255,.38);
+      box-shadow:0 24px 60px rgba(0,0,0,.36), 0 0 40px rgba(91,212,255,.24);
+    }
+
+    .cv-play-btn::before{
+      content:"";
+      position:absolute;
+      inset:-14px;
+      border-radius:50%;
+      border:1px solid rgba(91,212,255,.20);
+      animation:cvRing 2.8s ease-out infinite;
+    }
+
+    @keyframes cvRing{
+      0%{transform:scale(.7);opacity:1}
+      100%{transform:scale(1.35);opacity:0}
+    }
+
+    .cv-play-btn svg{
+      width:34px;
+      height:34px;
+      margin-left:5px;
+      fill:#eef4ff;
+    }
+
+    .cv-caption{
+      position:relative;
+      z-index:2;
+      width:100%;
+      display:flex;
+      justify-content:space-between;
+      align-items:end;
+      gap:16px;
+      flex-wrap:wrap;
+    }
+
+    .cv-caption-text h3{
+      margin:0 0 8px;
+      font-size:30px;
+      line-height:1;
+      font-weight:1000;
+      letter-spacing:-.04em;
+      color:#eef4ff;
+    }
+
+    .cv-caption-text p{
+      margin:0;
+      color:#d4e2f3;
+      font-size:15px;
+      line-height:1.6;
+      max-width:720px;
+    }
+
+    .cv-chips{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top:14px;
+    }
+
+    .cv-chip{
+      padding:8px 11px;
+      border-radius:999px;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.07);
+      color:#e6f0ff;
+      font-size:12px;
+      font-weight:800;
+    }
+
+    .cv-chapters{
+      padding:18px;
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:12px;
+      border-top:1px solid rgba(255,255,255,.06);
+      background:rgba(255,255,255,.02);
+    }
+
+    .cv-chapter{
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.035);
+      padding:14px;
+      cursor:pointer;
+      transition:transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+    }
+
+    .cv-chapter:hover{
+      transform:translateY(-2px);
+      border-color:rgba(91,212,255,.24);
+      box-shadow:0 10px 26px rgba(0,0,0,.18);
+    }
+
+    .cv-chapter .t{
+      font-size:11px;
+      font-weight:900;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+      color:#8fd7ff;
+      margin-bottom:8px;
+    }
+
+    .cv-chapter .h{
+      font-size:20px;
+      line-height:1.05;
+      font-weight:1000;
+      color:#eef4ff;
+      letter-spacing:-.03em;
+    }
+
+    .cv-chapter .d{
+      margin-top:8px;
+      color:#bfd2ec;
+      font-size:13px;
       line-height:1.55;
-      max-width:520px;
     }
 
-    .dc-side{
+    .cv-side{
       display:grid;
       gap:14px;
     }
 
-    .dc-card{
+    .cv-card{
       border-radius:24px;
       border:1px solid rgba(255,255,255,.08);
       background:
@@ -1409,17 +1613,17 @@ MAIN_HTML = """
       overflow:hidden;
     }
 
-    .dc-card::before{
+    .cv-card::before{
       content:"";
       position:absolute;
       inset:auto -10% -30% -10%;
-      height:150px;
+      height:140px;
       background:radial-gradient(circle at center, rgba(91,212,255,.12), transparent 62%);
       filter:blur(18px);
       pointer-events:none;
     }
 
-    .dc-label{
+    .cv-label{
       font-size:11px;
       font-weight:900;
       letter-spacing:.14em;
@@ -1427,47 +1631,30 @@ MAIN_HTML = """
       color:#8fd7ff;
     }
 
-    .dc-card-title{
+    .cv-card h4{
+      margin:10px 0 8px;
       font-size:28px;
       line-height:1;
       font-weight:1000;
-      color:#eef4ff;
-      margin-top:10px;
       letter-spacing:-.03em;
+      color:#eef4ff;
     }
 
-    .dc-copy{
-      margin-top:10px;
+    .cv-card p{
+      margin:0;
       color:#c7d8ef;
       font-size:15px;
       line-height:1.64;
     }
 
-    .dc-tags{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-      margin-top:12px;
-    }
-
-    .dc-tag{
-      padding:7px 10px;
-      border-radius:999px;
-      background:rgba(255,255,255,.05);
-      border:1px solid rgba(255,255,255,.06);
-      color:#e3eefc;
-      font-size:12px;
-      font-weight:800;
-    }
-
-    .dc-actions{
+    .cv-actions{
       display:flex;
       gap:10px;
       flex-wrap:wrap;
       margin-top:16px;
     }
 
-    .dc-btn{
+    .cv-btn{
       display:inline-flex;
       align-items:center;
       justify-content:center;
@@ -1484,19 +1671,19 @@ MAIN_HTML = """
       transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
     }
 
-    .dc-btn:hover{
+    .cv-btn:hover{
       transform:translateY(-2px);
       border-color:rgba(91,212,255,.28);
     }
 
-    .dc-btn.primary{
+    .cv-btn.primary{
       background:linear-gradient(135deg,#7aa2ff,#5bd4ff);
       color:#07101c;
       border-color:transparent;
       box-shadow:0 12px 28px rgba(91,212,255,.22);
     }
 
-    .dc-grid{
+    .cv-meta{
       display:grid;
       grid-template-columns:repeat(3,1fr);
       gap:14px;
@@ -1505,466 +1692,309 @@ MAIN_HTML = """
       z-index:2;
     }
 
-    .dc-mini{
+    .cv-mini{
       border-radius:22px;
       border:1px solid rgba(255,255,255,.07);
       background:rgba(255,255,255,.03);
       padding:18px;
     }
 
-    .dc-mini h4{
-      margin:8px 0 8px;
+    .cv-mini .k{
+      font-size:11px;
+      font-weight:900;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+      color:#8fd7ff;
+    }
+
+    .cv-mini .v{
+      display:block;
+      margin-top:10px;
       font-size:22px;
       line-height:1.1;
       font-weight:1000;
-      letter-spacing:-.03em;
       color:#eef4ff;
+      letter-spacing:-.03em;
     }
 
-    .dc-mini p{
-      margin:0;
+    .cv-mini p{
+      margin:10px 0 0;
       color:#c7d8ef;
       font-size:14px;
       line-height:1.6;
     }
 
+    .cv-modal{
+      position:fixed;
+      inset:0;
+      background:rgba(3,8,16,.82);
+      backdrop-filter:blur(10px);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index:99999;
+      padding:18px;
+    }
+
+    .cv-modal.active{ display:flex; }
+
+    .cv-modal-panel{
+      width:min(1200px,100%);
+      border-radius:28px;
+      border:1px solid rgba(255,255,255,.08);
+      background:linear-gradient(180deg, rgba(16,26,45,.98), rgba(9,16,30,.99));
+      box-shadow:0 28px 90px rgba(0,0,0,.46);
+      overflow:hidden;
+      animation:cvZoom .22s ease;
+    }
+
+    @keyframes cvZoom{
+      from{transform:scale(.97);opacity:0}
+      to{transform:scale(1);opacity:1}
+    }
+
+    .cv-modal-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding:18px 18px 14px;
+      border-bottom:1px solid rgba(255,255,255,.06);
+    }
+
+    .cv-modal-head h3{
+      margin:0;
+      font-size:24px;
+      line-height:1;
+      font-weight:1000;
+      color:#eef4ff;
+    }
+
+    .cv-close{
+      width:42px;
+      height:42px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.04);
+      color:#eef4ff;
+      font-size:20px;
+      font-weight:900;
+      cursor:pointer;
+    }
+
+    .cv-embed-wrap{
+      position:relative;
+      width:100%;
+      padding-top:56.25%;
+      background:#08111f;
+    }
+
+    .cv-embed-wrap iframe{
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      border:0;
+    }
+
     @media (max-width:1100px){
-      .dc-shell{grid-template-columns:1fr}
-      .dc-grid{grid-template-columns:1fr}
+      .cv-grid{grid-template-columns:1fr}
+      .cv-meta{grid-template-columns:1fr}
+      .cv-chapters{grid-template-columns:1fr}
     }
 
     @media (max-width:760px){
-      .dc-top,.dc-shell,.dc-grid{padding-left:16px;padding-right:16px}
-      .dc-top{padding-top:20px}
-      .dc-shell{padding-bottom:16px}
-      .dc-grid{padding-bottom:18px}
-      .dc-actions{flex-direction:column}
-      .dc-actions .dc-btn{width:100%}
-      .dc-player-foot{flex-direction:column;align-items:stretch}
+      .cv-top,.cv-grid,.cv-meta{padding-left:16px;padding-right:16px}
+      .cv-top{padding-top:20px}
+      .cv-grid{padding-bottom:18px}
+      .cv-meta{padding-bottom:18px}
+      .cv-actions{flex-direction:column}
+      .cv-actions .cv-btn{width:100%}
+      .cv-stage{min-height:260px;padding:18px}
+      .cv-caption-text h3{font-size:24px}
+      .cv-title{font-size:clamp(30px,9vw,46px)}
+      .cv-chapters{padding:16px}
     }
   </style>
 
-  <div class="dc-wrap">
-    <div class="dc-top">
-      <div class="dc-kicker">Master Demo Center</div>
-      <h2 class="dc-title">Watch the full platform story in one cinematic product demo.</h2>
-      <p class="dc-sub">
-        This master recording combines the hospital journey, live platform walkthrough, and investor commercial story
-        into one polished demo experience for meetings, outreach, and presentations.
+  <div class="cv-panel">
+    <div class="cv-top">
+      <div class="cv-kicker">Cinematic Master Demo</div>
+      <h2 class="cv-title">See the full platform story in one premium launch-style video experience.</h2>
+      <p class="cv-sub">
+        Your master recording now sits inside the platform as a polished demo center for hospitals, investors,
+        and strategic partners. Open the cinematic player, present the full story, and route viewers into the right next step.
       </p>
     </div>
 
-    <div class="dc-shell">
-      <div class="dc-player">
-        <div class="dc-video-wrap">
-          <iframe
-            src="https://www.youtube.com/embed/z4SbeYwwm7k?rel=0&modestbranding=1"
-            title="Early Risk Alert AI Master Demo"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            allowfullscreen>
-          </iframe>
+    <div class="cv-grid">
+      <div class="cv-player">
+        <div class="cv-stage">
+          <div class="cv-overlay"></div>
+          <div class="cv-poster-badge">Master Demo Center</div>
+          <div class="cv-duration">01:01</div>
+
+          <div class="cv-play">
+            <button class="cv-play-btn" type="button" onclick="openCinematicDemo(0)">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M8 5v14l11-7z"></path>
+              </svg>
+            </button>
+          </div>
+
+          <div class="cv-caption">
+            <div class="cv-caption-text">
+              <h3>Early Risk Alert AI Master Demo</h3>
+              <p>
+                A single cinematic walkthrough covering the hospital journey, live command-center platform,
+                and investor commercial pathway in one polished presentation.
+              </p>
+              <div class="cv-chips">
+                <span class="cv-chip">Hospital story</span>
+                <span class="cv-chip">Live platform</span>
+                <span class="cv-chip">Investor path</span>
+                <span class="cv-chip">Master recording</span>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div class="dc-player-foot">
-          <div class="dc-note">
-            Use this single master demo to present the platform to hospital teams, investors, and strategic partners
-            without switching between separate videos.
+        <div class="cv-chapters">
+          <div class="cv-chapter" onclick="openCinematicDemo(0)">
+            <div class="t">Chapter 01</div>
+            <div class="h">Hospital Demo</div>
+            <div class="d">Start with the hospital buyer story, workflow review, and demo capture flow.</div>
           </div>
-          <div class="dc-actions">
-            <button class="dc-btn primary" type="button" onclick="document.getElementById('demo-center').scrollIntoView({behavior:'smooth',block:'start'})">Watch Demo</button>
-            <a class="dc-btn" href="/hospital-demo">Hospital Demo Flow</a>
-            <a class="dc-btn" href="/investors">Investor Flow</a>
+          <div class="cv-chapter" onclick="openCinematicDemo(20)">
+            <div class="t">Chapter 02</div>
+            <div class="h">Live Platform</div>
+            <div class="d">Jump into the command center, alerts, patient focus, and AI scoring walkthrough.</div>
+          </div>
+          <div class="cv-chapter" onclick="openCinematicDemo(42)">
+            <div class="t">Chapter 03</div>
+            <div class="h">Investor Story</div>
+            <div class="d">Open the investor commercial path with positioning, traction, and pitch flow.</div>
+          </div>
+        </div>
+
+        <div style="padding:18px;display:flex;gap:10px;flex-wrap:wrap;justify-content:space-between;align-items:center;border-top:1px solid rgba(255,255,255,.06);">
+          <div style="color:#bdd0eb;font-size:14px;line-height:1.55;max-width:520px;">
+            Use one master demo for meetings, investor outreach, hospital introductions, and product presentations without switching between separate recordings.
+          </div>
+          <div class="cv-actions">
+            <button class="cv-btn primary" type="button" onclick="openCinematicDemo(0)">Play Demo</button>
+            <button class="cv-btn" type="button" onclick="openCinematicDemo(20)">Play Platform Chapter</button>
+            <button class="cv-btn" type="button" onclick="openCinematicDemo(42)">Play Investor Chapter</button>
           </div>
         </div>
       </div>
 
-      <div class="dc-side">
-        <div class="dc-card">
-          <div class="dc-label">Left Journey</div>
-          <div class="dc-card-title">Hospital Story</div>
-          <div class="dc-copy">
-            Shows clinical workflow value, demo capture, command-center visibility, and how hospital buyers can move into operational review.
-          </div>
-          <div class="dc-tags">
-            <span class="dc-tag">Clinical buyers</span>
-            <span class="dc-tag">Workflow review</span>
-            <span class="dc-tag">Demo capture</span>
-          </div>
-          <div class="dc-actions">
-            <button class="dc-btn primary" type="button" onclick="startGuidedTour && startGuidedTour('hospital')">Launch Hospital Tour</button>
+      <div class="cv-side">
+        <div class="cv-card">
+          <div class="cv-label">Hospital Demo Flow</div>
+          <h4>Clinical Buyer Story</h4>
+          <p>
+            Present the hospital journey first: workflow value, command-center visibility, AI scoring, and real demo capture for operational stakeholders.
+          </p>
+          <div class="cv-actions">
+            <a class="cv-btn primary" href="/hospital-demo">Open Hospital Demo</a>
           </div>
         </div>
 
-        <div class="dc-card">
-          <div class="dc-label">Center Journey</div>
-          <div class="dc-card-title">Live Platform</div>
-          <div class="dc-copy">
-            Shows the interactive product story: metrics, alerts, patient focus, simulator flow, AI scoring, and system panels in motion.
-          </div>
-          <div class="dc-tags">
-            <span class="dc-tag">AI scoring</span>
-            <span class="dc-tag">Alerts</span>
-            <span class="dc-tag">Command center</span>
-          </div>
-          <div class="dc-actions">
-            <button class="dc-btn primary" type="button" onclick="startGuidedTour && startGuidedTour('live')">Launch Live Tour</button>
+        <div class="cv-card">
+          <div class="cv-label">Live Platform Story</div>
+          <h4>Interactive Walkthrough</h4>
+          <p>
+            Show the product in motion through alerts, patient focus, simulator flow, AI confidence, recommended action, and system activity.
+          </p>
+          <div class="cv-actions">
+            <a class="cv-btn primary" href="#dashboard">Open Live Platform</a>
           </div>
         </div>
 
-        <div class="dc-card">
-          <div class="dc-label">Right Journey</div>
-          <div class="dc-card-title">Investor Story</div>
-          <div class="dc-copy">
-            Shows positioning, traction framing, founder credibility, pitch presentation flow, and investor intake from one commercial experience.
-          </div>
-          <div class="dc-tags">
-            <span class="dc-tag">Commercial flow</span>
-            <span class="dc-tag">Pitch deck</span>
-            <span class="dc-tag">Investor intake</span>
-          </div>
-          <div class="dc-actions">
-            <button class="dc-btn primary" type="button" onclick="startGuidedTour && startGuidedTour('investor')">Launch Investor Tour</button>
+        <div class="cv-card">
+          <div class="cv-label">Investor Commercial Story</div>
+          <h4>Premium Investor Path</h4>
+          <p>
+            Guide investors through platform positioning, founder credibility, pitch delivery, intake workflow, and commercial readiness.
+          </p>
+          <div class="cv-actions">
+            <a class="cv-btn primary" href="/investors">Open Investor View</a>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="dc-grid">
-      <div class="dc-mini">
-        <div class="dc-label">Use Case One</div>
-        <h4>Hospitals</h4>
-        <p>Send one cinematic demo link before meetings so operators and buyers understand the workflow before the call begins.</p>
+    <div class="cv-meta">
+      <div class="cv-mini">
+        <div class="k">Audience One</div>
+        <span class="v">Hospitals</span>
+        <p>Use the video before demos to give operators and buyers immediate workflow context.</p>
       </div>
-
-      <div class="dc-mini">
-        <div class="dc-label">Use Case Two</div>
-        <h4>Investors</h4>
-        <p>Use the same premium master demo in pitch outreach so investors see product depth, commercial flow, and founder execution.</p>
+      <div class="cv-mini">
+        <div class="k">Audience Two</div>
+        <span class="v">Investors</span>
+        <p>Use the same premium recording in pitch outreach and strategic conversations.</p>
       </div>
-
-      <div class="dc-mini">
-        <div class="dc-label">Use Case Three</div>
-        <h4>Partnerships</h4>
-        <p>Share the demo with strategic partners, advisors, and RPM stakeholders to present the platform with one consistent enterprise story.</p>
+      <div class="cv-mini">
+        <div class="k">Audience Three</div>
+        <span class="v">Partners</span>
+        <p>Share one polished enterprise story across RPM, advisors, and healthcare partnerships.</p>
       </div>
     </div>
   </div>
 </section>
-</body>
-</html>
-"""
 
-INVESTOR_HTML = """
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <title>Investor Overview — Early Risk Alert AI</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <style>
-    :root{
-      --bg:#07101d;--panel:#101a2d;--line:rgba(255,255,255,.08);--text:#edf4ff;--muted:#bdd0ec;
-      --blue:#7aa2ff;--blue2:#5bd4ff;--green:#38d39f;--amber:#f7be68;--shadow:0 18px 50px rgba(0,0,0,.24)
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0;font-family:Inter,Arial,sans-serif;color:var(--text);
-      background:
-        radial-gradient(circle at top left, rgba(122,162,255,.14), transparent 24%),
-        radial-gradient(circle at 82% 12%, rgba(91,212,255,.10), transparent 22%),
-        linear-gradient(180deg, #07101d, #0b1324)
-    }
-    .wrap{max-width:1280px;margin:0 auto;padding:36px 18px 60px}
-    .hero{
-      position:relative;overflow:hidden;
-      background:
-        radial-gradient(circle at top left, rgba(122,162,255,.16), transparent 28%),
-        radial-gradient(circle at 82% 12%, rgba(91,212,255,.12), transparent 24%),
-        linear-gradient(180deg, rgba(16,26,45,.98), rgba(10,16,28,.98));
-      border:1px solid var(--line);border-radius:26px;padding:32px;box-shadow:var(--shadow)
-    }
-    .hero:before{
-      content:"";position:absolute;inset:0;
-      background:linear-gradient(rgba(122,162,255,.035) 1px, transparent 1px),linear-gradient(90deg, rgba(122,162,255,.035) 1px, transparent 1px);
-      background-size:34px 34px;opacity:.28;pointer-events:none
-    }
-    .grid{display:grid;grid-template-columns:1.05fr .95fr;gap:16px}
-    .card{position:relative;background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.07);border-radius:22px;padding:22px}
-    .kicker{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#bfd0ea;font-weight:900}
-    h1{font-size:clamp(40px,4vw,64px);line-height:.95;margin:10px 0 14px;letter-spacing:-.05em}
-    p{color:var(--muted);line-height:1.72}
-    .btn{display:inline-block;padding:13px 18px;border-radius:14px;background:linear-gradient(135deg,var(--blue),var(--blue2));color:#08111f;font-weight:900;text-decoration:none;margin-right:10px;margin-bottom:10px;box-shadow:0 10px 28px rgba(0,0,0,.18)}
-    .btn.secondary{background:#111b2f;color:#edf4ff;border:1px solid rgba(255,255,255,.08);box-shadow:none}
-    .mini-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:20px}
-    .mini{background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.06);border-radius:18px;padding:18px}
-    .k{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#9eb4d6;font-weight:900}
-    .v{font-size:28px;font-weight:1000;margin-top:10px}
-    .s{font-size:14px;color:#c4d6ef;margin-top:8px;line-height:1.55}
-    .list{display:grid;gap:10px;margin-top:14px}
-    .li{padding:12px 14px;border-radius:16px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.05);color:#dce8fb}
-    .founder{
-      margin-top:20px;border-top:1px solid rgba(255,255,255,.08);padding-top:18px;
-      display:grid;grid-template-columns:repeat(2,1fr);gap:12px
-    }
-    .contact-card{
-      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.022));
-      border:1px solid rgba(122,162,255,.12);border-radius:18px;padding:16px 18px
-    }
-    .contact-label{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#9eb4d6;font-weight:900}
-    .contact-value{margin-top:6px;font-size:18px;font-weight:900;color:#f3f8ff}
-    .deck-panel{
-      margin-top:18px;padding:18px;border-radius:18px;
-      background:linear-gradient(135deg, rgba(122,162,255,.14), rgba(91,212,255,.08));
-      border:1px solid rgba(91,212,255,.16)
-    }
-    .deck-panel h3{margin:0 0 8px;font-size:22px}
-    .deck-panel p{margin:0 0 14px}
-    @media (max-width:980px){.grid,.mini-grid,.founder{grid-template-columns:1fr}.wrap{padding:16px 10px 54px}.hero,.card{padding:16px}}
-  </style>
-</head>
-<body>
-  <div class="wrap">
-    <div class="hero">
-      <div class="grid">
-        <div class="card">
-          <div class="kicker">Investor view</div>
-          <h1>Healthcare AI platform with real clinical command-center presentation.</h1>
-          <p>
-            Early Risk Alert AI is a predictive healthcare intelligence platform built for hospitals, clinics,
-            command centers, investors, and modern remote monitoring operations.
-          </p>
-          <p>
-            The platform combines AI risk scoring, a live hospital-facing dashboard, hospital demo capture,
-            executive walkthrough requests, investor intake, downloadable pitch materials, and admin review architecture in one branded experience.
-          </p>
-          <p>
-            <a class="btn" href="/investor-intake">Investor Intake Form</a>
-            <a class="btn" href="/deck">Download Pitch Deck PDF</a>
-            <a class="btn secondary" href="/admin/review">Admin Review</a>
-          </p>
-
-          <div class="founder">
-            <div class="contact-card"><div class="contact-label">Founder</div><div class="contact-value">__FOUNDER_NAME__</div></div>
-            <div class="contact-card"><div class="contact-label">Role</div><div class="contact-value">__FOUNDER_ROLE__</div></div>
-            <div class="contact-card"><div class="contact-label">Email</div><div class="contact-value">__INFO_EMAIL__</div></div>
-            <div class="contact-card"><div class="contact-label">Phone</div><div class="contact-value">__BUSINESS_PHONE__</div></div>
-          </div>
-
-          <div class="deck-panel">
-            <h3>Investor materials ready</h3>
-            <p>Download the branded pitch deck directly from the platform, review hospital traction positioning, and capture investor follow-up in one workflow.</p>
-            <a class="btn" href="/deck">Download Branded Deck</a>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="k">Investor summary</div>
-          <div class="v">Enterprise Ready</div>
-          <div class="s">A hospital-facing clinical intelligence platform with executive review workflows, investor intake, and branded pitch delivery.</div>
-          <div class="list">
-            <div class="li">Predictive clinical intelligence for hospitals and care operations</div>
-            <div class="li">Command-center style dashboard with AI risk scoring and confidence indicators</div>
-            <div class="li">Executive walkthrough capture, hospital demo requests, and investor intake workflows</div>
-            <div class="li">Admin review and CSV export for a real operating pipeline</div>
-            <div class="li">Founder-led product with investor-facing commercial positioning</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="mini-grid">
-        <div class="mini"><div class="k">Traction Angle</div><div class="v">Product Live</div><div class="s">Core public platform, forms, admin review, and investor flow are operational now.</div></div>
-        <div class="mini"><div class="k">Market</div><div class="v">Hospitals / RPM</div><div class="s">Targets command centers, clinics, remote monitoring, and enterprise healthcare workflows.</div></div>
-        <div class="mini"><div class="k">Revenue Model</div><div class="v">Enterprise SaaS</div><div class="s">Structured for hospital deployments, command dashboards, and recurring software contracts.</div></div>
-      </div>
+<div id="cinematicDemoModal" class="cv-modal">
+  <div class="cv-modal-panel">
+    <div class="cv-modal-head">
+      <h3>Early Risk Alert AI — Master Demo</h3>
+      <button class="cv-close" type="button" onclick="closeCinematicDemo()">×</button>
+    </div>
+    <div class="cv-embed-wrap">
+      <iframe
+        id="cinematicDemoFrame"
+        src=""
+        title="Early Risk Alert AI Master Demo"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowfullscreen>
+      </iframe>
     </div>
   </div>
-</body>
-</html>
-"""
+</div>
 
-FORM_PAGE = """
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <title>__TITLE__</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <style>
-    :root{--bg:#08111f;--panel:#101a2d;--line:rgba(255,255,255,.08);--text:#edf4ff;--muted:#c6d7ef;--blue:#7aa2ff;--blue2:#5bd4ff;--green:#38d39f;--shadow:0 18px 50px rgba(0,0,0,.24)}
-    *{box-sizing:border-box}
-    body{margin:0;font-family:Inter,Arial,sans-serif;background:#08111f;color:var(--text)}
-    .form-shell{max-width:1120px;margin:0 auto;padding:36px 18px 54px}
-    .form-card{
-      background:radial-gradient(circle at top left, rgba(122,162,255,.10), transparent 24%),linear-gradient(180deg, rgba(16,26,45,.98), rgba(12,18,32,.98));
-      border:1px solid rgba(255,255,255,.08);border-radius:24px;padding:30px;box-shadow:var(--shadow)
-    }
-    .form-top{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;flex-wrap:wrap;margin-bottom:22px}
-    .form-title{font-size:clamp(38px,4vw,54px);font-weight:1000;line-height:.98;margin:0 0 10px;letter-spacing:-.045em}
-    .form-copy{color:#c6d7ef;line-height:1.7;margin:0;max-width:760px}
-    .form-badge{padding:10px 14px;border-radius:999px;background:rgba(56,211,159,.12);border:1px solid rgba(56,211,159,.22);color:#c8ffe5;font-weight:900;font-size:12px;letter-spacing:.1em;text-transform:uppercase}
-    .form{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
-    .full{grid-column:1/-1}
-    .field{display:flex;flex-direction:column;gap:8px}
-    .field label{font-size:12px;text-transform:uppercase;letter-spacing:.14em;color:#9eb4d6;font-weight:900}
-    .field input,.field select,.field textarea{
-      width:100%;background:#0d1728;border:1px solid rgba(255,255,255,.08);border-radius:16px;color:#edf4ff;padding:15px 15px;font:inherit;
-      transition:border-color .18s ease, box-shadow .18s ease, background .18s ease
-    }
-    .field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:rgba(122,162,255,.42);box-shadow:0 0 0 3px rgba(122,162,255,.10);background:#101b2f}
-    .field textarea{min-height:140px;resize:vertical}
-    .btn{display:inline-flex;align-items:center;justify-content:center;padding:14px 18px;border-radius:16px;background:linear-gradient(135deg,var(--blue),var(--blue2));color:#08111f;font-weight:1000;text-decoration:none;border:none;cursor:pointer}
-    @media (max-width:760px){.form{grid-template-columns:1fr}.form-shell{padding:14px 10px 48px}.form-card{padding:16px}.form-top{flex-direction:column}.form-title{font-size:36px}}
-  </style>
-</head>
-<body>
-  <div class="form-shell">
-    <div class="form-card">
-      <div class="form-top">
-        <div>
-          <h1 class="form-title">__HEADING__</h1>
-          <p class="form-copy">__COPY__</p>
-        </div>
-        <div class="form-badge">Enterprise Intake</div>
-      </div>
-      <form method="post" class="form">
-        __FIELDS__
-        <div class="field full"><button class="btn" type="submit">__BUTTON__</button></div>
-      </form>
-    </div>
-  </div>
-</body>
-</html>
-"""
+<script>
+  function openCinematicDemo(startAt){
+    const start = Number(startAt || 0);
+    const modal = document.getElementById('cinematicDemoModal');
+    const frame = document.getElementById('cinematicDemoFrame');
+    frame.src = 'https://www.youtube.com/embed/z4SbeYwwm7k?autoplay=1&start=' + start + '&rel=0&modestbranding=1';
+    modal.classList.add('active');
+  }
 
-THANK_YOU_PAGE = """
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <title>Thank You — Early Risk Alert AI</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <style>
-    :root{
-      --bg:#08111f;--text:#edf4ff;--muted:#c6d7ef;--blue:#7aa2ff;--blue2:#5bd4ff;--line:rgba(255,255,255,.08);
-      --green:#38d39f;--amber:#f7be68;--violet:#a88bff;--shadow:0 18px 50px rgba(0,0,0,.24)
-    }
-    *{box-sizing:border-box}
-    body{margin:0;font-family:Inter,Arial,sans-serif;background:#08111f;color:var(--text)}
-    .success-card{max-width:980px;margin:0 auto;padding:36px 18px 54px}
-    .success-box{
-      background:__BG__;
-      border:1px solid var(--line);border-radius:24px;padding:32px;box-shadow:var(--shadow)
-    }
-    .ok{
-      display:inline-flex;align-items:center;gap:10px;padding:10px 14px;border-radius:999px;background:__BADGE_BG__;
-      border:1px solid __BADGE_BORDER__;color:__BADGE_TEXT__;font-weight:900;font-size:12px;letter-spacing:.08em;text-transform:uppercase
-    }
-    h1{margin:12px 0 10px;font-size:clamp(38px,4vw,54px);letter-spacing:-.045em}
-    p{color:var(--muted);line-height:1.75}
-    .detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:18px}
-    .detail{background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.05);border-radius:16px;padding:14px}
-    .dk{font-size:11px;text-transform:uppercase;letter-spacing:.14em;color:#9eb4d6;font-weight:900}
-    .dv{margin-top:6px;color:#edf4ff;line-height:1.5}
-    .btn{display:inline-block;padding:13px 18px;border-radius:14px;background:linear-gradient(135deg,var(--blue),var(--blue2));color:#08111f;font-weight:900;text-decoration:none;margin-right:10px;margin-top:10px}
-    @media (max-width:760px){.detail-grid{grid-template-columns:1fr}.success-card{padding:14px 10px 48px}.success-box{padding:16px}}
-  </style>
-</head>
-<body>
-  <div class="success-card">
-    <div class="success-box">
-      <div class="ok">__TYPE_LABEL__ received</div>
-      <h1>Thank you</h1>
-      <p>__THANK_YOU_COPY__</p>
-      <div class="detail-grid">__DETAILS__</div>
-      <p><a class="btn" href="/">Return Home</a><a class="btn" href="/admin/review">Open Admin Review</a></p>
-    </div>
-  </div>
-</body>
-</html>
-"""
+  function closeCinematicDemo(){
+    const modal = document.getElementById('cinematicDemoModal');
+    const frame = document.getElementById('cinematicDemoFrame');
+    modal.classList.remove('active');
+    frame.src = '';
+  }
 
-ADMIN_HTML = """
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <title>Admin Review — Early Risk Alert AI</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <style>
-    :root{
-      --bg:#08111f;--panel:#101a2d;--line:rgba(255,255,255,.08);--text:#edf4ff;--muted:#bdd0ec;
-      --blue:#7aa2ff;--blue2:#5bd4ff;--green:#38d39f;--amber:#f7be68;--red:#ff5c72;--shadow:0 18px 50px rgba(0,0,0,.24)
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape'){
+      const modal = document.getElementById('cinematicDemoModal');
+      if(modal && modal.classList.contains('active')){
+        closeCinematicDemo();
+      }
     }
-    *{box-sizing:border-box}
-    body{margin:0;font-family:Inter,Arial,sans-serif;background:#08111f;color:var(--text)}
-    .wrap{max-width:1380px;margin:0 auto;padding:36px 18px 60px}
-    .card{
-      background:radial-gradient(circle at top right, rgba(91,212,255,.10), transparent 24%),linear-gradient(180deg, rgba(16,26,45,.98), rgba(12,18,32,.98));
-      border:1px solid var(--line);border-radius:24px;padding:30px;box-shadow:var(--shadow)
-    }
-    h1{font-size:clamp(40px,4vw,56px);line-height:.98;margin:0 0 14px;letter-spacing:-.045em}
-    h2{margin:0 0 10px;font-size:32px;letter-spacing:-.03em}
-    p{color:var(--muted);line-height:1.7}
-    .btn{display:inline-block;padding:13px 18px;border-radius:14px;background:linear-gradient(135deg,var(--blue),var(--blue2));color:#08111f;font-weight:900;text-decoration:none;margin-right:10px;margin-bottom:10px}
-    .admin-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:20px 0 24px}
-    .admin-kpi{
-      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02));
-      border:1px solid rgba(255,255,255,.06);border-radius:20px;padding:24px;min-height:154px;display:flex;flex-direction:column;justify-content:space-between
-    }
-    .admin-kpi .k{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#9eb4d6;font-weight:900}
-    .admin-kpi .v{font-size:44px;font-weight:1000;line-height:1;margin-top:14px}
-    .admin-kpi.hospital{box-shadow:0 0 0 1px rgba(91,212,255,.12)}
-    .admin-kpi.exec{box-shadow:0 0 0 1px rgba(247,190,104,.12)}
-    .admin-kpi.investor{box-shadow:0 0 0 1px rgba(56,211,159,.12)}
-    .admin-kpi .hint{font-size:13px;color:#c6d7ef;line-height:1.5}
-    .section{margin-top:34px}
-    .lead-row{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:14px}
-    .lead-type{flex:1 1 260px;background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.06);border-radius:20px;padding:22px;min-height:130px}
-    .lead-type h3{margin:0 0 8px;font-size:24px}
-    .lead-type p{margin:0;color:#c9daf0;line-height:1.65}
-    .table-wrap{overflow:auto;border:1px solid rgba(255,255,255,.06);border-radius:18px;background:rgba(255,255,255,.02)}
-    table{width:100%;border-collapse:collapse;font-size:14px;min-width:920px}
-    th,td{padding:14px 12px;border-bottom:1px solid rgba(255,255,255,.08);text-align:left;vertical-align:top}
-    th{color:#9eb4d6;text-transform:uppercase;font-size:12px;letter-spacing:.12em;background:rgba(255,255,255,.02);position:sticky;top:0}
-    tr:hover td{background:rgba(255,255,255,.02)}
-    .empty{padding:18px;color:#c9daf0}
-    .status-pill{
-      display:inline-flex;align-items:center;justify-content:center;min-width:108px;padding:9px 12px;border-radius:999px;font-size:12px;font-weight:1000;letter-spacing:.08em;text-transform:uppercase
-    }
-    .status-new{background:rgba(91,212,255,.16);border:1px solid rgba(91,212,255,.28);color:#d6f4ff}
-    .status-contacted{background:rgba(247,190,104,.16);border:1px solid rgba(247,190,104,.28);color:#ffe3b2}
-    .status-scheduled{background:rgba(56,211,159,.16);border:1px solid rgba(56,211,159,.28);color:#d3ffe8}
-    .action-row{display:flex;gap:8px;flex-wrap:wrap}
-    .mini-btn{
-      display:inline-flex;align-items:center;justify-content:center;padding:9px 12px;border-radius:12px;background:#111b2f;border:1px solid rgba(255,255,255,.08);color:#edf4ff;font-weight:900;text-decoration:none;font-size:12px
-    }
-    @media (max-width:980px){.admin-grid{grid-template-columns:1fr}.wrap{padding:14px 10px 48px}.card{padding:16px}}
-  </style>
-</head>
-<body>
-  <div class="wrap">
-    <div class="card">
-      <h1>Admin Review</h1>
-      <p>Review hospital demo requests, executive walkthrough requests, and investor intake submissions. Update lead status, export CSV, and manage follow-up pipeline from one page.</p>
-      <p><a class="btn" href="/admin/export.csv">Download CSV</a><a class="btn" href="/">Return Home</a></p>
+  });
 
-      <div class="admin-grid">
-        <div class="admin-kpi hospital"><div class="k">Hospital Demo Requests</div><div class="v">__HOSPITAL_COUNT__</div><div class="hint">Clinical buyer and operator pipeline</div></div>
-        <div class="admin-kpi exec"><div class="k">Executive Walkthrough Requests</div><div class="v">__EXEC_COUNT__</div><div class="hint">Leadership and pilot evaluation requests</div></div>
-        <div class="admin-kpi investor"><div class="k">Investor Intake Requests</div><div class="v">__INVESTOR_COUNT__</div><div class="hint">Commercial and investor follow-up flow</div></div>
-      </div>
-
-      <div class="lead-row">
-        <div class="lead-type"><h3>Hospital Leads</h3><p>Clinical buyers, hospital operators, RPM teams, and health systems.</p></div>
-        <div class="lead-type"><h3>Executive Leads</h3><p>Leadership-facing walkthrough requests for evaluations, pilots, and strategic review.</p></div>
-        <div class="lead-type"><h3>Investor Leads</h3><p>Investor pipeline capture with contact details, timing, and opportunity notes.</p></div>
-      </div>
-
-      <div class="section"><h2>Hospital Demo Requests</h2>__HOSPITAL_TABLE__</div>
-      <div class="section"><h2>Executive Walkthrough Requests</h2>__EXEC_TABLE__</div>
-      <div class="section"><h2>Investor Intake</h2>__INVESTOR_TABLE__</div>
-    </div>
-  </div>
+  document.addEventListener('click', function(e){
+    const modal = document.getElementById('cinematicDemoModal');
+    if(e.target === modal){
+      closeCinematicDemo();
+    }
+  });
+</script>
 </body>
 </html>
 """
