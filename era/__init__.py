@@ -857,12 +857,11 @@ MAIN_HTML = """
     </div>
 
     <div class="nav-links">
-      <a href="https://early-risk-alert-ai-1.onrender.com/#overview">Overview</a>
-      <a href="https://early-risk-alert-ai-1.onrender.com/dashboard">Clinical Command Center</a>
-      <a href="https://early-risk-alert-ai-1.onrender.com/#simulator">Simulator</a>
-      <a href="https://early-risk-alert-ai-1.onrender.com/investors">Investor View</a>
-      <a href="https://early-risk-alert-ai-1.onrender.com/hospital-demo">Hospital Demo</a>
-      <a class="btn primary" href="https://early-risk-alert-ai-1.onrender.com/deck">Download Pitch Deck</a>
+      <<a href="https://early-risk-alert-ai-1.onrender.com/investors">Investor View</a>
+<a href="https://early-risk-alert-ai-1.onrender.com/hospital-demo">Hospital Demo</a>
+<a href="https://early-risk-alert-ai-1.onrender.com/hospital-intake">Hospital Intake</a>
+<a href="https://early-risk-alert-ai-1.onrender.com/command-center">Command Center</a>
+<a href="https://early-risk-alert-ai-1.onrender.com/dashboard">Open Command Center</a>
     </div>
   </div>
 </div>
