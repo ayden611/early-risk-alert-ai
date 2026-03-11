@@ -802,6 +802,114 @@ MAIN_HTML = """
   </style>
 </head>
 <body>
+<script>
+  (function () {
+    var allowedHost = "early-risk-alert-ai-1.onrender.com";
+    if (window.location.hostname !== allowedHost) {
+      var target = "https://" + allowedHost + window.location.pathname + window.location.search + window.location.hash;
+      window.location.replace(target);
+    }
+  })();
+</script>
+
+<style>
+  :root{
+    --bg:#07101c;
+    --bg2:#0b1424;
+    --panel:#101a2d;
+    --panel2:#13203a;
+    --line:rgba(255,255,255,.08);
+    --line2:rgba(255,255,255,.05);
+    --text:#eef4ff;
+    --muted:#9fb4d6;
+    --blue:#7aa2ff;
+    --blue2:#5bd4ff;
+    --green:#38d39f;
+    --amber:#f4bd6a;
+    --red:#ff667d;
+    --violet:#a68cff;
+    --shadow:0 20px 60px rgba(0,0,0,.30);
+    --radius:24px;
+    --max:1360px;
+  }
+
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;
+    font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    color:var(--text);
+    background:
+      radial-gradient(circle at top left, rgba(122,162,255,.16), transparent 22%),
+      radial-gradient(circle at 82% 12%, rgba(91,212,255,.10), transparent 20%),
+      linear-gradient(180deg, var(--bg), var(--bg2));
+    overflow-x:hidden;
+  }
+</style>
+
+<!-- NAVIGATION -->
+<div class="nav">
+  <div class="nav-inner">
+    <div>
+      <div class="brand-kicker">AI-powered predictive clinical intelligence</div>
+      <div class="brand-title">Early Risk Alert AI</div>
+      <div class="brand-sub">Hospitals · Clinics · Investors · Patients</div>
+    </div>
+
+    <div class="nav-links">
+      <a href="https://early-risk-alert-ai-1.onrender.com/#overview">Overview</a>
+      <a href="https://early-risk-alert-ai-1.onrender.com/dashboard">Clinical Command Center</a>
+      <a href="https://early-risk-alert-ai-1.onrender.com/#simulator">Simulator</a>
+      <a href="https://early-risk-alert-ai-1.onrender.com/investors">Investor View</a>
+      <a href="https://early-risk-alert-ai-1.onrender.com/hospital-demo">Hospital Demo</a>
+      <a class="btn primary" href="https://early-risk-alert-ai-1.onrender.com/deck">Download Pitch Deck</a>
+    </div>
+  </div>
+</div>
+
+<!-- HERO SECTION -->
+<div class="shell">
+  <section class="hero" id="overview">
+    <div class="hero-inner">
+      <div class="hero-grid">
+
+        <div class="glass hero-copy">
+          <div class="hero-kicker">Single-domain production experience</div>
+          <h1>See the platform. Open the demo. Move hospitals and investors into the right path.</h1>
+          <p>
+            Early Risk Alert AI is a professional predictive clinical intelligence platform for hospitals,
+            care operations, and investors. This opening experience keeps everything on one clean production domain
+            and uses your brand image as the polished entry to the live platform story.
+          </p>
+
+          <div class="hero-actions">
+            <a class="btn primary" href="https://youtu.be/z4SbeYwwm7k" target="_blank">▶ Play Demo</a>
+            <a class="btn secondary" href="https://early-risk-alert-ai-1.onrender.com/hospital-demo">Open Hospital Demo</a>
+            <a class="btn secondary" href="https://early-risk-alert-ai-1.onrender.com/investors">Open Investor View</a>
+            <a class="btn secondary" href="https://early-risk-alert-ai-1.onrender.com/dashboard">Open Command Center</a>
+          </div>
+        </div>
+
+        <div class="glass demo-card" id="demo">
+          <div class="demo-stage">
+            <div class="demo-badge">Platform Demo</div>
+            <div class="demo-play">
+              <a class="demo-play-btn" href="https://youtu.be/z4SbeYwwm7k" target="_blank">
+                ▶
+              </a>
+            </div>
+            <div class="demo-caption">
+              <h3>Early Risk Alert AI Master Demo</h3>
+              <p>Public-facing demo entry using your branded image as the thumbnail and walkthrough video.</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+</div>
+</body>
   <div class="nav">
     <div class="nav-inner">
       <div>
