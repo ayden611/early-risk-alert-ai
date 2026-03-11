@@ -821,13 +821,14 @@ MAIN_HTML = """
   </div>
 
   <div class="shell">
-    <section class="hero" id="overview">
+    <section class="hero" id="overview" style="position:relative;overflow:hidden;">
       <div class="sweep"></div>
       <div class="hero-inner">
         <div class="top-badges">
           <div class="badge-top">Single production domain experience</div>
           <div class="badge-top">Cinematic intro section with live platform paths</div>
         </div>
+        
 
         <div class="hero-grid">
           <div class="glass">
