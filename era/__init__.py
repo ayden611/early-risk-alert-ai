@@ -16,6 +16,7 @@ from flask import Response
 
 
 INFO_EMAIL = "info@earlyriskalertai.com"
+FOUNDER EMAIL = "MiltonMunroe@earlyriskalertai.com
 BUSINESS_PHONE = "732-724-7267"
 FOUNDER_NAME = "Milton Munroe"
 FOUNDER_ROLE = "Founder, Early Risk Alert AI"
