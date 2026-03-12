@@ -2641,19 +2641,7 @@ def _table_html(rows: List[Dict[str, Any]], columns: List[str], labels: Dict[str
         )
         body_rows.append("<tr>" + "".join(tds) + action_cell + "</tr>")
     return f"<div class='table-wrap'><table><thead><tr>{head}</tr></thead><tbody>{''.join(body_rows)}</tbody></table></div>"
-
-
-def create_app() -> Flask:
-    app = Flask(__name__, template_folder="../templates")
-    app.secret_key = os.getenv("SECRET_KEY", "early-risk-alert-dev-secret")
-
-    data_dir = Path(app.instance_path)
-    data_dir.mkdir(parents=True, exist_ok=True)
-
-    investor_file = data_dir / "investor_intake.jsonl"
-    hospital_file = data_dir / "hospital_demo_requests.jsonl"
-    exec_file = data_dir / "executive_walkthrough_requests.jsonl"
-
+    
 def send_notification_email(subject, message):
     sender = INFO_EMAIL
     recipients = [INFO_EMAIL, FOUNDER_EMAIL]
@@ -2671,6 +2659,18 @@ def send_notification_email(subject, message):
         server.quit()
     except Exception as e:
         print("Email send failed:", e)
+
+
+def create_app() -> Flask:
+    app = Flask(__name__, template_folder="../templates")
+    app.secret_key = os.getenv("SECRET_KEY", "early-risk-alert-dev-secret")
+
+    data_dir = Path(app.instance_path)
+    data_dir.mkdir(parents=True, exist_ok=True)
+
+    investor_file = data_dir / "investor_intake.jsonl"
+    hospital_file = data_dir / "hospital_demo_requests.jsonl"
+    exec_file = data_dir / "executive_walkthrough_requests.jsonl"
 
     @app.before_request
     def force_single_domain():
