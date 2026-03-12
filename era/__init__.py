@@ -6,6 +6,8 @@ import io
 import json
 import os
 import random
+import smtplib
+from email.mime.text import MIMEText
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
@@ -15,6 +17,7 @@ from flask import send_file
 from flask import Response
 
 
+
 INFO_EMAIL = "info@earlyriskalertai.com"
 FOUNDER EMAIL = "MiltonMunroe@earlyriskalertai.com
 BUSINESS_PHONE = "732-724-7267"
@@ -22,6 +25,26 @@ FOUNDER_NAME = "Milton Munroe"
 FOUNDER_ROLE = "Founder, Early Risk Alert AI"
 YOUTUBE_EMBED_URL = "https://www.youtube.com/embed/HiidXiXifY4"
 CANONICAL_HOST = os.getenv("CANONICAL_HOST", "").strip().lower()
+
+
+def send_notification_email(subject, message):
+
+    sender = INFO_EMAIL
+    recipients = [INFO_EMAIL, FOUNDER_EMAIL]
+
+    msg = MIMEText(message)
+    msg["Subject"] = subject
+    msg["From"] = sender
+    msg["To"] = ", ".join(recipients)
+
+    try:
+        server = smtplib.SMTP("smtp.zoho.com", 587)
+        server.starttls()
+        server.login(sender, os.getenv("EMAIL_PASSWORD"))
+        server.sendmail(sender, recipients, msg.as_string())
+        server.quit()
+    except Exception as e:
+        print("Email send failed:", e)
 
 
 def _utc_now_iso() -> str:
