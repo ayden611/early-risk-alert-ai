@@ -2642,7 +2642,7 @@ def _table_html(rows: List[Dict[str, Any]], columns: List[str], labels: Dict[str
         body_rows.append("<tr>" + "".join(tds) + action_cell + "</tr>")
     return f"<div class='table-wrap'><table><thead><tr>{head}</tr></thead><tbody>{''.join(body_rows)}</tbody></table></div>"
     
-    def send_notification_email(subject, message):
+def send_notification_email(subject, message):
     sender = INFO_EMAIL
     recipients = [INFO_EMAIL, FOUNDER_EMAIL]
 
