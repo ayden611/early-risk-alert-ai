@@ -3085,7 +3085,7 @@ def create_app() -> Flask:
             "User-agent: *\nAllow: /\nSitemap: https://earlyriskalertai.com/sitemap.xml",
             mimetype="text/plain"
         )
-         return app
-
+        
+        return app
 
 
