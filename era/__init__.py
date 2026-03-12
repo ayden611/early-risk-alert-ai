@@ -11,6 +11,14 @@ from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
 from flask import Flask, jsonify, redirect, render_template_string, request, send_file
+from flask import Response
+
+@app.route("/robots.txt")
+def robots_txt():
+    return Response(
+        "User-agent: *\nAllow: /\nSitemap: https://earlyriskalertai.com/sitemap.xml",
+        mimetype="text/plain"
+    )
 
 
 INFO_EMAIL = "info@earlyriskalertai.com"
