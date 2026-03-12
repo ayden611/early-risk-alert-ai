@@ -49,6 +49,352 @@ MAIN_HTML = r"""
       --max:1360px;
     }
     
+.ticker-wrap{
+  margin-top:18px;
+  margin-bottom:18px;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:18px;
+  overflow:hidden;
+  background:
+    linear-gradient(90deg, rgba(91,212,255,.08), rgba(122,162,255,.04), rgba(255,255,255,.02)),
+    rgba(8,16,29,.92);
+  box-shadow:0 12px 28px rgba(0,0,0,.18);
+}
+.ticker-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:12px 16px;
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
+.ticker-title{
+  font-size:11px;
+  font-weight:1000;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  color:#9fdcff;
+}
+.ticker-live{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  font-size:11px;
+  font-weight:900;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:#dff7ff;
+}
+.ticker-live::before{
+  content:"";
+  width:8px;
+  height:8px;
+  border-radius:999px;
+  background:#38d39f;
+  box-shadow:0 0 0 0 rgba(56,211,159,.55);
+  animation:livePulse 1.8s infinite;
+}
+@keyframes livePulse{
+  0%{box-shadow:0 0 0 0 rgba(56,211,159,.55)}
+  70%{box-shadow:0 0 0 12px rgba(56,211,159,0)}
+  100%{box-shadow:0 0 0 0 rgba(56,211,159,0)}
+}
+.ticker-track{
+  position:relative;
+  overflow:hidden;
+  white-space:nowrap;
+  padding:14px 0;
+}
+.ticker-move{
+  display:inline-flex;
+  gap:14px;
+  padding-left:100%;
+  animation:tickerMove 24s linear infinite;
+}
+@keyframes tickerMove{
+  from{transform:translateX(0)}
+  to{transform:translateX(-100%)}
+}
+.ticker-pill{
+  display:inline-flex;
+  align-items:center;
+  gap:10px;
+  padding:10px 14px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.08);
+  background:rgba(255,255,255,.04);
+  color:#edf4ff;
+  font-size:13px;
+  font-weight:900;
+}
+.ticker-pill .dot{
+  width:9px;
+  height:9px;
+  border-radius:999px;
+  display:inline-block;
+}
+.ticker-pill .dot.critical{background:#ff667d;box-shadow:0 0 10px rgba(255,102,125,.45)}
+.ticker-pill .dot.high{background:#f4bd6a;box-shadow:0 0 10px rgba(244,189,106,.35)}
+.ticker-pill .dot.stable{background:#38d39f;box-shadow:0 0 10px rgba(56,211,159,.35)}
+
+.icu-wall{
+  display:grid;
+  grid-template-columns:1.15fr .85fr;
+  gap:16px;
+  margin-top:18px;
+  margin-bottom:18px;
+}
+.icu-main{
+  display:grid;
+  gap:14px;
+}
+.icu-monitor{
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:22px;
+  padding:16px;
+  background:
+    radial-gradient(circle at top right, rgba(91,212,255,.08), transparent 28%),
+    linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015)),
+    #08101d;
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.02),
+    0 12px 30px rgba(0,0,0,.22),
+    0 0 50px rgba(91,212,255,.05);
+}
+.critical-monitor{border-color:rgba(255,107,107,.26)}
+.watch-monitor{border-color:rgba(247,190,104,.24)}
+.icu-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:12px;
+}
+.icu-kicker{
+  font-size:11px;
+  font-weight:900;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:#9eb4d6;
+}
+.icu-title{
+  margin-top:6px;
+  font-size:22px;
+  font-weight:1000;
+  line-height:1;
+  color:#eef4ff;
+}
+.icu-state{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:92px;
+  padding:8px 10px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:900;
+  letter-spacing:.05em;
+  text-transform:uppercase;
+}
+.icu-state.critical{
+  color:#ffd8d8;
+  background:rgba(255,107,107,.16);
+  border:1px solid rgba(255,107,107,.26);
+}
+.icu-state.warning{
+  color:#ffe7bf;
+  background:rgba(247,190,104,.16);
+  border:1px solid rgba(247,190,104,.24);
+}
+.icu-state.stable{
+  color:#dfffea;
+  background:rgba(91,211,141,.14);
+  border:1px solid rgba(91,211,141,.24);
+}
+.icu-screen{
+  position:relative;
+  height:240px;
+  border-radius:18px;
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,.06);
+  background:#050b14;
+}
+.screen-grid{
+  position:absolute;
+  inset:0;
+  background:
+    linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.01));
+  background-size:22px 22px, 22px 22px, auto;
+  pointer-events:none;
+}
+.ecg-svg{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+}
+.ecg-path{
+  fill:none;
+  stroke-width:4;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  stroke-dasharray:18 8;
+  animation:ecgMove 1.8s linear infinite;
+  filter:drop-shadow(0 0 10px currentColor);
+}
+.critical-path{
+  stroke:#ff6b6b;
+  color:#ff6b6b;
+}
+.warning-path{
+  stroke:#f7be68;
+  color:#f7be68;
+}
+@keyframes ecgMove{
+  from{stroke-dashoffset:0}
+  to{stroke-dashoffset:-52}
+}
+.screen-readouts{
+  position:absolute;
+  left:14px;
+  right:14px;
+  bottom:14px;
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:10px;
+}
+.readout{
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:14px;
+  padding:12px 10px;
+  background:rgba(255,255,255,.03);
+  backdrop-filter:blur(4px);
+}
+.r-k{
+  display:block;
+  font-size:11px;
+  letter-spacing:.10em;
+  text-transform:uppercase;
+  color:#9eb4d6;
+  font-weight:900;
+}
+.r-v{
+  display:block;
+  margin-top:8px;
+  font-size:22px;
+  line-height:1;
+  font-weight:1000;
+  color:#eef4ff;
+}
+.icu-side-rail{
+  display:grid;
+  gap:12px;
+}
+.rail-card{
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:18px;
+  padding:18px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02)),
+    linear-gradient(180deg, rgba(12,22,38,.76), rgba(9,16,30,.88));
+}
+.rail-k{
+  font-size:12px;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:#9eb4d6;
+  font-weight:900;
+}
+.rail-v{
+  font-size:34px;
+  font-weight:1000;
+  line-height:1;
+  margin-top:10px;
+  color:#ecf4ff;
+}
+.rail-sub{
+  margin-top:8px;
+  font-size:13px;
+  color:#c6d7ef;
+  line-height:1.5;
+}
+
+.proof-strip{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:12px;
+  margin-top:18px;
+}
+.proof-card{
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:18px;
+  padding:16px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015)),
+    rgba(8,16,29,.82);
+  box-shadow:0 12px 28px rgba(0,0,0,.16);
+}
+.proof-k{
+  font-size:11px;
+  font-weight:900;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:#9fdcff;
+}
+.proof-v{
+  margin-top:10px;
+  font-size:28px;
+  line-height:1;
+  font-weight:1000;
+  color:#eef4ff;
+}
+.proof-sub{
+  margin-top:8px;
+  color:#c6d7ef;
+  font-size:13px;
+  line-height:1.5;
+}
+
+.status-legend{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-top:16px;
+}
+.status-chip{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:10px 14px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:900;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  border:1px solid rgba(255,255,255,.08);
+  background:rgba(255,255,255,.03);
+  color:#eef4ff;
+}
+.status-chip .s-dot{
+  width:9px;
+  height:9px;
+  border-radius:999px;
+}
+.status-chip.new .s-dot{background:#7aa2ff;box-shadow:0 0 10px rgba(122,162,255,.45)}
+.status-chip.contacted .s-dot{background:#f4bd6a;box-shadow:0 0 10px rgba(244,189,106,.35)}
+.status-chip.closed .s-dot{background:#38d39f;box-shadow:0 0 10px rgba(56,211,159,.35)}
+
+@media (max-width:1100px){
+  .icu-wall{grid-template-columns:1fr}
+  .proof-strip{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:760px){
+  .screen-readouts{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .proof-strip{grid-template-columns:1fr}
+}
+    
 .icu-wall{
   display:grid;
   grid-template-columns:1.15fr .85fr;
@@ -785,31 +1131,22 @@ MAIN_HTML = r"""
     </div>
 
 <div class="live-band">
-  <div class="command-card" id="dashboard">
-    <div class="section-kicker">Live Clinical Command Center</div>
-    <h2 style="margin:0 0 8px">Hospital-grade visual monitoring with real command-center panels.</h2>
-    <p>Live alerts, risk scoring, patient condition status, and bedside-style monitors update automatically so hospitals and investors instantly understand the platform.</p>
-
-    <div class="cc-top">
-      <div class="cc-mini">
-        <div class="k">Open Alerts</div>
-        <div class="v" id="cc-open-alerts">0</div>
-      </div>
-      <div class="cc-mini">
-        <div class="k">Critical Alerts</div>
-        <div class="v" id="cc-critical-alerts">0</div>
-      </div>
-      <div class="cc-mini">
-        <div class="k">Avg Risk Score</div>
-        <div class="v" id="cc-avg-risk">0.0</div>
-      </div>
-      <div class="cc-mini">
-        <div class="k">Events Last Hour</div>
-        <div class="v" id="cc-events-hour">0</div>
-      </div>
+<div class="ticker-wrap">
+  <div class="ticker-head">
+    <div class="ticker-title">Live Clinical Activity Ticker</div>
+    <div class="ticker-live">Live Stream</div>
+  </div>
+  <div class="ticker-track">
+    <div class="ticker-move" id="cc-ticker">
+      <div class="ticker-pill"><span class="dot critical"></span> Critical risk escalation detected</div>
+      <div class="ticker-pill"><span class="dot high"></span> Care team routing updated</div>
+      <div class="ticker-pill"><span class="dot stable"></span> Stable patient trend confirmed</div>
+      <div class="ticker-pill"><span class="dot critical"></span> ICU watchlist refreshed</div>
+      <div class="ticker-pill"><span class="dot high"></span> Executive dashboard synced</div>
     </div>
+  </div>
+</div>
 
-    ```html
 <div class="icu-wall">
   <div class="icu-main">
     <div class="icu-monitor critical-monitor">
@@ -915,29 +1252,58 @@ MAIN_HTML = r"""
 
   <div class="icu-side-rail">
     <div class="rail-card">
-      <div class="rail-k">Active Patient Alerts</div>
+      <div class="rail-k">Open Alerts</div>
       <div class="rail-v" id="cc-open-alerts">0</div>
-      <div class="rail-sub">Open platform alerts across the command center.</div>
+      <div class="rail-sub">Live platform alerts across the command center.</div>
     </div>
 
     <div class="rail-card">
       <div class="rail-k">Critical Alerts</div>
       <div class="rail-v" id="cc-critical-alerts">0</div>
-      <div class="rail-sub">Highest urgency cases needing immediate attention.</div>
+      <div class="rail-sub">Highest urgency cases requiring immediate response.</div>
     </div>
 
     <div class="rail-card">
       <div class="rail-k">Avg Risk Score</div>
       <div class="rail-v" id="cc-avg-risk">0.0</div>
-      <div class="rail-sub">Average severity score from the live monitoring engine.</div>
+      <div class="rail-sub">Average risk severity from the intelligence layer.</div>
     </div>
 
     <div class="rail-card">
       <div class="rail-k">Patients With Alerts</div>
       <div class="rail-v" id="cc-patients-alerts">0</div>
-      <div class="rail-sub">Patients currently surfaced by the intelligence layer.</div>
+      <div class="rail-sub">Patients currently surfaced by AI monitoring.</div>
     </div>
   </div>
+</div>
+
+<div class="proof-strip">
+  <div class="proof-card">
+    <div class="proof-k">Hospital Story</div>
+    <div class="proof-v">Operational</div>
+    <div class="proof-sub">Shows a real command-center environment for hospitals and RPM teams.</div>
+  </div>
+  <div class="proof-card">
+    <div class="proof-k">Investor Story</div>
+    <div class="proof-v">Visual</div>
+    <div class="proof-sub">Communicates product value in seconds with immediate platform credibility.</div>
+  </div>
+  <div class="proof-card">
+    <div class="proof-k">Insurer Story</div>
+    <div class="proof-v">Predictive</div>
+    <div class="proof-sub">Supports the case for scalable monitoring, escalation, and lower-cost intervention.</div>
+  </div>
+  <div class="proof-card">
+    <div class="proof-k">Patient Story</div>
+    <div class="proof-v">Protective</div>
+    <div class="proof-sub">Makes the product feel proactive, responsive, and clinically reassuring.</div>
+  </div>
+</div>
+
+<div class="status-legend">
+  <div class="status-chip new"><span class="s-dot"></span>New</div>
+  <div class="status-chip contacted"><span class="s-dot"></span>Contacted</div>
+  <div class="status-chip closed"><span class="s-dot"></span>Closed</div>
 </div>
 
 <div class="stream-list" id="cc-alert-stream">
@@ -1050,41 +1416,6 @@ MAIN_HTML = r"""
   </div>
 
   <script>
-    async function submitLeadForm(formId, endpoint, resultId, successText) {
-      const form = document.getElementById(formId);
-      const result = document.getElementById(resultId);
-
-      form.addEventListener("submit", async function (e) {
-        e.preventDefault();
-        const data = Object.fromEntries(new FormData(form).entries());
-
-        try {
-          const res = await fetch(endpoint, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(data)
-          });
-
-          const payload = await res.json();
-
-          if (!res.ok || !payload.ok) {
-            throw new Error(payload.error || "Submission failed");
-          }
-
-          result.className = "result show";
-          result.textContent = successText;
-          form.reset();
-        } catch (err) {
-          result.className = "result show error";
-          result.textContent = "Submission failed. Please try again.";
-        }
-      });
-    }
-
-    submitLeadForm("hospitalLeadForm", "/submit/hospital", "hospitalLeadResult", "Hospital demo request submitted successfully.");
-    submitLeadForm("executiveLeadForm", "/submit/executive", "executiveLeadResult", "Executive walkthrough request submitted successfully.");
-    submitLeadForm("investorLeadForm", "/submit/investor", "investorLeadResult", "Investor request submitted successfully.");
-
   
 async function refreshCommandCenter() {
   try {
@@ -1103,6 +1434,100 @@ async function refreshCommandCenter() {
   } catch (err) {
     console.error("Overview refresh failed", err);
   }
+
+  try {
+    const res = await fetch("/api/v1/live-snapshot?tenant_id=demo&patient_id=p101&refresh=" + Date.now(), {
+      headers: { "Accept": "application/json" },
+      cache: "no-store"
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      const alerts = Array.isArray(data.alerts) ? data.alerts.slice(0, 6) : [];
+      const wrap = document.getElementById("cc-alert-stream");
+      const ticker = document.getElementById("cc-ticker");
+
+      if (!alerts.length) {
+        wrap.innerHTML = '<div class="stream-item"><div class="name">No active alerts right now</div><div class="meta">The system is running and waiting for new events.</div></div>';
+
+        if (ticker) {
+          ticker.innerHTML = `
+            <div class="ticker-pill"><span class="dot stable"></span> Stable patient monitoring active</div>
+            <div class="ticker-pill"><span class="dot high"></span> Command center awaiting next escalation</div>
+            <div class="ticker-pill"><span class="dot stable"></span> AI surveillance layer online</div>
+          `;
+        }
+      } else {
+        wrap.innerHTML = alerts.map(function (a) {
+          const sev = (a.severity || "").toLowerCase();
+          const dot = sev === "critical" ? "danger" : (sev === "high" ? "warn" : "");
+          return `
+            <div class="stream-item">
+              <div class="name"><span class="alert-dot ${dot}"></span>${a.title || a.alert_type || "Risk alert"}</div>
+              <div class="meta">Patient: ${a.patient_id || "Unknown"} · Severity: ${sev || "n/a"} · Risk: ${a.risk_score ?? ""}</div>
+            </div>
+          `;
+        }).join("");
+
+        if (ticker) {
+          ticker.innerHTML = alerts.map(function (a) {
+            const sev = (a.severity || "").toLowerCase();
+            const dot = sev === "critical" ? "critical" : (sev === "high" ? "high" : "stable");
+            return `<div class="ticker-pill"><span class="dot ${dot}"></span>${a.title || a.alert_type || "Risk alert"} · ${a.patient_id || "Patient"} · Risk ${Number(a.risk_score ?? 0).toFixed(1)}</div>`;
+          }).join("");
+        }
+      }
+
+      const monitorA = alerts[0] || { severity: "critical", risk_score: 9.1 };
+      const monitorB = alerts[1] || { severity: "high", risk_score: 8.2 };
+
+      function setMonitor(prefix, alert) {
+        const severity = (alert.severity || "stable").toLowerCase();
+        const statusEl = document.getElementById(prefix + "-status");
+        const hrEl = document.getElementById(prefix + "-hr");
+        const spo2El = document.getElementById(prefix + "-spo2");
+        const bpEl = document.getElementById(prefix + "-bp");
+        const riskEl = document.getElementById(prefix + "-risk");
+
+        const statusText = severity === "critical" ? "Critical" : (severity === "high" ? "High" : "Stable");
+        statusEl.textContent = statusText;
+        statusEl.className = "icu-state " + (severity === "critical" ? "critical" : (severity === "high" ? "warning" : "stable"));
+
+        const baseRisk = Number(alert.risk_score ?? 3.4);
+        const hr = severity === "critical"
+          ? 124 + Math.floor(Math.random() * 10)
+          : (severity === "high"
+              ? 106 + Math.floor(Math.random() * 10)
+              : 78 + Math.floor(Math.random() * 10));
+        const spo2 = severity === "critical"
+          ? 87 + Math.floor(Math.random() * 3)
+          : (severity === "high"
+              ? 92 + Math.floor(Math.random() * 3)
+              : 97 + Math.floor(Math.random() * 2));
+        const sys = severity === "critical"
+          ? 160 + Math.floor(Math.random() * 8)
+          : (severity === "high"
+              ? 146 + Math.floor(Math.random() * 8)
+              : 120 + Math.floor(Math.random() * 6));
+        const dia = severity === "critical"
+          ? 96 + Math.floor(Math.random() * 6)
+          : (severity === "high"
+              ? 88 + Math.floor(Math.random() * 5)
+              : 76 + Math.floor(Math.random() * 4));
+
+        hrEl.textContent = hr;
+        spo2El.textContent = spo2;
+        bpEl.textContent = sys + "/" + dia;
+        riskEl.textContent = baseRisk.toFixed(1);
+      }
+
+      setMonitor("monitor-a", monitorA);
+      setMonitor("monitor-b", monitorB);
+    }
+  } catch (err) {
+    console.error("Snapshot refresh failed", err);
+  }
+}
 
   try {
     const res = await fetch("/api/v1/live-snapshot?tenant_id=demo&patient_id=p101&refresh=" + Date.now(), {
