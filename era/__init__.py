@@ -48,6 +48,143 @@ MAIN_HTML = r"""
       --radius:24px;
       --max:1360px;
     }
+    
+.monitor-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:14px;
+  margin-top:18px;
+  margin-bottom:18px;
+}
+.monitor-panel{
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:20px;
+  padding:16px;
+  background:
+    radial-gradient(circle at top right, rgba(91,212,255,.08), transparent 28%),
+    linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015)),
+    #08101d;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.02), 0 12px 30px rgba(0,0,0,.22);
+}
+.monitor-panel.critical{border-color:rgba(255,107,107,.26)}
+.monitor-panel.warning{border-color:rgba(247,190,104,.24)}
+.monitor-panel.stable{border-color:rgba(91,211,141,.24)}
+.monitor-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:12px;
+}
+.monitor-label{
+  font-size:11px;
+  font-weight:900;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:#9eb4d6;
+}
+.monitor-name{
+  margin-top:6px;
+  font-size:20px;
+  font-weight:1000;
+  line-height:1;
+  color:#eef4ff;
+}
+.monitor-status{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:84px;
+  padding:8px 10px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:900;
+  letter-spacing:.05em;
+  text-transform:uppercase;
+}
+.status-critical{
+  color:#ffd8d8;
+  background:rgba(255,107,107,.16);
+  border:1px solid rgba(255,107,107,.26);
+}
+.status-warning{
+  color:#ffe7bf;
+  background:rgba(247,190,104,.16);
+  border:1px solid rgba(247,190,104,.24);
+}
+.status-stable{
+  color:#dfffea;
+  background:rgba(91,211,141,.14);
+  border:1px solid rgba(91,211,141,.24);
+}
+.wave-wrap{
+  height:122px;
+  border-radius:16px;
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,.06);
+  background:
+    linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.01));
+  background-size:20px 20px, 20px 20px, auto;
+}
+.wave-svg{
+  width:100%;
+  height:100%;
+}
+.wave-line{
+  fill:none;
+  stroke-width:3.5;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  filter:drop-shadow(0 0 8px currentColor);
+}
+.critical-line{
+  stroke:#ff6b6b;
+  color:#ff6b6b;
+}
+.warning-line{
+  stroke:#f7be68;
+  color:#f7be68;
+}
+.stable-line{
+  stroke:#5bd38d;
+  color:#5bd38d;
+}
+.monitor-metrics{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:10px;
+  margin-top:14px;
+}
+.metric-box{
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:14px;
+  padding:12px 10px;
+  background:rgba(255,255,255,.03);
+}
+.metric-k{
+  display:block;
+  font-size:11px;
+  letter-spacing:.10em;
+  text-transform:uppercase;
+  color:#9eb4d6;
+  font-weight:900;
+}
+.metric-v{
+  display:block;
+  margin-top:8px;
+  font-size:22px;
+  line-height:1;
+  font-weight:1000;
+  color:#eef4ff;
+}
+@media (max-width:1100px){
+  .monitor-grid{grid-template-columns:1fr}
+}
+@media (max-width:760px){
+  .monitor-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
 
     *{box-sizing:border-box}
     html{scroll-behavior:smooth}
@@ -460,62 +597,181 @@ MAIN_HTML = r"""
       </div>
     </div>
 
-    <div class="live-band">
-      <div class="command-card" id="dashboard">
-        <div class="section-kicker">Live Clinical Command Center</div>
-        <h2 style="margin:0 0 8px">Streaming monitoring story investors understand in 10 seconds.</h2>
-        <p>Open alerts, critical alert load, average live risk score, events last hour, and active patient alerts update automatically.</p>
+<div class="live-band">
+  <div class="command-card" id="dashboard">
+    <div class="section-kicker">Live Clinical Command Center</div>
+    <h2 style="margin:0 0 8px">Hospital-grade visual monitoring with real command-center panels.</h2>
+    <p>Live alerts, risk scoring, patient condition status, and bedside-style monitors update automatically so hospitals and investors instantly understand the platform.</p>
 
-        <div class="cc-top">
-          <div class="cc-mini">
-            <div class="k">Open Alerts</div>
-            <div class="v" id="cc-open-alerts">0</div>
+    <div class="cc-top">
+      <div class="cc-mini">
+        <div class="k">Open Alerts</div>
+        <div class="v" id="cc-open-alerts">0</div>
+      </div>
+      <div class="cc-mini">
+        <div class="k">Critical Alerts</div>
+        <div class="v" id="cc-critical-alerts">0</div>
+      </div>
+      <div class="cc-mini">
+        <div class="k">Avg Risk Score</div>
+        <div class="v" id="cc-avg-risk">0.0</div>
+      </div>
+      <div class="cc-mini">
+        <div class="k">Events Last Hour</div>
+        <div class="v" id="cc-events-hour">0</div>
+      </div>
+    </div>
+
+    <div class="monitor-grid">
+      <div class="monitor-panel critical">
+        <div class="monitor-top">
+          <div>
+            <div class="monitor-label">Patient Monitor A</div>
+            <div class="monitor-name">Critical Watch</div>
           </div>
-          <div class="cc-mini">
-            <div class="k">Critical Alerts</div>
-            <div class="v" id="cc-critical-alerts">0</div>
-          </div>
-          <div class="cc-mini">
-            <div class="k">Avg Risk Score</div>
-            <div class="v" id="cc-avg-risk">0.0</div>
-          </div>
-          <div class="cc-mini">
-            <div class="k">Events Last Hour</div>
-            <div class="v" id="cc-events-hour">0</div>
-          </div>
+          <div class="monitor-status status-critical" id="monitor-a-status">Critical</div>
         </div>
 
-        <div class="stream-list" id="cc-alert-stream">
-          <div class="stream-item">
-            <div class="name">Waiting for live command center data</div>
-            <div class="meta">The stream updates automatically every few seconds.</div>
+        <div class="wave-wrap">
+          <svg class="wave-svg" viewBox="0 0 600 120" preserveAspectRatio="none" aria-hidden="true">
+            <path id="wave-a" class="wave-line critical-line"
+              d="M0,72 L18,72 L30,72 L42,72 L54,72 L66,72 L78,72 L90,72 L102,72 L114,72 L126,72
+                 L138,72 L150,30 L162,108 L174,72 L186,72 L198,72 L210,72 L222,72 L234,72 L246,72
+                 L258,72 L270,72 L282,72 L294,72 L306,34 L318,106 L330,72 L342,72 L354,72 L366,72
+                 L378,72 L390,72 L402,72 L414,72 L426,72 L438,72 L450,72 L462,28 L474,108 L486,72
+                 L498,72 L510,72 L522,72 L534,72 L546,72 L558,72 L570,72 L582,72 L600,72" />
+          </svg>
+        </div>
+
+        <div class="monitor-metrics">
+          <div class="metric-box">
+            <span class="metric-k">HR</span>
+            <span class="metric-v" id="monitor-a-hr">128</span>
+          </div>
+          <div class="metric-box">
+            <span class="metric-k">SpO₂</span>
+            <span class="metric-v" id="monitor-a-spo2">89</span>
+          </div>
+          <div class="metric-box">
+            <span class="metric-k">BP</span>
+            <span class="metric-v" id="monitor-a-bp">164/98</span>
+          </div>
+          <div class="metric-box">
+            <span class="metric-k">Risk</span>
+            <span class="metric-v" id="monitor-a-risk">9.1</span>
           </div>
         </div>
       </div>
 
-      <div class="pipeline-card">
-        <div class="section-kicker">Investor Pipeline Dashboard</div>
-        <h2 style="margin:0 0 8px">Built to show product value and inbound momentum.</h2>
-        <p style="margin-bottom:14px">Hospital demos, executive walkthroughs, and investor intake all flow into one operating dashboard.</p>
-        <div class="list" style="margin-top:0">
-          <div class="mini">
-            <div class="k">Patients With Alerts</div>
-            <span class="v" id="cc-patients-alerts">0</span>
-            <p>Live demo signal that the platform is actively watching risk.</p>
+      <div class="monitor-panel warning">
+        <div class="monitor-top">
+          <div>
+            <div class="monitor-label">Patient Monitor B</div>
+            <div class="monitor-name">Escalation Watch</div>
           </div>
-          <div class="mini">
-            <div class="k">Command Center</div>
-            <span class="v">Live</span>
-            <p>Refreshes automatically to simulate hospital operations visibility.</p>
+          <div class="monitor-status status-warning" id="monitor-b-status">High</div>
+        </div>
+
+        <div class="wave-wrap">
+          <svg class="wave-svg" viewBox="0 0 600 120" preserveAspectRatio="none" aria-hidden="true">
+            <path id="wave-b" class="wave-line warning-line"
+              d="M0,72 L20,72 L40,72 L60,72 L80,72 L100,72 L120,72 L140,72 L160,58 L180,86 L200,72
+                 L220,72 L240,72 L260,72 L280,72 L300,60 L320,84 L340,72 L360,72 L380,72 L400,72
+                 L420,72 L440,56 L460,88 L480,72 L500,72 L520,72 L540,72 L560,72 L580,72 L600,72" />
+          </svg>
+        </div>
+
+        <div class="monitor-metrics">
+          <div class="metric-box">
+            <span class="metric-k">HR</span>
+            <span class="metric-v" id="monitor-b-hr">112</span>
           </div>
-          <div class="mini">
-            <div class="k">Lead Capture</div>
-            <span class="v">Live</span>
-            <p>Hospital and investor requests feed directly into admin review.</p>
+          <div class="metric-box">
+            <span class="metric-k">SpO₂</span>
+            <span class="metric-v" id="monitor-b-spo2">93</span>
+          </div>
+          <div class="metric-box">
+            <span class="metric-k">BP</span>
+            <span class="metric-v" id="monitor-b-bp">148/90</span>
+          </div>
+          <div class="metric-box">
+            <span class="metric-k">Risk</span>
+            <span class="metric-v" id="monitor-b-risk">8.2</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="monitor-panel stable">
+        <div class="monitor-top">
+          <div>
+            <div class="monitor-label">Patient Monitor C</div>
+            <div class="monitor-name">Stable Watch</div>
+          </div>
+          <div class="monitor-status status-stable" id="monitor-c-status">Stable</div>
+        </div>
+
+        <div class="wave-wrap">
+          <svg class="wave-svg" viewBox="0 0 600 120" preserveAspectRatio="none" aria-hidden="true">
+            <path id="wave-c" class="wave-line stable-line"
+              d="M0,72 L18,72 L36,72 L54,72 L72,72 L90,72 L108,68 L126,76 L144,72 L162,72 L180,72
+                 L198,72 L216,69 L234,75 L252,72 L270,72 L288,72 L306,68 L324,76 L342,72 L360,72
+                 L378,72 L396,70 L414,74 L432,72 L450,72 L468,72 L486,69 L504,75 L522,72 L540,72
+                 L558,72 L576,70 L594,74 L600,72" />
+          </svg>
+        </div>
+
+        <div class="monitor-metrics">
+          <div class="metric-box">
+            <span class="metric-k">HR</span>
+            <span class="metric-v" id="monitor-c-hr">84</span>
+          </div>
+          <div class="metric-box">
+            <span class="metric-k">SpO₂</span>
+            <span class="metric-v" id="monitor-c-spo2">98</span>
+          </div>
+          <div class="metric-box">
+            <span class="metric-k">BP</span>
+            <span class="metric-v" id="monitor-c-bp">122/78</span>
+          </div>
+          <div class="metric-box">
+            <span class="metric-k">Risk</span>
+            <span class="metric-v" id="monitor-c-risk">3.4</span>
           </div>
         </div>
       </div>
     </div>
+
+    <div class="stream-list" id="cc-alert-stream">
+      <div class="stream-item">
+        <div class="name">Waiting for live stream data</div>
+        <div class="meta">The command center updates automatically from the platform APIs.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pipeline-card">
+    <div class="section-kicker">Investor Pipeline Dashboard</div>
+    <h2 style="margin:0 0 8px">Built to show product value and inbound momentum.</h2>
+    <p style="margin-bottom:14px">Hospital demos, executive walkthroughs, and investor intake all flow into one operating dashboard.</p>
+    <div class="list" style="margin-top:0">
+      <div class="mini">
+        <div class="k">Patients With Alerts</div>
+        <span class="v" id="cc-patients-alerts">0</span>
+        <p>Live demo signal that the platform is actively watching risk.</p>
+      </div>
+      <div class="mini">
+        <div class="k">Command Center</div>
+        <span class="v">Live</span>
+        <p>Refreshes automatically to simulate hospital operations visibility.</p>
+      </div>
+      <div class="mini">
+        <div class="k">Lead Capture</div>
+        <span class="v">Live</span>
+        <p>Hospital and investor requests feed directly into admin review.</p>
+      </div>
+    </div>
+  </div>
+</div>
 
     <div class="forms-grid">
       <div class="form-card" id="hospital-form">
@@ -624,50 +880,116 @@ MAIN_HTML = r"""
 
     async function refreshCommandCenter() {
       try {
-        const res = await fetch("/api/v1/dashboard/overview?tenant_id=demo&refresh=" + Date.now(), {
-          headers: { "Accept": "application/json" },
-          cache: "no-store"
-        });
-        if (res.ok) {
-          const data = await res.json();
-          document.getElementById("cc-open-alerts").textContent = data.open_alerts ?? 0;
-          document.getElementById("cc-critical-alerts").textContent = data.critical_alerts ?? 0;
-          document.getElementById("cc-avg-risk").textContent = Number(data.avg_risk_score ?? 0).toFixed(1);
-          document.getElementById("cc-events-hour").textContent = data.events_last_hour ?? 0;
-          document.getElementById("cc-patients-alerts").textContent = data.patients_with_alerts ?? 0;
-        }
-      } catch (err) {
-        console.error("Overview refresh failed", err);
+    const res = await fetch("/api/v1/dashboard/overview?tenant_id=demo&refresh=" + Date.now(), {
+      headers: { "Accept": "application/json" },
+      cache: "no-store"
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      document.getElementById("cc-open-alerts").textContent = data.open_alerts ?? 0;
+      document.getElementById("cc-critical-alerts").textContent = data.critical_alerts ?? 0;
+      document.getElementById("cc-avg-risk").textContent = Number(data.avg_risk_score ?? 0).toFixed(1);
+      document.getElementById("cc-events-hour").textContent = data.events_last_hour ?? 0;
+      document.getElementById("cc-patients-alerts").textContent = data.patients_with_alerts ?? 0;
+    }
+  } catch (err) {
+    console.error("Overview refresh failed", err);
+  }
+
+  try {
+    const res = await fetch("/api/v1/live-snapshot?tenant_id=demo&patient_id=p101&refresh=" + Date.now(), {
+      headers: { "Accept": "application/json" },
+      cache: "no-store"
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      const alerts = Array.isArray(data.alerts) ? data.alerts.slice(0, 5) : [];
+      const wrap = document.getElementById("cc-alert-stream");
+
+      if (!alerts.length) {
+        wrap.innerHTML = '<div class="stream-item"><div class="name">No active alerts right now</div><div class="meta">The system is running and waiting for new events.</div></div>';
+      } else {
+        wrap.innerHTML = alerts.map(function (a) {
+          const sev = (a.severity || "").toLowerCase();
+          const dot = sev === "critical" ? "danger" : (sev === "high" ? "warn" : "");
+          return `
+            <div class="stream-item">
+              <div class="name"><span class="alert-dot ${dot}"></span>${a.title || a.alert_type || "Risk alert"}</div>
+              <div class="meta">Patient: ${a.patient_id || "Unknown"} · Severity: ${sev || "n/a"} · Risk: ${a.risk_score ?? ""}</div>
+            </div>
+          `;
+        }).join("");
       }
 
-      try {
-        const res = await fetch("/api/v1/live-snapshot?tenant_id=demo&patient_id=p101&refresh=" + Date.now(), {
-          headers: { "Accept": "application/json" },
-          cache: "no-store"
-        });
-        if (res.ok) {
-          const data = await res.json();
-          const alerts = Array.isArray(data.alerts) ? data.alerts.slice(0, 5) : [];
-          const wrap = document.getElementById("cc-alert-stream");
-          if (!alerts.length) {
-            wrap.innerHTML = '<div class="stream-item"><div class="name">No active alerts right now</div><div class="meta">The system is running and waiting for new events.</div></div>';
-          } else {
-            wrap.innerHTML = alerts.map(function (a) {
-              const sev = (a.severity || "").toLowerCase();
-              const dot = sev === "critical" ? "danger" : (sev === "high" ? "warn" : "");
-              return `
-                <div class="stream-item">
-                  <div class="name"><span class="alert-dot ${dot}"></span>${a.title || a.alert_type || "Risk alert"}</div>
-                  <div class="meta">Patient: ${a.patient_id || "Unknown"} · Severity: ${sev || "n/a"} · Risk: ${a.risk_score ?? ""}</div>
-                </div>
-              `;
-            }).join("");
-          }
-        }
-      } catch (err) {
-        console.error("Snapshot refresh failed", err);
+      const monitorA = alerts[0] || {};
+      const monitorB = alerts[1] || {};
+      const monitorC = alerts[2] || {};
+
+      function setMonitor(prefix, alert, defaults) {
+        const severity = (alert.severity || defaults.severity || "stable").toLowerCase();
+        const statusEl = document.getElementById(prefix + "-status");
+        const hrEl = document.getElementById(prefix + "-hr");
+        const spo2El = document.getElementById(prefix + "-spo2");
+        const bpEl = document.getElementById(prefix + "-bp");
+        const riskEl = document.getElementById(prefix + "-risk");
+
+        const statusText =
+          severity === "critical" ? "Critical" :
+          (severity === "high" ? "High" : "Stable");
+
+        statusEl.textContent = statusText;
+        statusEl.className =
+          "monitor-status " +
+          (severity === "critical"
+            ? "status-critical"
+            : (severity === "high" ? "status-warning" : "status-stable"));
+
+        const baseRisk = Number(alert.risk_score ?? defaults.risk ?? 3.4);
+
+        const hr =
+          severity === "critical"
+            ? 124 + Math.floor(Math.random() * 10)
+            : (severity === "high"
+                ? 106 + Math.floor(Math.random() * 10)
+                : 78 + Math.floor(Math.random() * 10));
+
+        const spo2 =
+          severity === "critical"
+            ? 87 + Math.floor(Math.random() * 3)
+            : (severity === "high"
+                ? 92 + Math.floor(Math.random() * 3)
+                : 97 + Math.floor(Math.random() * 2));
+
+        const sys =
+          severity === "critical"
+            ? 160 + Math.floor(Math.random() * 8)
+            : (severity === "high"
+                ? 146 + Math.floor(Math.random() * 8)
+                : 120 + Math.floor(Math.random() * 6));
+
+        const dia =
+          severity === "critical"
+            ? 96 + Math.floor(Math.random() * 6)
+            : (severity === "high"
+                ? 88 + Math.floor(Math.random() * 5)
+                : 76 + Math.floor(Math.random() * 4));
+
+        hrEl.textContent = hr;
+        spo2El.textContent = spo2;
+        bpEl.textContent = sys + "/" + dia;
+        riskEl.textContent = baseRisk.toFixed(1);
       }
+
+      setMonitor("monitor-a", monitorA, { severity: "critical", risk: 9.1 });
+      setMonitor("monitor-b", monitorB, { severity: "high", risk: 8.2 });
+      setMonitor("monitor-c", monitorC, { severity: "stable", risk: 3.4 });
     }
+  } catch (err) {
+    console.error("Snapshot refresh failed", err);
+  }
+}
 
     refreshCommandCenter();
     setInterval(refreshCommandCenter, 5000);
