@@ -3042,7 +3042,7 @@ def create_app() -> Flask:
             ],
         })
         
-    @@app.route("/robots.txt")
+    @app.route("/robots.txt")
     def robots_txt():
         return Response(
             "User-agent: *\nAllow: /\nSitemap: https://earlyriskalertai.com/sitemap.xml",
