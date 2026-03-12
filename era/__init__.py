@@ -15,7 +15,7 @@ from flask import Flask, Response, jsonify, redirect, render_template_string, re
 
 
 INFO_EMAIL = "info@earlyriskalertai.com"
-FOUNDER_EMAIL = os.getenv("FOUNDER_EMAIL", "milton.munroe@earlyriskalertai.com")
+FOUNDER_EMAIL = "milton.munroe@earlyriskalertai.com"
 BUSINESS_PHONE = "732-724-7267"
 FOUNDER_NAME = "Milton Munroe"
 FOUNDER_ROLE = "Founder & AI Systems Engineer"
