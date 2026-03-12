@@ -3105,5 +3105,8 @@ def send_notification_email(subject, message):
             "User-agent: *\nAllow: /\nSitemap: https://earlyriskalertai.com/sitemap.xml",
             mimetype="text/plain"
         )
-    
-    return app
+     
+        return app
+
+
+
