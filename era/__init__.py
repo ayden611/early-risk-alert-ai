@@ -25,26 +25,6 @@ YOUTUBE_EMBED_URL = "https://www.youtube.com/embed/HiidXiXifY4"
 CANONICAL_HOST = os.getenv("CANONICAL_HOST", "").strip().lower()
 
 
-def send_notification_email(subject, message):
-
-    sender = INFO_EMAIL
-    recipients = [INFO_EMAIL, FOUNDER_EMAIL]
-
-    msg = MIMEText(message)
-    msg["Subject"] = subject
-    msg["From"] = sender
-    msg["To"] = ", ".join(recipients)
-
-    try:
-        server = smtplib.SMTP("smtp.zoho.com", 587)
-        server.starttls()
-        server.login(sender, os.getenv("EMAIL_PASSWORD"))
-        server.sendmail(sender, recipients, msg.as_string())
-        server.quit()
-    except Exception as e:
-        print("Email send failed:", e)
-
-
 def _utc_now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
