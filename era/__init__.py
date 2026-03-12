@@ -2490,11 +2490,58 @@ ADMIN_HTML = """
         <div class="lead-type"><h3>Investor Leads</h3><p>Investor pipeline capture with contact details, timing, and opportunity notes.</p></div>
       </div>
 
-      <div class="section"><h2>Hospital Demo Requests</h2>__HOSPITAL_TABLE__</div>
-      <div class="section"><h2>Executive Walkthrough Requests</h2>__EXEC_TABLE__</div>
-      <div class="section"><h2>Investor Intake</h2>__INVESTOR_TABLE__</div>
+      <div class="section">
+  <h2>Hospital Demo Requests</h2>
+  <div id="hospital-table">
+    __HOSPITAL_TABLE__
+  </div>
+</div>
+
+<div class="section">
+  <h2>Executive Walkthrough Requests</h2>
+  <div id="exec-table">
+    __EXEC_TABLE__
+  </div>
+</div>
+
+<div class="section">
+  <h2>Investor Intake</h2>
+  <div id="investor-table">
+    __INVESTOR_TABLE__
+  </div>
+</div>
     </div>
   </div>
+  <script>
+setInterval(async function () {
+    try {
+        const response = await fetch("/admin/review");
+        const html = await response.text();
+
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, "text/html");
+
+        const newHospital = doc.querySelector("#hospital-table");
+        const newExec = doc.querySelector("#exec-table");
+        const newInvestor = doc.querySelector("#investor-table");
+
+        if (newHospital) {
+            document.querySelector("#hospital-table").innerHTML = newHospital.innerHTML;
+        }
+
+        if (newExec) {
+            document.querySelector("#exec-table").innerHTML = newExec.innerHTML;
+        }
+
+        if (newInvestor) {
+            document.querySelector("#investor-table").innerHTML = newInvestor.innerHTML;
+        }
+
+    } catch (err) {
+        console.error("Admin auto refresh failed:", err);
+    }
+}, 7000);
+</script>
 </body>
 </html>
 """
