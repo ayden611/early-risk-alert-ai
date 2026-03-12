@@ -3086,6 +3086,6 @@ def create_app() -> Flask:
             mimetype="text/plain"
         )
         
-         return app
+    return app
 
 
