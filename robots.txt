@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://earlyriskalertai.com/sitemap.xml
