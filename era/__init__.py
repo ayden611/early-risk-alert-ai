@@ -3041,5 +3041,12 @@ def create_app() -> Flask:
                 f"stream:alerts:{tenant_id}:{patient_id}",
             ],
         })
-
+        
+    @@app.route("/robots.txt")
+    def robots_txt():
+        return Response(
+            "User-agent: *\nAllow: /\nSitemap: https://earlyriskalertai.com/sitemap.xml",
+            mimetype="text/plain"
+        )
+    
     return app
