@@ -878,8 +878,9 @@ MAIN_HTML = r"""
     submitLeadForm("executiveLeadForm", "/submit/executive", "executiveLeadResult", "Executive walkthrough request submitted successfully.");
     submitLeadForm("investorLeadForm", "/submit/investor", "investorLeadResult", "Investor request submitted successfully.");
 
-    async function refreshCommandCenter() {
-      try {
+  
+async function refreshCommandCenter() {
+  try {
     const res = await fetch("/api/v1/dashboard/overview?tenant_id=demo&refresh=" + Date.now(), {
       headers: { "Accept": "application/json" },
       cache: "no-store"
@@ -890,7 +891,6 @@ MAIN_HTML = r"""
       document.getElementById("cc-open-alerts").textContent = data.open_alerts ?? 0;
       document.getElementById("cc-critical-alerts").textContent = data.critical_alerts ?? 0;
       document.getElementById("cc-avg-risk").textContent = Number(data.avg_risk_score ?? 0).toFixed(1);
-      document.getElementById("cc-events-hour").textContent = data.events_last_hour ?? 0;
       document.getElementById("cc-patients-alerts").textContent = data.patients_with_alerts ?? 0;
     }
   } catch (err) {
@@ -923,12 +923,11 @@ MAIN_HTML = r"""
         }).join("");
       }
 
-      const monitorA = alerts[0] || {};
-      const monitorB = alerts[1] || {};
-      const monitorC = alerts[2] || {};
+      const monitorA = alerts[0] || { severity: "critical", risk_score: 9.1 };
+      const monitorB = alerts[1] || { severity: "high", risk_score: 8.2 };
 
-      function setMonitor(prefix, alert, defaults) {
-        const severity = (alert.severity || defaults.severity || "stable").toLowerCase();
+      function setMonitor(prefix, alert) {
+        const severity = (alert.severity || "stable").toLowerCase();
         const statusEl = document.getElementById(prefix + "-status");
         const hrEl = document.getElementById(prefix + "-hr");
         const spo2El = document.getElementById(prefix + "-spo2");
@@ -941,12 +940,12 @@ MAIN_HTML = r"""
 
         statusEl.textContent = statusText;
         statusEl.className =
-          "monitor-status " +
+          "icu-state " +
           (severity === "critical"
-            ? "status-critical"
-            : (severity === "high" ? "status-warning" : "status-stable"));
+            ? "critical"
+            : (severity === "high" ? "warning" : "stable"));
 
-        const baseRisk = Number(alert.risk_score ?? defaults.risk ?? 3.4);
+        const baseRisk = Number(alert.risk_score ?? 3.4);
 
         const hr =
           severity === "critical"
@@ -982,14 +981,14 @@ MAIN_HTML = r"""
         riskEl.textContent = baseRisk.toFixed(1);
       }
 
-      setMonitor("monitor-a", monitorA, { severity: "critical", risk: 9.1 });
-      setMonitor("monitor-b", monitorB, { severity: "high", risk: 8.2 });
-      setMonitor("monitor-c", monitorC, { severity: "stable", risk: 3.4 });
+      setMonitor("monitor-a", monitorA);
+      setMonitor("monitor-b", monitorB);
     }
   } catch (err) {
     console.error("Snapshot refresh failed", err);
   }
 }
+
 
     refreshCommandCenter();
     setInterval(refreshCommandCenter, 5000);
