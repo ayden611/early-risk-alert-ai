@@ -2654,7 +2654,7 @@ def create_app() -> Flask:
     hospital_file = data_dir / "hospital_demo_requests.jsonl"
     exec_file = data_dir / "executive_walkthrough_requests.jsonl"
 
-    def send_notification_email(subject, message):
+def send_notification_email(subject, message):
     sender = INFO_EMAIL
     recipients = [INFO_EMAIL, FOUNDER_EMAIL]
 
