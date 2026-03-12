@@ -2643,6 +2643,7 @@ def send_notification_email(subject, message):
 
 def create_app() -> Flask:
     app = Flask(__name__, template_folder="../templates")
+    print("ENTER create_app", flush=True)
     app.secret_key = os.getenv("SECRET_KEY", "early-risk-alert-dev-secret")
 
     data_dir = Path(app.instance_path)
@@ -3085,8 +3086,8 @@ def create_app() -> Flask:
             "User-agent: *\nAllow: /\nSitemap: https://earlyriskalertai.com/sitemap.xml",
             mimetype="text/plain"
         )
-     
-        return app
+         print("ABOUT TO RETURN APP", app, type(app), flush=True)
+         return app
 
 
 
