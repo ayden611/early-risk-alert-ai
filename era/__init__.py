@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
 from flask import Flask, jsonify, redirect, render_template_string, request, send_file
-from flask import send_file,
+from flask import send_file
 from flask import Response
 
 
