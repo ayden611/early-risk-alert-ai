@@ -2960,52 +2960,92 @@ def create_app() -> Flask:
         _update_row_status(investor_file, submitted_at, status)
         return redirect("/admin/review")
 
-    @app.get("/admin/review")
-    def admin_review():
-        hospital_rows = _read_jsonl(hospital_file)
-        exec_rows = _read_jsonl(exec_file)
-        investor_rows = _read_jsonl(investor_file)
+@app.get("/admin/review")
+def admin_review():
+    hospital_rows = _read_jsonl(hospital_file)
+    exec_rows = _read_jsonl(exec_file)
+    investor_rows = _read_jsonl(investor_file)
 
-        labels_h = {
-            "submitted_at": "Submitted",
-            "status": "Status",
-            "full_name": "Name",
-            "organization": "Organization",
-            "role": "Role",
-            "email": "Email",
-            "facility_type": "Facility Type",
-            "timeline": "Timeline",
-        }
-        labels_e = {
-            "submitted_at": "Submitted",
-            "status": "Status",
-            "full_name": "Name",
-            "organization": "Organization",
-            "title": "Executive Title",
-            "email": "Email",
-            "priority": "Priority",
-            "timeline": "Timeline",
-        }
-        labels_i = {
-            "submitted_at": "Submitted",
-            "status": "Status",
-            "full_name": "Name",
-            "organization": "Organization",
-            "role": "Role",
-            "email": "Email",
-            "investor_type": "Investor Type",
-            "check_size": "Check Size",
-            "timeline": "Timeline",
-        }
+    snapshot = _admin_snapshot_payload(hospital_rows, exec_rows, investor_rows)
 
-        html_out = ADMIN_HTML
-        html_out = html_out.replace("__HOSPITAL_COUNT__", str(len(hospital_rows)))
-        html_out = html_out.replace("__EXEC_COUNT__", str(len(exec_rows)))
-        html_out = html_out.replace("__INVESTOR_COUNT__", str(len(investor_rows)))
-        html_out = html_out.replace("__HOSPITAL_TABLE__", _table_html(hospital_rows, ["submitted_at", "status", "full_name", "organization", "role", "email", "facility_type", "timeline"], labels_h, "hospital"))
-        html_out = html_out.replace("__EXEC_TABLE__", _table_html(exec_rows, ["submitted_at", "status", "full_name", "organization", "title", "email", "priority", "timeline"], labels_e, "executive"))
-        html_out = html_out.replace("__INVESTOR_TABLE__", _table_html(investor_rows, ["submitted_at", "status", "full_name", "organization", "role", "email", "investor_type", "check_size", "timeline"], labels_i, "investor"))
-        return render_template_string(html_out)
+    auto_refresh_script = """
+<script>
+(function () {
+  const POLL_MS = 7000;
+  let busy = false;
+
+  function setText(id, value) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = value;
+  }
+
+  function setHTML(id, value) {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = value;
+  }
+
+  async function refreshAdminReview() {
+    if (busy) return;
+    busy = true;
+
+    try {
+      const res = await fetch('/admin/review/data', {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' },
+        cache: 'no-store'
+      });
+
+      if (!res.ok) {
+        busy = false;
+        return;
+      }
+
+      const data = await res.json();
+
+      setText('hospital-count', data.hospital_count);
+      setText('exec-count', data.exec_count);
+      setText('investor-count', data.investor_count);
+
+      setHTML('hospital-table-wrap', data.hospital_table);
+      setHTML('exec-table-wrap', data.exec_table);
+      setHTML('investor-table-wrap', data.investor_table);
+
+      setText('last-refresh-time', new Date().toLocaleTimeString());
+    } catch (err) {
+      console.error('Admin refresh failed:', err);
+    } finally {
+      busy = false;
+    }
+  }
+
+  window.addEventListener('focus', refreshAdminReview);
+  document.addEventListener('visibilitychange', function () {
+    if (!document.hidden) refreshAdminReview();
+  });
+
+  setInterval(refreshAdminReview, POLL_MS);
+})();
+</script>
+"""
+
+    html_out = ADMIN_HTML
+    html_out = html_out.replace("__HOSPITAL_COUNT__", str(snapshot["hospital_count"]))
+    html_out = html_out.replace("__EXEC_COUNT__", str(snapshot["exec_count"]))
+    html_out = html_out.replace("__INVESTOR_COUNT__", str(snapshot["investor_count"]))
+    html_out = html_out.replace("__HOSPITAL_TABLE__", snapshot["hospital_table"])
+    html_out = html_out.replace("__EXEC_TABLE__", snapshot["exec_table"])
+    html_out = html_out.replace("__INVESTOR_TABLE__", snapshot["investor_table"])
+    html_out = html_out.replace("__AUTO_REFRESH_SCRIPT__", auto_refresh_script)
+
+    return render_template_string(html_out)
+
+
+    @app.get("/admin/review/data")
+    def admin_review_data():
+    hospital_rows = _read_jsonl(hospital_file)
+    exec_rows = _read_jsonl(exec_file)
+    investor_rows = _read_jsonl(investor_file)
+    return jsonify(_admin_snapshot_payload(hospital_rows, exec_rows, investor_rows))
 
     @app.get("/admin/export.csv")
     def admin_export_csv():
