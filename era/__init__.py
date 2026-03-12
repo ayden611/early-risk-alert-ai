@@ -1,5 +1,4 @@
 from __future__ import annotations
-
 import csv
 import html
 import io
@@ -2656,6 +2655,24 @@ def create_app() -> Flask:
     hospital_file = data_dir / "hospital_demo_requests.jsonl"
     exec_file = data_dir / "executive_walkthrough_requests.jsonl"
 
+    def send_notification_email(subject, message):
+    sender = INFO_EMAIL
+    recipients = [INFO_EMAIL, FOUNDER_EMAIL]
+
+    msg = MIMEText(message)
+    msg["Subject"] = subject
+    msg["From"] = sender
+    msg["To"] = ", ".join(recipients)
+
+    try:
+        server = smtplib.SMTP("smtp.zoho.com", 587)
+        server.starttls()
+        server.login(sender, os.getenv("EMAIL_PASSWORD"))
+        server.sendmail(sender, recipients, msg.as_string())
+        server.quit()
+    except Exception as e:
+        print("Email send failed:", e)
+
     @app.before_request
     def force_single_domain():
         if not CANONICAL_HOST:
@@ -2709,6 +2726,23 @@ def create_app() -> Flask:
                 "message": request.form.get("message", "").strip(),
             }
             _save_jsonl(hospital_file, payload)
+            subject = "New Hospital Demo Request"
+
+            message = f"""
+            New Hospital Demo Request
+
+            Name: {payload['full_name']}
+            Organization: {payload['organization']}
+            Role: {payload['role']}
+            Email: {payload['email']}
+            Phone: {payload['phone']}
+            Facility Type: {payload['facility_type']}
+            Timeline: {payload['timeline']}
+            Message: {payload['message']}
+            """
+
+            send_notification_email(subject, message)
+
             return render_template_string(
                 _render_thank_you(
                     "hospital",
