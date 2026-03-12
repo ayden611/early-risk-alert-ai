@@ -49,6 +49,193 @@ MAIN_HTML = r"""
       --max:1360px;
     }
     
+.icu-wall{
+  display:grid;
+  grid-template-columns:1.15fr .85fr;
+  gap:16px;
+  margin-top:18px;
+  margin-bottom:18px;
+}
+.icu-main{
+  display:grid;
+  gap:14px;
+}
+.icu-monitor{
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:22px;
+  padding:16px;
+  background:
+    radial-gradient(circle at top right, rgba(91,212,255,.08), transparent 28%),
+    linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015)),
+    #08101d;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.02), 0 12px 30px rgba(0,0,0,.22);
+}
+.critical-monitor{border-color:rgba(255,107,107,.26)}
+.watch-monitor{border-color:rgba(247,190,104,.24)}
+.icu-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:12px;
+}
+.icu-kicker{
+  font-size:11px;
+  font-weight:900;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:#9eb4d6;
+}
+.icu-title{
+  margin-top:6px;
+  font-size:22px;
+  font-weight:1000;
+  line-height:1;
+  color:#eef4ff;
+}
+.icu-state{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:92px;
+  padding:8px 10px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:900;
+  letter-spacing:.05em;
+  text-transform:uppercase;
+}
+.icu-state.critical{
+  color:#ffd8d8;
+  background:rgba(255,107,107,.16);
+  border:1px solid rgba(255,107,107,.26);
+}
+.icu-state.warning{
+  color:#ffe7bf;
+  background:rgba(247,190,104,.16);
+  border:1px solid rgba(247,190,104,.24);
+}
+.icu-state.stable{
+  color:#dfffea;
+  background:rgba(91,211,141,.14);
+  border:1px solid rgba(91,211,141,.24);
+}
+.icu-screen{
+  position:relative;
+  height:240px;
+  border-radius:18px;
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,.06);
+  background:#050b14;
+}
+.screen-grid{
+  position:absolute;
+  inset:0;
+  background:
+    linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.01));
+  background-size:22px 22px, 22px 22px, auto;
+  pointer-events:none;
+}
+.ecg-svg{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+}
+.ecg-path{
+  fill:none;
+  stroke-width:4;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  stroke-dasharray:18 8;
+  animation:ecgMove 1.8s linear infinite;
+  filter:drop-shadow(0 0 10px currentColor);
+}
+.critical-path{
+  stroke:#ff6b6b;
+  color:#ff6b6b;
+}
+.warning-path{
+  stroke:#f7be68;
+  color:#f7be68;
+}
+@keyframes ecgMove{
+  from{stroke-dashoffset:0}
+  to{stroke-dashoffset:-52}
+}
+.screen-readouts{
+  position:absolute;
+  left:14px;
+  right:14px;
+  bottom:14px;
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:10px;
+}
+.readout{
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:14px;
+  padding:12px 10px;
+  background:rgba(255,255,255,.03);
+  backdrop-filter:blur(4px);
+}
+.r-k{
+  display:block;
+  font-size:11px;
+  letter-spacing:.10em;
+  text-transform:uppercase;
+  color:#9eb4d6;
+  font-weight:900;
+}
+.r-v{
+  display:block;
+  margin-top:8px;
+  font-size:22px;
+  line-height:1;
+  font-weight:1000;
+  color:#eef4ff;
+}
+.icu-side-rail{
+  display:grid;
+  gap:12px;
+}
+.rail-card{
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:18px;
+  padding:18px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02)),
+    linear-gradient(180deg, rgba(12,22,38,.76), rgba(9,16,30,.88));
+}
+.rail-k{
+  font-size:12px;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:#9eb4d6;
+  font-weight:900;
+}
+.rail-v{
+  font-size:34px;
+  font-weight:1000;
+  line-height:1;
+  margin-top:10px;
+  color:#ecf4ff;
+}
+.rail-sub{
+  margin-top:8px;
+  font-size:13px;
+  color:#c6d7ef;
+  line-height:1.5;
+}
+@media (max-width:1100px){
+  .icu-wall{grid-template-columns:1fr}
+}
+@media (max-width:760px){
+  .screen-readouts{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+    
 .monitor-grid{
   display:grid;
   grid-template-columns:repeat(3,minmax(0,1fr));
@@ -622,124 +809,144 @@ MAIN_HTML = r"""
       </div>
     </div>
 
-    <div class="monitor-grid">
-      <div class="monitor-panel critical">
-        <div class="monitor-top">
-          <div>
-            <div class="monitor-label">Patient Monitor A</div>
-            <div class="monitor-name">Critical Watch</div>
-          </div>
-          <div class="monitor-status status-critical" id="monitor-a-status">Critical</div>
+    ```html
+<div class="icu-wall">
+  <div class="icu-main">
+    <div class="icu-monitor critical-monitor">
+      <div class="icu-head">
+        <div>
+          <div class="icu-kicker">ICU Bed A</div>
+          <div class="icu-title">Critical Patient Monitor</div>
         </div>
-
-        <div class="wave-wrap">
-          <svg class="wave-svg" viewBox="0 0 600 120" preserveAspectRatio="none" aria-hidden="true">
-            <path id="wave-a" class="wave-line critical-line"
-              d="M0,72 L18,72 L30,72 L42,72 L54,72 L66,72 L78,72 L90,72 L102,72 L114,72 L126,72
-                 L138,72 L150,30 L162,108 L174,72 L186,72 L198,72 L210,72 L222,72 L234,72 L246,72
-                 L258,72 L270,72 L282,72 L294,72 L306,34 L318,106 L330,72 L342,72 L354,72 L366,72
-                 L378,72 L390,72 L402,72 L414,72 L426,72 L438,72 L450,72 L462,28 L474,108 L486,72
-                 L498,72 L510,72 L522,72 L534,72 L546,72 L558,72 L570,72 L582,72 L600,72" />
-          </svg>
-        </div>
-
-        <div class="monitor-metrics">
-          <div class="metric-box">
-            <span class="metric-k">HR</span>
-            <span class="metric-v" id="monitor-a-hr">128</span>
-          </div>
-          <div class="metric-box">
-            <span class="metric-k">SpO₂</span>
-            <span class="metric-v" id="monitor-a-spo2">89</span>
-          </div>
-          <div class="metric-box">
-            <span class="metric-k">BP</span>
-            <span class="metric-v" id="monitor-a-bp">164/98</span>
-          </div>
-          <div class="metric-box">
-            <span class="metric-k">Risk</span>
-            <span class="metric-v" id="monitor-a-risk">9.1</span>
-          </div>
-        </div>
+        <div class="icu-state critical" id="monitor-a-status">Critical</div>
       </div>
 
-      <div class="monitor-panel warning">
-        <div class="monitor-top">
-          <div>
-            <div class="monitor-label">Patient Monitor B</div>
-            <div class="monitor-name">Escalation Watch</div>
-          </div>
-          <div class="monitor-status status-warning" id="monitor-b-status">High</div>
-        </div>
+      <div class="icu-screen">
+        <div class="screen-grid"></div>
+        <svg class="ecg-svg" viewBox="0 0 1200 220" preserveAspectRatio="none" aria-hidden="true">
+          <path
+            id="ecg-a"
+            class="ecg-path critical-path"
+            d="M0 130
+               L40 130 L70 130 L90 130
+               L110 130 L130 130 L150 130
+               L170 130 L190 130
+               L210 130 L225 110 L240 145 L255 60 L270 185 L285 128
+               L300 130 L340 130 L380 130
+               L420 130 L435 112 L450 145 L465 65 L480 185 L495 128
+               L510 130 L550 130 L590 130
+               L630 130 L645 112 L660 145 L675 58 L690 190 L705 128
+               L720 130 L760 130 L800 130
+               L840 130 L855 114 L870 142 L885 63 L900 186 L915 128
+               L930 130 L970 130 L1010 130
+               L1050 130 L1065 112 L1080 144 L1095 60 L1110 184 L1125 128
+               L1140 130 L1200 130" />
+        </svg>
 
-        <div class="wave-wrap">
-          <svg class="wave-svg" viewBox="0 0 600 120" preserveAspectRatio="none" aria-hidden="true">
-            <path id="wave-b" class="wave-line warning-line"
-              d="M0,72 L20,72 L40,72 L60,72 L80,72 L100,72 L120,72 L140,72 L160,58 L180,86 L200,72
-                 L220,72 L240,72 L260,72 L280,72 L300,60 L320,84 L340,72 L360,72 L380,72 L400,72
-                 L420,72 L440,56 L460,88 L480,72 L500,72 L520,72 L540,72 L560,72 L580,72 L600,72" />
-          </svg>
-        </div>
-
-        <div class="monitor-metrics">
-          <div class="metric-box">
-            <span class="metric-k">HR</span>
-            <span class="metric-v" id="monitor-b-hr">112</span>
+        <div class="screen-readouts">
+          <div class="readout">
+            <span class="r-k">HR</span>
+            <span class="r-v" id="monitor-a-hr">128</span>
           </div>
-          <div class="metric-box">
-            <span class="metric-k">SpO₂</span>
-            <span class="metric-v" id="monitor-b-spo2">93</span>
+          <div class="readout">
+            <span class="r-k">SpO₂</span>
+            <span class="r-v" id="monitor-a-spo2">89</span>
           </div>
-          <div class="metric-box">
-            <span class="metric-k">BP</span>
-            <span class="metric-v" id="monitor-b-bp">148/90</span>
+          <div class="readout">
+            <span class="r-k">BP</span>
+            <span class="r-v" id="monitor-a-bp">164/98</span>
           </div>
-          <div class="metric-box">
-            <span class="metric-k">Risk</span>
-            <span class="metric-v" id="monitor-b-risk">8.2</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="monitor-panel stable">
-        <div class="monitor-top">
-          <div>
-            <div class="monitor-label">Patient Monitor C</div>
-            <div class="monitor-name">Stable Watch</div>
-          </div>
-          <div class="monitor-status status-stable" id="monitor-c-status">Stable</div>
-        </div>
-
-        <div class="wave-wrap">
-          <svg class="wave-svg" viewBox="0 0 600 120" preserveAspectRatio="none" aria-hidden="true">
-            <path id="wave-c" class="wave-line stable-line"
-              d="M0,72 L18,72 L36,72 L54,72 L72,72 L90,72 L108,68 L126,76 L144,72 L162,72 L180,72
-                 L198,72 L216,69 L234,75 L252,72 L270,72 L288,72 L306,68 L324,76 L342,72 L360,72
-                 L378,72 L396,70 L414,74 L432,72 L450,72 L468,72 L486,69 L504,75 L522,72 L540,72
-                 L558,72 L576,70 L594,74 L600,72" />
-          </svg>
-        </div>
-
-        <div class="monitor-metrics">
-          <div class="metric-box">
-            <span class="metric-k">HR</span>
-            <span class="metric-v" id="monitor-c-hr">84</span>
-          </div>
-          <div class="metric-box">
-            <span class="metric-k">SpO₂</span>
-            <span class="metric-v" id="monitor-c-spo2">98</span>
-          </div>
-          <div class="metric-box">
-            <span class="metric-k">BP</span>
-            <span class="metric-v" id="monitor-c-bp">122/78</span>
-          </div>
-          <div class="metric-box">
-            <span class="metric-k">Risk</span>
-            <span class="metric-v" id="monitor-c-risk">3.4</span>
+          <div class="readout">
+            <span class="r-k">Risk</span>
+            <span class="r-v" id="monitor-a-risk">9.1</span>
           </div>
         </div>
       </div>
     </div>
+
+    <div class="icu-monitor watch-monitor">
+      <div class="icu-head">
+        <div>
+          <div class="icu-kicker">ICU Bed B</div>
+          <div class="icu-title">Escalation Watch Monitor</div>
+        </div>
+        <div class="icu-state warning" id="monitor-b-status">High</div>
+      </div>
+
+      <div class="icu-screen">
+        <div class="screen-grid"></div>
+        <svg class="ecg-svg" viewBox="0 0 1200 220" preserveAspectRatio="none" aria-hidden="true">
+          <path
+            id="ecg-b"
+            class="ecg-path warning-path"
+            d="M0 132
+               L50 132 L90 132 L130 132 L170 132
+               L210 132 L225 120 L240 140 L255 92 L270 165 L285 132
+               L300 132 L350 132 L400 132
+               L450 132 L465 118 L480 140 L495 96 L510 162 L525 132
+               L540 132 L590 132 L640 132
+               L690 132 L705 120 L720 138 L735 98 L750 162 L765 132
+               L780 132 L830 132 L880 132
+               L930 132 L945 120 L960 140 L975 95 L990 164 L1005 132
+               L1020 132 L1080 132 L1140 132 L1200 132" />
+        </svg>
+
+        <div class="screen-readouts">
+          <div class="readout">
+            <span class="r-k">HR</span>
+            <span class="r-v" id="monitor-b-hr">112</span>
+          </div>
+          <div class="readout">
+            <span class="r-k">SpO₂</span>
+            <span class="r-v" id="monitor-b-spo2">93</span>
+          </div>
+          <div class="readout">
+            <span class="r-k">BP</span>
+            <span class="r-v" id="monitor-b-bp">148/90</span>
+          </div>
+          <div class="readout">
+            <span class="r-k">Risk</span>
+            <span class="r-v" id="monitor-b-risk">8.2</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="icu-side-rail">
+    <div class="rail-card">
+      <div class="rail-k">Active Patient Alerts</div>
+      <div class="rail-v" id="cc-open-alerts">0</div>
+      <div class="rail-sub">Open platform alerts across the command center.</div>
+    </div>
+
+    <div class="rail-card">
+      <div class="rail-k">Critical Alerts</div>
+      <div class="rail-v" id="cc-critical-alerts">0</div>
+      <div class="rail-sub">Highest urgency cases needing immediate attention.</div>
+    </div>
+
+    <div class="rail-card">
+      <div class="rail-k">Avg Risk Score</div>
+      <div class="rail-v" id="cc-avg-risk">0.0</div>
+      <div class="rail-sub">Average severity score from the live monitoring engine.</div>
+    </div>
+
+    <div class="rail-card">
+      <div class="rail-k">Patients With Alerts</div>
+      <div class="rail-v" id="cc-patients-alerts">0</div>
+      <div class="rail-sub">Patients currently surfaced by the intelligence layer.</div>
+    </div>
+  </div>
+</div>
+
+<div class="stream-list" id="cc-alert-stream">
+  <div class="stream-item">
+    <div class="name">Waiting for live stream data</div>
+    <div class="meta">The command center updates automatically from the platform APIs.</div>
+  </div>
+</div>
+</div>
 
     <div class="stream-list" id="cc-alert-stream">
       <div class="stream-item">
