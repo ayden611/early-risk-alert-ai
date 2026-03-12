@@ -11,12 +11,8 @@ from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
 from flask import Flask, jsonify, redirect, render_template_string, request, send_file
-from flask import send_file
-from pathlib import Path
-
-@app.route("/robots.txt")
-def robots_txt():
-    return send_file(Path(__file__).resolve().parent.parent / "robots.txt")
+from flask import send_file,
+from flask import Response
 
 
 INFO_EMAIL = "info@earlyriskalertai.com"
