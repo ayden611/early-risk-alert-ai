@@ -2640,6 +2640,71 @@ def send_notification_email(subject, message):
     except Exception as e:
         print("Email send failed:", e)
 
+# 1) ADD THIS HELPER FUNCTION ABOVE create_app() (or anywhere above @app.get("/admin/review"))
+
+def _admin_snapshot_payload(
+    hospital_rows: list[dict[str, Any]],
+    exec_rows: list[dict[str, Any]],
+    investor_rows: list[dict[str, Any]],
+) -> dict[str, Any]:
+    def sort_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        return sorted(rows, key=lambda r: r.get("submitted_at", ""), reverse=True)
+
+    hospital_rows = sort_rows(hospital_rows)
+    exec_rows = sort_rows(exec_rows)
+    investor_rows = sort_rows(investor_rows)
+
+    return {
+        "hospital_count": len(hospital_rows),
+        "exec_count": len(exec_rows),
+        "investor_count": len(investor_rows),
+        "hospital_table": _table_html(
+            hospital_rows,
+            ["submitted_at", "status", "full_name", "organization", "role", "email", "facility_type", "timeline"],
+            {
+                "submitted_at": "Submitted",
+                "status": "Status",
+                "full_name": "Name",
+                "organization": "Organization",
+                "role": "Role",
+                "email": "Email",
+                "facility_type": "Facility Type",
+                "timeline": "Timeline",
+            },
+            "hospital",
+        ),
+        "exec_table": _table_html(
+            exec_rows,
+            ["submitted_at", "status", "full_name", "organization", "title", "email", "priority", "timeline"],
+            {
+                "submitted_at": "Submitted",
+                "status": "Status",
+                "full_name": "Name",
+                "organization": "Organization",
+                "title": "Executive Title",
+                "email": "Email",
+                "priority": "Priority",
+                "timeline": "Timeline",
+            },
+            "executive",
+        ),
+        "investor_table": _table_html(
+            investor_rows,
+            ["submitted_at", "status", "full_name", "organization", "role", "email", "investor_type", "check_size", "timeline"],
+            {
+                "submitted_at": "Submitted",
+                "status": "Status",
+                "full_name": "Name",
+                "organization": "Organization",
+                "role": "Role",
+                "email": "Email",
+                "investor_type": "Investor Type",
+                "check_size": "Check Size",
+                "timeline": "Timeline",
+            },
+            "investor",
+        ),
+    }
 
 def create_app() -> Flask:
     app = Flask(__name__, template_folder="../templates")
