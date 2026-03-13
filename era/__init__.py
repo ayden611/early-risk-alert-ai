@@ -405,792 +405,300 @@ THANK_YOU_HTML = r"""
 """
 
 
-Use this as your new `COMMAND_CENTER_HTML` block exactly as pasted.
-
-It’s paste-ready and matches your current `/api/command-center-stream` and `/api/v1/live-snapshot` setup.
-
 COMMAND_CENTER_HTML = r"""
 <!doctype html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="utf-8">
-  <title>Early Risk Alert AI · Hospital Command Center</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <style>
-    :root{
-      --bg:#040913;
-      --bg2:#07101c;
-      --panel:#0d1728;
-      --panel2:#101d33;
-      --panel3:#07111e;
-      --line:rgba(255,255,255,.08);
-      --line2:rgba(255,255,255,.05);
-      --text:#eef4ff;
-      --muted:#9fb4d6;
-      --blue:#7aa2ff;
-      --cyan:#5bd4ff;
-      --green:#38d39f;
-      --amber:#f4bd6a;
-      --red:#ff667d;
-      --purple:#ba8cff;
-      --shadow:0 18px 48px rgba(0,0,0,.34);
-      --r:20px;
-    }
-    *{box-sizing:border-box}
-    html,body{margin:0;padding:0;background:
-      radial-gradient(circle at top left, rgba(91,212,255,.06), transparent 20%),
-      radial-gradient(circle at 88% 10%, rgba(122,162,255,.05), transparent 18%),
-      linear-gradient(180deg,var(--bg),var(--bg2));
-      color:var(--text);
-      font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-    }
-    a{text-decoration:none;color:inherit}
-    .wrap{max-width:1680px;margin:0 auto;padding:18px}
-    .card{
-      border:1px solid var(--line);
-      border-radius:22px;
-      background:
-        radial-gradient(circle at top right, rgba(91,212,255,.05), transparent 28%),
-        linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015)),
-        var(--panel);
-      box-shadow:var(--shadow);
-    }
+<meta charset="utf-8">
+<title>Early Risk Alert AI – Hospital Operations Cockpit</title>
 
-    .topbar{
-      display:grid;
-      grid-template-columns:1.2fr auto;
-      gap:16px;
-      align-items:center;
-      padding:18px 20px;
-      margin-bottom:16px;
-    }
-    .eyebrow{font-size:11px;font-weight:900;letter-spacing:.16em;text-transform:uppercase;color:#9fdcff}
-    .title{margin-top:8px;font-size:44px;font-weight:1000;line-height:.94;letter-spacing:-.05em}
-    .subtitle{margin-top:10px;color:#c6d7ef;line-height:1.65;max-width:960px}
-    .actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
-    .btn{
-      display:inline-flex;align-items:center;justify-content:center;gap:8px;
-      padding:13px 16px;border-radius:14px;font-size:14px;font-weight:1000;
-      border:1px solid transparent;
-    }
-    .btn.primary{background:linear-gradient(135deg,var(--blue),var(--cyan));color:#08111f}
-    .btn.secondary{background:rgba(255,255,255,.03);border-color:var(--line);color:var(--text)}
+<style>
 
-    .alarm-banner{
-      margin-bottom:16px;
-      border:1px solid rgba(255,255,255,.08);
-      border-radius:18px;
-      overflow:hidden;
-      background:
-        linear-gradient(90deg, rgba(255,102,125,.10), rgba(244,189,106,.08), rgba(91,212,255,.06)),
-        rgba(8,16,29,.96);
-    }
-    .alarm-head{
-      display:flex;align-items:center;justify-content:space-between;gap:12px;
-      padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.06)
-    }
-    .alarm-title{font-size:11px;font-weight:1000;letter-spacing:.16em;text-transform:uppercase;color:#d8ecff}
-    .alarm-live{
-      display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:#eaf8ff
-    }
-    .alarm-live::before{
-      content:"";width:8px;height:8px;border-radius:999px;background:var(--green);
-      box-shadow:0 0 0 0 rgba(56,211,159,.55);animation:pulse 1.8s infinite
-    }
-    @keyframes pulse{
-      0%{box-shadow:0 0 0 0 rgba(56,211,159,.55)}
-      70%{box-shadow:0 0 0 12px rgba(56,211,159,0)}
-      100%{box-shadow:0 0 0 0 rgba(56,211,159,0)}
-    }
-    .alarm-track{overflow:hidden;white-space:nowrap;padding:14px 0}
-    .alarm-move{display:inline-flex;gap:14px;padding-left:100%;animation:marquee 26s linear infinite}
-    @keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-100%)}}
-    .alarm-pill{
-      display:inline-flex;align-items:center;gap:10px;padding:10px 14px;border-radius:999px;
-      border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);
-      font-size:13px;font-weight:900;color:#eef4ff
-    }
-    .dot{width:9px;height:9px;border-radius:999px;display:inline-block}
-    .dot.critical{background:var(--red);box-shadow:0 0 10px rgba(255,102,125,.45)}
-    .dot.high{background:var(--amber);box-shadow:0 0 10px rgba(244,189,106,.35)}
-    .dot.stable{background:var(--green);box-shadow:0 0 10px rgba(56,211,159,.35)}
+body{
+background:#06101c;
+color:white;
+font-family:Arial;
+margin:0;
+padding:30px;
+}
 
-    .kpi-grid{
-      display:grid;grid-template-columns:repeat(8,1fr);gap:12px;margin-bottom:16px
-    }
-    .kpi{
-      padding:16px;border-radius:18px;border:1px solid var(--line);
-      background:
-        linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015)),
-        var(--panel2);
-      box-shadow:var(--shadow);
-    }
-    .kpi .k{font-size:11px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:#9fdcff}
-    .kpi .v{margin-top:10px;font-size:32px;font-weight:1000;line-height:1}
-    .kpi .s{margin-top:8px;color:#c6d7ef;font-size:12px;line-height:1.45}
+.title{
+font-size:34px;
+font-weight:700;
+margin-bottom:10px;
+}
 
-    .layout{
-      display:grid;grid-template-columns:1.55fr .85fr;gap:16px
-    }
+.subtitle{
+opacity:.7;
+margin-bottom:30px;
+}
 
-    .left-stack,.right-stack{display:grid;gap:16px}
+.grid{
+display:grid;
+grid-template-columns:2fr 1fr;
+gap:20px;
+}
 
-    .section-pad{padding:18px}
-    .section-head{
-      display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px
-    }
-    .section-title{
-      font-size:11px;font-weight:1000;letter-spacing:.16em;text-transform:uppercase;color:#9fdcff
-    }
-    .section-copy{color:#c6d7ef;line-height:1.6}
+.wall{
+display:grid;
+grid-template-columns:repeat(2,1fr);
+gap:20px;
+}
 
-    .monitor-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
-    .monitor{
-      border:1px solid rgba(255,255,255,.08);
-      border-radius:20px;
-      padding:14px;
-      background:
-        radial-gradient(circle at top right, rgba(91,212,255,.05), transparent 28%),
-        linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.01)),
-        var(--panel3);
-      box-shadow:inset 0 0 0 1px rgba(255,255,255,.02);
-    }
-    .monitor.critical{border-color:rgba(255,102,125,.26)}
-    .monitor.high{border-color:rgba(244,189,106,.24)}
-    .monitor.stable{border-color:rgba(56,211,159,.24)}
-    .monitor-top{
-      display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px
-    }
-    .monitor-k{font-size:11px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:#9eb4d6}
-    .monitor-name{margin-top:6px;font-size:20px;font-weight:1000;line-height:1}
-    .monitor-sub{margin-top:6px;font-size:12px;color:#bed1ea}
-    .badge{
-      display:inline-flex;align-items:center;justify-content:center;min-width:98px;padding:8px 10px;border-radius:999px;
-      font-size:12px;font-weight:900;letter-spacing:.05em;text-transform:uppercase
-    }
-    .badge.critical{background:rgba(255,102,125,.16);border:1px solid rgba(255,102,125,.28);color:#ffd8e0}
-    .badge.high{background:rgba(244,189,106,.16);border:1px solid rgba(244,189,106,.28);color:#ffe5bb}
-    .badge.stable{background:rgba(56,211,159,.16);border:1px solid rgba(56,211,159,.28);color:#d9ffec}
+.monitor{
+background:#0c1a2c;
+border-radius:16px;
+padding:18px;
+border:1px solid rgba(255,255,255,.1);
+box-shadow:0 10px 30px rgba(0,0,0,.4);
+}
 
-    .screen{
-      position:relative;height:230px;border-radius:18px;overflow:hidden;border:1px solid rgba(255,255,255,.06);background:#050b14;
-    }
-    .screen-grid{
-      position:absolute;inset:0;
-      background:
-        linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px),
-        linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.01));
-      background-size:22px 22px,22px 22px,auto;
-      pointer-events:none;
-    }
-    .scanline{
-      position:absolute;inset:0;
-      background:linear-gradient(180deg, transparent 0%, rgba(91,212,255,.03) 48%, transparent 100%);
-      animation:scan 5s linear infinite;
-      pointer-events:none
-    }
-    @keyframes scan{
-      0%{transform:translateY(-100%)}
-      100%{transform:translateY(100%)}
-    }
-    .wave-svg,.spark-svg{position:absolute;inset:0;width:100%;height:100%}
-    .wave-line{
-      fill:none;stroke-width:4;stroke-linecap:round;stroke-linejoin:round;
-      stroke-dasharray:18 8;animation:ecgMove 1.8s linear infinite;filter:drop-shadow(0 0 10px currentColor)
-    }
-    .wave-line.critical{stroke:var(--red);color:var(--red)}
-    .wave-line.high{stroke:var(--amber);color:var(--amber)}
-    .wave-line.stable{stroke:var(--green);color:var(--green)}
-    @keyframes ecgMove{from{stroke-dashoffset:0}to{stroke-dashoffset:-52}}
+.monitor h3{
+margin:0 0 10px;
+}
 
-    .screen-readouts{
-      position:absolute;left:12px;right:12px;bottom:12px;display:grid;grid-template-columns:repeat(5,1fr);gap:8px
-    }
-    .readout{
-      border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:10px;background:rgba(255,255,255,.03);backdrop-filter:blur(4px)
-    }
-    .readout .rk{display:block;font-size:10px;letter-spacing:.10em;text-transform:uppercase;color:#9eb4d6;font-weight:900}
-    .readout .rv{display:block;margin-top:6px;font-size:18px;line-height:1;font-weight:1000}
+.metric{
+font-size:22px;
+margin:6px 0;
+}
 
-    .rail-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
-    .rail-card{
-      border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:16px;background:rgba(255,255,255,.03)
-    }
-    .rail-k{font-size:11px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:#9fdcff}
-    .rail-v{margin-top:10px;font-size:30px;font-weight:1000;line-height:1}
-    .rail-s{margin-top:8px;color:#c6d7ef;font-size:13px;line-height:1.5}
+.ecg{
+height:90px;
+background:black;
+border-radius:6px;
+margin:12px 0;
+position:relative;
+overflow:hidden;
+}
 
-    .feed-list,.queue-list,.board-list,.zone-list,.patient-list{display:grid;gap:10px;margin-top:14px}
-    .feed-item,.queue-item,.board-item,.zone-item,.patient-row{
-      padding:12px 14px;border:1px solid rgba(255,255,255,.08);border-radius:14px;background:rgba(255,255,255,.03)
-    }
-    .feed-item .n,.queue-item .n,.board-item .n,.zone-item .n,.patient-row .n{
-      font-size:14px;font-weight:1000;color:#eef4ff;display:flex;align-items:center;gap:10px
-    }
-    .feed-item .m,.queue-item .m,.board-item .m,.zone-item .m,.patient-row .m{
-      font-size:13px;color:#bdd0ea;margin-top:6px;line-height:1.5
-    }
+.wave{
+position:absolute;
+width:200%;
+height:100%;
+background:
+linear-gradient(90deg, transparent 0%, #00ff9c 40%, transparent 60%);
+animation:wave 2s linear infinite;
+opacity:.6;
+}
 
-    .patient-table{
-      display:grid;grid-template-columns:1.2fr .7fr .7fr .7fr .7fr .9fr .9fr;gap:10px;align-items:center
-    }
-    .patient-head{
-      padding:0 2px 8px;color:#9eb4d6;font-size:11px;font-weight:900;letter-spacing:.14em;text-transform:uppercase
-    }
-    .spark{
-      width:100%;height:34px;border-radius:10px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);overflow:hidden
-    }
-    .spark-path{fill:none;stroke-width:2.8;stroke-linecap:round;stroke-linejoin:round}
-    .spark-path.hr{stroke:var(--cyan)}
-    .spark-path.risk{stroke:var(--purple)}
+@keyframes wave{
+0%{left:-100%}
+100%{left:100%}
+}
 
-    .zone-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
-    .zone-item .tag{
-      display:inline-flex;align-items:center;justify-content:center;padding:7px 10px;border-radius:999px;
-      font-size:11px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;margin-top:10px
-    }
-    .tag.good{background:rgba(56,211,159,.14);border:1px solid rgba(56,211,159,.26);color:#d9ffec}
-    .tag.watch{background:rgba(244,189,106,.14);border:1px solid rgba(244,189,106,.26);color:#ffe6bd}
-    .tag.hot{background:rgba(255,102,125,.14);border:1px solid rgba(255,102,125,.26);color:#ffd8e0}
+.status{
+padding:6px 12px;
+border-radius:20px;
+display:inline-block;
+font-size:12px;
+margin-top:10px;
+}
 
-    .status-bar{
-      display:flex;gap:10px;flex-wrap:wrap;margin-top:12px
-    }
-    .status-chip{
-      display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:999px;font-size:12px;font-weight:900;
-      letter-spacing:.06em;text-transform:uppercase;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);color:#eef4ff
-    }
-    .status-chip .s-dot{width:9px;height:9px;border-radius:999px}
-    .status-chip .s-dot.red{background:var(--red)}
-    .status-chip .s-dot.amber{background:var(--amber)}
-    .status-chip .s-dot.green{background:var(--green)}
-    .status-chip .s-dot.blue{background:var(--blue)}
+.stable{background:#2ecc71}
+.high{background:#f1c40f}
+.critical{background:#e74c3c}
 
-    @media (max-width:1440px){
-      .kpi-grid{grid-template-columns:repeat(4,1fr)}
-      .layout{grid-template-columns:1fr}
-    }
-    @media (max-width:960px){
-      .kpi-grid{grid-template-columns:repeat(2,1fr)}
-      .monitor-grid{grid-template-columns:1fr}
-      .zone-grid,.rail-grid{grid-template-columns:1fr}
-      .proof-grid{grid-template-columns:1fr}
-      .patient-table{grid-template-columns:1fr}
-      .screen-readouts{grid-template-columns:repeat(2,1fr)}
-      .topbar{grid-template-columns:1fr}
-    }
-  </style>
+.sidepanel{
+display:grid;
+gap:20px;
+}
+
+.card{
+background:#0d1b30;
+border-radius:16px;
+padding:16px;
+border:1px solid rgba(255,255,255,.1);
+}
+
+.card h4{
+margin-top:0;
+}
+
+.spark{
+height:40px;
+background:black;
+border-radius:6px;
+margin-top:10px;
+position:relative;
+overflow:hidden;
+}
+
+.sparkline{
+position:absolute;
+width:200%;
+height:100%;
+background:linear-gradient(90deg, transparent 0%, #5bd4ff 40%, transparent 60%);
+animation:wave 3s linear infinite;
+opacity:.6;
+}
+
+.heatmap{
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:8px;
+margin-top:10px;
+}
+
+.heat{
+height:40px;
+border-radius:6px;
+}
+
+.low{background:#2ecc71}
+.medium{background:#f1c40f}
+.highh{background:#e74c3c}
+
+.queue{
+margin-top:10px;
+}
+
+.queue div{
+padding:6px 0;
+border-bottom:1px solid rgba(255,255,255,.1);
+}
+
+.capacity{
+font-size:28px;
+font-weight:700;
+}
+
+</style>
+
 </head>
 <body>
-  <div class="wrap">
-    <div class="card topbar">
-      <div>
-        <div class="eyebrow">AI Hospital Mission Control</div>
-        <div class="title">Early Risk Alert AI · Hospital Command Center</div>
-        <div class="subtitle">
-          ICU-grade waveform monitors, escalation queue, census tracking, rapid response view, clinical feed,
-          care coordination board, unit status visibility, and real-time predictive telemetry in one flagship command center.
-        </div>
-      </div>
-      <div class="actions">
-        <a class="btn primary" href="/">Return Home</a>
-        <a class="btn secondary" href="/admin/review">Admin Review</a>
-      </div>
-    </div>
 
-    <div class="alarm-banner">
-      <div class="alarm-head">
-        <div class="alarm-title">Live Clinical Activity Ticker</div>
-        <div class="alarm-live">Predictive Stream</div>
-      </div>
-      <div class="alarm-track">
-        <div class="alarm-move" id="ticker">
-          <div class="alarm-pill"><span class="dot critical"></span> Critical deterioration signal surfaced</div>
-          <div class="alarm-pill"><span class="dot high"></span> High-risk escalation routed to rapid response</div>
-          <div class="alarm-pill"><span class="dot stable"></span> Stable patient trend confirmed</div>
-          <div class="alarm-pill"><span class="dot critical"></span> ICU watchlist refreshed</div>
-          <div class="alarm-pill"><span class="dot high"></span> Mission control telemetry synced</div>
-        </div>
-      </div>
-    </div>
+<div class="title">
+Early Risk Alert AI — Hospital Command Center
+</div>
 
-    <div class="kpi-grid">
-      <div class="kpi"><div class="k">Open Alerts</div><div class="v" id="k-open">0</div><div class="s">Active AI-flagged alerts</div></div>
-      <div class="kpi"><div class="k">Critical Alerts</div><div class="v" id="k-critical">0</div><div class="s">Immediate intervention cases</div></div>
-      <div class="kpi"><div class="k">Avg Risk Score</div><div class="v" id="k-risk">0.0</div><div class="s">Average flagged-patient severity</div></div>
-      <div class="kpi"><div class="k">Patients With Alerts</div><div class="v" id="k-patients">0</div><div class="s">Patients under active watch</div></div>
-      <div class="kpi"><div class="k">Events Last Hour</div><div class="v" id="k-events">0</div><div class="s">Simulated clinical events</div></div>
-      <div class="kpi"><div class="k">Rapid Response</div><div class="v" id="k-rrt">0</div><div class="s">Cases needing escalation</div></div>
-      <div class="kpi"><div class="k">Focus Patient</div><div class="v" id="k-focus">p101</div><div class="s">Highest-priority patient ID</div></div>
-      <div class="kpi"><div class="k">Engine State</div><div class="v">LIVE</div><div class="s">Predictive monitoring online</div></div>
-    </div>
+<div class="subtitle">
+AI predictive monitoring · clinical alert intelligence · hospital operations cockpit
+</div>
 
-    <div class="layout">
-      <div class="left-stack">
-        <div class="card section-pad">
-          <div class="section-head">
-            <div>
-              <div class="section-title">Waveform monitor wall</div>
-              <div class="section-copy">Four active patient monitors with animated ECG waveforms, vitals, AI risk score, and escalation state.</div>
-            </div>
-          </div>
+<div class="grid">
 
-          <div class="monitor-grid">
-            <div class="monitor critical" id="card-m1">
-              <div class="monitor-top">
-                <div>
-                  <div class="monitor-k">ICU Bed A</div>
-                  <div class="monitor-name" id="m1-name">p101 · Patient 1042</div>
-                  <div class="monitor-sub" id="m1-sub">Trend: deteriorating · Confidence 0.94</div>
-                </div>
-                <div class="badge critical" id="m1-status">Critical</div>
-              </div>
-              <div class="screen">
-                <div class="screen-grid"></div>
-                <div class="scanline"></div>
-                <svg class="wave-svg" viewBox="0 0 1200 220" preserveAspectRatio="none">
-                  <path id="m1-wave" class="wave-line critical"
-                    d="M0 130 L40 130 L70 130 L90 130 L110 130 L130 130 L150 130 L170 130 L190 130 L210 130 L225 110 L240 145 L255 60 L270 185 L285 128 L300 130 L340 130 L380 130 L420 130 L435 112 L450 145 L465 65 L480 185 L495 128 L510 130 L550 130 L590 130 L630 130 L645 112 L660 145 L675 58 L690 190 L705 128 L720 130 L760 130 L800 130 L840 130 L855 114 L870 142 L885 63 L900 186 L915 128 L930 130 L970 130 L1010 130 L1050 130 L1065 112 L1080 144 L1095 60 L1110 184 L1125 128 L1140 130 L1200 130" />
-                </svg>
-                <div class="screen-readouts">
-                  <div class="readout"><span class="rk">HR</span><span class="rv" id="m1-hr">128</span></div>
-                  <div class="readout"><span class="rk">SpO₂</span><span class="rv" id="m1-spo2">89</span></div>
-                  <div class="readout"><span class="rk">BP</span><span class="rv" id="m1-bp">164/98</span></div>
-                  <div class="readout"><span class="rk">RR</span><span class="rv" id="m1-rr">28</span></div>
-                  <div class="readout"><span class="rk">Risk</span><span class="rv" id="m1-risk">9.1</span></div>
-                </div>
-              </div>
-            </div>
+<div class="wall" id="wall"></div>
 
-            <div class="monitor high" id="card-m2">
-              <div class="monitor-top">
-                <div>
-                  <div class="monitor-k">ICU Bed B</div>
-                  <div class="monitor-name" id="m2-name">p102 · Patient 2188</div>
-                  <div class="monitor-sub" id="m2-sub">Trend: watch · Confidence 0.88</div>
-                </div>
-                <div class="badge high" id="m2-status">High</div>
-              </div>
-              <div class="screen">
-                <div class="screen-grid"></div>
-                <div class="scanline"></div>
-                <svg class="wave-svg" viewBox="0 0 1200 220" preserveAspectRatio="none">
-                  <path id="m2-wave" class="wave-line high"
-                    d="M0 132 L50 132 L90 132 L130 132 L170 132 L210 132 L225 120 L240 140 L255 92 L270 165 L285 132 L300 132 L350 132 L400 132 L450 132 L465 118 L480 140 L495 96 L510 162 L525 132 L540 132 L590 132 L640 132 L690 132 L705 120 L720 138 L735 98 L750 162 L765 132 L780 132 L830 132 L880 132 L930 132 L945 120 L960 140 L975 95 L990 164 L1005 132 L1020 132 L1080 132 L1140 132 L1200 132" />
-                </svg>
-                <div class="screen-readouts">
-                  <div class="readout"><span class="rk">HR</span><span class="rv" id="m2-hr">112</span></div>
-                  <div class="readout"><span class="rk">SpO₂</span><span class="rv" id="m2-spo2">93</span></div>
-                  <div class="readout"><span class="rk">BP</span><span class="rv" id="m2-bp">148/90</span></div>
-                  <div class="readout"><span class="rk">RR</span><span class="rv" id="m2-rr">24</span></div>
-                  <div class="readout"><span class="rk">Risk</span><span class="rv" id="m2-risk">8.1</span></div>
-                </div>
-              </div>
-            </div>
+<div class="sidepanel">
 
-            <div class="monitor stable" id="card-m3">
-              <div class="monitor-top">
-                <div>
-                  <div class="monitor-k">Stepdown Bed C</div>
-                  <div class="monitor-name" id="m3-name">p103 · Patient 3045</div>
-                  <div class="monitor-sub" id="m3-sub">Trend: recovering · Confidence 0.81</div>
-                </div>
-                <div class="badge stable" id="m3-status">Stable</div>
-              </div>
-              <div class="screen">
-                <div class="screen-grid"></div>
-                <div class="scanline"></div>
-                <svg class="wave-svg" viewBox="0 0 1200 220" preserveAspectRatio="none">
-                  <path id="m3-wave" class="wave-line stable"
-                    d="M0 140 L40 140 L80 140 L120 140 L160 140 L200 140 L218 134 L236 146 L254 112 L272 156 L290 140 L330 140 L370 140 L410 140 L450 140 L468 134 L486 146 L504 112 L522 156 L540 140 L580 140 L620 140 L660 140 L700 140 L718 134 L736 146 L754 112 L772 156 L790 140 L830 140 L870 140 L910 140 L950 140 L968 134 L986 146 L1004 112 L1022 156 L1040 140 L1080 140 L1120 140 L1200 140" />
-                </svg>
-                <div class="screen-readouts">
-                  <div class="readout"><span class="rk">HR</span><span class="rv" id="m3-hr">82</span></div>
-                  <div class="readout"><span class="rk">SpO₂</span><span class="rv" id="m3-spo2">98</span></div>
-                  <div class="readout"><span class="rk">BP</span><span class="rv" id="m3-bp">122/78</span></div>
-                  <div class="readout"><span class="rk">RR</span><span class="rv" id="m3-rr">18</span></div>
-                  <div class="readout"><span class="rk">Risk</span><span class="rv" id="m3-risk">3.4</span></div>
-                </div>
-              </div>
-            </div>
+<div class="card">
+<h4>Oxygen Trend</h4>
+<div class="spark"><div class="sparkline"></div></div>
+</div>
 
-            <div class="monitor high" id="card-m4">
-              <div class="monitor-top">
-                <div>
-                  <div class="monitor-k">Remote Watch D</div>
-                  <div class="monitor-name" id="m4-name">p104 · Patient 4172</div>
-                  <div class="monitor-sub" id="m4-sub">Trend: watch · Confidence 0.86</div>
-                </div>
-                <div class="badge high" id="m4-status">High</div>
-              </div>
-              <div class="screen">
-                <div class="screen-grid"></div>
-                <div class="scanline"></div>
-                <svg class="wave-svg" viewBox="0 0 1200 220" preserveAspectRatio="none">
-                  <path id="m4-wave" class="wave-line high"
-                    d="M0 136 L40 136 L80 136 L120 136 L160 136 L200 136 L220 126 L240 142 L260 100 L280 162 L300 136 L340 136 L380 136 L420 136 L460 136 L480 126 L500 142 L520 100 L540 162 L560 136 L600 136 L640 136 L680 136 L720 136 L740 126 L760 142 L780 100 L800 162 L820 136 L860 136 L900 136 L940 136 L980 136 L1000 126 L1020 142 L1040 100 L1060 162 L1080 136 L1120 136 L1160 136 L1200 136" />
-                </svg>
-                <div class="screen-readouts">
-                  <div class="readout"><span class="rk">HR</span><span class="rv" id="m4-hr">105</span></div>
-                  <div class="readout"><span class="rk">SpO₂</span><span class="rv" id="m4-spo2">94</span></div>
-                  <div class="readout"><span class="rk">BP</span><span class="rv" id="m4-bp">142/88</span></div>
-                  <div class="readout"><span class="rk">RR</span><span class="rv" id="m4-rr">22</span></div>
-                  <div class="readout"><span class="rk">Risk</span><span class="rv" id="m4-risk">7.6</span></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+<div class="card">
+<h4>Risk Prediction Timeline</h4>
+<div class="spark"><div class="sparkline"></div></div>
+</div>
 
-        <div class="card section-pad">
-          <div class="section-head">
-            <div>
-              <div class="section-title">Care coordination board</div>
-              <div class="section-copy">Patient census, trend lines, and care-team view for command-center coordination.</div>
-            </div>
-          </div>
+<div class="card">
+<h4>Deterioration Forecast</h4>
+15 min: Moderate<br>
+1 hr: Elevated<br>
+4 hr: Critical
+</div>
 
-          <div class="patient-table patient-head">
-            <div>Patient</div>
-            <div>Status</div>
-            <div>Risk</div>
-            <div>HR</div>
-            <div>SpO₂</div>
-            <div>HR Trend</div>
-            <div>Risk Trend</div>
-          </div>
-          <div class="patient-list" id="patient-list">
-            <div class="patient-row">
-              <div class="patient-table">
-                <div class="n">Waiting for patient stream</div>
-                <div class="m">--</div>
-                <div class="m">--</div>
-                <div class="m">--</div>
-                <div class="m">--</div>
-                <div class="spark"></div>
-                <div class="spark"></div>
-              </div>
-            </div>
-          </div>
+<div class="card">
+<h4>Predictive Alert Clusters</h4>
+Respiratory: 3<br>
+Cardiac: 2<br>
+Hemodynamic: 1
+</div>
 
-          <div class="status-bar">
-            <div class="status-chip"><span class="s-dot red"></span>Rapid Response Queue</div>
-            <div class="status-chip"><span class="s-dot amber"></span>Escalation Watch</div>
-            <div class="status-chip"><span class="s-dot green"></span>Routine Monitoring</div>
-            <div class="status-chip"><span class="s-dot blue"></span>Command Center Online</div>
-          </div>
-        </div>
+<div class="card">
+<h4>Hospital Capacity</h4>
+<div class="capacity">78%</div>
+Beds Occupied
+</div>
 
-        <div class="card section-pad">
-          <div class="section-head">
-            <div>
-              <div class="section-title">Unit operations board</div>
-              <div class="section-copy">A hospital-style unit overview showing which areas are stable, on watch, or escalated.</div>
-            </div>
-          </div>
-          <div class="zone-grid" id="zone-grid">
-            <div class="zone-item"><div class="n">ICU North</div><div class="m">Monitoring bed occupancy, deterioration watch, and escalation queue.</div><div class="tag watch">Watch</div></div>
-            <div class="zone-item"><div class="n">Stepdown</div><div class="m">Post-acute stabilization and recovery oversight.</div><div class="tag good">Stable</div></div>
-            <div class="zone-item"><div class="n">ED Overflow</div><div class="m">Rapid triage visibility and escalation backup.</div><div class="tag hot">Elevated</div></div>
-            <div class="zone-item"><div class="n">Remote Watch</div><div class="m">Cross-site predictive monitoring and triage.</div><div class="tag watch">Watch</div></div>
-          </div>
-        </div>
-      </div>
+<div class="card">
+<h4>Staffing Load</h4>
+ICU Nurses: 82% capacity<br>
+Respiratory: 67%<br>
+Physicians: 74%
+</div>
 
-      <div class="right-stack">
-        <div class="card section-pad">
-          <div class="section-head">
-            <div>
-              <div class="section-title">Mission control metrics</div>
-              <div class="section-copy">House-wide monitoring metrics and operational state.</div>
-            </div>
-          </div>
-          <div class="rail-grid">
-            <div class="rail-card"><div class="rail-k">Engine State</div><div class="rail-v">LIVE</div><div class="rail-s">Predictive engine online</div></div>
-            <div class="rail-card"><div class="rail-k">Shift</div><div class="rail-v" id="rail-shift">Day</div><div class="rail-s">Live command-center coverage window</div></div>
-            <div class="rail-card"><div class="rail-k">Clock</div><div class="rail-v" id="rail-clock">--:--</div><div class="rail-s">Local command-center time</div></div>
-            <div class="rail-card"><div class="rail-k">Focus Patient</div><div class="rail-v" id="rail-focus">p101</div><div class="rail-s">Highest-priority watch target</div></div>
-            <div class="rail-card"><div class="rail-k">RRT Queue</div><div class="rail-v" id="rail-rrt">0</div><div class="rail-s">Rapid response activations</div></div>
-            <div class="rail-card"><div class="rail-k">Census</div><div class="rail-v" id="rail-census">4</div><div class="rail-s">Visible monitored patients</div></div>
-          </div>
-        </div>
+<div class="card">
+<h4>Unit Heatmap</h4>
+<div class="heatmap">
+<div class="heat low"></div>
+<div class="heat medium"></div>
+<div class="heat highh"></div>
+<div class="heat medium"></div>
+<div class="heat medium"></div>
+<div class="heat low"></div>
+<div class="heat highh"></div>
+<div class="heat medium"></div>
+</div>
+</div>
 
-        <div class="card section-pad">
-          <div class="section-title">Live alert feed</div>
-          <div class="section-copy">Newest alerts appear first with severity, patient ID, recommended action, and AI confidence.</div>
-          <div class="feed-list" id="feed-list">
-            <div class="feed-item">
-              <div class="n"><span class="dot stable"></span>Waiting for predictive stream</div>
-              <div class="m">The command center will populate as simulated patient signals arrive.</div>
-            </div>
-          </div>
-        </div>
+<div class="card">
+<h4>Rapid Response Queue</h4>
+<div class="queue" id="queue"></div>
+</div>
 
-        <div class="card section-pad">
-          <div class="section-title">Rapid response queue</div>
-          <div class="section-copy">Operational queue for critical and high-risk escalations.</div>
-          <div class="queue-list" id="queue-list">
-            <div class="queue-item">
-              <div class="n"><span class="dot high"></span>No current escalations</div>
-              <div class="m">The rapid response queue will populate from the predictive engine.</div>
-            </div>
-          </div>
-        </div>
+</div>
 
-        <div class="card section-pad">
-          <div class="section-title">Disposition and transport board</div>
-          <div class="section-copy">Hospital-style workflow summary for transfer, observation, and intervention planning.</div>
-          <div class="board-list" id="board-list">
-            <div class="board-item">
-              <div class="n"><span class="dot stable"></span>Awaiting workflow updates</div>
-              <div class="m">Transfer, stepdown, observation, and intervention states will appear here.</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+</div>
 
-  <script>
-    const historyStore = {};
+<script>
 
-    function setClock() {
-      const d = new Date();
-      const hh = d.getHours().toString().padStart(2, "0");
-      const mm = d.getMinutes().toString().padStart(2, "0");
-      document.getElementById("rail-clock").textContent = hh + ":" + mm;
-      document.getElementById("rail-shift").textContent = d.getHours() >= 19 || d.getHours() < 7 ? "Night" : "Day";
-    }
-    setClock();
-    setInterval(setClock, 1000);
+const wall=document.getElementById("wall")
+const queue=document.getElementById("queue")
 
-    function wavePath(status) {
-      if (status === "critical") {
-        return "M0 130 L40 130 L70 130 L90 130 L110 130 L130 130 L150 130 L170 130 L190 130 L210 130 L225 110 L240 145 L255 60 L270 185 L285 128 L300 130 L340 130 L380 130 L420 130 L435 112 L450 145 L465 65 L480 185 L495 128 L510 130 L550 130 L590 130 L630 130 L645 112 L660 145 L675 58 L690 190 L705 128 L720 130 L760 130 L800 130 L840 130 L855 114 L870 142 L885 63 L900 186 L915 128 L930 130 L970 130 L1010 130 L1050 130 L1065 112 L1080 144 L1095 60 L1110 184 L1125 128 L1140 130 L1200 130";
-      }
-      if (status === "high") {
-        return "M0 132 L50 132 L90 132 L130 132 L170 132 L210 132 L225 120 L240 140 L255 92 L270 165 L285 132 L300 132 L350 132 L400 132 L450 132 L465 118 L480 140 L495 96 L510 162 L525 132 L540 132 L590 132 L640 132 L690 132 L705 120 L720 138 L735 98 L750 162 L765 132 L780 132 L830 132 L880 132 L930 132 L945 120 L960 140 L975 95 L990 164 L1005 132 L1020 132 L1080 132 L1140 132 L1200 132";
-      }
-      return "M0 140 L40 140 L80 140 L120 140 L160 140 L200 140 L218 134 L236 146 L254 112 L272 156 L290 140 L330 140 L370 140 L410 140 L450 140 L468 134 L486 146 L504 112 L522 156 L540 140 L580 140 L620 140 L660 140 L700 140 L718 134 L736 146 L754 112 L772 156 L790 140 L830 140 L870 140 L910 140 L950 140 L968 134 L986 146 L1004 112 L1022 156 L1040 140 L1080 140 L1120 140 L1200 140";
-    }
+const evt=new EventSource("/api/command-center-stream")
 
-    function clsFromStatus(status) {
-      const s = String(status || "").toLowerCase();
-      return s === "critical" ? "critical" : (s === "high" ? "high" : "stable");
-    }
+evt.onmessage=function(e){
 
-    function keepHistory(patient) {
-      if (!historyStore[patient.patient_id]) {
-        historyStore[patient.patient_id] = { hr: [], risk: [] };
-      }
-      const h = historyStore[patient.patient_id];
-      h.hr.push(Number(patient.heart_rate || 0));
-      h.risk.push(Number(patient.risk_score || 0));
-      if (h.hr.length > 24) h.hr.shift();
-      if (h.risk.length > 24) h.risk.shift();
-    }
+const data=JSON.parse(e.data)
 
-    function sparkPath(values, width, height, low, high) {
-      if (!values.length) return "";
-      const range = Math.max(1, high - low);
-      return values.map((v, i) => {
-        const x = (i / Math.max(1, values.length - 1)) * width;
-        const y = height - ((v - low) / range) * height;
-        return (i === 0 ? "M" : "L") + x.toFixed(1) + " " + y.toFixed(1);
-      }).join(" ");
-    }
+const div=document.createElement("div")
+div.className="monitor"
 
-    function sparkSvg(values, cls, low, high) {
-      const path = sparkPath(values, 180, 34, low, high);
-      return `
-        <svg class="spark-svg" viewBox="0 0 180 34" preserveAspectRatio="none">
-          <path class="spark-path ${cls}" d="${path}"></path>
-        </svg>
-      `;
-    }
+let statusClass="stable"
+if(data.status==="HIGH") statusClass="high"
+if(data.status==="CRITICAL") statusClass="critical"
 
-    function applyMonitor(slot, patient, label) {
-      keepHistory(patient);
-      const cls = clsFromStatus(patient.status);
-      document.getElementById(slot + "-name").textContent = patient.patient_id + " · " + patient.name;
-      document.getElementById(slot + "-sub").textContent =
-        "Trend: " + patient.trend + " · Confidence " + Number(patient.confidence || 0).toFixed(2) +
-        " · " + patient.recommended_action;
-      const badge = document.getElementById(slot + "-status");
-      badge.textContent = patient.status;
-      badge.className = "badge " + cls;
-      document.getElementById(slot + "-hr").textContent = Math.round(patient.heart_rate);
-      document.getElementById(slot + "-spo2").textContent = Math.round(patient.spo2);
-      document.getElementById(slot + "-bp").textContent = Math.round(patient.bp_systolic) + "/" + Math.round(patient.bp_diastolic);
-      document.getElementById(slot + "-rr").textContent = Math.round(patient.resp_rate);
-      document.getElementById(slot + "-risk").textContent = Number(patient.risk_score).toFixed(1);
-      document.getElementById(slot + "-wave").setAttribute("d", wavePath(cls));
-      document.getElementById(slot + "-wave").setAttribute("class", "wave-line " + cls);
-      document.getElementById("card-" + slot).className = "monitor " + cls;
-    }
+div.innerHTML=`
 
-    function renderFeed(alerts) {
-      const feed = document.getElementById("feed-list");
-      if (!alerts.length) {
-        feed.innerHTML = '<div class="feed-item"><div class="n"><span class="dot stable"></span>No active alerts</div><div class="m">The predictive engine is online and waiting for new events.</div></div>';
-        return;
-      }
-      feed.innerHTML = alerts.slice(0, 6).map(a => {
-        const sev = clsFromStatus(a.severity);
-        return `
-          <div class="feed-item">
-            <div class="n"><span class="dot ${sev}"></span>${a.title} · ${a.patient_id}</div>
-            <div class="m">Severity: ${a.severity} · Risk ${Number(a.risk_score).toFixed(1)} · ${a.recommended_action} · Confidence ${Number(a.confidence).toFixed(2)}</div>
-          </div>
-        `;
-      }).join("");
-    }
+<h3>${data.patient}</h3>
 
-    function renderQueue(alerts) {
-      const queue = document.getElementById("queue-list");
-      const urgent = alerts.filter(a => ["critical","high"].includes(clsFromStatus(a.severity)));
-      if (!urgent.length) {
-        queue.innerHTML = '<div class="queue-item"><div class="n"><span class="dot stable"></span>No current escalations</div><div class="m">The rapid response queue will populate from the predictive engine.</div></div>';
-        return;
-      }
-      queue.innerHTML = urgent.slice(0, 5).map((a, idx) => {
-        const sev = clsFromStatus(a.severity);
-        const team = sev === "critical" ? "Rapid Response Team" : "Charge Nurse Review";
-        return `
-          <div class="queue-item">
-            <div class="n"><span class="dot ${sev}"></span>Queue ${idx + 1} · ${a.patient_id} · ${a.severity}</div>
-            <div class="m">${team} · ${a.recommended_action} · AI Confidence ${Number(a.confidence).toFixed(2)}</div>
-          </div>
-        `;
-      }).join("");
-    }
+<div class="metric">HR: ${data.heart_rate}</div>
+<div class="metric">SpO2: ${data.spo2}%</div>
+<div class="metric">BP: ${data.bp}</div>
+<div class="metric">AI Risk: ${data.risk}</div>
 
-    function renderBoard(patients) {
-      const board = document.getElementById("board-list");
-      board.innerHTML = patients.slice(0, 4).map((p, idx) => {
-        const cls = clsFromStatus(p.status);
-        let disp = "Continue Observation";
-        if (cls === "critical") disp = "Immediate Intervention / ICU Review";
-        else if (cls === "high") disp = "Escalation Watch / Bedside Reassessment";
-        else if (p.trend === "recovering") disp = "Stepdown Readiness Review";
-        return `
-          <div class="board-item">
-            <div class="n"><span class="dot ${cls}"></span>${p.patient_id} · ${p.name}</div>
-            <div class="m">Disposition: ${disp} · Trend: ${p.trend} · Temp ${Number(p.temp).toFixed(1)}°F</div>
-          </div>
-        `;
-      }).join("");
-    }
+<div class="ecg"><div class="wave"></div></div>
 
-    function renderTicker(alerts) {
-      const ticker = document.getElementById("ticker");
-      if (!alerts.length) return;
-      ticker.innerHTML = alerts.slice(0, 6).map(a => {
-        const sev = clsFromStatus(a.severity);
-        return `<div class="alarm-pill"><span class="dot ${sev}"></span>${a.title} · ${a.patient_id} · Risk ${Number(a.risk_score).toFixed(1)} · ${a.recommended_action}</div>`;
-      }).join("");
-    }
+<div class="status ${statusClass}">
+${data.status}
+</div>
 
-    function renderZones(patients) {
-      const grid = document.getElementById("zone-grid");
-      const critical = patients.filter(p => clsFromStatus(p.status) === "critical").length;
-      const high = patients.filter(p => clsFromStatus(p.status) === "high").length;
+`
 
-      const zones = [
-        { name: "ICU North", desc: critical ? critical + " critical case(s) under intervention watch." : "No critical cases currently assigned.", tag: critical ? "Elevated" : "Stable", cls: critical ? "hot" : "good" },
-        { name: "Stepdown", desc: patients.filter(p => p.trend === "recovering").length + " recovering patient(s) under stabilization review.", tag: "Stable", cls: "good" },
-        { name: "ED Overflow", desc: high ? high + " high-risk case(s) flagged for reassessment." : "No high-risk overflow cases right now.", tag: high ? "Watch" : "Stable", cls: high ? "watch" : "good" },
-        { name: "Remote Watch", desc: patients.length + " monitored patient(s) visible to mission control.", tag: "Watch", cls: "watch" }
-      ];
+wall.prepend(div)
 
-      grid.innerHTML = zones.map(z => `
-        <div class="zone-item">
-          <div class="n">${z.name}</div>
-          <div class="m">${z.desc}</div>
-          <div class="tag ${z.cls}">${z.tag}</div>
-        </div>
-      `).join("");
-    }
+if(wall.children.length>6){
+wall.removeChild(wall.lastChild)
+}
 
-    function renderPatientList(patients) {
-      const wrap = document.getElementById("patient-list");
-      wrap.innerHTML = patients.map(p => {
-        keepHistory(p);
-        const cls = clsFromStatus(p.status);
-        const h = historyStore[p.patient_id];
-        return `
-          <div class="patient-row">
-            <div class="patient-table">
-              <div>
-                <div class="n"><span class="dot ${cls}"></span>${p.patient_id} · ${p.name}</div>
-                <div class="m">${p.recommended_action}</div>
-              </div>
-              <div class="m">${p.status}</div>
-              <div class="m">${Number(p.risk_score).toFixed(1)}</div>
-              <div class="m">${Math.round(p.heart_rate)}</div>
-              <div class="m">${Math.round(p.spo2)}%</div>
-              <div class="spark">${sparkSvg(h.hr, "hr", 60, 145)}</div>
-              <div class="spark">${sparkSvg(h.risk, "risk", 0, 10)}</div>
-            </div>
-          </div>
-        `;
-      }).join("");
-    }
+if(data.status==="CRITICAL" || data.status==="HIGH"){
 
-    function refreshOverviewFromSummary(summary) {
-      document.getElementById("k-open").textContent = summary.open_alerts ?? 0;
-      document.getElementById("k-critical").textContent = summary.critical_alerts ?? 0;
-      document.getElementById("k-risk").textContent = Number(summary.avg_risk_score ?? 0).toFixed(1);
-      document.getElementById("k-patients").textContent = summary.patients_with_alerts ?? 0;
-      document.getElementById("k-events").textContent = summary.events_last_hour ?? 0;
-      document.getElementById("k-focus").textContent = summary.focus_patient_id || "p101";
-      document.getElementById("k-rrt").textContent = summary.critical_alerts ?? 0;
-      document.getElementById("rail-focus").textContent = summary.focus_patient_id || "p101";
-      document.getElementById("rail-rrt").textContent = summary.critical_alerts ?? 0;
-    }
+const q=document.createElement("div")
+q.innerText=data.patient+" – "+data.status
 
-    const es = new EventSource("/api/command-center-stream");
-    es.onmessage = function(evt) {
-      const payload = JSON.parse(evt.data || "{}");
-      const patients = payload.patients || [];
-      const alerts = payload.alerts || [];
-      const summary = payload.summary || {};
+queue.prepend(q)
 
-      if (patients[0]) applyMonitor("m1", patients[0], "ICU Bed A");
-      if (patients[1]) applyMonitor("m2", patients[1], "ICU Bed B");
-      if (patients[2]) applyMonitor("m3", patients[2], "Stepdown Bed C");
-      if (patients[3]) applyMonitor("m4", patients[3], "Remote Watch D");
+if(queue.children.length>6){
+queue.removeChild(queue.lastChild)
+}
 
-      renderFeed(alerts);
-      renderQueue(alerts);
-      renderBoard(patients);
-      renderTicker(alerts);
-      renderZones(patients);
-      renderPatientList(patients);
-      refreshOverviewFromSummary(summary);
-      document.getElementById("rail-census").textContent = patients.length;
-    };
+}
 
-    async function refreshFallback() {
-      try {
-        const r = await fetch("/api/v1/live-snapshot?tenant_id=demo&patient_id=p101&refresh=" + Date.now(), { cache: "no-store" });
-        if (!r.ok) return;
-        const payload = await r.json();
-        renderFeed(payload.alerts || []);
-        renderQueue(payload.alerts || []);
-        renderBoard(payload.patients || []);
-        renderTicker(payload.alerts || []);
-        renderZones(payload.patients || []);
-        renderPatientList(payload.patients || []);
-        refreshOverviewFromSummary(payload.summary || {});
-      } catch (e) {
-        console.error(e);
-      }
-    }
-    refreshFallback();
-    setInterval(refreshFallback, 5000);
-  </script>
+}
+
+</script>
+
 </body>
 </html>
 """
