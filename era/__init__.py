@@ -406,443 +406,146 @@ THANK_YOU_HTML = r"""
 
 
 COMMAND_CENTER_HTML = r"""
-<!doctype html>
-<html>
-<head>
-<meta charset="utf-8">
-<title>Early Risk Alert AI – Hospital Operations Cockpit</title>
+<section class="command-center">
 
-<style>
-
-body{
-background:#06101c;
-color:white;
-font-family:Arial;
-margin:0;
-padding:30px;
-}
-
-.title{
-font-size:34px;
-font-weight:700;
-margin-bottom:10px;
-}
-
-.subtitle{
-opacity:.7;
-margin-bottom:30px;
-}
-
-.grid{
-display:grid;
-grid-template-columns:2fr 1fr;
-gap:20px;
-}
-
-.wall{
-display:grid;
-grid-template-columns:repeat(2,1fr);
-gap:20px;
-}
-
-.monitor{
-background:#0c1a2c;
-border-radius:16px;
-padding:18px;
-border:1px solid rgba(255,255,255,.1);
-box-shadow:0 10px 30px rgba(0,0,0,.4);
-}
-
-.monitor h3{
-margin:0 0 10px;
-}
-
-.metric{
-font-size:22px;
-margin:6px 0;
-}
-
-.ecg{
-height:90px;
-background:black;
-border-radius:6px;
-margin:12px 0;
-position:relative;
-overflow:hidden;
-}
-
-.wave{
-position:absolute;
-width:200%;
-height:100%;
-background:
-linear-gradient(90deg, transparent 0%, #00ff9c 40%, transparent 60%);
-animation:wave 2s linear infinite;
-opacity:.6;
-}
-
-@keyframes wave{
-0%{left:-100%}
-100%{left:100%}
-}
-
-.status{
-padding:6px 12px;
-border-radius:20px;
-display:inline-block;
-font-size:12px;
-margin-top:10px;
-}
-
-.stable{background:#2ecc71}
-.high{background:#f1c40f}
-.critical{background:#e74c3c}
-
-.sidepanel{
-display:grid;
-gap:20px;
-}
-
-.card{
-background:#0d1b30;
-border-radius:16px;
-padding:16px;
-border:1px solid rgba(255,255,255,.1);
-}
-
-.card h4{
-margin-top:0;
-}
-
-.spark{
-height:40px;
-background:black;
-border-radius:6px;
-margin-top:10px;
-position:relative;
-overflow:hidden;
-}
-
-.sparkline{
-position:absolute;
-width:200%;
-height:100%;
-background:linear-gradient(90deg, transparent 0%, #5bd4ff 40%, transparent 60%);
-animation:wave 3s linear infinite;
-opacity:.6;
-}
-
-.heatmap{
-display:grid;
-grid-template-columns:repeat(4,1fr);
-gap:8px;
-margin-top:10px;
-}
-
-.heat{
-height:40px;
-border-radius:6px;
-}
-
-.low{background:#2ecc71}
-.medium{background:#f1c40f}
-.highh{background:#e74c3c}
-
-.queue{
-margin-top:10px;
-}
-
-.queue div{
-padding:6px 0;
-border-bottom:1px solid rgba(255,255,255,.1);
-}
-
-.capacity{
-font-size:28px;
-font-weight:700;
-}
-
-</style>
-
-</head>
-<body>
-
-<div class="title">
-Early Risk Alert AI — Hospital Command Center
+<div class="cc-header">
+<h2>AI Hospital Command Center</h2>
+<p>Real-time clinical intelligence · predictive monitoring · hospital operations</p>
 </div>
 
-<div class="subtitle">
-AI predictive monitoring · clinical alert intelligence · hospital operations cockpit
+<div class="cc-grid">
+
+<!-- TELEMETRY WALL -->
+<div class="cc-telemetry">
+
+<div class="telemetry-title">ICU Telemetry Wall</div>
+
+<div class="monitor-grid" id="wall"></div>
+
 </div>
 
-<div class="grid">
+<!-- AI INTELLIGENCE PANEL -->
+<div class="cc-intelligence">
 
-<div class="wall" id="wall"></div>
+<div class="intel-card">
 
-<div class="sidepanel">
+<h3>Live Alerts</h3>
+<div id="queue" class="alert-feed"></div>
 
-<div class="card">
-<h4>Oxygen Trend</h4>
-<div class="spark"><div class="sparkline"></div></div>
 </div>
 
-<div class="card">
-<h4>Risk Prediction Timeline</h4>
-<div class="spark"><div class="sparkline"></div></div>
+<div class="intel-card">
+
+<h3>AI Risk Summary</h3>
+
+<div class="intel-metrics">
+
+<div class="intel-metric">
+<span class="intel-label">Open Alerts</span>
+<span class="intel-value" id="open-alerts">5</span>
 </div>
 
-<div class="card">
-<h4>Deterioration Forecast</h4>
-15 min: Moderate<br>
-1 hr: Elevated<br>
-4 hr: Critical
+<div class="intel-metric">
+<span class="intel-label">Critical Alerts</span>
+<span class="intel-value" id="critical-alerts">1</span>
 </div>
 
-<div class="card">
-<h4>Predictive Alert Clusters</h4>
-Respiratory: 3<br>
-Cardiac: 2<br>
+<div class="intel-metric">
+<span class="intel-label">Avg Risk Score</span>
+<span class="intel-value" id="avg-risk">6.2</span>
+</div>
+
+</div>
+
+</div>
+
+<div class="intel-card">
+
+<h3>Hospital Capacity</h3>
+
+<div class="capacity-meter">
+<span class="capacity-value">78%</span>
+<span class="capacity-label">Beds Occupied</span>
+</div>
+
+</div>
+
+</div>
+
+<!-- OPERATIONS LAYER -->
+<div class="cc-operations">
+
+<div class="ops-card">
+
+<h3>Oxygen Trend</h3>
+<div class="trend-bar"></div>
+
+</div>
+
+<div class="ops-card">
+
+<h3>Risk Prediction Timeline</h3>
+<div class="trend-bar"></div>
+
+</div>
+
+<div class="ops-card">
+
+<h3>Deterioration Forecast</h3>
+
+<div class="forecast">
+
+<div>15 min: <span class="forecast-mid">Moderate</span></div>
+<div>1 hr: <span class="forecast-high">Elevated</span></div>
+<div>4 hr: <span class="forecast-critical">Critical</span></div>
+
+</div>
+
+</div>
+
+<div class="ops-card">
+
+<h3>Predictive Alert Clusters</h3>
+
+<div class="cluster">
+Respiratory: 3
+</div>
+
+<div class="cluster">
+Cardiac: 2
+</div>
+
+<div class="cluster">
 Hemodynamic: 1
 </div>
 
-<div class="card">
-<h4>Hospital Capacity</h4>
-<div class="capacity">78%</div>
-Beds Occupied
 </div>
 
-<div class="card">
-<h4>Staffing Load</h4>
-ICU Nurses: 82% capacity<br>
-Respiratory: 67%<br>
-Physicians: 74%
-</div>
+<div class="ops-card">
 
-<div class="card">
-<h4>Unit Heatmap</h4>
+<h3>Unit Heatmap</h3>
+
 <div class="heatmap">
+
 <div class="heat low"></div>
 <div class="heat medium"></div>
-<div class="heat highh"></div>
+<div class="heat high"></div>
 <div class="heat medium"></div>
+
 <div class="heat medium"></div>
 <div class="heat low"></div>
-<div class="heat highh"></div>
+<div class="heat high"></div>
 <div class="heat medium"></div>
-</div>
+
 </div>
 
-<div class="card">
-<h4>Rapid Response Queue</h4>
-<div class="queue" id="queue"></div>
 </div>
 
 </div>
 
 </div>
 
-<script>
-const wall = document.getElementById("wall");
-const queue = document.getElementById("queue");
-
-const fallbackPatients = [
-  {
-    patient_id: "p101",
-    name: "Patient 1042",
-    heart_rate: 128,
-    spo2: 89,
-    bp_systolic: 164,
-    bp_diastolic: 98,
-    risk_score: 9.1,
-    status: "Critical"
-  },
-  {
-    patient_id: "p102",
-    name: "Patient 2188",
-    heart_rate: 112,
-    spo2: 93,
-    bp_systolic: 148,
-    bp_diastolic: 90,
-    risk_score: 8.1,
-    status: "High"
-  },
-  {
-    patient_id: "p103",
-    name: "Patient 3045",
-    heart_rate: 82,
-    spo2: 98,
-    bp_systolic: 122,
-    bp_diastolic: 78,
-    risk_score: 3.4,
-    status: "Stable"
-  },
-  {
-    patient_id: "p104",
-    name: "Patient 4172",
-    heart_rate: 105,
-    spo2: 94,
-    bp_systolic: 142,
-    bp_diastolic: 88,
-    risk_score: 7.6,
-    status: "High"
-  }
-];
-
-const fallbackAlerts = [
-  { patient_id: "p101", severity: "Critical" },
-  { patient_id: "p102", severity: "High" },
-  { patient_id: "p104", severity: "High" }
-];
-
-function clsFromStatus(status) {
-  const s = String(status || "").toLowerCase();
-  if (s === "critical") return "critical";
-  if (s === "high") return "high";
-  return "stable";
-}
-
-function safe(v, fallback = "--") {
-  return v === undefined || v === null || v === "" ? fallback : v;
-}
-
-function renderMonitor(patient) {
-  const div = document.createElement("div");
-  div.className = "monitor";
-
-  const statusClass = clsFromStatus(patient.status);
-  const bpText = `${safe(patient.bp_systolic, "--")}/${safe(patient.bp_diastolic, "--")}`;
-
-  div.innerHTML = `
-    <h3>${safe(patient.patient_id, "Patient")} · ${safe(patient.name, "Monitored Patient")}</h3>
-
-    <div class="metric">HR: ${safe(patient.heart_rate)}</div>
-    <div class="metric">SpO2: ${safe(patient.spo2)}%</div>
-    <div class="metric">BP: ${bpText}</div>
-    <div class="metric">AI Risk: ${safe(
-      typeof patient.risk_score === "number"
-        ? patient.risk_score.toFixed(1)
-        : patient.risk_score
-    )}</div>
-
-    <div class="ecg"><div class="wave"></div></div>
-
-    <div class="status ${statusClass}">
-      ${safe(patient.status, "Stable")}
-    </div>
-  `;
-
-  return div;
-}
-
-function renderQueueItem(alert) {
-  const q = document.createElement("div");
-  const sev = safe(alert.severity, "Stable");
-  q.innerText = `${safe(alert.patient_id, "Patient")} – ${sev}`;
-  return q;
-}
-
-function renderPatients(patients) {
-  wall.innerHTML = "";
-
-  const source = patients && patients.length ? patients : fallbackPatients;
-
-  source.slice(0, 4).forEach((patient) => {
-    wall.appendChild(renderMonitor(patient));
-  });
-}
-
-function renderQueue(alerts) {
-  queue.innerHTML = "";
-
-  const source = alerts && alerts.length ? alerts : fallbackAlerts;
-
-  const urgent = source.filter((a) => {
-    const sev = String(a.severity || a.status || "").toLowerCase();
-    return sev === "critical" || sev === "high";
-  });
-
-  if (!urgent.length) {
-    queue.innerHTML = `<div>No high-priority escalations right now</div>`;
-    return;
-  }
-
-  urgent.slice(0, 6).forEach((alert) => {
-    queue.appendChild(renderQueueItem(alert));
-  });
-}
-
-function applyPayload(data) {
-  if (data && data.patients) {
-    renderPatients(data.patients || []);
-    renderQueue(data.alerts || []);
-    return;
-  }
-
-  if (Array.isArray(data)) {
-    renderPatients(data);
-    renderQueue([]);
-    return;
-  }
-
-  if (data && (data.patient_id || data.heart_rate || data.risk_score)) {
-    renderPatients([data]);
-    renderQueue([{
-      patient_id: data.patient_id || "Patient",
-      severity: data.status || "Stable"
-    }]);
-    return;
-  }
-
-  renderPatients([]);
-  renderQueue([]);
-}
-
-async function refreshFallback() {
-  try {
-    const r = await fetch("/api/v1/live-snapshot?tenant_id=demo&patient_id=p101&refresh=" + Date.now(), {
-      cache: "no-store"
-    });
-
-    if (!r.ok) {
-      renderPatients([]);
-      renderQueue([]);
-      return;
-    }
-
-    const payload = await r.json();
-    applyPayload(payload);
-  } catch (e) {
-    console.error("Fallback refresh failed", e);
-    renderPatients([]);
-    renderQueue([]);
-  }
-}
-
-try {
-  const evt = new EventSource("/api/command-center-stream");
-
-  evt.onmessage = function(e) {
-    try {
-      const data = JSON.parse(e.data || "{}");
-      applyPayload(data);
-    } catch (err) {
-      console.error("Stream parse error", err);
-    }
-  };
-
-  evt.onerror = function() {
-    console.warn("EventSource failed, using fallback polling.");
-  };
-} catch (e) {
-  console.warn("EventSource unavailable, using fallback polling.");
-}
-
-renderPatients([]);
-renderQueue([]);
-refreshFallback();
-setInterval(refreshFallback, 5000);
-</script>
-
+</section>
 </body>
 </html>
 """
