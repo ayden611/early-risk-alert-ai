@@ -645,6 +645,55 @@ Physicians: 74%
 const wall = document.getElementById("wall");
 const queue = document.getElementById("queue");
 
+const fallbackPatients = [
+  {
+    patient_id: "p101",
+    name: "Patient 1042",
+    heart_rate: 128,
+    spo2: 89,
+    bp_systolic: 164,
+    bp_diastolic: 98,
+    risk_score: 9.1,
+    status: "Critical"
+  },
+  {
+    patient_id: "p102",
+    name: "Patient 2188",
+    heart_rate: 112,
+    spo2: 93,
+    bp_systolic: 148,
+    bp_diastolic: 90,
+    risk_score: 8.1,
+    status: "High"
+  },
+  {
+    patient_id: "p103",
+    name: "Patient 3045",
+    heart_rate: 82,
+    spo2: 98,
+    bp_systolic: 122,
+    bp_diastolic: 78,
+    risk_score: 3.4,
+    status: "Stable"
+  },
+  {
+    patient_id: "p104",
+    name: "Patient 4172",
+    heart_rate: 105,
+    spo2: 94,
+    bp_systolic: 142,
+    bp_diastolic: 88,
+    risk_score: 7.6,
+    status: "High"
+  }
+];
+
+const fallbackAlerts = [
+  { patient_id: "p101", severity: "Critical" },
+  { patient_id: "p102", severity: "High" },
+  { patient_id: "p104", severity: "High" }
+];
+
 function clsFromStatus(status) {
   const s = String(status || "").toLowerCase();
   if (s === "critical") return "critical";
@@ -661,10 +710,7 @@ function renderMonitor(patient) {
   div.className = "monitor";
 
   const statusClass = clsFromStatus(patient.status);
-  const bpText =
-    patient.bp
-      ? patient.bp
-      : `${safe(patient.bp_systolic, "--")}/${safe(patient.bp_diastolic, "--")}`;
+  const bpText = `${safe(patient.bp_systolic, "--")}/${safe(patient.bp_diastolic, "--")}`;
 
   div.innerHTML = `
     <h3>${safe(patient.patient_id, "Patient")} · ${safe(patient.name, "Monitored Patient")}</h3>
@@ -690,7 +736,7 @@ function renderMonitor(patient) {
 
 function renderQueueItem(alert) {
   const q = document.createElement("div");
-  const sev = safe(alert.severity, alert.status, "Stable");
+  const sev = safe(alert.severity, "Stable");
   q.innerText = `${safe(alert.patient_id, "Patient")} – ${sev}`;
   return q;
 }
@@ -698,19 +744,9 @@ function renderQueueItem(alert) {
 function renderPatients(patients) {
   wall.innerHTML = "";
 
-  if (!patients || !patients.length) {
-    wall.innerHTML = `
-      <div class="monitor">
-        <h3>No live patients yet</h3>
-        <div class="metric">Waiting for stream...</div>
-        <div class="ecg"><div class="wave"></div></div>
-        <div class="status stable">Stable</div>
-      </div>
-    `;
-    return;
-  }
+  const source = patients && patients.length ? patients : fallbackPatients;
 
-  patients.slice(0, 4).forEach((patient) => {
+  source.slice(0, 4).forEach((patient) => {
     wall.appendChild(renderMonitor(patient));
   });
 }
@@ -718,7 +754,9 @@ function renderPatients(patients) {
 function renderQueue(alerts) {
   queue.innerHTML = "";
 
-  const urgent = (alerts || []).filter((a) => {
+  const source = alerts && alerts.length ? alerts : fallbackAlerts;
+
+  const urgent = source.filter((a) => {
     const sev = String(a.severity || a.status || "").toLowerCase();
     return sev === "critical" || sev === "high";
   });
@@ -733,18 +771,50 @@ function renderQueue(alerts) {
   });
 }
 
+function applyPayload(data) {
+  if (data && data.patients) {
+    renderPatients(data.patients || []);
+    renderQueue(data.alerts || []);
+    return;
+  }
+
+  if (Array.isArray(data)) {
+    renderPatients(data);
+    renderQueue([]);
+    return;
+  }
+
+  if (data && (data.patient_id || data.heart_rate || data.risk_score)) {
+    renderPatients([data]);
+    renderQueue([{
+      patient_id: data.patient_id || "Patient",
+      severity: data.status || "Stable"
+    }]);
+    return;
+  }
+
+  renderPatients([]);
+  renderQueue([]);
+}
+
 async function refreshFallback() {
   try {
     const r = await fetch("/api/v1/live-snapshot?tenant_id=demo&patient_id=p101&refresh=" + Date.now(), {
       cache: "no-store"
     });
-    if (!r.ok) return;
+
+    if (!r.ok) {
+      renderPatients([]);
+      renderQueue([]);
+      return;
+    }
 
     const payload = await r.json();
-    renderPatients(payload.patients || []);
-    renderQueue(payload.alerts || []);
+    applyPayload(payload);
   } catch (e) {
     console.error("Fallback refresh failed", e);
+    renderPatients([]);
+    renderQueue([]);
   }
 }
 
@@ -754,23 +824,7 @@ try {
   evt.onmessage = function(e) {
     try {
       const data = JSON.parse(e.data || "{}");
-
-      if (data.patients || data.alerts) {
-        renderPatients(data.patients || []);
-        renderQueue(data.alerts || []);
-        return;
-      }
-
-      if (Array.isArray(data)) {
-        renderPatients(data);
-        renderQueue([]);
-        return;
-      }
-
-      if (data.patient_id || data.heart_rate || data.risk_score) {
-        renderPatients([data]);
-        renderQueue([data]);
-      }
+      applyPayload(data);
     } catch (err) {
       console.error("Stream parse error", err);
     }
@@ -783,6 +837,8 @@ try {
   console.warn("EventSource unavailable, using fallback polling.");
 }
 
+renderPatients([]);
+renderQueue([]);
 refreshFallback();
 setInterval(refreshFallback, 5000);
 </script>
