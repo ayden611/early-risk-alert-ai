@@ -2035,9 +2035,12 @@ def create_app() -> Flask:
     def command_center():
         return render_template_string(COMMAND_CENTER_HTML)
 
-    @app.get("/admin/review")
-    def admin_review():
+@app.get("/admin/review")
+def admin_review():
+    try:
         return render_template_string(ADMIN_HTML)
+    except Exception as e:
+        return f"<h1>ADMIN_HTML ERROR</h1><pre>{e}</pre>", 500
 
     @app.get("/healthz")
     def healthz():
