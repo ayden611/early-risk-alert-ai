@@ -642,61 +642,149 @@ Physicians: 74%
 </div>
 
 <script>
+const wall = document.getElementById("wall");
+const queue = document.getElementById("queue");
 
-const wall=document.getElementById("wall")
-const queue=document.getElementById("queue")
-
-const evt=new EventSource("/api/command-center-stream")
-
-evt.onmessage=function(e){
-
-const data=JSON.parse(e.data)
-
-const div=document.createElement("div")
-div.className="monitor"
-
-let statusClass="stable"
-if(data.status==="HIGH") statusClass="high"
-if(data.status==="CRITICAL") statusClass="critical"
-
-div.innerHTML=`
-
-<h3>${data.patient}</h3>
-
-<div class="metric">HR: ${data.heart_rate}</div>
-<div class="metric">SpO2: ${data.spo2}%</div>
-<div class="metric">BP: ${data.bp}</div>
-<div class="metric">AI Risk: ${data.risk}</div>
-
-<div class="ecg"><div class="wave"></div></div>
-
-<div class="status ${statusClass}">
-${data.status}
-</div>
-
-`
-
-wall.prepend(div)
-
-if(wall.children.length>6){
-wall.removeChild(wall.lastChild)
+function clsFromStatus(status) {
+  const s = String(status || "").toLowerCase();
+  if (s === "critical") return "critical";
+  if (s === "high") return "high";
+  return "stable";
 }
 
-if(data.status==="CRITICAL" || data.status==="HIGH"){
-
-const q=document.createElement("div")
-q.innerText=data.patient+" – "+data.status
-
-queue.prepend(q)
-
-if(queue.children.length>6){
-queue.removeChild(queue.lastChild)
+function safe(v, fallback = "--") {
+  return v === undefined || v === null || v === "" ? fallback : v;
 }
 
+function renderMonitor(patient) {
+  const div = document.createElement("div");
+  div.className = "monitor";
+
+  const statusClass = clsFromStatus(patient.status);
+  const bpText =
+    patient.bp
+      ? patient.bp
+      : `${safe(patient.bp_systolic, "--")}/${safe(patient.bp_diastolic, "--")}`;
+
+  div.innerHTML = `
+    <h3>${safe(patient.patient_id, "Patient")} · ${safe(patient.name, "Monitored Patient")}</h3>
+
+    <div class="metric">HR: ${safe(patient.heart_rate)}</div>
+    <div class="metric">SpO2: ${safe(patient.spo2)}%</div>
+    <div class="metric">BP: ${bpText}</div>
+    <div class="metric">AI Risk: ${safe(
+      typeof patient.risk_score === "number"
+        ? patient.risk_score.toFixed(1)
+        : patient.risk_score
+    )}</div>
+
+    <div class="ecg"><div class="wave"></div></div>
+
+    <div class="status ${statusClass}">
+      ${safe(patient.status, "Stable")}
+    </div>
+  `;
+
+  return div;
 }
 
+function renderQueueItem(alert) {
+  const q = document.createElement("div");
+  const sev = safe(alert.severity, alert.status, "Stable");
+  q.innerText = `${safe(alert.patient_id, "Patient")} – ${sev}`;
+  return q;
 }
 
+function renderPatients(patients) {
+  wall.innerHTML = "";
+
+  if (!patients || !patients.length) {
+    wall.innerHTML = `
+      <div class="monitor">
+        <h3>No live patients yet</h3>
+        <div class="metric">Waiting for stream...</div>
+        <div class="ecg"><div class="wave"></div></div>
+        <div class="status stable">Stable</div>
+      </div>
+    `;
+    return;
+  }
+
+  patients.slice(0, 4).forEach((patient) => {
+    wall.appendChild(renderMonitor(patient));
+  });
+}
+
+function renderQueue(alerts) {
+  queue.innerHTML = "";
+
+  const urgent = (alerts || []).filter((a) => {
+    const sev = String(a.severity || a.status || "").toLowerCase();
+    return sev === "critical" || sev === "high";
+  });
+
+  if (!urgent.length) {
+    queue.innerHTML = `<div>No high-priority escalations right now</div>`;
+    return;
+  }
+
+  urgent.slice(0, 6).forEach((alert) => {
+    queue.appendChild(renderQueueItem(alert));
+  });
+}
+
+async function refreshFallback() {
+  try {
+    const r = await fetch("/api/v1/live-snapshot?tenant_id=demo&patient_id=p101&refresh=" + Date.now(), {
+      cache: "no-store"
+    });
+    if (!r.ok) return;
+
+    const payload = await r.json();
+    renderPatients(payload.patients || []);
+    renderQueue(payload.alerts || []);
+  } catch (e) {
+    console.error("Fallback refresh failed", e);
+  }
+}
+
+try {
+  const evt = new EventSource("/api/command-center-stream");
+
+  evt.onmessage = function(e) {
+    try {
+      const data = JSON.parse(e.data || "{}");
+
+      if (data.patients || data.alerts) {
+        renderPatients(data.patients || []);
+        renderQueue(data.alerts || []);
+        return;
+      }
+
+      if (Array.isArray(data)) {
+        renderPatients(data);
+        renderQueue([]);
+        return;
+      }
+
+      if (data.patient_id || data.heart_rate || data.risk_score) {
+        renderPatients([data]);
+        renderQueue([data]);
+      }
+    } catch (err) {
+      console.error("Stream parse error", err);
+    }
+  };
+
+  evt.onerror = function() {
+    console.warn("EventSource failed, using fallback polling.");
+  };
+} catch (e) {
+  console.warn("EventSource unavailable, using fallback polling.");
+}
+
+refreshFallback();
+setInterval(refreshFallback, 5000);
 </script>
 
 </body>
