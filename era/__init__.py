@@ -1984,6 +1984,184 @@ def _simulated_snapshot() -> dict[str, Any]:
             "focus_patient_id": focus_patient_id,
         },
     }
+    
+ADMIN_HTML = r"""
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Admin Review — Early Risk Alert AI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root{
+      --bg:#07101c;
+      --bg2:#0b1528;
+      --panel:#101a2d;
+      --panel2:#13203a;
+      --line:rgba(255,255,255,.08);
+      --text:#eef4ff;
+      --muted:#a7bddc;
+      --blue:#7aa2ff;
+      --blue2:#5bd4ff;
+      --green:#3ad38f;
+      --amber:#f4bd6a;
+      --red:#ff667d;
+      --shadow:0 20px 60px rgba(0,0,0,.34);
+      --radius:24px;
+      --max:1380px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(122,162,255,.14), transparent 22%),
+        linear-gradient(180deg, var(--bg), var(--bg2));
+    }
+    .shell{max-width:var(--max);margin:0 auto;padding:24px 16px 48px}
+    .card{
+      border:1px solid var(--line);
+      border-radius:28px;
+      padding:24px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.018)),
+        linear-gradient(180deg, rgba(12,22,38,.82), rgba(8,15,28,.92));
+      box-shadow:var(--shadow);
+    }
+    h1{
+      margin:0 0 10px;
+      font-size:clamp(34px,5vw,58px);
+      line-height:.95;
+      letter-spacing:-.05em;
+      font-weight:1000;
+    }
+    p{
+      margin:0;
+      color:#d0def2;
+      font-size:16px;
+      line-height:1.7;
+    }
+    .grid{
+      margin-top:22px;
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:16px;
+    }
+    .stat{
+      border:1px solid var(--line);
+      border-radius:20px;
+      padding:18px;
+      background:rgba(255,255,255,.03);
+    }
+    .k{
+      font-size:11px;
+      font-weight:900;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+      color:#8fdcff;
+      margin-bottom:10px;
+    }
+    .v{
+      font-size:34px;
+      font-weight:1000;
+      line-height:.95;
+      letter-spacing:-.04em;
+    }
+    .section{
+      margin-top:22px;
+      border:1px solid var(--line);
+      border-radius:24px;
+      padding:20px;
+      background:rgba(255,255,255,.03);
+    }
+    h2{
+      margin:0 0 12px;
+      font-size:24px;
+      font-weight:1000;
+      letter-spacing:-.03em;
+    }
+    .empty{
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.6;
+    }
+    .actions{
+      margin-top:18px;
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:12px 16px;
+      border-radius:16px;
+      font-size:14px;
+      font-weight:900;
+      text-decoration:none;
+      border:1px solid var(--line);
+      color:var(--text);
+      background:rgba(255,255,255,.04);
+    }
+    .btn.primary{
+      background:linear-gradient(135deg,var(--blue),var(--blue2));
+      color:#07101c;
+      border-color:transparent;
+    }
+    @media (max-width:900px){
+      .grid{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="card">
+      <h1>Admin Review</h1>
+      <p>
+        Operating layer for hospital demo requests, executive walkthrough requests, and investor intake submissions.
+      </p>
+
+      <div class="grid">
+        <div class="stat">
+          <div class="k">Hospital Requests</div>
+          <div class="v">Live</div>
+        </div>
+        <div class="stat">
+          <div class="k">Executive Requests</div>
+          <div class="v">Live</div>
+        </div>
+        <div class="stat">
+          <div class="k">Investor Requests</div>
+          <div class="v">Live</div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>Hospital Demo Requests</h2>
+        <div class="empty">Admin table will render here after the full review bundle is restored.</div>
+      </div>
+
+      <div class="section">
+        <h2>Executive Walkthrough Requests</h2>
+        <div class="empty">Admin table will render here after the full review bundle is restored.</div>
+      </div>
+
+      <div class="section">
+        <h2>Investor Intake Requests</h2>
+        <div class="empty">Admin table will render here after the full review bundle is restored.</div>
+      </div>
+
+      <div class="actions">
+        <a class="btn primary" href="/command-center">Back to Command Center</a>
+        <a class="btn" href="/">Back to Overview</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+"""
 
 
 def create_app() -> Flask:
