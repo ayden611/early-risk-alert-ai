@@ -2111,14 +2111,14 @@ def _simulated_snapshot() -> dict[str, Any]:
     }
 
 
-def create_app() -> Flask:
-    app = Flask(__name__)
-    app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "era-dev-secret")
+    def create_app() -> Flask:
+        app = Flask(__name__)
+        app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "era-dev-secret")
 
-    data_dir = _data_dir()
-    hospital_file = data_dir / "hospital_demo_requests.jsonl"
-    exec_file = data_dir / "executive_walkthrough_requests.jsonl"
-    investor_file = data_dir / "investor_intake_requests.jsonl"
+        data_dir = _data_dir()
+        hospital_file = data_dir / "hospital_demo_requests.jsonl"
+        exec_file = data_dir / "executive_walkthrough_requests.jsonl"
+        investor_file = data_dir / "investor_intake_requests.jsonl"
 
     def load_all_rows() -> dict[str, list[dict[str, Any]]]:
         return {
