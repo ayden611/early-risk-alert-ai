@@ -54,7 +54,6 @@ HOME_HTML = r"""
       --radius:24px;
       --max:1380px;
     }
-  
     *{box-sizing:border-box}
     html{scroll-behavior:smooth}
     body{
@@ -405,979 +404,629 @@ THANK_YOU_HTML = r"""
 </html>
 """
 
+
 COMMAND_CENTER_HTML = r"""
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Early Risk Alert AI – Hospital Operations Cockpit</title>
+
+<style>
+
+body{
+background:#06101c;
+color:white;
+font-family:Arial;
+margin:0;
+padding:30px;
+}
+
+.title{
+font-size:34px;
+font-weight:700;
+margin-bottom:10px;
+}
+
+.subtitle{
+opacity:.7;
+margin-bottom:30px;
+}
+
+.grid{
+display:grid;
+grid-template-columns:2fr 1fr;
+gap:20px;
+}
+
+.wall{
+display:grid;
+grid-template-columns:repeat(2,1fr);
+gap:20px;
+}
+
+.monitor{
+background:#0c1a2c;
+border-radius:16px;
+padding:18px;
+border:1px solid rgba(255,255,255,.1);
+box-shadow:0 10px 30px rgba(0,0,0,.4);
+}
+
+.monitor h3{
+margin:0 0 10px;
+}
+
+.metric{
+font-size:22px;
+margin:6px 0;
+}
+
+.ecg{
+height:90px;
+background:black;
+border-radius:6px;
+margin:12px 0;
+position:relative;
+overflow:hidden;
+}
+
+.wave{
+position:absolute;
+width:200%;
+height:100%;
+background:
+linear-gradient(90deg, transparent 0%, #00ff9c 40%, transparent 60%);
+animation:wave 2s linear infinite;
+opacity:.6;
+}
+
+@keyframes wave{
+0%{left:-100%}
+100%{left:100%}
+}
+
+.status{
+padding:6px 12px;
+border-radius:20px;
+display:inline-block;
+font-size:12px;
+margin-top:10px;
+}
+
+.stable{background:#2ecc71}
+.high{background:#f1c40f}
+.critical{background:#e74c3c}
+
+.sidepanel{
+display:grid;
+gap:20px;
+}
+
+.card{
+background:#0d1b30;
+border-radius:16px;
+padding:16px;
+border:1px solid rgba(255,255,255,.1);
+}
+
+.card h4{
+margin-top:0;
+}
+
+.spark{
+height:40px;
+background:black;
+border-radius:6px;
+margin-top:10px;
+position:relative;
+overflow:hidden;
+}
+
+.sparkline{
+position:absolute;
+width:200%;
+height:100%;
+background:linear-gradient(90deg, transparent 0%, #5bd4ff 40%, transparent 60%);
+animation:wave 3s linear infinite;
+opacity:.6;
+}
+
+.heatmap{
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:8px;
+margin-top:10px;
+}
+
+.heat{
+height:40px;
+border-radius:6px;
+}
+
+.low{background:#2ecc71}
+.medium{background:#f1c40f}
+.highh{background:#e74c3c}
+
+.queue{
+margin-top:10px;
+}
+
+.queue div{
+padding:6px 0;
+border-bottom:1px solid rgba(255,255,255,.1);
+}
+
+.capacity{
+font-size:28px;
+font-weight:700;
+}
+
+</style>
+
+</head>
+<body>
+
+<div class="title">
+Early Risk Alert AI — Hospital Command Center
+</div>
+
+<div class="subtitle">
+AI predictive monitoring · clinical alert intelligence · hospital operations cockpit
+</div>
+
+<div class="grid">
+
+<div class="wall" id="wall"></div>
+
+<div class="sidepanel">
+
+<div class="card">
+<h4>Oxygen Trend</h4>
+<div class="spark"><div class="sparkline"></div></div>
+</div>
+
+<div class="card">
+<h4>Risk Prediction Timeline</h4>
+<div class="spark"><div class="sparkline"></div></div>
+</div>
+
+<div class="card">
+<h4>Deterioration Forecast</h4>
+15 min: Moderate<br>
+1 hr: Elevated<br>
+4 hr: Critical
+</div>
+
+<div class="card">
+<h4>Predictive Alert Clusters</h4>
+Respiratory: 3<br>
+Cardiac: 2<br>
+Hemodynamic: 1
+</div>
+
+<div class="card">
+<h4>Hospital Capacity</h4>
+<div class="capacity">78%</div>
+Beds Occupied
+</div>
+
+<div class="card">
+<h4>Staffing Load</h4>
+ICU Nurses: 82% capacity<br>
+Respiratory: 67%<br>
+Physicians: 74%
+</div>
+
+<div class="card">
+<h4>Unit Heatmap</h4>
+<div class="heatmap">
+<div class="heat low"></div>
+<div class="heat medium"></div>
+<div class="heat highh"></div>
+<div class="heat medium"></div>
+<div class="heat medium"></div>
+<div class="heat low"></div>
+<div class="heat highh"></div>
+<div class="heat medium"></div>
+</div>
+</div>
+
+<div class="card">
+<h4>Rapid Response Queue</h4>
+<div class="queue" id="queue"></div>
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+const wall=document.getElementById("wall")
+const queue=document.getElementById("queue")
+
+const evt=new EventSource("/api/command-center-stream")
+
+evt.onmessage=function(e){
+
+const data=JSON.parse(e.data)
+
+const div=document.createElement("div")
+div.className="monitor"
+
+let statusClass="stable"
+if(data.status==="HIGH") statusClass="high"
+if(data.status==="CRITICAL") statusClass="critical"
+
+div.innerHTML=`
+
+<h3>${data.patient}</h3>
+
+<div class="metric">HR: ${data.heart_rate}</div>
+<div class="metric">SpO2: ${data.spo2}%</div>
+<div class="metric">BP: ${data.bp}</div>
+<div class="metric">AI Risk: ${data.risk}</div>
+
+<div class="ecg"><div class="wave"></div></div>
+
+<div class="status ${statusClass}">
+${data.status}
+</div>
+
+`
+
+wall.prepend(div)
+
+if(wall.children.length>6){
+wall.removeChild(wall.lastChild)
+}
+
+if(data.status==="CRITICAL" || data.status==="HIGH"){
+
+const q=document.createElement("div")
+q.innerText=data.patient+" – "+data.status
+
+queue.prepend(q)
+
+if(queue.children.length>6){
+queue.removeChild(queue.lastChild)
+}
+
+}
+
+}
+
+</script>
+
+</body>
+</html>
+"""
+
+
+ADMIN_HTML = r"""
 <!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Early Risk Alert AI — AI Hospital Command Center</title>
+  <title>Admin Review - Early Risk Alert AI</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     :root{
-      --bg:#07101c;
-      --bg2:#0b1528;
+      --bg:#08111f;
       --panel:#101a2d;
-      --panel2:#13203a;
-      --panel3:#0d1728;
       --line:rgba(255,255,255,.08);
-      --line2:rgba(255,255,255,.05);
-      --text:#eef4ff;
-      --muted:#a7bddc;
+      --text:#edf4ff;
+      --muted:#bdd0ec;
       --blue:#7aa2ff;
       --blue2:#5bd4ff;
-      --green:#3ad38f;
-      --amber:#f4bd6a;
+      --green:#38d39f;
+      --amber:#f7be68;
       --red:#ff667d;
-      --purple:#b58cff;
-      --shadow:0 20px 60px rgba(0,0,0,.34);
-      --radius:24px;
-      --max:1460px;
+      --purple:#ba8cff;
+      --shadow:0 18px 50px rgba(0,0,0,.24);
     }
-
     *{box-sizing:border-box}
-    html{scroll-behavior:smooth}
-    body{
-      margin:0;
-      font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-      color:var(--text);
+    body{margin:0;font-family:Inter,Arial,sans-serif;background:#08111f;color:var(--text)}
+    .wrap{max-width:1480px;margin:0 auto;padding:36px 18px 60px}
+    .card{
       background:
-        radial-gradient(circle at top left, rgba(122,162,255,.14), transparent 22%),
-        radial-gradient(circle at 88% 10%, rgba(91,212,255,.10), transparent 18%),
-        linear-gradient(180deg, var(--bg), var(--bg2));
-    }
-    a{text-decoration:none;color:inherit}
-    .shell{max-width:var(--max);margin:0 auto;padding:22px 16px 48px}
-    .topbar{
-      position:sticky;top:0;z-index:50;
-      border-bottom:1px solid var(--line);
-      background:rgba(7,16,28,.82);
-      backdrop-filter:blur(14px);
-    }
-    .topbar-inner{
-      max-width:var(--max);margin:0 auto;padding:14px 16px;
-      display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;
-    }
-    .brand-kicker{
-      font-size:11px;font-weight:900;letter-spacing:.16em;text-transform:uppercase;color:#9adfff;
-    }
-    .brand-title{
-      font-size:clamp(30px,3.4vw,48px);font-weight:1000;line-height:.92;letter-spacing:-.05em;
-    }
-    .brand-sub{font-size:14px;font-weight:800;color:var(--muted)}
-    .nav-links{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
-    .nav-links a{font-size:14px;font-weight:900;color:#dce9ff}
-    .btn{
-      display:inline-flex;align-items:center;justify-content:center;gap:8px;
-      padding:12px 16px;border-radius:16px;font-size:14px;font-weight:900;
-      border:1px solid transparent;
-      transition:transform .18s ease, box-shadow .18s ease, opacity .18s ease;
-    }
-    .btn:hover{transform:translateY(-2px)}
-    .btn.primary{
-      background:linear-gradient(135deg,var(--blue),var(--blue2));
-      color:#07101c;box-shadow:0 12px 30px rgba(91,212,255,.22);
-    }
-    .btn.secondary{
-      background:rgba(255,255,255,.04);border-color:var(--line);color:var(--text);
-    }
-
-    .ticker-wrap{
-      margin-top:18px;
-      border:1px solid var(--line);
-      border-radius:20px;
-      background:
+        radial-gradient(circle at top right, rgba(91,212,255,.10), transparent 24%),
         linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.018)),
-        linear-gradient(180deg, rgba(12,22,38,.82), rgba(8,15,28,.92));
-      box-shadow:var(--shadow);
-      overflow:hidden;
+        linear-gradient(180deg, rgba(16,26,45,.96), rgba(11,18,31,.98));
+      border:1px solid var(--line);border-radius:24px;padding:30px;box-shadow:var(--shadow)
     }
-    .ticker-track{
-      display:flex;gap:16px;align-items:center;
-      padding:12px 0;
-      white-space:nowrap;
-      min-width:max-content;
-      animation:tickerMove 28s linear infinite;
+    h1{font-size:clamp(40px,4vw,56px);line-height:.98;margin:0 0 14px;letter-spacing:-.045em}
+    h2{margin:0 0 10px;font-size:32px;letter-spacing:-.03em}
+    p{color:var(--muted);line-height:1.7}
+    .btn{display:inline-flex;padding:13px 18px;border-radius:14px;background:linear-gradient(135deg,var(--blue),var(--blue2));color:#08111f;font-weight:1000}
+    .toolbar{margin-top:18px;display:grid;grid-template-columns:1.2fr .8fr .8fr .8fr auto;gap:12px;align-items:end}
+    .field{display:grid;gap:8px}
+    .field label{font-size:11px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:#9eb4d6}
+    .field input,.field select{width:100%;padding:13px 14px;border-radius:14px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);color:#eef4ff;font:inherit}
+    .admin-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin:20px 0 24px}
+    .admin-kpi{
+      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02));
+      border:1px solid rgba(255,255,255,.06);
+      border-radius:20px;padding:24px;min-height:154px;display:flex;flex-direction:column;justify-content:space-between;
     }
-    .ticker-item{
-      display:inline-flex;align-items:center;gap:10px;
-      border:1px solid var(--line);
-      border-radius:999px;
-      padding:10px 14px;
-      background:rgba(255,255,255,.03);
-      margin-left:14px;
-      font-size:14px;font-weight:800;color:#deebff;
-    }
-    .ticker-dot{
-      width:10px;height:10px;border-radius:50%;
-      box-shadow:0 0 20px currentColor;
-      flex:0 0 auto;
-    }
-    .dot-green{color:var(--green);background:var(--green)}
-    .dot-amber{color:var(--amber);background:var(--amber)}
-    .dot-red{color:var(--red);background:var(--red)}
-    .dot-blue{color:var(--blue2);background:var(--blue2)}
-    @keyframes tickerMove{
-      0%{transform:translateX(0)}
-      100%{transform:translateX(-50%)}
-    }
-
-    .hero{
-      margin-top:18px;
-      border:1px solid var(--line);
-      border-radius:30px;
-      background:
-        radial-gradient(circle at 20% 20%, rgba(91,212,255,.08), transparent 18%),
-        radial-gradient(circle at 80% 0%, rgba(181,140,255,.08), transparent 18%),
-        linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.015)),
-        linear-gradient(180deg, rgba(10,19,34,.86), rgba(7,14,26,.96));
-      box-shadow:var(--shadow);
-      padding:24px;
-    }
-    .hero-grid{
-      display:grid;grid-template-columns:1.45fr .95fr;gap:18px;align-items:stretch;
-    }
-    .hero-copy{
-      border:1px solid var(--line);
-      border-radius:26px;
-      background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.018));
-      padding:22px;
-    }
-    .hero-kicker{
-      font-size:11px;font-weight:900;letter-spacing:.16em;text-transform:uppercase;color:#91ddff;margin-bottom:10px;
-    }
-    .hero-copy h1{
-      margin:0 0 12px;font-size:clamp(40px,5.6vw,76px);line-height:.92;letter-spacing:-.06em;font-weight:1000;
-    }
-    .hero-copy p{
-      margin:0;color:#d0def2;font-size:17px;line-height:1.68;max-width:820px;
-    }
-    .hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:20px}
-    .hero-mini-grid{
-      margin-top:18px;display:grid;grid-template-columns:repeat(4,1fr);gap:12px;
-    }
-    .hero-mini{
-      border:1px solid var(--line2);border-radius:18px;padding:14px;background:rgba(255,255,255,.03);
-    }
-    .hero-mini .k{
-      font-size:11px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:#8fdcff;margin-bottom:8px;
-    }
-    .hero-mini .v{
-      font-size:18px;font-weight:1000;line-height:1.1;letter-spacing:-.03em;
-    }
-
-    .mission-panel{
-      border:1px solid var(--line);
-      border-radius:26px;
-      background:
-        linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.018)),
-        linear-gradient(180deg, rgba(12,22,38,.76), rgba(9,16,30,.88));
-      padding:18px;
-      position:relative;
-      overflow:hidden;
-    }
-    .mission-panel::before{
-      content:"";
-      position:absolute;inset:0;
-      background:
-        linear-gradient(120deg, transparent 30%, rgba(255,255,255,.04) 50%, transparent 70%);
-      animation:panelSweep 9s linear infinite;
-      pointer-events:none;
-    }
-    @keyframes panelSweep{
-      0%{transform:translateX(-35%)}
-      100%{transform:translateX(35%)}
-    }
-    .mission-header{
-      display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px;
-    }
-    .mission-title{font-size:24px;font-weight:1000;letter-spacing:-.04em}
-    .mission-sub{font-size:13px;color:var(--muted);line-height:1.55}
+    .admin-kpi .k{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#9eb4d6;font-weight:900}
+    .admin-kpi .v{font-size:44px;font-weight:1000;line-height:1;margin-top:14px}
+    .admin-kpi .hint{font-size:13px;color:#c6d7ef;line-height:1.5}
+    .status-legend{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0}
+    .status-chip{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:999px;font-size:12px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);color:#eef4ff}
+    .status-chip .s-dot{width:9px;height:9px;border-radius:999px}
+    .status-chip.new .s-dot{background:#7aa2ff}
+    .status-chip.contacted .s-dot{background:#f4bd6a}
+    .status-chip.closed .s-dot{background:#38d39f}
+    .status-chip.interested .s-dot{background:#ba8cff}
+    .status-chip.dd .s-dot{background:#ff667d}
+    .last-updated{font-size:12px;color:#9eb4d6;font-weight:900;letter-spacing:.08em;text-transform:uppercase}
+    .table-wrap{overflow:auto;border:1px solid rgba(255,255,255,.06);border-radius:18px;background:rgba(255,255,255,.02)}
+    table{width:100%;border-collapse:collapse;font-size:14px;min-width:1280px}
+    th,td{padding:14px 12px;border-bottom:1px solid rgba(255,255,255,.08);text-align:left;vertical-align:top}
+    th{color:#9eb4d6;text-transform:uppercase;font-size:12px;letter-spacing:.12em;background:rgba(255,255,255,.02);position:sticky;top:0}
+    tr:hover td{background:rgba(255,255,255,.02)}
+    .empty{padding:18px;color:#c9daf0}
     .status-pill{
-      display:inline-flex;align-items:center;justify-content:center;
-      padding:10px 14px;border-radius:999px;font-size:12px;font-weight:1000;letter-spacing:.14em;text-transform:uppercase;
-      border:1px solid rgba(255,255,255,.12);
-      background:rgba(255,255,255,.05);
+      display:inline-flex;align-items:center;justify-content:center;min-width:108px;padding:9px 12px;border-radius:999px;font-size:12px;font-weight:1000
     }
-    .status-pill.live{color:#0b1528;background:linear-gradient(135deg,var(--green),#7ef5c0);box-shadow:0 0 24px rgba(58,211,143,.18)}
-    .status-pill.watch{color:#2a1b00;background:linear-gradient(135deg,var(--amber),#ffdba5)}
-    .status-pill.critical{color:#fff3f5;background:linear-gradient(135deg,#ff667d,#ff8e99)}
-
-    .cockpit-grid{
-      margin-top:20px;
-      display:grid;
-      grid-template-columns:1.75fr 1.05fr;
-      gap:18px;
-      align-items:start;
+    .status-new{background:rgba(91,212,255,.16);border:1px solid rgba(91,212,255,.28);color:#d6f4ff}
+    .status-contacted{background:rgba(247,190,104,.16);border:1px solid rgba(247,190,104,.28);color:#ffe3b2}
+    .status-closed{background:rgba(56,211,159,.16);border:1px solid rgba(56,211,159,.28);color:#d3ffe8}
+    .status-interested{background:rgba(186,140,255,.16);border:1px solid rgba(186,140,255,.28);color:#f0e4ff}
+    .status-due-diligence{background:rgba(255,102,125,.16);border:1px solid rgba(255,102,125,.28);color:#ffd8e0}
+    .status-follow-up{background:rgba(122,162,255,.16);border:1px solid rgba(122,162,255,.28);color:#d6e5ff}
+    .score{display:inline-flex;align-items:center;justify-content:center;min-width:64px;padding:8px 10px;border-radius:999px;background:rgba(122,162,255,.14);border:1px solid rgba(122,162,255,.22);font-weight:1000}
+    .score.hot{background:rgba(255,102,125,.16);border-color:rgba(255,102,125,.28);color:#ffd8df}
+    .score.warm{background:rgba(244,189,106,.16);border-color:rgba(244,189,106,.28);color:#ffe5bb}
+    .score.cool{background:rgba(56,211,159,.16);border-color:rgba(56,211,159,.26);color:#d9ffec}
+    .action-row{display:flex;gap:8px;flex-wrap:wrap}
+    .mini-btn{display:inline-flex;align-items:center;justify-content:center;padding:9px 12px;border-radius:12px;background:#111b2f;border:1px solid rgba(255,255,255,.08);color:#eef4ff;font-size:12px;font-weight:1000;cursor:pointer}
+    .meta-stack{display:grid;gap:6px}
+    .meta-item{font-size:13px;color:#c6d7ef;line-height:1.5}
+    .priority-tag{display:inline-flex;align-items:center;justify-content:center;padding:8px 10px;border-radius:999px;background:rgba(186,140,255,.14);border:1px solid rgba(186,140,255,.22);font-size:12px;font-weight:1000;color:#f0e4ff}
+    @media (max-width:1200px){
+      .toolbar{grid-template-columns:1fr 1fr;align-items:stretch}
+      .admin-grid{grid-template-columns:repeat(2,1fr)}
     }
-
-    .telemetry-wall,
-    .intel-column,
-    .ops-strip{
-      display:grid;
-      gap:18px;
-    }
-
-    .telemetry-top{
-      display:grid;grid-template-columns:repeat(3,1fr);gap:14px;
-    }
-    .stat-card{
-      border:1px solid var(--line);
-      border-radius:20px;
-      background:
-        linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.018)),
-        linear-gradient(180deg, rgba(13,23,40,.90), rgba(8,15,28,.95));
-      padding:16px;
-      min-height:122px;
-      position:relative;
-      overflow:hidden;
-    }
-    .stat-card::after{
-      content:"";
-      position:absolute;right:-30px;top:-30px;width:120px;height:120px;border-radius:50%;
-      background:radial-gradient(circle, rgba(91,212,255,.12), transparent 60%);
-      pointer-events:none;
-    }
-    .stat-card .k{
-      font-size:11px;font-weight:900;letter-spacing:.16em;text-transform:uppercase;color:#8ddcff;margin-bottom:10px;
-    }
-    .stat-card .v{
-      font-size:44px;font-weight:1000;line-height:.92;letter-spacing:-.05em;
-    }
-    .stat-card .hint{
-      margin-top:8px;font-size:13px;line-height:1.5;color:#c8d8ef;
-    }
-
-    .monitor-grid{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:16px;
-    }
-
-    .monitor{
-      border:1px solid var(--line);
-      border-radius:26px;
-      background:
-        linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.012)),
-        linear-gradient(180deg, rgba(11,20,35,.96), rgba(6,12,22,.98));
-      box-shadow:0 16px 44px rgba(0,0,0,.32);
-      padding:18px;
-      position:relative;
-      overflow:hidden;
-      min-height:350px;
-    }
-    .monitor::before{
-      content:"";
-      position:absolute;inset:0;
-      background:
-        repeating-linear-gradient(
-          to right,
-          rgba(255,255,255,.03) 0,
-          rgba(255,255,255,.03) 1px,
-          transparent 1px,
-          transparent 58px
-        ),
-        repeating-linear-gradient(
-          to bottom,
-          rgba(255,255,255,.025) 0,
-          rgba(255,255,255,.025) 1px,
-          transparent 1px,
-          transparent 40px
-        );
-      opacity:.12;
-      pointer-events:none;
-    }
-    .monitor-top{
-      position:relative;z-index:1;
-      display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
-      margin-bottom:14px;
-    }
-    .monitor-bed{
-      font-size:11px;font-weight:1000;letter-spacing:.16em;text-transform:uppercase;color:#95ddff;
-      margin-bottom:6px;
-    }
-    .monitor-title{
-      font-size:34px;font-weight:1000;line-height:.92;letter-spacing:-.05em;
-    }
-    .monitor-wave{
-      position:relative;z-index:1;
-      border:1px solid rgba(255,255,255,.06);
-      border-radius:20px;
-      min-height:138px;
-      background:
-        linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.01)),
-        rgba(0,0,0,.18);
-      overflow:hidden;
-      display:flex;align-items:center;
-      padding:8px 0;
-    }
-    .monitor-wave svg{width:100%;height:118px;display:block}
-    .ecg-path{
-      fill:none;
-      stroke-width:4;
-      stroke-linecap:round;
-      stroke-linejoin:round;
-      stroke-dasharray:920;
-      stroke-dashoffset:0;
-      animation:ecgMove 2.8s linear infinite;
-      filter:drop-shadow(0 0 10px currentColor);
-    }
-    @keyframes ecgMove{
-      0%{stroke-dashoffset:920}
-      100%{stroke-dashoffset:0}
-    }
-    .ecg-green{stroke:#77ffb4;color:#77ffb4}
-    .ecg-amber{stroke:#ffd96c;color:#ffd96c}
-    .ecg-red{stroke:#ff7c8d;color:#ff7c8d}
-
-    .monitor-metrics{
-      position:relative;z-index:1;
-      margin-top:14px;
-      display:grid;grid-template-columns:repeat(4,1fr);gap:10px;
-    }
-    .metric-box{
-      border:1px solid rgba(255,255,255,.06);
-      border-radius:16px;
-      background:rgba(255,255,255,.03);
-      padding:12px;
-      min-height:78px;
-      display:flex;flex-direction:column;justify-content:space-between;
-    }
-    .metric-k{
-      font-size:11px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:#9eb8dc;
-    }
-    .metric-v{
-      font-size:18px;font-weight:1000;line-height:1;letter-spacing:-.03em;
-    }
-    .monitor-story{
-      position:relative;z-index:1;
-      margin-top:14px;
-      display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
-    }
-    .story-text{
-      font-size:13px;color:#cfe0f4;line-height:1.55;max-width:78%;
-    }
-
-    .intel-column{
-      align-content:start;
-    }
-    .intel-card{
-      border:1px solid var(--line);
-      border-radius:24px;
-      background:
-        linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.018)),
-        linear-gradient(180deg, rgba(12,22,38,.76), rgba(9,16,30,.88));
-      padding:18px;
-      box-shadow:0 14px 36px rgba(0,0,0,.26);
-    }
-    .intel-card h3{
-      margin:0 0 12px;font-size:20px;font-weight:1000;letter-spacing:-.03em;
-    }
-    .intel-grid{
-      display:grid;grid-template-columns:repeat(3,1fr);gap:12px;
-    }
-    .intel-metric{
-      border:1px solid rgba(255,255,255,.06);
-      border-radius:18px;padding:14px;background:rgba(255,255,255,.03);
-      min-height:100px;
-    }
-    .intel-label{
-      display:block;font-size:11px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:#9eb8dc;margin-bottom:8px;
-    }
-    .intel-value{
-      display:block;font-size:38px;font-weight:1000;line-height:.92;letter-spacing:-.04em;
-    }
-    .intel-note{
-      margin-top:8px;font-size:13px;line-height:1.5;color:#cadbf0;
-    }
-
-    .alert-feed{
-      display:grid;gap:10px;
-    }
-    .alert-item{
-      display:flex;align-items:flex-start;justify-content:space-between;gap:10px;
-      border:1px solid rgba(255,255,255,.06);
-      border-radius:18px;padding:14px;background:rgba(255,255,255,.03);
-    }
-    .alert-copy{
-      font-size:14px;font-weight:900;line-height:1.45;color:#e4efff;
-    }
-    .alert-sub{
-      font-size:12px;color:#acc0dd;font-weight:700;margin-top:4px;
-    }
-
-    .why-now{
-      display:grid;gap:10px;
-    }
-    .why-line{
-      border:1px solid rgba(255,255,255,.06);
-      border-radius:16px;padding:12px;background:rgba(255,255,255,.03);
-      font-size:14px;font-weight:800;line-height:1.5;color:#def0ff;
-    }
-
-    .ops-strip{
-      margin-top:18px;
-      display:grid;
-      grid-template-columns:repeat(6,1fr);
-      gap:16px;
-    }
-    .ops-card{
-      border:1px solid var(--line);
-      border-radius:22px;
-      background:
-        linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.018)),
-        linear-gradient(180deg, rgba(12,22,38,.76), rgba(9,16,30,.88));
-      padding:16px;
-      box-shadow:0 14px 34px rgba(0,0,0,.24);
-      min-height:170px;
-    }
-    .ops-card h3{
-      margin:0 0 12px;font-size:18px;font-weight:1000;letter-spacing:-.03em;
-    }
-    .trend-bar{
-      position:relative;
-      height:16px;border-radius:999px;overflow:hidden;
-      background:rgba(255,255,255,.05);
-      border:1px solid rgba(255,255,255,.06);
-      margin-top:14px;
-    }
-    .trend-fill{
-      position:absolute;left:-36%;top:0;bottom:0;width:60%;
-      background:linear-gradient(90deg, rgba(91,212,255,.10), rgba(91,212,255,.82), rgba(91,212,255,.10));
-      animation:trendMove 3.6s linear infinite;
-      filter:blur(.2px);
-    }
-    @keyframes trendMove{
-      0%{transform:translateX(0)}
-      100%{transform:translateX(230%)}
-    }
-    .trend-labels{
-      display:flex;justify-content:space-between;gap:8px;margin-top:12px;
-      font-size:12px;font-weight:900;color:#b2c6e3;
-    }
-
-    .forecast{
-      display:grid;gap:10px;margin-top:10px;
-    }
-    .forecast div{
-      border:1px solid rgba(255,255,255,.06);
-      border-radius:14px;padding:10px 12px;background:rgba(255,255,255,.03);
-      font-size:14px;font-weight:900;color:#e3efff;
-    }
-    .forecast-mid{color:#ffd27d}
-    .forecast-high{color:#ffb162}
-    .forecast-critical{color:#ff7f91}
-
-    .cluster{
-      border:1px solid rgba(255,255,255,.06);
-      border-radius:14px;padding:10px 12px;background:rgba(255,255,255,.03);
-      font-size:14px;font-weight:900;color:#e3efff;margin-bottom:8px;
-    }
-
-    .capacity-block{text-align:left}
-    .capacity-value{
-      display:block;font-size:44px;font-weight:1000;line-height:.92;letter-spacing:-.05em;
-    }
-    .capacity-label{
-      display:block;margin-top:8px;font-size:14px;font-weight:800;color:#d2e1f4;
-    }
-    .capacity-note{
-      margin-top:10px;font-size:12px;line-height:1.55;color:#a9bedb;
-    }
-
-    .heatmap{
-      display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px;
-    }
-    .heat{
-      height:28px;border-radius:8px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.10);
-    }
-    .low{background:linear-gradient(135deg,#46d88f,#8cffc1)}
-    .medium{background:linear-gradient(135deg,#ffd965,#ffe79e)}
-    .high{background:linear-gradient(135deg,#ff7b71,#ff9f95)}
-
-    .queue-list{display:grid;gap:10px}
-    .queue-item{
-      display:flex;align-items:center;justify-content:space-between;gap:10px;
-      border:1px solid rgba(255,255,255,.06);
-      border-radius:14px;padding:10px 12px;background:rgba(255,255,255,.03);
-    }
-    .queue-copy{
-      font-size:13px;font-weight:900;line-height:1.45;color:#e3efff;
-    }
-
-    @media (max-width:1280px){
-      .hero-grid{grid-template-columns:1fr}
-      .cockpit-grid{grid-template-columns:1fr}
-      .ops-strip{grid-template-columns:repeat(3,1fr)}
-    }
-    @media (max-width:900px){
-      .hero-mini-grid{grid-template-columns:repeat(2,1fr)}
-      .monitor-grid{grid-template-columns:1fr}
-      .telemetry-top{grid-template-columns:1fr}
-      .intel-grid{grid-template-columns:1fr}
-      .ops-strip{grid-template-columns:1fr}
-      .monitor-metrics{grid-template-columns:repeat(2,1fr)}
-      .story-text{max-width:100%}
-    }
-    @media (max-width:640px){
-      .shell{padding:16px 10px 36px}
-      .hero{padding:16px}
-      .hero-copy h1{font-size:clamp(32px,11vw,52px)}
-      .hero-actions{flex-direction:column}
-      .btn{width:100%}
-      .hero-mini-grid{grid-template-columns:1fr}
-      .monitor-metrics{grid-template-columns:1fr}
-      .topbar-inner{padding:12px 10px}
+    @media (max-width:760px){
+      .admin-grid{grid-template-columns:1fr}
+      .toolbar{grid-template-columns:1fr}
+      .wrap{padding:14px 10px 48px}
+      .card{padding:16px}
     }
   </style>
 </head>
 <body>
-  <div class="topbar">
-    <div class="topbar-inner">
-      <div>
-        <div class="brand-kicker">AI-powered predictive clinical intelligence</div>
-        <div class="brand-title">Early Risk Alert AI</div>
-        <div class="brand-sub">Hospitals · Clinics · Investors · Insurers · Patients</div>
+  <div class="wrap">
+    <div class="card">
+      <h1>Admin Review</h1>
+      <p>Live request operations, investor pipeline visibility, instant status updates, search, filtering, lead scoring, and export-ready follow-up flow.</p>
+      <p><a class="btn" href="/admin/export.csv">Download Full Export</a> <a class="btn" href="/">Return Home</a></p>
+
+      <div class="toolbar">
+        <div class="field">
+          <label>Search</label>
+          <input id="admin-search" placeholder="Search by name, organization, email">
+        </div>
+        <div class="field">
+          <label>Lead Type</label>
+          <select id="admin-type">
+            <option value="all">All</option>
+            <option value="hospital">Hospital</option>
+            <option value="executive">Executive</option>
+            <option value="investor">Investor</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Status</label>
+          <select id="admin-status">
+            <option value="all">All</option>
+            <option value="New">New</option>
+            <option value="Contacted">Contacted</option>
+            <option value="Closed">Closed</option>
+            <option value="Interested">Interested</option>
+            <option value="Due Diligence">Due Diligence</option>
+            <option value="Follow-Up">Follow-Up</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Sort</label>
+          <select id="admin-sort">
+            <option value="newest">Newest First</option>
+            <option value="score">Hottest Leads</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>&nbsp;</label>
+          <button class="mini-btn" id="admin-refresh-btn" type="button">Refresh</button>
+        </div>
       </div>
-      <div class="nav-links">
-        <a href="/">Overview</a>
-        <a href="/hospital-demo">Hospitals</a>
-        <a href="/investor-intake">Investors</a>
-        <a href="/admin/review">Admin Review</a>
-        <a class="btn primary" href="/admin/review">Open Operating Layer</a>
+
+      <div class="admin-grid">
+        <div class="admin-kpi"><div class="k">Hospital Demo Requests</div><div class="v" id="kpi-hospital">0</div><div class="hint">Clinical buyer and operator pipeline</div></div>
+        <div class="admin-kpi"><div class="k">Executive Walkthroughs</div><div class="v" id="kpi-exec">0</div><div class="hint">Leadership-facing product review requests</div></div>
+        <div class="admin-kpi"><div class="k">Investor Intake</div><div class="v" id="kpi-investor">0</div><div class="hint">Commercial and financing pipeline</div></div>
+        <div class="admin-kpi"><div class="k">Open Leads</div><div class="v" id="kpi-open">0</div><div class="hint">All active requests not yet closed</div></div>
+        <div class="admin-kpi"><div class="k">Interested / DD</div><div class="v" id="kpi-dd">0</div><div class="hint">Investor pipeline progression</div></div>
+        <div class="admin-kpi"><div class="k">Last Updated</div><div class="v" style="font-size:24px" id="kpi-updated">--</div><div class="hint">Live admin refresh timestamp</div></div>
+      </div>
+
+      <div class="status-legend">
+        <div class="status-chip new"><span class="s-dot"></span>New</div>
+        <div class="status-chip contacted"><span class="s-dot"></span>Contacted</div>
+        <div class="status-chip closed"><span class="s-dot"></span>Closed</div>
+        <div class="status-chip interested"><span class="s-dot"></span>Interested</div>
+        <div class="status-chip dd"><span class="s-dot"></span>Due Diligence</div>
+      </div>
+
+      <div class="last-updated" id="admin-last-updated">Last Updated --</div>
+
+      <div class="table-wrap" style="margin-top:14px">
+        <table id="admin-table">
+          <thead>
+            <tr>
+              <th>Lead Type</th>
+              <th>Submitted</th>
+              <th>Status</th>
+              <th>Lead Score</th>
+              <th>Priority</th>
+              <th>Name</th>
+              <th>Organization</th>
+              <th>Role / Title</th>
+              <th>Email</th>
+              <th>Phone</th>
+              <th>Category</th>
+              <th>Timeline</th>
+              <th>Message</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="admin-table-body">
+            <tr><td colspan="14" class="empty">Loading live admin data...</td></tr>
+          </tbody>
+        </table>
       </div>
     </div>
-  </div>
-
-  <div class="shell">
-
-    <div class="ticker-wrap">
-      <div class="ticker-track" id="ticker-track">
-        <div class="ticker-item"><span class="ticker-dot dot-red"></span>Critical deterioration signal surfaced · p101 · Risk 9.3</div>
-        <div class="ticker-item"><span class="ticker-dot dot-amber"></span>High-priority risk escalation · p104 · Risk 7.4</div>
-        <div class="ticker-item"><span class="ticker-dot dot-green"></span>Stable patient trend · p105 · Risk 3.9</div>
-        <div class="ticker-item"><span class="ticker-dot dot-blue"></span>Command center telemetry synced · Mission mode active</div>
-        <div class="ticker-item"><span class="ticker-dot dot-green"></span>Respiratory cluster reduced · p103 · Recovery trend</div>
-
-        <div class="ticker-item"><span class="ticker-dot dot-red"></span>Critical deterioration signal surfaced · p101 · Risk 9.3</div>
-        <div class="ticker-item"><span class="ticker-dot dot-amber"></span>High-priority risk escalation · p104 · Risk 7.4</div>
-        <div class="ticker-item"><span class="ticker-dot dot-green"></span>Stable patient trend · p105 · Risk 3.9</div>
-        <div class="ticker-item"><span class="ticker-dot dot-blue"></span>Command center telemetry synced · Mission mode active</div>
-        <div class="ticker-item"><span class="ticker-dot dot-green"></span>Respiratory cluster reduced · p103 · Recovery trend</div>
-      </div>
-    </div>
-
-    <section class="hero">
-      <div class="hero-grid">
-        <div class="hero-copy">
-          <div class="hero-kicker">Hospital mission control</div>
-          <h1>AI Hospital Command Center</h1>
-          <p>
-            Real-time clinical intelligence, predictive monitoring, telemetry-style deterioration detection,
-            investor-ready operating visibility, and hospital command-center storytelling in one polished environment.
-          </p>
-          <div class="hero-actions">
-            <a class="btn primary" href="/admin/review">Open Admin Review</a>
-            <a class="btn secondary" href="/hospital-demo">Hospital Demo Form</a>
-            <a class="btn secondary" href="/executive-walkthrough">Executive Walkthrough</a>
-            <a class="btn secondary" href="/investor-intake">Investor Intake</a>
-          </div>
-          <div class="hero-mini-grid">
-            <div class="hero-mini">
-              <div class="k">Telemetry</div>
-              <div class="v">ECG-style clinical monitors</div>
-            </div>
-            <div class="hero-mini">
-              <div class="k">Prediction</div>
-              <div class="v">AI risk + forecast signals</div>
-            </div>
-            <div class="hero-mini">
-              <div class="k">Operations</div>
-              <div class="v">Capacity + staffing + triage</div>
-            </div>
-            <div class="hero-mini">
-              <div class="k">Commercial</div>
-              <div class="v">Hospital + investor readiness</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="mission-panel">
-          <div class="mission-header">
-            <div>
-              <div class="mission-title">Mission Status</div>
-              <div class="mission-sub">
-                Command center online · predictive telemetry active · live intake flows synchronized
-              </div>
-            </div>
-            <div class="status-pill live">Live</div>
-          </div>
-
-          <div class="telemetry-top">
-            <div class="stat-card">
-              <div class="k">Open Alerts</div>
-              <div class="v" id="open-alerts">5</div>
-              <div class="hint">Active alerts surfaced by the intelligence layer.</div>
-            </div>
-            <div class="stat-card">
-              <div class="k">Critical Alerts</div>
-              <div class="v" id="critical-alerts">1</div>
-              <div class="hint">Highest urgency patients needing immediate attention.</div>
-            </div>
-            <div class="stat-card">
-              <div class="k">Avg Risk Score</div>
-              <div class="v" id="avg-risk">6.2</div>
-              <div class="hint">Average intelligence-layer risk level across flagged patients.</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="cockpit-grid">
-        <div class="telemetry-wall">
-          <div class="monitor-grid" id="wall"></div>
-        </div>
-
-        <div class="intel-column">
-          <div class="intel-card">
-            <h3>Live Alerts Feed</h3>
-            <div class="alert-feed" id="queue"></div>
-          </div>
-
-          <div class="intel-card">
-            <h3>Why this matters now</h3>
-            <div class="why-now">
-              <div class="why-line">Predictive risk surfaced before full clinical collapse.</div>
-              <div class="why-line">Command-center telemetry prioritizes intervention timing.</div>
-              <div class="why-line">Hospital operators can see pressure, escalation, and stability in one wall.</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="ops-strip">
-        <div class="ops-card">
-          <h3>Oxygen Trend</h3>
-          <div class="trend-bar"><div class="trend-fill"></div></div>
-          <div class="trend-labels"><span>Stable</span><span>Drift</span><span>Recovery</span></div>
-        </div>
-
-        <div class="ops-card">
-          <h3>Risk Prediction Timeline</h3>
-          <div class="trend-bar"><div class="trend-fill"></div></div>
-          <div class="trend-labels"><span>15 min</span><span>1 hr</span><span>4 hr</span></div>
-        </div>
-
-        <div class="ops-card">
-          <h3>Deterioration Forecast</h3>
-          <div class="forecast">
-            <div>15 min: <span class="forecast-mid">Moderate</span></div>
-            <div>1 hr: <span class="forecast-high">Elevated</span></div>
-            <div>4 hr: <span class="forecast-critical">Critical</span></div>
-          </div>
-        </div>
-
-        <div class="ops-card">
-          <h3>Predictive Alert Clusters</h3>
-          <div class="cluster">Respiratory: 3</div>
-          <div class="cluster">Cardiac: 2</div>
-          <div class="cluster">Hemodynamic: 1</div>
-        </div>
-
-        <div class="ops-card">
-          <h3>Hospital Capacity</h3>
-          <div class="capacity-block">
-            <span class="capacity-value">78%</span>
-            <span class="capacity-label">Beds Occupied</span>
-            <div class="capacity-note">Telemetry coverage and escalation pressure remain within controllable range.</div>
-          </div>
-        </div>
-
-        <div class="ops-card">
-          <h3>Unit Heatmap</h3>
-          <div class="heatmap">
-            <div class="heat low"></div>
-            <div class="heat medium"></div>
-            <div class="heat high"></div>
-            <div class="heat medium"></div>
-            <div class="heat medium"></div>
-            <div class="heat low"></div>
-            <div class="heat high"></div>
-            <div class="heat medium"></div>
-          </div>
-        </div>
-      </div>
-    </section>
   </div>
 
   <script>
-    const fallbackPatients = [
-      {
-        patient_id: "p101",
-        name: "Patient 1042",
-        bed: "ICU Bed A",
-        title: "Critical Deterioration Monitor",
-        heart_rate: 127,
-        spo2: 87,
-        bp_systolic: 162,
-        bp_diastolic: 98,
-        risk_score: 9.3,
-        status: "Critical",
-        story: "Oxygen trend sharply below target. Predictive layer recommends immediate escalation."
-      },
-      {
-        patient_id: "p102",
-        name: "Patient 2188",
-        bed: "ICU Bed B",
-        title: "Escalation Watch Monitor",
-        heart_rate: 113,
-        spo2: 92,
-        bp_systolic: 150,
-        bp_diastolic: 88,
-        risk_score: 7.4,
-        status: "High",
-        story: "High-risk cardiac drift surfaced. Telemetry indicates worsening trend over the next hour."
-      },
-      {
-        patient_id: "p103",
-        name: "Patient 3045",
-        bed: "ICU Bed C",
-        title: "Stable Recovery Monitor",
-        heart_rate: 84,
-        spo2: 98,
-        bp_systolic: 122,
-        bp_diastolic: 78,
-        risk_score: 3.5,
-        status: "Stable",
-        story: "Patient remains stable. Recovery trend confirmed across oxygen and hemodynamic signals."
-      },
-      {
-        patient_id: "p104",
-        name: "Patient 4172",
-        bed: "ICU Bed D",
-        title: "Priority Intervention Monitor",
-        heart_rate: 109,
-        spo2: 94,
-        bp_systolic: 144,
-        bp_diastolic: 86,
-        risk_score: 7.1,
-        status: "High",
-        story: "Escalation pressure remains elevated. Intervention queue should continue active surveillance."
+    let adminRows = [];
+
+    function statusClass(value) {
+      if (value === "Contacted") return "status-contacted";
+      if (value === "Closed") return "status-closed";
+      if (value === "Interested") return "status-interested";
+      if (value === "Due Diligence") return "status-due-diligence";
+      if (value === "Follow-Up") return "status-follow-up";
+      return "status-new";
+    }
+
+    function scoreClass(score) {
+      if (score >= 80) return "hot";
+      if (score >= 60) return "warm";
+      return "cool";
+    }
+
+    function escapeHtml(value) {
+      return String(value || "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+
+    function applyFilters() {
+      const query = document.getElementById("admin-search").value.toLowerCase().trim();
+      const type = document.getElementById("admin-type").value;
+      const status = document.getElementById("admin-status").value;
+      const sort = document.getElementById("admin-sort").value;
+
+      let rows = adminRows.filter(function(row) {
+        const haystack = [
+          row.full_name, row.organization, row.email, row.role_or_title, row.message, row.lead_type
+        ].join(" ").toLowerCase();
+        const matchesQuery = !query || haystack.includes(query);
+        const matchesType = type === "all" || row.lead_type_key === type;
+        const matchesStatus = status === "all" || row.status === status;
+        return matchesQuery && matchesType && matchesStatus;
+      });
+
+      if (sort === "score") {
+        rows.sort(function(a, b) { return (b.lead_score || 0) - (a.lead_score || 0); });
+      } else {
+        rows.sort(function(a, b) { return String(b.submitted_at).localeCompare(String(a.submitted_at)); });
       }
-    ];
 
-    const fallbackAlerts = [
-      { patient_id: "p101", severity: "Critical", text: "Oxygen saturation critical", unit: "ICU-12" },
-      { patient_id: "p102", severity: "High", text: "Escalation watch surfaced", unit: "Telemetry-09" },
-      { patient_id: "p104", severity: "High", text: "Priority intervention requested", unit: "Stepdown-04" }
-    ];
-
-    const wall = document.getElementById("wall");
-    const queue = document.getElementById("queue");
-
-    function safe(v, fallback="--"){
-      return v === undefined || v === null || v === "" ? fallback : v;
-    }
-
-    function statusClass(status){
-      const s = String(status || "").toLowerCase();
-      if (s === "critical") return "critical";
-      if (s === "high") return "watch";
-      return "live";
-    }
-
-    function ecgClass(status){
-      const s = String(status || "").toLowerCase();
-      if (s === "critical") return "ecg-red";
-      if (s === "high") return "ecg-amber";
-      return "ecg-green";
-    }
-
-    function pulseLabel(status){
-      const s = String(status || "").toLowerCase();
-      if (s === "critical") return "Critical";
-      if (s === "high") return "High";
-      return "Stable";
-    }
-
-    function buildPath(points){
-      return points.map((p, i) => (i === 0 ? "M" : "L") + p[0] + "," + p[1]).join(" ");
-    }
-
-    function waveformPoints(mode){
-      if (mode === "critical") {
-        return [[0,72],[30,72],[46,72],[58,70],[72,72],[86,72],[98,50],[106,100],[116,24],[126,108],[136,72],[162,72],[186,72],[204,70],[220,72],[236,72],[250,54],[258,96],[268,22],[278,106],[290,72],[318,72],[336,72],[352,70],[368,72],[382,72],[398,46],[406,104],[416,20],[428,110],[440,72],[466,72],[486,72],[504,70],[520,72],[536,72],[550,52],[558,98],[568,24],[578,106],[592,72],[620,72]];
-      }
-      if (mode === "high") {
-        return [[0,76],[36,76],[60,76],[74,74],[88,76],[104,76],[118,56],[126,90],[136,38],[146,96],[158,76],[190,76],[214,76],[228,74],[242,76],[258,76],[272,54],[280,88],[290,40],[300,94],[314,76],[348,76],[372,76],[388,74],[402,76],[418,76],[432,58],[440,92],[452,42],[464,96],[478,76],[514,76],[538,76],[552,74],[566,76],[582,76],[596,60],[604,94],[614,44],[624,98],[640,76]];
-      }
-      return [[0,78],[48,78],[82,78],[96,76],[110,78],[126,78],[138,66],[146,84],[156,52],[166,88],[178,78],[220,78],[254,78],[268,76],[282,78],[298,78],[310,68],[318,84],[328,56],[338,88],[350,78],[392,78],[426,78],[440,76],[454,78],[470,78],[482,68],[490,84],[500,56],[510,88],[522,78],[566,78],[600,78]];
-    }
-
-    function renderMonitor(patient){
-      const status = String(patient.status || "").toLowerCase();
-      const ecg = ecgClass(status);
-      const path = buildPath(waveformPoints(status === "critical" ? "critical" : status === "high" ? "high" : "stable"));
-
-      const html = `
-        <div class="monitor">
-          <div class="monitor-top">
-            <div>
-              <div class="monitor-bed">${safe(patient.bed, "ICU Bed")}</div>
-              <div class="monitor-title">${safe(patient.title, safe(patient.name, "Telemetry Monitor"))}</div>
-            </div>
-            <div class="status-pill ${statusClass(patient.status)}">${pulseLabel(patient.status)}</div>
-          </div>
-
-          <div class="monitor-wave">
-            <svg viewBox="0 0 640 120" preserveAspectRatio="none" aria-hidden="true">
-              <path class="ecg-path ${ecg}" d="${path}"></path>
-            </svg>
-          </div>
-
-          <div class="monitor-metrics">
-            <div class="metric-box">
-              <span class="metric-k">HR</span>
-              <span class="metric-v">${Math.round(Number(patient.heart_rate || 0)) || "--"}</span>
-            </div>
-            <div class="metric-box">
-              <span class="metric-k">SpO₂</span>
-              <span class="metric-v">${Math.round(Number(patient.spo2 || 0)) || "--"}</span>
-            </div>
-            <div class="metric-box">
-              <span class="metric-k">BP</span>
-              <span class="metric-v">${Math.round(Number(patient.bp_systolic || 0)) || "--"}/${Math.round(Number(patient.bp_diastolic || 0)) || "--"}</span>
-            </div>
-            <div class="metric-box">
-              <span class="metric-k">Risk</span>
-              <span class="metric-v">${typeof patient.risk_score === "number" ? patient.risk_score.toFixed(1) : safe(patient.risk_score)}</span>
-            </div>
-          </div>
-
-          <div class="monitor-story">
-            <div class="story-text">${safe(patient.story, "Predictive monitoring active.")}</div>
-            <div class="status-pill ${statusClass(patient.status)}">${safe(patient.patient_id, "p---")}</div>
-          </div>
-        </div>
-      `;
-      return html;
-    }
-
-    function renderAlert(alert){
-      const sev = String(alert.severity || "").toLowerCase();
-      const pill = sev === "critical" ? "critical" : sev === "high" ? "watch" : "live";
-      return `
-        <div class="alert-item">
-          <div>
-            <div class="alert-copy">${safe(alert.text, "Clinical alert surfaced")}</div>
-            <div class="alert-sub">${safe(alert.patient_id, "Patient")} · ${safe(alert.unit, "Unit")} · ${safe(alert.severity, "Stable")}</div>
-          </div>
-          <div class="status-pill ${pill}">${safe(alert.severity, "Live")}</div>
-        </div>
-      `;
-    }
-
-    function updateSummary(patients, alerts){
-      const sourcePatients = patients && patients.length ? patients : fallbackPatients;
-      const sourceAlerts = alerts && alerts.length ? alerts : fallbackAlerts;
-
-      const openAlerts = sourceAlerts.length;
-      const criticalAlerts = sourceAlerts.filter(a => String(a.severity || "").toLowerCase() === "critical").length;
-      const avgRisk = sourcePatients.length
-        ? (sourcePatients.reduce((n, p) => n + Number(p.risk_score || 0), 0) / sourcePatients.length)
-        : 0;
-
-      const openNode = document.getElementById("open-alerts");
-      const criticalNode = document.getElementById("critical-alerts");
-      const avgNode = document.getElementById("avg-risk");
-
-      if (openNode) openNode.textContent = String(openAlerts);
-      if (criticalNode) criticalNode.textContent = String(criticalAlerts);
-      if (avgNode) avgNode.textContent = avgRisk.toFixed(1);
-    }
-
-    function renderPatients(patients){
-      const source = patients && patients.length ? patients : fallbackPatients;
-      wall.innerHTML = source.slice(0, 4).map(renderMonitor).join("");
-    }
-
-    function renderAlerts(alerts){
-      const source = alerts && alerts.length ? alerts : fallbackAlerts;
-      queue.innerHTML = source.slice(0, 6).map(renderAlert).join("");
-    }
-
-    function applyPayload(payload){
-      if (payload && Array.isArray(payload.patients)) {
-        renderPatients(payload.patients);
-        renderAlerts(payload.alerts || []);
-        updateSummary(payload.patients, payload.alerts || []);
+      const body = document.getElementById("admin-table-body");
+      if (!rows.length) {
+        body.innerHTML = '<tr><td colspan="14" class="empty">No matching results.</td></tr>';
         return;
       }
 
-      if (Array.isArray(payload)) {
-        renderPatients(payload);
-        renderAlerts([]);
-        updateSummary(payload, []);
-        return;
-      }
-
-      if (payload && (payload.patient_id || payload.heart_rate || payload.risk_score)) {
-        const arr = [payload];
-        const alerts = [{
-          patient_id: payload.patient_id || "Patient",
-          severity: payload.status || "Stable",
-          text: payload.alert_text || "Predictive clinical alert surfaced",
-          unit: payload.unit || "ICU"
-        }];
-        renderPatients(arr);
-        renderAlerts(alerts);
-        updateSummary(arr, alerts);
-        return;
-      }
-
-      renderPatients([]);
-      renderAlerts([]);
-      updateSummary([], []);
+      body.innerHTML = rows.map(function(row) {
+        return `
+          <tr>
+            <td>${escapeHtml(row.lead_type)}</td>
+            <td>
+              <div class="meta-stack">
+                <div class="meta-item">${escapeHtml(row.submitted_at)}</div>
+                <div class="meta-item">Updated: ${escapeHtml(row.last_updated || row.submitted_at)}</div>
+              </div>
+            </td>
+            <td><span class="status-pill ${statusClass(row.status)}">${escapeHtml(row.status)}</span></td>
+            <td><span class="score ${scoreClass(row.lead_score || 0)}">${escapeHtml(row.lead_score || 0)}</span></td>
+            <td><span class="priority-tag">${escapeHtml(row.priority_tag || "Standard")}</span></td>
+            <td>${escapeHtml(row.full_name)}</td>
+            <td>${escapeHtml(row.organization)}</td>
+            <td>${escapeHtml(row.role_or_title)}</td>
+            <td>${escapeHtml(row.email)}</td>
+            <td>${escapeHtml(row.phone)}</td>
+            <td>${escapeHtml(row.category)}</td>
+            <td>${escapeHtml(row.timeline)}</td>
+            <td>${escapeHtml(row.message)}</td>
+            <td>
+              <div class="action-row">
+                ${row.available_statuses.map(function(s) {
+                  return `<button class="mini-btn" type="button" onclick="updateLeadStatus('${escapeHtml(row.lead_type_key)}','${escapeHtml(row.submitted_at)}','${escapeHtml(s)}')">${escapeHtml(s)}</button>`;
+                }).join("")}
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join("");
     }
 
-    async function refreshFallback(){
-      try{
-        const res = await fetch("/api/v1/live-snapshot?tenant_id=demo&patient_id=p101&refresh=" + Date.now(), {cache:"no-store"});
-        if (!res.ok){
-          applyPayload({});
-          return;
+    async function updateLeadStatus(type, submittedAt, status) {
+      try {
+        const res = await fetch("/admin/api/status", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({lead_type: type, submitted_at: submittedAt, status: status})
+        });
+        if (res.ok) {
+          await refreshAdminData();
         }
-        const payload = await res.json();
-        applyPayload(payload);
-      }catch(err){
-        console.error("Command center fallback refresh failed", err);
-        applyPayload({});
+      } catch (e) {
+        console.error("status update failed", e);
       }
     }
 
-    try{
-      const evt = new EventSource("/api/command-center-stream");
-      evt.onmessage = function(e){
-        try{
-          const payload = JSON.parse(e.data || "{}");
-          applyPayload(payload);
-        }catch(err){
-          console.error("Command center stream parse error", err);
+    async function refreshAdminData() {
+      try {
+        const res = await fetch("/admin/api/data?refresh=" + Date.now(), { cache: "no-store" });
+        if (res.ok) {
+          const data = await res.json();
+          adminRows = data.rows || [];
+          document.getElementById("kpi-hospital").textContent = data.summary.hospital_count || 0;
+          document.getElementById("kpi-exec").textContent = data.summary.executive_count || 0;
+          document.getElementById("kpi-investor").textContent = data.summary.investor_count || 0;
+          document.getElementById("kpi-open").textContent = data.summary.open_count || 0;
+          document.getElementById("kpi-dd").textContent = (data.summary.investor_stages?.Interested || 0) + (data.summary.investor_stages?.["Due Diligence"] || 0);
+          document.getElementById("kpi-updated").textContent = data.summary.last_updated_label || "--";
+          document.getElementById("admin-last-updated").textContent = "Last Updated " + (data.summary.last_updated || "--");
+          applyFilters();
         }
-      };
-      evt.onerror = function(){
-        console.warn("Command center stream error, fallback polling remains active.");
-      };
-    }catch(err){
-      console.warn("EventSource unavailable, fallback polling only.");
+      } catch (e) {
+        console.error("admin data refresh failed", e);
+      }
     }
 
-    applyPayload({});
-    refreshFallback();
-    setInterval(refreshFallback, 5000);
+    document.getElementById("admin-search").addEventListener("input", applyFilters);
+    document.getElementById("admin-type").addEventListener("change", applyFilters);
+    document.getElementById("admin-status").addEventListener("change", applyFilters);
+    document.getElementById("admin-sort").addEventListener("change", applyFilters);
+    document.getElementById("admin-refresh-btn").addEventListener("click", refreshAdminData);
+
+    refreshAdminData();
+    setInterval(refreshAdminData, 5000);
   </script>
 </body>
 </html>
 """
+
 
 SIM_STATE = {
     "seed": 1,
@@ -1984,806 +1633,7 @@ def _simulated_snapshot() -> dict[str, Any]:
             "focus_patient_id": focus_patient_id,
         },
     }
-    
-ADMIN_HTML = r"""
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <title>Admin Review — Early Risk Alert AI</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <style>
-    :root{
-      --bg:#07101c;
-      --bg2:#0b1528;
-      --panel:#101a2d;
-      --panel2:#13203a;
-      --line:rgba(255,255,255,.08);
-      --line2:rgba(255,255,255,.05);
-      --text:#eef4ff;
-      --muted:#a7bddc;
-      --blue:#7aa2ff;
-      --blue2:#5bd4ff;
-      --green:#3ad38f;
-      --amber:#f4bd6a;
-      --red:#ff667d;
-      --purple:#b58cff;
-      --shadow:0 20px 60px rgba(0,0,0,.34);
-      --radius:24px;
-      --max:1440px;
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-      color:var(--text);
-      background:
-        radial-gradient(circle at top left, rgba(122,162,255,.14), transparent 22%),
-        radial-gradient(circle at 88% 10%, rgba(91,212,255,.10), transparent 18%),
-        linear-gradient(180deg, var(--bg), var(--bg2));
-    }
-    a{text-decoration:none;color:inherit}
-    .shell{max-width:var(--max);margin:0 auto;padding:20px 16px 44px}
-    .topbar{
-      position:sticky;top:0;z-index:50;
-      background:rgba(7,16,28,.82);
-      backdrop-filter:blur(14px);
-      border-bottom:1px solid var(--line);
-    }
-    .topbar-inner{
-      max-width:var(--max);
-      margin:0 auto;
-      padding:14px 16px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:18px;
-      flex-wrap:wrap;
-    }
-    .brand-kicker{
-      font-size:11px;font-weight:900;letter-spacing:.16em;text-transform:uppercase;color:#8fdcff;
-    }
-    .brand-title{
-      font-size:clamp(26px,3vw,40px);font-weight:1000;line-height:.95;letter-spacing:-.05em;
-    }
-    .brand-sub{
-      font-size:14px;color:var(--muted);font-weight:800;
-    }
-    .nav-links{
-      display:flex;align-items:center;gap:14px;flex-wrap:wrap;
-    }
-    .nav-links a{font-size:14px;font-weight:900}
-    .btn{
-      display:inline-flex;align-items:center;justify-content:center;gap:8px;
-      padding:12px 16px;border-radius:16px;font-size:14px;font-weight:900;
-      border:1px solid transparent;cursor:pointer;
-      transition:transform .18s ease, box-shadow .18s ease, opacity .18s ease;
-      text-decoration:none;
-    }
-    .btn:hover{transform:translateY(-2px)}
-    .btn.primary{
-      background:linear-gradient(135deg,var(--blue),var(--blue2));
-      color:#07101c;box-shadow:0 12px 30px rgba(91,212,255,.22);
-    }
-    .btn.secondary{
-      background:rgba(255,255,255,.04);
-      border-color:var(--line);
-      color:var(--text);
-    }
 
-    .hero{
-      margin-top:18px;
-      border:1px solid var(--line);
-      border-radius:30px;
-      background:
-        radial-gradient(circle at 20% 20%, rgba(91,212,255,.08), transparent 18%),
-        radial-gradient(circle at 80% 0%, rgba(181,140,255,.08), transparent 18%),
-        linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.015)),
-        linear-gradient(180deg, rgba(10,19,34,.86), rgba(7,14,26,.96));
-      box-shadow:var(--shadow);
-      padding:24px;
-    }
-    .hero-grid{
-      display:grid;grid-template-columns:1.3fr .9fr;gap:18px;
-    }
-    .hero-copy{
-      border:1px solid var(--line);
-      border-radius:26px;
-      background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.018));
-      padding:22px;
-    }
-    .hero-kicker{
-      font-size:11px;font-weight:900;letter-spacing:.16em;text-transform:uppercase;color:#91ddff;margin-bottom:10px;
-    }
-    .hero-copy h1{
-      margin:0 0 12px;font-size:clamp(36px,5vw,66px);line-height:.92;letter-spacing:-.06em;font-weight:1000;
-    }
-    .hero-copy p{
-      margin:0;color:#d0def2;font-size:16px;line-height:1.68;max-width:820px;
-    }
-    .hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:20px}
-    .hero-mini-grid{
-      margin-top:18px;display:grid;grid-template-columns:repeat(4,1fr);gap:12px;
-    }
-    .hero-mini{
-      border:1px solid var(--line2);border-radius:18px;padding:14px;background:rgba(255,255,255,.03);
-    }
-    .hero-mini .k{
-      font-size:11px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:#8fdcff;margin-bottom:8px;
-    }
-    .hero-mini .v{
-      font-size:18px;font-weight:1000;line-height:1.1;letter-spacing:-.03em;
-    }
-
-    .mission-panel{
-      border:1px solid var(--line);
-      border-radius:26px;
-      background:
-        linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.018)),
-        linear-gradient(180deg, rgba(12,22,38,.76), rgba(9,16,30,.88));
-      padding:18px;
-      position:relative;
-      overflow:hidden;
-    }
-    .mission-panel::before{
-      content:"";
-      position:absolute;inset:0;
-      background:linear-gradient(120deg, transparent 30%, rgba(255,255,255,.04) 50%, transparent 70%);
-      animation:panelSweep 9s linear infinite;
-      pointer-events:none;
-    }
-    @keyframes panelSweep{
-      0%{transform:translateX(-35%)}
-      100%{transform:translateX(35%)}
-    }
-    .mission-header{
-      display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px;
-    }
-    .mission-title{font-size:24px;font-weight:1000;letter-spacing:-.04em}
-    .mission-sub{font-size:13px;color:var(--muted);line-height:1.55}
-    .status-pill{
-      display:inline-flex;align-items:center;justify-content:center;
-      padding:9px 13px;border-radius:999px;font-size:12px;font-weight:1000;letter-spacing:.14em;text-transform:uppercase;
-      border:1px solid rgba(255,255,255,.12);
-      background:rgba(255,255,255,.05);
-    }
-    .status-new{color:#0b1528;background:linear-gradient(135deg,var(--blue),var(--blue2))}
-    .status-contacted{color:#2a1b00;background:linear-gradient(135deg,var(--amber),#ffdba5)}
-    .status-closed{color:#fff3f5;background:linear-gradient(135deg,#ff667d,#ff8e99)}
-    .stage-dd{color:#120c25;background:linear-gradient(135deg,var(--purple),#d3b4ff)}
-
-    .mission-stats{
-      display:grid;grid-template-columns:repeat(4,1fr);gap:14px;
-    }
-    .stat-card{
-      border:1px solid var(--line);
-      border-radius:20px;
-      background:
-        linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.018)),
-        linear-gradient(180deg, rgba(13,23,40,.90), rgba(8,15,28,.95));
-      padding:16px;min-height:122px;position:relative;overflow:hidden;
-    }
-    .stat-card::after{
-      content:"";
-      position:absolute;right:-30px;top:-30px;width:120px;height:120px;border-radius:50%;
-      background:radial-gradient(circle, rgba(91,212,255,.12), transparent 60%);
-      pointer-events:none;
-    }
-    .stat-card .k{
-      font-size:11px;font-weight:900;letter-spacing:.16em;text-transform:uppercase;color:#8ddcff;margin-bottom:10px;
-    }
-    .stat-card .v{
-      font-size:40px;font-weight:1000;line-height:.92;letter-spacing:-.05em;
-    }
-    .stat-card .hint{
-      margin-top:8px;font-size:13px;line-height:1.5;color:#c8d8ef;
-    }
-
-    .filter-bar{
-      margin-top:20px;
-      display:grid;grid-template-columns:1.2fr .9fr .9fr .9fr auto;
-      gap:12px;
-    }
-    .field{
-      border:1px solid var(--line);
-      border-radius:16px;
-      background:rgba(255,255,255,.04);
-      padding:12px 14px;
-      color:var(--text);
-      font-size:14px;
-      font-weight:800;
-      min-height:48px;
-      width:100%;
-      outline:none;
-    }
-    .field::placeholder{color:#9fb6d7}
-    select.field{appearance:none}
-
-    .pipeline-grid{
-      margin-top:20px;
-      display:grid;
-      grid-template-columns:repeat(4,1fr);
-      gap:14px;
-    }
-    .pipeline-card{
-      border:1px solid var(--line);
-      border-radius:20px;
-      padding:16px;
-      background:
-        linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.018)),
-        linear-gradient(180deg, rgba(12,22,38,.76), rgba(9,16,30,.88));
-    }
-    .pipeline-card .k{
-      font-size:11px;font-weight:900;letter-spacing:.16em;text-transform:uppercase;color:#8fdcff;margin-bottom:10px;
-    }
-    .pipeline-card .v{
-      font-size:34px;font-weight:1000;line-height:.92;letter-spacing:-.04em;
-    }
-
-    .board{
-      margin-top:20px;
-      display:grid;
-      grid-template-columns:1.35fr .95fr;
-      gap:18px;
-      align-items:start;
-    }
-
-    .table-card,
-    .side-card{
-      border:1px solid var(--line);
-      border-radius:24px;
-      background:
-        linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.018)),
-        linear-gradient(180deg, rgba(12,22,38,.76), rgba(9,16,30,.88));
-      padding:18px;
-      box-shadow:0 14px 36px rgba(0,0,0,.26);
-    }
-    .table-card h2,
-    .side-card h2{
-      margin:0 0 12px;font-size:22px;font-weight:1000;letter-spacing:-.03em;
-    }
-    .muted{
-      color:var(--muted);font-size:13px;line-height:1.55;
-    }
-
-    .table-wrap{
-      margin-top:12px;
-      overflow:auto;
-      border:1px solid rgba(255,255,255,.06);
-      border-radius:18px;
-      background:rgba(255,255,255,.02);
-    }
-    table{
-      width:100%;
-      border-collapse:collapse;
-      min-width:1080px;
-    }
-    th, td{
-      padding:14px 12px;
-      border-bottom:1px solid rgba(255,255,255,.08);
-      text-align:left;
-      vertical-align:top;
-      font-size:13px;
-    }
-    th{
-      color:#9eb8d6;
-      text-transform:uppercase;
-      font-size:11px;
-      letter-spacing:.12em;
-      background:rgba(255,255,255,.02);
-      position:sticky;top:0;
-      z-index:1;
-    }
-    tr:hover td{background:rgba(255,255,255,.02)}
-    .lead-type{
-      display:inline-flex;align-items:center;justify-content:center;
-      padding:8px 10px;border-radius:999px;
-      font-size:11px;font-weight:1000;letter-spacing:.12em;text-transform:uppercase;
-      border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);
-    }
-    .type-hospital{color:#0b1528;background:linear-gradient(135deg,var(--green),#7ef5c0)}
-    .type-executive{color:#07101c;background:linear-gradient(135deg,var(--blue),var(--blue2))}
-    .type-investor{color:#120c25;background:linear-gradient(135deg,var(--purple),#d3b4ff)}
-    .row-title{font-weight:1000;font-size:14px;line-height:1.4}
-    .row-sub{margin-top:4px;color:#acc0dd;font-size:12px;line-height:1.45}
-    .pill{
-      display:inline-flex;align-items:center;justify-content:center;
-      padding:8px 10px;border-radius:999px;
-      font-size:11px;font-weight:1000;letter-spacing:.12em;text-transform:uppercase;
-      border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);
-    }
-    .actions{
-      display:flex;gap:8px;flex-wrap:wrap;
-    }
-    .mini-btn{
-      display:inline-flex;align-items:center;justify-content:center;
-      padding:8px 10px;border-radius:12px;font-size:11px;font-weight:1000;
-      border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);color:var(--text);
-      cursor:pointer;
-    }
-
-    .side-grid{
-      display:grid;gap:14px;
-    }
-    .summary-line{
-      display:flex;justify-content:space-between;gap:10px;
-      border:1px solid rgba(255,255,255,.06);
-      border-radius:16px;padding:12px;background:rgba(255,255,255,.03);
-      font-size:13px;font-weight:900;color:#e3efff;
-    }
-    .queue-item{
-      border:1px solid rgba(255,255,255,.06);
-      border-radius:16px;padding:12px;background:rgba(255,255,255,.03);
-      margin-bottom:10px;
-    }
-    .queue-title{font-size:14px;font-weight:1000;line-height:1.45}
-    .queue-sub{margin-top:4px;font-size:12px;color:#a9bedb;line-height:1.45}
-
-    .empty{
-      border:1px dashed rgba(255,255,255,.12);
-      border-radius:18px;
-      padding:18px;
-      font-size:14px;
-      line-height:1.6;
-      color:#a7bddc;
-      background:rgba(255,255,255,.02);
-      text-align:center;
-    }
-
-    @media (max-width:1280px){
-      .hero-grid{grid-template-columns:1fr}
-      .board{grid-template-columns:1fr}
-      .pipeline-grid{grid-template-columns:repeat(2,1fr)}
-      .mission-stats{grid-template-columns:repeat(2,1fr)}
-    }
-    @media (max-width:900px){
-      .filter-bar{grid-template-columns:1fr}
-      .hero-mini-grid{grid-template-columns:repeat(2,1fr)}
-      .pipeline-grid{grid-template-columns:1fr}
-      .mission-stats{grid-template-columns:1fr}
-    }
-    @media (max-width:640px){
-      .shell{padding:16px 10px 36px}
-      .hero{padding:16px}
-      .hero-copy h1{font-size:clamp(30px,11vw,50px)}
-      .hero-actions{flex-direction:column}
-      .btn{width:100%}
-      .hero-mini-grid{grid-template-columns:1fr}
-      .topbar-inner{padding:12px 10px}
-    }
-  </style>
-</head>
-<body>
-  <div class="topbar">
-    <div class="topbar-inner">
-      <div>
-        <div class="brand-kicker">Operating layer · live review dashboard</div>
-        <div class="brand-title">Early Risk Alert AI</div>
-        <div class="brand-sub">Hospital requests · executive walkthroughs · investor pipeline</div>
-      </div>
-      <div class="nav-links">
-        <a href="/">Overview</a>
-        <a href="/command-center">Command Center</a>
-        <a href="/hospital-demo">Hospitals</a>
-        <a href="/investor-intake">Investors</a>
-        <a class="btn primary" href="/command-center">Back to Command Center</a>
-      </div>
-    </div>
-  </div>
-
-  <div class="shell">
-    <section class="hero">
-      <div class="hero-grid">
-        <div class="hero-copy">
-          <div class="hero-kicker">Live operating layer</div>
-          <h1>Admin Review Dashboard</h1>
-          <p>
-            Review hospital demo requests, executive walkthrough requests, and investor intake submissions in one
-            production-ready operating layer with live refresh, status control, search, filters, and pipeline visibility.
-          </p>
-          <div class="hero-actions">
-            <a class="btn primary" href="/command-center">Open Command Center</a>
-            <a class="btn secondary" href="/hospital-demo">Hospital Demo Form</a>
-            <a class="btn secondary" href="/executive-walkthrough">Executive Walkthrough</a>
-            <a class="btn secondary" href="/investor-intake">Investor Intake</a>
-          </div>
-          <div class="hero-mini-grid">
-            <div class="hero-mini">
-              <div class="k">Hospital Leads</div>
-              <div class="v" id="hero-hospital-count">0</div>
-            </div>
-            <div class="hero-mini">
-              <div class="k">Executive Leads</div>
-              <div class="v" id="hero-exec-count">0</div>
-            </div>
-            <div class="hero-mini">
-              <div class="k">Investor Leads</div>
-              <div class="v" id="hero-investor-count">0</div>
-            </div>
-            <div class="hero-mini">
-              <div class="k">Last Updated</div>
-              <div class="v" id="last-updated-label">—</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="mission-panel">
-          <div class="mission-header">
-            <div>
-              <div class="mission-title">Review Status</div>
-              <div class="mission-sub">Newest leads first · instant status updates · auto-refresh active</div>
-            </div>
-            <div class="status-pill status-new">Live</div>
-          </div>
-
-          <div class="mission-stats">
-            <div class="stat-card">
-              <div class="k">Total Leads</div>
-              <div class="v" id="total-leads">0</div>
-              <div class="hint">All inbound submissions across the platform.</div>
-            </div>
-            <div class="stat-card">
-              <div class="k">Open Leads</div>
-              <div class="v" id="open-leads">0</div>
-              <div class="hint">New and active leads still needing follow-up.</div>
-            </div>
-            <div class="stat-card">
-              <div class="k">Contacted</div>
-              <div class="v" id="contacted-leads">0</div>
-              <div class="hint">Requests already engaged or moved forward.</div>
-            </div>
-            <div class="stat-card">
-              <div class="k">Closed</div>
-              <div class="v" id="closed-leads">0</div>
-              <div class="hint">Completed, resolved, or archived opportunities.</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="filter-bar">
-        <input id="search-box" class="field" type="text" placeholder="Search by name, organization, email, phone, notes">
-        <select id="type-filter" class="field">
-          <option value="">All lead types</option>
-          <option value="hospital">Hospital</option>
-          <option value="executive">Executive</option>
-          <option value="investor">Investor</option>
-        </select>
-        <select id="status-filter" class="field">
-          <option value="">All statuses</option>
-          <option value="New">New</option>
-          <option value="Contacted">Contacted</option>
-          <option value="Closed">Closed</option>
-        </select>
-        <select id="stage-filter" class="field">
-          <option value="">All investor stages</option>
-          <option value="New">New</option>
-          <option value="Interested">Interested</option>
-          <option value="Due Diligence">Due Diligence</option>
-          <option value="Follow-Up">Follow-Up</option>
-          <option value="Closed">Closed</option>
-        </select>
-        <button id="refresh-btn" class="btn secondary" type="button">Refresh</button>
-      </div>
-
-      <div class="pipeline-grid">
-        <div class="pipeline-card">
-          <div class="k">Interested</div>
-          <div class="v" id="stage-interested">0</div>
-        </div>
-        <div class="pipeline-card">
-          <div class="k">Due Diligence</div>
-          <div class="v" id="stage-dd">0</div>
-        </div>
-        <div class="pipeline-card">
-          <div class="k">Follow-Up</div>
-          <div class="v" id="stage-followup">0</div>
-        </div>
-        <div class="pipeline-card">
-          <div class="k">Closed Investors</div>
-          <div class="v" id="stage-closed">0</div>
-        </div>
-      </div>
-
-      <div class="board">
-        <div class="table-card">
-          <h2>Live Lead Board</h2>
-          <div class="muted">Newest and hottest leads first. Use status buttons without reloading the page.</div>
-
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Lead Type</th>
-                  <th>Name / Organization</th>
-                  <th>Contact</th>
-                  <th>Notes / Intent</th>
-                  <th>Status</th>
-                  <th>Investor Stage</th>
-                  <th>Submitted</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody id="lead-table-body"></tbody>
-            </table>
-          </div>
-
-          <div id="lead-empty" class="empty" style="display:none;margin-top:12px;">
-            No leads match the current filters.
-          </div>
-        </div>
-
-        <div class="side-grid">
-          <div class="side-card">
-            <h2>Lead Mix</h2>
-            <div class="summary-line"><span>Hospital</span><span id="mix-hospital">0</span></div>
-            <div class="summary-line"><span>Executive</span><span id="mix-executive">0</span></div>
-            <div class="summary-line"><span>Investor</span><span id="mix-investor">0</span></div>
-          </div>
-
-          <div class="side-card">
-            <h2>Newest Opportunities</h2>
-            <div id="newest-queue"></div>
-          </div>
-
-          <div class="side-card">
-            <h2>Hottest Investor Pipeline</h2>
-            <div id="investor-queue"></div>
-          </div>
-        </div>
-      </div>
-    </section>
-  </div>
-
-  <script>
-    let ALL_ROWS = [];
-
-    function safe(v, fallback) {
-      if (v === undefined || v === null || v === "") return fallback || "—";
-      return v;
-    }
-
-    function escapeHtml(s) {
-      return String(s || "")
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;");
-    }
-
-    function statusClass(status) {
-      const s = String(status || "").toLowerCase();
-      if (s === "contacted") return "status-contacted";
-      if (s === "closed") return "status-closed";
-      return "status-new";
-    }
-
-    function typeClass(kind) {
-      const s = String(kind || "").toLowerCase();
-      if (s === "executive") return "type-executive";
-      if (s === "investor") return "type-investor";
-      return "type-hospital";
-    }
-
-    function stagePill(stage) {
-      const s = String(stage || "New");
-      if (s === "Due Diligence") return '<span class="pill stage-dd">Due Diligence</span>';
-      if (s === "Interested") return '<span class="pill status-contacted">Interested</span>';
-      if (s === "Follow-Up") return '<span class="pill status-new">Follow-Up</span>';
-      if (s === "Closed") return '<span class="pill status-closed">Closed</span>';
-      return '<span class="pill status-new">New</span>';
-    }
-
-    function statusPill(status) {
-      const s = safe(status, "New");
-      return '<span class="pill ' + statusClass(s) + '">' + escapeHtml(s) + '</span>';
-    }
-
-    function leadTypePill(kind) {
-      return '<span class="lead-type ' + typeClass(kind) + '">' + escapeHtml(kind || "hospital") + '</span>';
-    }
-
-    function submittedText(row) {
-      return escapeHtml(safe(row.submitted_at, "—"));
-    }
-
-    function noteText(row) {
-      return escapeHtml(
-        row.message ||
-        row.notes ||
-        row.intent ||
-        row.facility_type ||
-        row.priority ||
-        row.investor_type ||
-        "No notes"
-      );
-    }
-
-    function titleText(row) {
-      const org = row.organization || row.company || row.facility || "";
-      const role = row.role || row.title || "";
-      let sub = [];
-      if (org) sub.push(org);
-      if (role) sub.push(role);
-      const subline = sub.length ? '<div class="row-sub">' + escapeHtml(sub.join(" · ")) + '</div>' : "";
-      return '<div class="row-title">' + escapeHtml(row.full_name || row.name || "Unnamed lead") + '</div>' + subline;
-    }
-
-    function contactText(row) {
-      const bits = [];
-      if (row.email) bits.push(escapeHtml(row.email));
-      if (row.phone) bits.push(escapeHtml(row.phone));
-      return bits.join("<br>") || "—";
-    }
-
-    function buildActionButtons(row) {
-      let html = '';
-      html += '<button class="mini-btn" data-action="status" data-kind="' + escapeHtml(row.kind) + '" data-id="' + escapeHtml(row.submitted_at) + '" data-value="New">New</button>';
-      html += '<button class="mini-btn" data-action="status" data-kind="' + escapeHtml(row.kind) + '" data-id="' + escapeHtml(row.submitted_at) + '" data-value="Contacted">Contacted</button>';
-      html += '<button class="mini-btn" data-action="status" data-kind="' + escapeHtml(row.kind) + '" data-id="' + escapeHtml(row.submitted_at) + '" data-value="Closed">Closed</button>';
-      if (row.kind === "investor") {
-        html += '<button class="mini-btn" data-action="stage" data-kind="investor" data-id="' + escapeHtml(row.submitted_at) + '" data-value="Interested">Interested</button>';
-        html += '<button class="mini-btn" data-action="stage" data-kind="investor" data-id="' + escapeHtml(row.submitted_at) + '" data-value="Due Diligence">Due Diligence</button>';
-        html += '<button class="mini-btn" data-action="stage" data-kind="investor" data-id="' + escapeHtml(row.submitted_at) + '" data-value="Follow-Up">Follow-Up</button>';
-      }
-      return '<div class="actions">' + html + '</div>';
-    }
-
-    function renderTable(rows) {
-      const body = document.getElementById("lead-table-body");
-      const empty = document.getElementById("lead-empty");
-
-      if (!rows.length) {
-        body.innerHTML = "";
-        empty.style.display = "block";
-        return;
-      }
-
-      empty.style.display = "none";
-      body.innerHTML = rows.map(function(row) {
-        return ''
-          + '<tr>'
-          + '<td>' + leadTypePill(row.kind) + '</td>'
-          + '<td>' + titleText(row) + '</td>'
-          + '<td>' + contactText(row) + '</td>'
-          + '<td>' + noteText(row) + '</td>'
-          + '<td>' + statusPill(row.status || "New") + '</td>'
-          + '<td>' + (row.kind === "investor" ? stagePill(row.stage || "New") : '<span class="muted">—</span>') + '</td>'
-          + '<td>' + submittedText(row) + '</td>'
-          + '<td>' + buildActionButtons(row) + '</td>'
-          + '</tr>';
-      }).join("");
-    }
-
-    function renderQueues(rows) {
-      const newest = document.getElementById("newest-queue");
-      const investor = document.getElementById("investor-queue");
-
-      const newestRows = rows.slice(0, 5);
-      newest.innerHTML = newestRows.length ? newestRows.map(function(row) {
-        return ''
-          + '<div class="queue-item">'
-          +   '<div class="queue-title">' + escapeHtml(row.full_name || row.name || "Unnamed lead") + '</div>'
-          +   '<div class="queue-sub">' + escapeHtml(row.kind) + ' · ' + escapeHtml(row.status || "New") + ' · ' + escapeHtml(row.organization || row.company || row.investor_type || "Lead") + '</div>'
-          + '</div>';
-      }).join("") : '<div class="empty">No recent leads yet.</div>';
-
-      const investorRows = rows.filter(function(r){ return r.kind === "investor"; }).slice(0, 5);
-      investor.innerHTML = investorRows.length ? investorRows.map(function(row) {
-        return ''
-          + '<div class="queue-item">'
-          +   '<div class="queue-title">' + escapeHtml(row.full_name || "Investor lead") + '</div>'
-          +   '<div class="queue-sub">' + escapeHtml(row.stage || "New") + ' · ' + escapeHtml(row.investor_type || "Investor") + ' · ' + escapeHtml(row.organization || "Pipeline") + '</div>'
-          + '</div>';
-      }).join("") : '<div class="empty">No investor leads yet.</div>';
-    }
-
-    function applyCounts(allRows) {
-      const hospital = allRows.filter(function(r){ return r.kind === "hospital"; }).length;
-      const executive = allRows.filter(function(r){ return r.kind === "executive"; }).length;
-      const investor = allRows.filter(function(r){ return r.kind === "investor"; }).length;
-      const open = allRows.filter(function(r){ return String(r.status || "New") !== "Closed"; }).length;
-      const contacted = allRows.filter(function(r){ return String(r.status || "") === "Contacted"; }).length;
-      const closed = allRows.filter(function(r){ return String(r.status || "") === "Closed"; }).length;
-
-      document.getElementById("hero-hospital-count").textContent = String(hospital);
-      document.getElementById("hero-exec-count").textContent = String(executive);
-      document.getElementById("hero-investor-count").textContent = String(investor);
-      document.getElementById("total-leads").textContent = String(allRows.length);
-      document.getElementById("open-leads").textContent = String(open);
-      document.getElementById("contacted-leads").textContent = String(contacted);
-      document.getElementById("closed-leads").textContent = String(closed);
-      document.getElementById("mix-hospital").textContent = String(hospital);
-      document.getElementById("mix-executive").textContent = String(executive);
-      document.getElementById("mix-investor").textContent = String(investor);
-
-      const lastUpdated = allRows.length ? (allRows[0].last_updated || allRows[0].submitted_at || "—") : "—";
-      document.getElementById("last-updated-label").textContent = lastUpdated;
-
-      const investors = allRows.filter(function(r){ return r.kind === "investor"; });
-      document.getElementById("stage-interested").textContent = String(investors.filter(function(r){ return (r.stage || "New") === "Interested"; }).length);
-      document.getElementById("stage-dd").textContent = String(investors.filter(function(r){ return (r.stage || "New") === "Due Diligence"; }).length);
-      document.getElementById("stage-followup").textContent = String(investors.filter(function(r){ return (r.stage || "New") === "Follow-Up"; }).length);
-      document.getElementById("stage-closed").textContent = String(investors.filter(function(r){ return (r.stage || "New") === "Closed"; }).length);
-    }
-
-    function filteredRows() {
-      const q = String(document.getElementById("search-box").value || "").trim().toLowerCase();
-      const type = document.getElementById("type-filter").value;
-      const status = document.getElementById("status-filter").value;
-      const stage = document.getElementById("stage-filter").value;
-
-      return ALL_ROWS.filter(function(row) {
-        const hay = [
-          row.kind, row.full_name, row.name, row.organization, row.company, row.email,
-          row.phone, row.message, row.notes, row.intent, row.role, row.title,
-          row.facility_type, row.priority, row.investor_type, row.stage
-        ].join(" ").toLowerCase();
-
-        if (q && hay.indexOf(q) === -1) return false;
-        if (type && row.kind !== type) return false;
-        if (status && (row.status || "New") !== status) return false;
-        if (stage && row.kind === "investor" && (row.stage || "New") !== stage) return false;
-        if (stage && row.kind !== "investor") return false;
-        return true;
-      });
-    }
-
-    function rerender() {
-      const rows = filteredRows();
-      renderTable(rows);
-      renderQueues(rows);
-    }
-
-    async function loadData() {
-      const res = await fetch("/admin/review/data?refresh=" + Date.now(), { cache: "no-store" });
-      const payload = await res.json();
-      ALL_ROWS = Array.isArray(payload.rows) ? payload.rows : [];
-      applyCounts(ALL_ROWS);
-      rerender();
-    }
-
-    async function updateLead(kind, submittedAt, field, value) {
-      const res = await fetch("/admin/review/update", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          kind: kind,
-          submitted_at: submittedAt,
-          field: field,
-          value: value
-        })
-      });
-      if (!res.ok) return;
-      await loadData();
-    }
-
-    document.addEventListener("click", async function(e) {
-      const btn = e.target.closest("[data-action]");
-      if (!btn) return;
-      const action = btn.getAttribute("data-action");
-      const kind = btn.getAttribute("data-kind");
-      const id = btn.getAttribute("data-id");
-      const value = btn.getAttribute("data-value");
-      if (action === "status") {
-        await updateLead(kind, id, "status", value);
-      } else if (action === "stage") {
-        await updateLead(kind, id, "stage", value);
-      }
-    });
-
-    document.getElementById("search-box").addEventListener("input", rerender);
-    document.getElementById("type-filter").addEventListener("change", rerender);
-    document.getElementById("status-filter").addEventListener("change", rerender);
-    document.getElementById("stage-filter").addEventListener("change", rerender);
-    document.getElementById("refresh-btn").addEventListener("click", loadData);
-
-    loadData();
-    setInterval(loadData, 4000);
-  </script>
-</body>
-</html>
-"""
 
 def create_app() -> Flask:
     app = Flask(__name__)
@@ -2825,95 +1675,6 @@ def create_app() -> Flask:
             "last_updated": _format_pretty_label(last_updated),
             "last_updated_label": _format_pretty_label(last_updated).split(" ")[1] if last_updated else "--",
         }
-
-        
-def _write_jsonl_rows(path: Path, rows: list[dict[str, Any]]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("w", encoding="utf-8") as f:
-        for row in rows:
-            f.write(json.dumps(row, ensure_ascii=False) + "\n")
-
-def _lead_rows() -> list[dict[str, Any]]:
-    rows: list[dict[str, Any]] = []
-
-    for item in _read_jsonl(hospital_file):
-        item = dict(item)
-        item["kind"] = "hospital"
-        item["status"] = _status_norm(item.get("status"))
-        item["stage"] = ""
-        rows.append(item)
-
-    for item in _read_jsonl(exec_file):
-        item = dict(item)
-        item["kind"] = "executive"
-        item["status"] = _status_norm(item.get("status"))
-        item["stage"] = ""
-        rows.append(item)
-
-    for item in _read_jsonl(investor_file):
-        item = dict(item)
-        item["kind"] = "investor"
-        item["status"] = _status_norm(item.get("status"))
-        item["stage"] = item.get("stage", "New") or "New"
-        rows.append(item)
-
-    rows.sort(
-        key=lambda r: (
-            r.get("status") == "Closed",
-            -(float(str(r.get("risk_score", 0) or 0)) if str(r.get("risk_score", "")).replace(".", "", 1).isdigit() else 0),
-            str(r.get("submitted_at", ""))
-        ),
-        reverse=False
-    )
-    rows.sort(key=lambda r: str(r.get("submitted_at", "")), reverse=True)
-    return rows
-
-@app.get("/admin/review/data")
-def admin_review_data():
-    return jsonify({"ok": True, "rows": _lead_rows()})
-
-@app.post("/admin/review/update")
-def admin_review_update():
-    payload = request.get_json(silent=True) or {}
-    kind = str(payload.get("kind", "")).strip().lower()
-    submitted_at = str(payload.get("submitted_at", "")).strip()
-    field = str(payload.get("field", "")).strip()
-    value = str(payload.get("value", "")).strip()
-
-    if not kind or not submitted_at or field not in {"status", "stage"}:
-        return jsonify({"ok": False, "error": "invalid payload"}), 400
-
-    path_map = {
-        "hospital": hospital_file,
-        "executive": exec_file,
-        "investor": investor_file,
-    }
-    path = path_map.get(kind)
-    if not path:
-        return jsonify({"ok": False, "error": "invalid lead type"}), 400
-
-    rows = _read_jsonl(path)
-    updated = False
-
-    for row in rows:
-        if str(row.get("submitted_at", "")).strip() == submitted_at:
-            if field == "status":
-                row["status"] = _status_norm(value)
-                if kind == "investor" and row["status"] == "Closed":
-                    row["stage"] = "Closed"
-            elif field == "stage" and kind == "investor":
-                row["stage"] = value or "New"
-                if row["stage"] == "Closed":
-                    row["status"] = "Closed"
-            row["last_updated"] = _utc_now_iso()
-            updated = True
-            break
-
-    if not updated:
-        return jsonify({"ok": False, "error": "lead not found"}), 404
-
-    _write_jsonl_rows(path, rows)
-    return jsonify({"ok": True})
 
     @app.get("/")
     def home():
