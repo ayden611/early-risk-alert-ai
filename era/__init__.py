@@ -2151,6 +2151,95 @@ def create_app() -> Flask:
             "last_updated": _format_pretty_label(last_updated),
             "last_updated_label": _format_pretty_label(last_updated).split(" ")[1] if last_updated else "--",
         }
+        
+    def _write_jsonl_rows(path: Path, rows: list[dict[str, Any]]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8") as f:
+        for row in rows:
+            f.write(json.dumps(row, ensure_ascii=False) + "\n")
+
+    def _lead_rows() -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+
+    for item in _read_jsonl(hospital_file):
+        item = dict(item)
+        item["kind"] = "hospital"
+        item["status"] = _status_norm(item.get("status"))
+        item["stage"] = ""
+        rows.append(item)
+
+    for item in _read_jsonl(exec_file):
+        item = dict(item)
+        item["kind"] = "executive"
+        item["status"] = _status_norm(item.get("status"))
+        item["stage"] = ""
+        rows.append(item)
+
+    for item in _read_jsonl(investor_file):
+        item = dict(item)
+        item["kind"] = "investor"
+        item["status"] = _status_norm(item.get("status"))
+        item["stage"] = item.get("stage", "New") or "New"
+        rows.append(item)
+
+    rows.sort(
+        key=lambda r: (
+            r.get("status") == "Closed",
+            -(float(str(r.get("risk_score", 0) or 0)) if str(r.get("risk_score", "")).replace(".", "", 1).isdigit() else 0),
+            str(r.get("submitted_at", ""))
+        ),
+        reverse=False
+    )
+    rows.sort(key=lambda r: str(r.get("submitted_at", "")), reverse=True)
+    return rows
+
+    @app.get("/admin/review/data")
+    def admin_review_data():
+        return jsonify({"ok": True, "rows": _lead_rows()})
+
+    @app.post("/admin/review/update")
+    def admin_review_update():
+    payload = request.get_json(silent=True) or {}
+    kind = str(payload.get("kind", "")).strip().lower()
+    submitted_at = str(payload.get("submitted_at", "")).strip()
+    field = str(payload.get("field", "")).strip()
+    value = str(payload.get("value", "")).strip()
+
+    if not kind or not submitted_at or field not in {"status", "stage"}:
+        return jsonify({"ok": False, "error": "invalid payload"}), 400
+
+    path_map = {
+        "hospital": hospital_file,
+        "executive": exec_file,
+        "investor": investor_file,
+    }
+    path = path_map.get(kind)
+    if not path:
+        return jsonify({"ok": False, "error": "invalid lead type"}), 400
+
+    rows = _read_jsonl(path)
+    updated = False
+
+    for row in rows:
+        if str(row.get("submitted_at", "")).strip() == submitted_at:
+            if field == "status":
+                row["status"] = _status_norm(value)
+                if kind == "investor" and row["status"] == "Closed":
+                    row["stage"] = "Closed"
+            elif field == "stage" and kind == "investor":
+                row["stage"] = value or "New"
+                if row["stage"] == "Closed":
+                    row["status"] = "Closed"
+            row["last_updated"] = _utc_now_iso()
+            updated = True
+            break
+
+    if not updated:
+        return jsonify({"ok": False, "error": "lead not found"}), 404
+
+    _write_jsonl_rows(path, rows)
+    return jsonify({"ok": True})
+        
 
     @app.get("/")
     def home():
