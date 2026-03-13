@@ -2215,10 +2215,8 @@ def create_app() -> Flask:
 
 @app.get("/admin/review")
 def admin_review():
-    try:
-        return render_template_string(ADMIN_HTML)
-    except Exception as e:
-        return f"<h1>ADMIN_HTML ERROR</h1><pre>{e}</pre>", 500
+    return render_template_string(ADMIN_HTML)
+    
 
     @app.get("/healthz")
     def healthz():
