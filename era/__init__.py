@@ -407,298 +407,974 @@ THANK_YOU_HTML = r"""
 
 COMMAND_CENTER_HTML = r"""
 <!doctype html>
-<html>
+<html lang="en">
 <head>
-<meta charset="utf-8">
-<title>Early Risk Alert AI – Hospital Operations Cockpit</title>
+  <meta charset="utf-8">
+  <title>Early Risk Alert AI — AI Hospital Command Center</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root{
+      --bg:#07101c;
+      --bg2:#0b1528;
+      --panel:#101a2d;
+      --panel2:#13203a;
+      --panel3:#0d1728;
+      --line:rgba(255,255,255,.08);
+      --line2:rgba(255,255,255,.05);
+      --text:#eef4ff;
+      --muted:#a7bddc;
+      --blue:#7aa2ff;
+      --blue2:#5bd4ff;
+      --green:#3ad38f;
+      --amber:#f4bd6a;
+      --red:#ff667d;
+      --purple:#b58cff;
+      --shadow:0 20px 60px rgba(0,0,0,.34);
+      --radius:24px;
+      --max:1460px;
+    }
 
-<style>
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(122,162,255,.14), transparent 22%),
+        radial-gradient(circle at 88% 10%, rgba(91,212,255,.10), transparent 18%),
+        linear-gradient(180deg, var(--bg), var(--bg2));
+    }
+    a{text-decoration:none;color:inherit}
+    .shell{max-width:var(--max);margin:0 auto;padding:22px 16px 48px}
+    .topbar{
+      position:sticky;top:0;z-index:50;
+      border-bottom:1px solid var(--line);
+      background:rgba(7,16,28,.82);
+      backdrop-filter:blur(14px);
+    }
+    .topbar-inner{
+      max-width:var(--max);margin:0 auto;padding:14px 16px;
+      display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;
+    }
+    .brand-kicker{
+      font-size:11px;font-weight:900;letter-spacing:.16em;text-transform:uppercase;color:#9adfff;
+    }
+    .brand-title{
+      font-size:clamp(30px,3.4vw,48px);font-weight:1000;line-height:.92;letter-spacing:-.05em;
+    }
+    .brand-sub{font-size:14px;font-weight:800;color:var(--muted)}
+    .nav-links{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+    .nav-links a{font-size:14px;font-weight:900;color:#dce9ff}
+    .btn{
+      display:inline-flex;align-items:center;justify-content:center;gap:8px;
+      padding:12px 16px;border-radius:16px;font-size:14px;font-weight:900;
+      border:1px solid transparent;
+      transition:transform .18s ease, box-shadow .18s ease, opacity .18s ease;
+    }
+    .btn:hover{transform:translateY(-2px)}
+    .btn.primary{
+      background:linear-gradient(135deg,var(--blue),var(--blue2));
+      color:#07101c;box-shadow:0 12px 30px rgba(91,212,255,.22);
+    }
+    .btn.secondary{
+      background:rgba(255,255,255,.04);border-color:var(--line);color:var(--text);
+    }
 
-body{
-background:#06101c;
-color:white;
-font-family:Arial;
-margin:0;
-padding:30px;
-}
+    .ticker-wrap{
+      margin-top:18px;
+      border:1px solid var(--line);
+      border-radius:20px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.018)),
+        linear-gradient(180deg, rgba(12,22,38,.82), rgba(8,15,28,.92));
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    .ticker-track{
+      display:flex;gap:16px;align-items:center;
+      padding:12px 0;
+      white-space:nowrap;
+      min-width:max-content;
+      animation:tickerMove 28s linear infinite;
+    }
+    .ticker-item{
+      display:inline-flex;align-items:center;gap:10px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      padding:10px 14px;
+      background:rgba(255,255,255,.03);
+      margin-left:14px;
+      font-size:14px;font-weight:800;color:#deebff;
+    }
+    .ticker-dot{
+      width:10px;height:10px;border-radius:50%;
+      box-shadow:0 0 20px currentColor;
+      flex:0 0 auto;
+    }
+    .dot-green{color:var(--green);background:var(--green)}
+    .dot-amber{color:var(--amber);background:var(--amber)}
+    .dot-red{color:var(--red);background:var(--red)}
+    .dot-blue{color:var(--blue2);background:var(--blue2)}
+    @keyframes tickerMove{
+      0%{transform:translateX(0)}
+      100%{transform:translateX(-50%)}
+    }
 
-.title{
-font-size:34px;
-font-weight:700;
-margin-bottom:10px;
-}
+    .hero{
+      margin-top:18px;
+      border:1px solid var(--line);
+      border-radius:30px;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(91,212,255,.08), transparent 18%),
+        radial-gradient(circle at 80% 0%, rgba(181,140,255,.08), transparent 18%),
+        linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.015)),
+        linear-gradient(180deg, rgba(10,19,34,.86), rgba(7,14,26,.96));
+      box-shadow:var(--shadow);
+      padding:24px;
+    }
+    .hero-grid{
+      display:grid;grid-template-columns:1.45fr .95fr;gap:18px;align-items:stretch;
+    }
+    .hero-copy{
+      border:1px solid var(--line);
+      border-radius:26px;
+      background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.018));
+      padding:22px;
+    }
+    .hero-kicker{
+      font-size:11px;font-weight:900;letter-spacing:.16em;text-transform:uppercase;color:#91ddff;margin-bottom:10px;
+    }
+    .hero-copy h1{
+      margin:0 0 12px;font-size:clamp(40px,5.6vw,76px);line-height:.92;letter-spacing:-.06em;font-weight:1000;
+    }
+    .hero-copy p{
+      margin:0;color:#d0def2;font-size:17px;line-height:1.68;max-width:820px;
+    }
+    .hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:20px}
+    .hero-mini-grid{
+      margin-top:18px;display:grid;grid-template-columns:repeat(4,1fr);gap:12px;
+    }
+    .hero-mini{
+      border:1px solid var(--line2);border-radius:18px;padding:14px;background:rgba(255,255,255,.03);
+    }
+    .hero-mini .k{
+      font-size:11px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:#8fdcff;margin-bottom:8px;
+    }
+    .hero-mini .v{
+      font-size:18px;font-weight:1000;line-height:1.1;letter-spacing:-.03em;
+    }
 
-.subtitle{
-opacity:.7;
-margin-bottom:30px;
-}
+    .mission-panel{
+      border:1px solid var(--line);
+      border-radius:26px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.018)),
+        linear-gradient(180deg, rgba(12,22,38,.76), rgba(9,16,30,.88));
+      padding:18px;
+      position:relative;
+      overflow:hidden;
+    }
+    .mission-panel::before{
+      content:"";
+      position:absolute;inset:0;
+      background:
+        linear-gradient(120deg, transparent 30%, rgba(255,255,255,.04) 50%, transparent 70%);
+      animation:panelSweep 9s linear infinite;
+      pointer-events:none;
+    }
+    @keyframes panelSweep{
+      0%{transform:translateX(-35%)}
+      100%{transform:translateX(35%)}
+    }
+    .mission-header{
+      display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px;
+    }
+    .mission-title{font-size:24px;font-weight:1000;letter-spacing:-.04em}
+    .mission-sub{font-size:13px;color:var(--muted);line-height:1.55}
+    .status-pill{
+      display:inline-flex;align-items:center;justify-content:center;
+      padding:10px 14px;border-radius:999px;font-size:12px;font-weight:1000;letter-spacing:.14em;text-transform:uppercase;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.05);
+    }
+    .status-pill.live{color:#0b1528;background:linear-gradient(135deg,var(--green),#7ef5c0);box-shadow:0 0 24px rgba(58,211,143,.18)}
+    .status-pill.watch{color:#2a1b00;background:linear-gradient(135deg,var(--amber),#ffdba5)}
+    .status-pill.critical{color:#fff3f5;background:linear-gradient(135deg,#ff667d,#ff8e99)}
 
-.grid{
-display:grid;
-grid-template-columns:2fr 1fr;
-gap:20px;
-}
+    .cockpit-grid{
+      margin-top:20px;
+      display:grid;
+      grid-template-columns:1.75fr 1.05fr;
+      gap:18px;
+      align-items:start;
+    }
 
-.wall{
-display:grid;
-grid-template-columns:repeat(2,1fr);
-gap:20px;
-}
+    .telemetry-wall,
+    .intel-column,
+    .ops-strip{
+      display:grid;
+      gap:18px;
+    }
 
-.monitor{
-background:#0c1a2c;
-border-radius:16px;
-padding:18px;
-border:1px solid rgba(255,255,255,.1);
-box-shadow:0 10px 30px rgba(0,0,0,.4);
-}
+    .telemetry-top{
+      display:grid;grid-template-columns:repeat(3,1fr);gap:14px;
+    }
+    .stat-card{
+      border:1px solid var(--line);
+      border-radius:20px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.018)),
+        linear-gradient(180deg, rgba(13,23,40,.90), rgba(8,15,28,.95));
+      padding:16px;
+      min-height:122px;
+      position:relative;
+      overflow:hidden;
+    }
+    .stat-card::after{
+      content:"";
+      position:absolute;right:-30px;top:-30px;width:120px;height:120px;border-radius:50%;
+      background:radial-gradient(circle, rgba(91,212,255,.12), transparent 60%);
+      pointer-events:none;
+    }
+    .stat-card .k{
+      font-size:11px;font-weight:900;letter-spacing:.16em;text-transform:uppercase;color:#8ddcff;margin-bottom:10px;
+    }
+    .stat-card .v{
+      font-size:44px;font-weight:1000;line-height:.92;letter-spacing:-.05em;
+    }
+    .stat-card .hint{
+      margin-top:8px;font-size:13px;line-height:1.5;color:#c8d8ef;
+    }
 
-.monitor h3{
-margin:0 0 10px;
-}
+    .monitor-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:16px;
+    }
 
-.metric{
-font-size:22px;
-margin:6px 0;
-}
+    .monitor{
+      border:1px solid var(--line);
+      border-radius:26px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.012)),
+        linear-gradient(180deg, rgba(11,20,35,.96), rgba(6,12,22,.98));
+      box-shadow:0 16px 44px rgba(0,0,0,.32);
+      padding:18px;
+      position:relative;
+      overflow:hidden;
+      min-height:350px;
+    }
+    .monitor::before{
+      content:"";
+      position:absolute;inset:0;
+      background:
+        repeating-linear-gradient(
+          to right,
+          rgba(255,255,255,.03) 0,
+          rgba(255,255,255,.03) 1px,
+          transparent 1px,
+          transparent 58px
+        ),
+        repeating-linear-gradient(
+          to bottom,
+          rgba(255,255,255,.025) 0,
+          rgba(255,255,255,.025) 1px,
+          transparent 1px,
+          transparent 40px
+        );
+      opacity:.12;
+      pointer-events:none;
+    }
+    .monitor-top{
+      position:relative;z-index:1;
+      display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
+      margin-bottom:14px;
+    }
+    .monitor-bed{
+      font-size:11px;font-weight:1000;letter-spacing:.16em;text-transform:uppercase;color:#95ddff;
+      margin-bottom:6px;
+    }
+    .monitor-title{
+      font-size:34px;font-weight:1000;line-height:.92;letter-spacing:-.05em;
+    }
+    .monitor-wave{
+      position:relative;z-index:1;
+      border:1px solid rgba(255,255,255,.06);
+      border-radius:20px;
+      min-height:138px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.01)),
+        rgba(0,0,0,.18);
+      overflow:hidden;
+      display:flex;align-items:center;
+      padding:8px 0;
+    }
+    .monitor-wave svg{width:100%;height:118px;display:block}
+    .ecg-path{
+      fill:none;
+      stroke-width:4;
+      stroke-linecap:round;
+      stroke-linejoin:round;
+      stroke-dasharray:920;
+      stroke-dashoffset:0;
+      animation:ecgMove 2.8s linear infinite;
+      filter:drop-shadow(0 0 10px currentColor);
+    }
+    @keyframes ecgMove{
+      0%{stroke-dashoffset:920}
+      100%{stroke-dashoffset:0}
+    }
+    .ecg-green{stroke:#77ffb4;color:#77ffb4}
+    .ecg-amber{stroke:#ffd96c;color:#ffd96c}
+    .ecg-red{stroke:#ff7c8d;color:#ff7c8d}
 
-.ecg{
-height:90px;
-background:black;
-border-radius:6px;
-margin:12px 0;
-position:relative;
-overflow:hidden;
-}
+    .monitor-metrics{
+      position:relative;z-index:1;
+      margin-top:14px;
+      display:grid;grid-template-columns:repeat(4,1fr);gap:10px;
+    }
+    .metric-box{
+      border:1px solid rgba(255,255,255,.06);
+      border-radius:16px;
+      background:rgba(255,255,255,.03);
+      padding:12px;
+      min-height:78px;
+      display:flex;flex-direction:column;justify-content:space-between;
+    }
+    .metric-k{
+      font-size:11px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:#9eb8dc;
+    }
+    .metric-v{
+      font-size:18px;font-weight:1000;line-height:1;letter-spacing:-.03em;
+    }
+    .monitor-story{
+      position:relative;z-index:1;
+      margin-top:14px;
+      display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+    }
+    .story-text{
+      font-size:13px;color:#cfe0f4;line-height:1.55;max-width:78%;
+    }
 
-.wave{
-position:absolute;
-width:200%;
-height:100%;
-background:
-linear-gradient(90deg, transparent 0%, #00ff9c 40%, transparent 60%);
-animation:wave 2s linear infinite;
-opacity:.6;
-}
+    .intel-column{
+      align-content:start;
+    }
+    .intel-card{
+      border:1px solid var(--line);
+      border-radius:24px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.018)),
+        linear-gradient(180deg, rgba(12,22,38,.76), rgba(9,16,30,.88));
+      padding:18px;
+      box-shadow:0 14px 36px rgba(0,0,0,.26);
+    }
+    .intel-card h3{
+      margin:0 0 12px;font-size:20px;font-weight:1000;letter-spacing:-.03em;
+    }
+    .intel-grid{
+      display:grid;grid-template-columns:repeat(3,1fr);gap:12px;
+    }
+    .intel-metric{
+      border:1px solid rgba(255,255,255,.06);
+      border-radius:18px;padding:14px;background:rgba(255,255,255,.03);
+      min-height:100px;
+    }
+    .intel-label{
+      display:block;font-size:11px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:#9eb8dc;margin-bottom:8px;
+    }
+    .intel-value{
+      display:block;font-size:38px;font-weight:1000;line-height:.92;letter-spacing:-.04em;
+    }
+    .intel-note{
+      margin-top:8px;font-size:13px;line-height:1.5;color:#cadbf0;
+    }
 
-@keyframes wave{
-0%{left:-100%}
-100%{left:100%}
-}
+    .alert-feed{
+      display:grid;gap:10px;
+    }
+    .alert-item{
+      display:flex;align-items:flex-start;justify-content:space-between;gap:10px;
+      border:1px solid rgba(255,255,255,.06);
+      border-radius:18px;padding:14px;background:rgba(255,255,255,.03);
+    }
+    .alert-copy{
+      font-size:14px;font-weight:900;line-height:1.45;color:#e4efff;
+    }
+    .alert-sub{
+      font-size:12px;color:#acc0dd;font-weight:700;margin-top:4px;
+    }
 
-.status{
-padding:6px 12px;
-border-radius:20px;
-display:inline-block;
-font-size:12px;
-margin-top:10px;
-}
+    .why-now{
+      display:grid;gap:10px;
+    }
+    .why-line{
+      border:1px solid rgba(255,255,255,.06);
+      border-radius:16px;padding:12px;background:rgba(255,255,255,.03);
+      font-size:14px;font-weight:800;line-height:1.5;color:#def0ff;
+    }
 
-.stable{background:#2ecc71}
-.high{background:#f1c40f}
-.critical{background:#e74c3c}
+    .ops-strip{
+      margin-top:18px;
+      display:grid;
+      grid-template-columns:repeat(6,1fr);
+      gap:16px;
+    }
+    .ops-card{
+      border:1px solid var(--line);
+      border-radius:22px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.018)),
+        linear-gradient(180deg, rgba(12,22,38,.76), rgba(9,16,30,.88));
+      padding:16px;
+      box-shadow:0 14px 34px rgba(0,0,0,.24);
+      min-height:170px;
+    }
+    .ops-card h3{
+      margin:0 0 12px;font-size:18px;font-weight:1000;letter-spacing:-.03em;
+    }
+    .trend-bar{
+      position:relative;
+      height:16px;border-radius:999px;overflow:hidden;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.06);
+      margin-top:14px;
+    }
+    .trend-fill{
+      position:absolute;left:-36%;top:0;bottom:0;width:60%;
+      background:linear-gradient(90deg, rgba(91,212,255,.10), rgba(91,212,255,.82), rgba(91,212,255,.10));
+      animation:trendMove 3.6s linear infinite;
+      filter:blur(.2px);
+    }
+    @keyframes trendMove{
+      0%{transform:translateX(0)}
+      100%{transform:translateX(230%)}
+    }
+    .trend-labels{
+      display:flex;justify-content:space-between;gap:8px;margin-top:12px;
+      font-size:12px;font-weight:900;color:#b2c6e3;
+    }
 
-.sidepanel{
-display:grid;
-gap:20px;
-}
+    .forecast{
+      display:grid;gap:10px;margin-top:10px;
+    }
+    .forecast div{
+      border:1px solid rgba(255,255,255,.06);
+      border-radius:14px;padding:10px 12px;background:rgba(255,255,255,.03);
+      font-size:14px;font-weight:900;color:#e3efff;
+    }
+    .forecast-mid{color:#ffd27d}
+    .forecast-high{color:#ffb162}
+    .forecast-critical{color:#ff7f91}
 
-.card{
-background:#0d1b30;
-border-radius:16px;
-padding:16px;
-border:1px solid rgba(255,255,255,.1);
-}
+    .cluster{
+      border:1px solid rgba(255,255,255,.06);
+      border-radius:14px;padding:10px 12px;background:rgba(255,255,255,.03);
+      font-size:14px;font-weight:900;color:#e3efff;margin-bottom:8px;
+    }
 
-.card h4{
-margin-top:0;
-}
+    .capacity-block{text-align:left}
+    .capacity-value{
+      display:block;font-size:44px;font-weight:1000;line-height:.92;letter-spacing:-.05em;
+    }
+    .capacity-label{
+      display:block;margin-top:8px;font-size:14px;font-weight:800;color:#d2e1f4;
+    }
+    .capacity-note{
+      margin-top:10px;font-size:12px;line-height:1.55;color:#a9bedb;
+    }
 
-.spark{
-height:40px;
-background:black;
-border-radius:6px;
-margin-top:10px;
-position:relative;
-overflow:hidden;
-}
+    .heatmap{
+      display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px;
+    }
+    .heat{
+      height:28px;border-radius:8px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.10);
+    }
+    .low{background:linear-gradient(135deg,#46d88f,#8cffc1)}
+    .medium{background:linear-gradient(135deg,#ffd965,#ffe79e)}
+    .high{background:linear-gradient(135deg,#ff7b71,#ff9f95)}
 
-.sparkline{
-position:absolute;
-width:200%;
-height:100%;
-background:linear-gradient(90deg, transparent 0%, #5bd4ff 40%, transparent 60%);
-animation:wave 3s linear infinite;
-opacity:.6;
-}
+    .queue-list{display:grid;gap:10px}
+    .queue-item{
+      display:flex;align-items:center;justify-content:space-between;gap:10px;
+      border:1px solid rgba(255,255,255,.06);
+      border-radius:14px;padding:10px 12px;background:rgba(255,255,255,.03);
+    }
+    .queue-copy{
+      font-size:13px;font-weight:900;line-height:1.45;color:#e3efff;
+    }
 
-.heatmap{
-display:grid;
-grid-template-columns:repeat(4,1fr);
-gap:8px;
-margin-top:10px;
-}
-
-.heat{
-height:40px;
-border-radius:6px;
-}
-
-.low{background:#2ecc71}
-.medium{background:#f1c40f}
-.highh{background:#e74c3c}
-
-.queue{
-margin-top:10px;
-}
-
-.queue div{
-padding:6px 0;
-border-bottom:1px solid rgba(255,255,255,.1);
-}
-
-.capacity{
-font-size:28px;
-font-weight:700;
-}
-
-</style>
-
+    @media (max-width:1280px){
+      .hero-grid{grid-template-columns:1fr}
+      .cockpit-grid{grid-template-columns:1fr}
+      .ops-strip{grid-template-columns:repeat(3,1fr)}
+    }
+    @media (max-width:900px){
+      .hero-mini-grid{grid-template-columns:repeat(2,1fr)}
+      .monitor-grid{grid-template-columns:1fr}
+      .telemetry-top{grid-template-columns:1fr}
+      .intel-grid{grid-template-columns:1fr}
+      .ops-strip{grid-template-columns:1fr}
+      .monitor-metrics{grid-template-columns:repeat(2,1fr)}
+      .story-text{max-width:100%}
+    }
+    @media (max-width:640px){
+      .shell{padding:16px 10px 36px}
+      .hero{padding:16px}
+      .hero-copy h1{font-size:clamp(32px,11vw,52px)}
+      .hero-actions{flex-direction:column}
+      .btn{width:100%}
+      .hero-mini-grid{grid-template-columns:1fr}
+      .monitor-metrics{grid-template-columns:1fr}
+      .topbar-inner{padding:12px 10px}
+    }
+  </style>
 </head>
 <body>
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div>
+        <div class="brand-kicker">AI-powered predictive clinical intelligence</div>
+        <div class="brand-title">Early Risk Alert AI</div>
+        <div class="brand-sub">Hospitals · Clinics · Investors · Insurers · Patients</div>
+      </div>
+      <div class="nav-links">
+        <a href="/">Overview</a>
+        <a href="/hospital-demo">Hospitals</a>
+        <a href="/investor-intake">Investors</a>
+        <a href="/admin/review">Admin Review</a>
+        <a class="btn primary" href="/admin/review">Open Operating Layer</a>
+      </div>
+    </div>
+  </div>
 
-<div class="title">
-Early Risk Alert AI — Hospital Command Center
-</div>
+  <div class="shell">
 
-<div class="subtitle">
-AI predictive monitoring · clinical alert intelligence · hospital operations cockpit
-</div>
+    <div class="ticker-wrap">
+      <div class="ticker-track" id="ticker-track">
+        <div class="ticker-item"><span class="ticker-dot dot-red"></span>Critical deterioration signal surfaced · p101 · Risk 9.3</div>
+        <div class="ticker-item"><span class="ticker-dot dot-amber"></span>High-priority risk escalation · p104 · Risk 7.4</div>
+        <div class="ticker-item"><span class="ticker-dot dot-green"></span>Stable patient trend · p105 · Risk 3.9</div>
+        <div class="ticker-item"><span class="ticker-dot dot-blue"></span>Command center telemetry synced · Mission mode active</div>
+        <div class="ticker-item"><span class="ticker-dot dot-green"></span>Respiratory cluster reduced · p103 · Recovery trend</div>
 
-<div class="grid">
+        <div class="ticker-item"><span class="ticker-dot dot-red"></span>Critical deterioration signal surfaced · p101 · Risk 9.3</div>
+        <div class="ticker-item"><span class="ticker-dot dot-amber"></span>High-priority risk escalation · p104 · Risk 7.4</div>
+        <div class="ticker-item"><span class="ticker-dot dot-green"></span>Stable patient trend · p105 · Risk 3.9</div>
+        <div class="ticker-item"><span class="ticker-dot dot-blue"></span>Command center telemetry synced · Mission mode active</div>
+        <div class="ticker-item"><span class="ticker-dot dot-green"></span>Respiratory cluster reduced · p103 · Recovery trend</div>
+      </div>
+    </div>
 
-<div class="wall" id="wall"></div>
+    <section class="hero">
+      <div class="hero-grid">
+        <div class="hero-copy">
+          <div class="hero-kicker">Hospital mission control</div>
+          <h1>AI Hospital Command Center</h1>
+          <p>
+            Real-time clinical intelligence, predictive monitoring, telemetry-style deterioration detection,
+            investor-ready operating visibility, and hospital command-center storytelling in one polished environment.
+          </p>
+          <div class="hero-actions">
+            <a class="btn primary" href="/admin/review">Open Admin Review</a>
+            <a class="btn secondary" href="/hospital-demo">Hospital Demo Form</a>
+            <a class="btn secondary" href="/executive-walkthrough">Executive Walkthrough</a>
+            <a class="btn secondary" href="/investor-intake">Investor Intake</a>
+          </div>
+          <div class="hero-mini-grid">
+            <div class="hero-mini">
+              <div class="k">Telemetry</div>
+              <div class="v">ECG-style clinical monitors</div>
+            </div>
+            <div class="hero-mini">
+              <div class="k">Prediction</div>
+              <div class="v">AI risk + forecast signals</div>
+            </div>
+            <div class="hero-mini">
+              <div class="k">Operations</div>
+              <div class="v">Capacity + staffing + triage</div>
+            </div>
+            <div class="hero-mini">
+              <div class="k">Commercial</div>
+              <div class="v">Hospital + investor readiness</div>
+            </div>
+          </div>
+        </div>
 
-<div class="sidepanel">
+        <div class="mission-panel">
+          <div class="mission-header">
+            <div>
+              <div class="mission-title">Mission Status</div>
+              <div class="mission-sub">
+                Command center online · predictive telemetry active · live intake flows synchronized
+              </div>
+            </div>
+            <div class="status-pill live">Live</div>
+          </div>
 
-<div class="card">
-<h4>Oxygen Trend</h4>
-<div class="spark"><div class="sparkline"></div></div>
-</div>
+          <div class="telemetry-top">
+            <div class="stat-card">
+              <div class="k">Open Alerts</div>
+              <div class="v" id="open-alerts">5</div>
+              <div class="hint">Active alerts surfaced by the intelligence layer.</div>
+            </div>
+            <div class="stat-card">
+              <div class="k">Critical Alerts</div>
+              <div class="v" id="critical-alerts">1</div>
+              <div class="hint">Highest urgency patients needing immediate attention.</div>
+            </div>
+            <div class="stat-card">
+              <div class="k">Avg Risk Score</div>
+              <div class="v" id="avg-risk">6.2</div>
+              <div class="hint">Average intelligence-layer risk level across flagged patients.</div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-<div class="card">
-<h4>Risk Prediction Timeline</h4>
-<div class="spark"><div class="sparkline"></div></div>
-</div>
+      <div class="cockpit-grid">
+        <div class="telemetry-wall">
+          <div class="monitor-grid" id="wall"></div>
+        </div>
 
-<div class="card">
-<h4>Deterioration Forecast</h4>
-15 min: Moderate<br>
-1 hr: Elevated<br>
-4 hr: Critical
-</div>
+        <div class="intel-column">
+          <div class="intel-card">
+            <h3>Live Alerts Feed</h3>
+            <div class="alert-feed" id="queue"></div>
+          </div>
 
-<div class="card">
-<h4>Predictive Alert Clusters</h4>
-Respiratory: 3<br>
-Cardiac: 2<br>
-Hemodynamic: 1
-</div>
+          <div class="intel-card">
+            <h3>Why this matters now</h3>
+            <div class="why-now">
+              <div class="why-line">Predictive risk surfaced before full clinical collapse.</div>
+              <div class="why-line">Command-center telemetry prioritizes intervention timing.</div>
+              <div class="why-line">Hospital operators can see pressure, escalation, and stability in one wall.</div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-<div class="card">
-<h4>Hospital Capacity</h4>
-<div class="capacity">78%</div>
-Beds Occupied
-</div>
+      <div class="ops-strip">
+        <div class="ops-card">
+          <h3>Oxygen Trend</h3>
+          <div class="trend-bar"><div class="trend-fill"></div></div>
+          <div class="trend-labels"><span>Stable</span><span>Drift</span><span>Recovery</span></div>
+        </div>
 
-<div class="card">
-<h4>Staffing Load</h4>
-ICU Nurses: 82% capacity<br>
-Respiratory: 67%<br>
-Physicians: 74%
-</div>
+        <div class="ops-card">
+          <h3>Risk Prediction Timeline</h3>
+          <div class="trend-bar"><div class="trend-fill"></div></div>
+          <div class="trend-labels"><span>15 min</span><span>1 hr</span><span>4 hr</span></div>
+        </div>
 
-<div class="card">
-<h4>Unit Heatmap</h4>
-<div class="heatmap">
-<div class="heat low"></div>
-<div class="heat medium"></div>
-<div class="heat highh"></div>
-<div class="heat medium"></div>
-<div class="heat medium"></div>
-<div class="heat low"></div>
-<div class="heat highh"></div>
-<div class="heat medium"></div>
-</div>
-</div>
+        <div class="ops-card">
+          <h3>Deterioration Forecast</h3>
+          <div class="forecast">
+            <div>15 min: <span class="forecast-mid">Moderate</span></div>
+            <div>1 hr: <span class="forecast-high">Elevated</span></div>
+            <div>4 hr: <span class="forecast-critical">Critical</span></div>
+          </div>
+        </div>
 
-<div class="card">
-<h4>Rapid Response Queue</h4>
-<div class="queue" id="queue"></div>
-</div>
+        <div class="ops-card">
+          <h3>Predictive Alert Clusters</h3>
+          <div class="cluster">Respiratory: 3</div>
+          <div class="cluster">Cardiac: 2</div>
+          <div class="cluster">Hemodynamic: 1</div>
+        </div>
 
-</div>
+        <div class="ops-card">
+          <h3>Hospital Capacity</h3>
+          <div class="capacity-block">
+            <span class="capacity-value">78%</span>
+            <span class="capacity-label">Beds Occupied</span>
+            <div class="capacity-note">Telemetry coverage and escalation pressure remain within controllable range.</div>
+          </div>
+        </div>
 
-</div>
+        <div class="ops-card">
+          <h3>Unit Heatmap</h3>
+          <div class="heatmap">
+            <div class="heat low"></div>
+            <div class="heat medium"></div>
+            <div class="heat high"></div>
+            <div class="heat medium"></div>
+            <div class="heat medium"></div>
+            <div class="heat low"></div>
+            <div class="heat high"></div>
+            <div class="heat medium"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
 
-<script>
+  <script>
+    const fallbackPatients = [
+      {
+        patient_id: "p101",
+        name: "Patient 1042",
+        bed: "ICU Bed A",
+        title: "Critical Deterioration Monitor",
+        heart_rate: 127,
+        spo2: 87,
+        bp_systolic: 162,
+        bp_diastolic: 98,
+        risk_score: 9.3,
+        status: "Critical",
+        story: "Oxygen trend sharply below target. Predictive layer recommends immediate escalation."
+      },
+      {
+        patient_id: "p102",
+        name: "Patient 2188",
+        bed: "ICU Bed B",
+        title: "Escalation Watch Monitor",
+        heart_rate: 113,
+        spo2: 92,
+        bp_systolic: 150,
+        bp_diastolic: 88,
+        risk_score: 7.4,
+        status: "High",
+        story: "High-risk cardiac drift surfaced. Telemetry indicates worsening trend over the next hour."
+      },
+      {
+        patient_id: "p103",
+        name: "Patient 3045",
+        bed: "ICU Bed C",
+        title: "Stable Recovery Monitor",
+        heart_rate: 84,
+        spo2: 98,
+        bp_systolic: 122,
+        bp_diastolic: 78,
+        risk_score: 3.5,
+        status: "Stable",
+        story: "Patient remains stable. Recovery trend confirmed across oxygen and hemodynamic signals."
+      },
+      {
+        patient_id: "p104",
+        name: "Patient 4172",
+        bed: "ICU Bed D",
+        title: "Priority Intervention Monitor",
+        heart_rate: 109,
+        spo2: 94,
+        bp_systolic: 144,
+        bp_diastolic: 86,
+        risk_score: 7.1,
+        status: "High",
+        story: "Escalation pressure remains elevated. Intervention queue should continue active surveillance."
+      }
+    ];
 
-const wall=document.getElementById("wall")
-const queue=document.getElementById("queue")
+    const fallbackAlerts = [
+      { patient_id: "p101", severity: "Critical", text: "Oxygen saturation critical", unit: "ICU-12" },
+      { patient_id: "p102", severity: "High", text: "Escalation watch surfaced", unit: "Telemetry-09" },
+      { patient_id: "p104", severity: "High", text: "Priority intervention requested", unit: "Stepdown-04" }
+    ];
 
-const evt=new EventSource("/api/command-center-stream")
+    const wall = document.getElementById("wall");
+    const queue = document.getElementById("queue");
 
-evt.onmessage=function(e){
+    function safe(v, fallback="--"){
+      return v === undefined || v === null || v === "" ? fallback : v;
+    }
 
-const data=JSON.parse(e.data)
+    function statusClass(status){
+      const s = String(status || "").toLowerCase();
+      if (s === "critical") return "critical";
+      if (s === "high") return "watch";
+      return "live";
+    }
 
-const div=document.createElement("div")
-div.className="monitor"
+    function ecgClass(status){
+      const s = String(status || "").toLowerCase();
+      if (s === "critical") return "ecg-red";
+      if (s === "high") return "ecg-amber";
+      return "ecg-green";
+    }
 
-let statusClass="stable"
-if(data.status==="HIGH") statusClass="high"
-if(data.status==="CRITICAL") statusClass="critical"
+    function pulseLabel(status){
+      const s = String(status || "").toLowerCase();
+      if (s === "critical") return "Critical";
+      if (s === "high") return "High";
+      return "Stable";
+    }
 
-div.innerHTML=`
+    function buildPath(points){
+      return points.map((p, i) => (i === 0 ? "M" : "L") + p[0] + "," + p[1]).join(" ");
+    }
 
-<h3>${data.patient}</h3>
+    function waveformPoints(mode){
+      if (mode === "critical") {
+        return [[0,72],[30,72],[46,72],[58,70],[72,72],[86,72],[98,50],[106,100],[116,24],[126,108],[136,72],[162,72],[186,72],[204,70],[220,72],[236,72],[250,54],[258,96],[268,22],[278,106],[290,72],[318,72],[336,72],[352,70],[368,72],[382,72],[398,46],[406,104],[416,20],[428,110],[440,72],[466,72],[486,72],[504,70],[520,72],[536,72],[550,52],[558,98],[568,24],[578,106],[592,72],[620,72]];
+      }
+      if (mode === "high") {
+        return [[0,76],[36,76],[60,76],[74,74],[88,76],[104,76],[118,56],[126,90],[136,38],[146,96],[158,76],[190,76],[214,76],[228,74],[242,76],[258,76],[272,54],[280,88],[290,40],[300,94],[314,76],[348,76],[372,76],[388,74],[402,76],[418,76],[432,58],[440,92],[452,42],[464,96],[478,76],[514,76],[538,76],[552,74],[566,76],[582,76],[596,60],[604,94],[614,44],[624,98],[640,76]];
+      }
+      return [[0,78],[48,78],[82,78],[96,76],[110,78],[126,78],[138,66],[146,84],[156,52],[166,88],[178,78],[220,78],[254,78],[268,76],[282,78],[298,78],[310,68],[318,84],[328,56],[338,88],[350,78],[392,78],[426,78],[440,76],[454,78],[470,78],[482,68],[490,84],[500,56],[510,88],[522,78],[566,78],[600,78]];
+    }
 
-<div class="metric">HR: ${data.heart_rate}</div>
-<div class="metric">SpO2: ${data.spo2}%</div>
-<div class="metric">BP: ${data.bp}</div>
-<div class="metric">AI Risk: ${data.risk}</div>
+    function renderMonitor(patient){
+      const status = String(patient.status || "").toLowerCase();
+      const ecg = ecgClass(status);
+      const path = buildPath(waveformPoints(status === "critical" ? "critical" : status === "high" ? "high" : "stable"));
 
-<div class="ecg"><div class="wave"></div></div>
+      const html = `
+        <div class="monitor">
+          <div class="monitor-top">
+            <div>
+              <div class="monitor-bed">${safe(patient.bed, "ICU Bed")}</div>
+              <div class="monitor-title">${safe(patient.title, safe(patient.name, "Telemetry Monitor"))}</div>
+            </div>
+            <div class="status-pill ${statusClass(patient.status)}">${pulseLabel(patient.status)}</div>
+          </div>
 
-<div class="status ${statusClass}">
-${data.status}
-</div>
+          <div class="monitor-wave">
+            <svg viewBox="0 0 640 120" preserveAspectRatio="none" aria-hidden="true">
+              <path class="ecg-path ${ecg}" d="${path}"></path>
+            </svg>
+          </div>
 
-`
+          <div class="monitor-metrics">
+            <div class="metric-box">
+              <span class="metric-k">HR</span>
+              <span class="metric-v">${Math.round(Number(patient.heart_rate || 0)) || "--"}</span>
+            </div>
+            <div class="metric-box">
+              <span class="metric-k">SpO₂</span>
+              <span class="metric-v">${Math.round(Number(patient.spo2 || 0)) || "--"}</span>
+            </div>
+            <div class="metric-box">
+              <span class="metric-k">BP</span>
+              <span class="metric-v">${Math.round(Number(patient.bp_systolic || 0)) || "--"}/${Math.round(Number(patient.bp_diastolic || 0)) || "--"}</span>
+            </div>
+            <div class="metric-box">
+              <span class="metric-k">Risk</span>
+              <span class="metric-v">${typeof patient.risk_score === "number" ? patient.risk_score.toFixed(1) : safe(patient.risk_score)}</span>
+            </div>
+          </div>
 
-wall.prepend(div)
+          <div class="monitor-story">
+            <div class="story-text">${safe(patient.story, "Predictive monitoring active.")}</div>
+            <div class="status-pill ${statusClass(patient.status)}">${safe(patient.patient_id, "p---")}</div>
+          </div>
+        </div>
+      `;
+      return html;
+    }
 
-if(wall.children.length>6){
-wall.removeChild(wall.lastChild)
-}
+    function renderAlert(alert){
+      const sev = String(alert.severity || "").toLowerCase();
+      const pill = sev === "critical" ? "critical" : sev === "high" ? "watch" : "live";
+      return `
+        <div class="alert-item">
+          <div>
+            <div class="alert-copy">${safe(alert.text, "Clinical alert surfaced")}</div>
+            <div class="alert-sub">${safe(alert.patient_id, "Patient")} · ${safe(alert.unit, "Unit")} · ${safe(alert.severity, "Stable")}</div>
+          </div>
+          <div class="status-pill ${pill}">${safe(alert.severity, "Live")}</div>
+        </div>
+      `;
+    }
 
-if(data.status==="CRITICAL" || data.status==="HIGH"){
+    function updateSummary(patients, alerts){
+      const sourcePatients = patients && patients.length ? patients : fallbackPatients;
+      const sourceAlerts = alerts && alerts.length ? alerts : fallbackAlerts;
 
-const q=document.createElement("div")
-q.innerText=data.patient+" – "+data.status
+      const openAlerts = sourceAlerts.length;
+      const criticalAlerts = sourceAlerts.filter(a => String(a.severity || "").toLowerCase() === "critical").length;
+      const avgRisk = sourcePatients.length
+        ? (sourcePatients.reduce((n, p) => n + Number(p.risk_score || 0), 0) / sourcePatients.length)
+        : 0;
 
-queue.prepend(q)
+      const openNode = document.getElementById("open-alerts");
+      const criticalNode = document.getElementById("critical-alerts");
+      const avgNode = document.getElementById("avg-risk");
 
-if(queue.children.length>6){
-queue.removeChild(queue.lastChild)
-}
+      if (openNode) openNode.textContent = String(openAlerts);
+      if (criticalNode) criticalNode.textContent = String(criticalAlerts);
+      if (avgNode) avgNode.textContent = avgRisk.toFixed(1);
+    }
 
-}
+    function renderPatients(patients){
+      const source = patients && patients.length ? patients : fallbackPatients;
+      wall.innerHTML = source.slice(0, 4).map(renderMonitor).join("");
+    }
 
-}
+    function renderAlerts(alerts){
+      const source = alerts && alerts.length ? alerts : fallbackAlerts;
+      queue.innerHTML = source.slice(0, 6).map(renderAlert).join("");
+    }
 
-</script>
+    function applyPayload(payload){
+      if (payload && Array.isArray(payload.patients)) {
+        renderPatients(payload.patients);
+        renderAlerts(payload.alerts || []);
+        updateSummary(payload.patients, payload.alerts || []);
+        return;
+      }
 
+      if (Array.isArray(payload)) {
+        renderPatients(payload);
+        renderAlerts([]);
+        updateSummary(payload, []);
+        return;
+      }
+
+      if (payload && (payload.patient_id || payload.heart_rate || payload.risk_score)) {
+        const arr = [payload];
+        const alerts = [{
+          patient_id: payload.patient_id || "Patient",
+          severity: payload.status || "Stable",
+          text: payload.alert_text || "Predictive clinical alert surfaced",
+          unit: payload.unit || "ICU"
+        }];
+        renderPatients(arr);
+        renderAlerts(alerts);
+        updateSummary(arr, alerts);
+        return;
+      }
+
+      renderPatients([]);
+      renderAlerts([]);
+      updateSummary([], []);
+    }
+
+    async function refreshFallback(){
+      try{
+        const res = await fetch("/api/v1/live-snapshot?tenant_id=demo&patient_id=p101&refresh=" + Date.now(), {cache:"no-store"});
+        if (!res.ok){
+          applyPayload({});
+          return;
+        }
+        const payload = await res.json();
+        applyPayload(payload);
+      }catch(err){
+        console.error("Command center fallback refresh failed", err);
+        applyPayload({});
+      }
+    }
+
+    try{
+      const evt = new EventSource("/api/command-center-stream");
+      evt.onmessage = function(e){
+        try{
+          const payload = JSON.parse(e.data || "{}");
+          applyPayload(payload);
+        }catch(err){
+          console.error("Command center stream parse error", err);
+        }
+      };
+      evt.onerror = function(){
+        console.warn("Command center stream error, fallback polling remains active.");
+      };
+    }catch(err){
+      console.warn("EventSource unavailable, fallback polling only.");
+    }
+
+    applyPayload({});
+    refreshFallback();
+    setInterval(refreshFallback, 5000);
+  </script>
 </body>
 </html>
 """
