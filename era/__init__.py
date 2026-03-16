@@ -2215,62 +2215,64 @@ def create_app() -> Flask:
         "records": store.get("records", {}),
         "audit_log": store.get("audit_log", []),
         })
+@app.post("/api/workflow/action")
+def workflow_action():
 
-    @app.post("/api/v1/command-workflow/action")
-    def command_workflow_action():
-        payload = request.get_json(silent=True) or {}
+    if not session.get("logged_in"):
+        return jsonify({"ok": False, "error": "login required"}), 401
 
-        patient_id = str(payload.get("patient_id", "")).strip()
-        action = str(payload.get("action", "")).strip().lower()
-        role = str(payload.get("role", "operator")).strip().lower()
-        note = str(payload.get("note", "")).strip()
+    payload = request.get_json() or {}
+
+    patient_id = str(payload.get("patient_id", "")).strip()
+    action = str(payload.get("action", "")).strip().lower()
+    role = _current_role()
+
     if not patient_id:
-        return jsonify({"ok": False, "error": "patient_id is required"}), 400
+        return jsonify({"ok": False, "error": "patient_id required"}), 400
 
-        valid_actions = {"ack", "escalate", "assign_nurse", "clear"}
-        if action not in valid_actions:
-        return jsonify({"ok": False, "error": "invalid action"}), 400
-
-        store = _load_command_workflow()
-        record = _get_workflow_record(store, patient_id)
+    store = _load_workflow()
+    record = _get_record(store, patient_id)
 
     if action == "ack":
+        if not _has_permission("ack"):
+            return jsonify({"ok": False, "error": "permission denied"}), 403
         record["ack"] = True
-        record["updated_at"] = _utc_now_iso()
-        record["role"] = role
-        _append_audit_event(store, patient_id, "ACK", role, note or "Alert acknowledged")
+        record["state"] = "acknowledged"
+        _audit(store, patient_id, "ACK", role)
+
+    elif action == "assign":
+        if not _has_permission("assign"):
+            return jsonify({"ok": False, "error": "permission denied"}), 403
+        record["assigned"] = True
+        record["state"] = "assigned"
+        _audit(store, patient_id, "ASSIGN", role)
 
     elif action == "escalate":
+        if not _has_permission("escalate"):
+            return jsonify({"ok": False, "error": "permission denied"}), 403
         record["escalated"] = True
-        record["updated_at"] = _utc_now_iso()
-        record["role"] = role
-        _append_audit_event(store, patient_id, "ESCALATE", role, note or "Patient escalated")
+        record["state"] = "escalated"
+        _audit(store, patient_id, "ESCALATE", role)
 
-    elif action == "assign_nurse":
-        record["assigned_nurse"] = True
-        record["assigned_label"] = note or "Nurse assigned"
-        record["updated_at"] = _utc_now_iso()
-        record["role"] = role
-        _append_audit_event(store, patient_id, "ASSIGN_NURSE", role, note or "Nurse assigned")
+    elif action == "resolve":
+        if not _has_permission("resolve"):
+            return jsonify({"ok": False, "error": "permission denied"}), 403
+        record["state"] = "resolved"
+        _audit(store, patient_id, "RESOLVE", role)
 
-    elif action == "clear":
-        store["records"][patient_id] = {
-            "ack": False,
-            "escalated": False,
-            "assigned_nurse": False,
-            "assigned_label": "",
-            "role": role,
-            "updated_at": _utc_now_iso(),
-        }
-        _append_audit_event(store, patient_id, "CLEAR", role, note or "Workflow cleared")
+    else:
+        return jsonify({"ok": False, "error": "invalid action"}), 400
 
-    _save_command_workflow(store)
+    record["updated_at"] = _utc_now_iso()
+    record["role"] = role
+
+    _save_workflow(store)
 
     return jsonify({
         "ok": True,
-        "patient_id": patient_id,
-        "record": store["records"].get(patient_id, {}),
-        "audit_log": store.get("audit_log", [])[:12],
+        "record": record,
+        "user_role": role,
+        "user_name": _current_user(),
     })
 
     @app.get("/api/v1/stream/channels")
