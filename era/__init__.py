@@ -1928,25 +1928,31 @@ grid-template-columns:1fr;
         </div>
       `;
     }
+function updateSummary(patients, alerts){
+  const sourcePatients = patients && patients.length ? patients : fallbackPatients;
+  const sourceAlerts = alerts && alerts.length ? alerts : fallbackAlerts;
 
-    function updateSummary(patients, alerts){
-      const sourcePatients = patients && patients.length ? patients : fallbackPatients;
-      const sourceAlerts = alerts && alerts.length ? alerts : fallbackAlerts;
+  const openAlerts = sourceAlerts.length;
+  const criticalAlerts = sourceAlerts.filter(
+    a => String(a.severity || "").toLowerCase() === "critical"
+  ).length;
 
-      const openAlerts = sourceAlerts.length;
-      const criticalAlerts = sourceAlerts.filter(a => String(a.severity || "").toLowerCase() === "critical").length;
-      const avgRisk = sourcePatients.length
-        ? (sourcePatients.reduce((n, p) => n + Number(p.risk_score || 0), 0) / sourcePatients.length)
-        : 0;
+  const validRiskScores = sourcePatients
+    .map(p => Number(p.risk_score ?? (p.risk && p.risk.risk_score)))
+    .filter(v => Number.isFinite(v) && v > 0);
 
-      const openNode = document.getElementById("open-alerts");
-      const criticalNode = document.getElementById("critical-alerts");
-      const avgNode = document.getElementById("avg-risk");
+  const avgRisk = validRiskScores.length
+    ? validRiskScores.reduce((sum, value) => sum + value, 0) / validRiskScores.length
+    : 0;
 
-      if (openNode) openNode.textContent = String(openAlerts);
-      if (criticalNode) criticalNode.textContent = String(criticalAlerts);
-      if (avgNode) avgNode.textContent = avgRisk.toFixed(1);
-    }
+  const openNode = document.getElementById("open-alerts");
+  const criticalNode = document.getElementById("critical-alerts");
+  const avgNode = document.getElementById("avg-risk");
+
+  if (openNode) openNode.textContent = String(openAlerts);
+  if (criticalNode) criticalNode.textContent = String(criticalAlerts);
+  if (avgNode) avgNode.textContent = avgRisk.toFixed(1);
+}
 
     function renderPatients(patients){
       const source = patients && patients.length ? patients : fallbackPatients;
