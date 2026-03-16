@@ -2219,7 +2219,7 @@ def create_app() -> Flask:
     def workflow_action():
 
         if not session.get("logged_in"):
-        return jsonify({"ok": False, "error": "login required"}), 401
+            return jsonify({"ok": False, "error": "login required"}), 401
 
         payload = request.get_json() or {}
 
@@ -2228,7 +2228,7 @@ def create_app() -> Flask:
         role = _current_role()
 
         if not patient_id:
-        return jsonify({"ok": False, "error": "patient_id required"}), 400
+            return jsonify({"ok": False, "error": "patient_id required"}), 400
 
         store = _load_workflow()
         record = _get_record(store, patient_id)
