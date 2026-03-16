@@ -2234,7 +2234,7 @@ def create_app() -> Flask:
         record = _get_record(store, patient_id)
 
         if action == "ack":
-        if not _has_permission("ack"):
+          if not _has_permission("ack"):
             return jsonify({"ok": False, "error": "permission denied"}), 403
         record["ack"] = True
         record["state"] = "acknowledged"
@@ -2261,7 +2261,7 @@ def create_app() -> Flask:
         _audit(store, patient_id, "RESOLVE", role)
 
     else:
-        return jsonify({"ok": False, "error": "invalid action"}), 400
+            return jsonify({"ok": False, "error": "invalid action"}), 400
 
     record["updated_at"] = _utc_now_iso()
     record["role"] = role
