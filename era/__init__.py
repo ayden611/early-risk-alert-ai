@@ -1832,89 +1832,168 @@ grid-template-columns:1fr;
     { patient_id: "p104", severity: "High", text: "Priority intervention requested", unit: "Stepdown-04" }
   ];
 
-  const wall = document.getElementById("wall");
-  const queue = document.getElementById("queue");
+const wall = document.getElementById("wall");
+const queue = document.getElementById("queue");
+const topRiskList = document.getElementById("top-risk-list");
+const aiReasoningPanel = document.getElementById("ai-reasoning-panel");
+const workflowPanel = document.getElementById("workflow-panel");
+const staffOpenAlerts = document.getElementById("staff-open-alerts");
+const staffCriticalPatients = document.getElementById("staff-critical-patients");
+const staffResponseLoad = document.getElementById("staff-response-load");
+const healthDevices = document.getElementById("health-devices");
+const healthStreams = document.getElementById("health-streams");
+const healthLatency = document.getElementById("health-latency");
+const healthStatus = document.getElementById("health-status");
 
-  function safe(v, fallback = "--") {
-    return v === undefined || v === null || v === "" ? fallback : v;
+let selectedUnit = "all";
+let alertState = {};
+let auditTrail = [];
+
+function safe(v, fallback="--"){
+  return v === undefined || v === null || v === "" ? fallback : v;
+}
+
+function statusClass(status){
+  const s = String(status || "").toLowerCase();
+  if (s === "critical") return "critical";
+  if (s === "high") return "watch";
+  return "live";
+}
+
+function ecgClass(status){
+  const s = String(status || "").toLowerCase();
+  if (s === "critical") return "ecg-red";
+  if (s === "high") return "ecg-amber";
+  return "ecg-green";
+}
+
+function pulseLabel(status){
+  const s = String(status || "").toLowerCase();
+  if (s === "critical") return "Critical";
+  if (s === "high") return "High";
+  return "Stable";
+}
+
+function riskSeverityLabel(severity){
+  const s = String(severity || "").toLowerCase();
+  if (s === "critical") return "Critical";
+  if (s === "high") return "High";
+  return "Stable";
+}
+
+function normalizePatient(raw) {
+  if (!raw) return null;
+
+  const vitals = raw.vitals || {};
+  const risk = raw.risk || {};
+
+  return {
+    patient_id: raw.patient_id || "p---",
+    name: raw.patient_name || raw.name || "Patient",
+    bed: raw.room || raw.bed || "ICU Bed",
+    title:
+      raw.title ||
+      risk.alert_message ||
+      (risk.alert_type ? String(risk.alert_type).replace(/_/g, " ") : "Predictive Risk Monitor"),
+    heart_rate: raw.heart_rate ?? vitals.heart_rate ?? "--",
+    spo2: raw.spo2 ?? vitals.spo2 ?? "--",
+    bp_systolic: raw.bp_systolic ?? vitals.systolic_bp ?? "--",
+    bp_diastolic: raw.bp_diastolic ?? vitals.diastolic_bp ?? "--",
+    risk_score: raw.risk_score ?? risk.risk_score ?? "--",
+    status: raw.status || risk.severity || "stable",
+    story: raw.story || risk.recommended_action || "Predictive monitoring active.",
+    unit: raw.room || raw.unit || raw.bed || "Unit",
+    alert_text: risk.alert_message || raw.alert_text || "Clinical alert surfaced",
+    clinical_priority: risk.clinical_priority || "Priority 4",
+    confidence: risk.confidence ?? "--",
+    trend: risk.trend_direction || "Stable",
+    recommended_action: risk.recommended_action || "Continue routine monitoring."
+  };
+}
+
+function normalizeAlert(alert) {
+  if (!alert) return null;
+  return {
+    patient_id: alert.patient_id || "Patient",
+    severity: alert.severity || "Stable",
+    text: alert.message || alert.text || "Clinical alert surfaced",
+    unit: alert.room || alert.unit || "Unit",
+    risk_score: alert.risk_score ?? "--",
+    confidence: alert.confidence ?? "--",
+    recommended_action: alert.recommended_action || "Continue monitoring.",
+    clinical_priority: alert.clinical_priority || "Priority 4",
+    trend: alert.trend_direction || "Stable",
+    created_at: alert.created_at || new Date().toISOString()
+  };
+}
+
+function buildPath(points){
+  return points.map((p, i) => (i === 0 ? "M" : "L") + p[0] + "," + p[1]).join(" ");
+}
+
+function waveformPoints(mode){
+  if (mode === "critical") {
+    return [[0,72],[30,72],[46,72],[58,70],[72,72],[86,72],[98,50],[106,100],[116,24],[126,108],[136,72],[162,72],[186,72],[204,70],[220,72],[236,72],[250,54],[258,96],[268,22],[278,106],[290,72],[318,72],[336,72],[352,70],[368,72],[382,72],[398,46],[406,104],[416,20],[428,110],[440,72],[466,72],[486,72],[504,70],[520,72],[536,72],[550,52],[558,98],[568,24],[578,106],[592,72],[620,72]];
   }
-
-  function riskSeverityLabel(severity) {
-    const s = String(severity || "").toLowerCase();
-    if (s === "critical") return "Critical";
-    if (s === "high") return "High";
-    return "Stable";
+  if (mode === "high") {
+    return [[0,76],[36,76],[60,76],[74,74],[88,76],[104,76],[118,56],[126,90],[136,38],[146,96],[158,76],[190,76],[214,76],[228,74],[242,76],[258,76],[272,54],[280,88],[290,40],[300,94],[314,76],[348,76],[372,76],[388,74],[402,76],[418,76],[432,58],[440,92],[452,42],[464,96],[478,76],[514,76],[538,76],[552,74],[566,76],[582,76],[596,60],[604,94],[614,44],[624,98],[640,76]];
   }
+  return [[0,78],[48,78],[82,78],[96,76],[110,78],[126,78],[138,66],[146,84],[156,52],[166,88],[178,78],[220,78],[254,78],[268,76],[282,78],[298,78],[310,68],[318,84],[328,56],[338,88],[350,78],[392,78],[426,78],[440,76],[454,78],[470,78],[482,68],[490,84],[500,56],[510,88],[522,78],[566,78],[600,78]];
+}
 
-  function normalizePatient(raw) {
-    if (!raw) return null;
+function buildUnitFilters(patients){
+  const units = [...new Set((patients || []).map(p => safe(p.unit, "Unit")))].filter(Boolean);
+  return `
+    <div class="intel-card">
+      <h3>Unit Filters</h3>
+      <div class="queue-list">
+        <div class="queue-item">
+          <div class="queue-copy">All Units</div>
+          <button class="status-pill ${selectedUnit === "all" ? "live" : "watch"}" onclick="setUnitFilter('all')">All</button>
+        </div>
+        ${units.map(unit => `
+          <div class="queue-item">
+            <div class="queue-copy">${unit}</div>
+            <button class="status-pill ${selectedUnit === unit ? "live" : "watch"}" onclick="setUnitFilter(${JSON.stringify(unit)})">${selectedUnit === unit ? "Viewing" : "Filter"}</button>
+          </div>
+        `).join("")}
+      </div>
+    </div>
+  `;
+}
 
-    const vitals = raw.vitals || {};
-    const risk = raw.risk || {};
+window.setUnitFilter = function(unit){
+  selectedUnit = unit;
+  refreshFallback();
+};
 
-    return {
-      patient_id: raw.patient_id || "p---",
-      name: raw.patient_name || raw.name || "Patient",
-      bed: raw.room || raw.bed || "ICU Bed",
-      title:
-        raw.title ||
-        risk.alert_message ||
-        (risk.alert_type ? String(risk.alert_type).replace(/_/g, " ") : "Predictive Risk Monitor"),
-      heart_rate: raw.heart_rate ?? vitals.heart_rate ?? "--",
-      spo2: raw.spo2 ?? vitals.spo2 ?? "--",
-      bp_systolic: raw.bp_systolic ?? vitals.systolic_bp ?? "--",
-      bp_diastolic: raw.bp_diastolic ?? vitals.diastolic_bp ?? "--",
-      risk_score: raw.risk_score ?? risk.risk_score ?? "--",
-      status: raw.status || riskSeverityLabel(risk.severity),
-      story: raw.story || risk.recommended_action || "Predictive monitoring active."
-    };
-  }
+window.ackAlert = function(patientId){
+  if (!patientId) return;
+  alertState[patientId] = "acknowledged";
+  auditTrail.unshift({
+    ts: new Date().toLocaleTimeString(),
+    action: "Acknowledged alert",
+    patient_id: patientId
+  });
+  renderWorkflowFromState();
+  renderAuditTrail();
+  refreshFallback();
+};
 
-  function normalizeAlert(alert) {
-    if (!alert) return null;
-    return {
-      patient_id: alert.patient_id || "Patient",
-      severity: alert.severity || "Stable",
-      text: alert.message || alert.text || "Clinical alert surfaced",
-      unit: alert.room || alert.unit || "Unit"
-    };
-  }
+window.escalateAlert = function(patientId){
+  if (!patientId) return;
+  alertState[patientId] = "escalated";
+  auditTrail.unshift({
+    ts: new Date().toLocaleTimeString(),
+    action: "Escalated alert",
+    patient_id: patientId
+  });
+  renderWorkflowFromState();
+  renderAuditTrail();
+  refreshFallback();
+};
 
-  function statusClass(status) {
-    const s = String(status || "").toLowerCase();
-    if (s === "critical") return "critical";
-    if (s === "high") return "watch";
-    return "live";
-  }
-
-  function ecgClass(status) {
-    const s = String(status || "").toLowerCase();
-    if (s === "critical") return "ecg-red";
-    if (s === "high") return "ecg-amber";
-    return "ecg-green";
-  }
-
-  function pulseLabel(status) {
-    const s = String(status || "").toLowerCase();
-    if (s === "critical") return "Critical";
-    if (s === "high") return "High";
-    return "Stable";
-  }
-
-  function buildPath(points) {
-    return points.map((p, i) => (i === 0 ? "M" : "L") + p[0] + "," + p[1]).join(" ");
-  }
-
-  function waveformPoints(mode) {
-    if (mode === "critical") {
-      return [[0,72],[30,72],[46,72],[58,70],[72,72],[86,72],[98,50],[106,100],[116,24],[126,108],[136,72],[162,72],[186,72],[204,70],[220,72],[236,72],[250,54],[258,96],[268,22],[278,106],[290,72],[318,72],[336,72],[352,70],[368,72],[382,72],[398,46],[406,104],[416,20],[428,110],[440,72],[466,72],[486,72],[504,70],[520,72],[536,72],[550,52],[558,98],[568,24],[578,106],[592,72],[620,72]];
-    }
-    if (mode === "high") {
-      return [[0,76],[36,76],[60,76],[74,74],[88,76],[104,76],[118,56],[126,90],[136,38],[146,96],[158,76],[190,76],[214,76],[228,74],[242,76],[258,76],[272,54],[280,88],[290,40],[300,94],[314,76],[348,76],[372,76],[388,74],[402,76],[418,76],[432,58],[440,92],[452,42],[464,96],[478,76],[514,76],[538,76],[552,74],[566,76],[582,76],[596,60],[604,94],[614,44],[624,98],[640,76]];
-    }
-    return [[0,78],[48,78],[82,78],[96,76],[110,78],[126,78],[138,66],[146,84],[156,52],[166,88],[178,78],[220,78],[254,78],[268,76],[282,78],[298,78],[310,68],[318,84],[328,56],[338,88],[350,78],[392,78],[426,78],[440,76],[454,78],[470,78],[482,68],[490,84],[500,56],[510,88],[522,78],[566,78],[600,78]];
-  }
-function renderMonitor(patient) {
+function renderMonitor(patient){
   const status = String(patient.status || "").toLowerCase();
   const ecg = ecgClass(status);
   const path = buildPath(
@@ -1935,7 +2014,7 @@ function renderMonitor(patient) {
       <div class="monitor-top">
         <div>
           <div class="monitor-bed">${safe(patient.bed, "ICU Bed")}</div>
-          <div class="monitor-title">${safe(patient.title, safe(patient.name, "Clinical Telemetry Monitor"))}</div>
+          <div class="monitor-title">${safe(patient.title, safe(patient.name, "Predictive Risk Monitor"))}</div>
         </div>
         <div class="status-pill ${statusClass(patient.status)}">${pulseLabel(patient.status)}</div>
       </div>
@@ -1973,58 +2052,168 @@ function renderMonitor(patient) {
   `;
 }
 
-  function renderAlert(alert) {
-    const sev = String(alert.severity || "").toLowerCase();
-    const pill = sev === "critical" ? "critical" : sev === "high" ? "watch" : "live";
-    return `
-      <div class="alert-item">
-        <div>
-          <div class="alert-copy">${safe(alert.text, "Clinical alert surfaced")}</div>
-          <div class="alert-sub">${safe(alert.patient_id, "Patient")} · ${safe(alert.unit, "Unit")} · ${safe(alert.severity, "Stable")}</div>
+function renderAlert(alert){
+  const sev = String(alert.severity || "").toLowerCase();
+  const pill = sev === "critical" ? "critical" : sev === "high" ? "watch" : "live";
+  const state = alertState[alert.patient_id] || "new";
+  const minutesOpen = Math.max(
+    1,
+    Math.floor((Date.now() - new Date(alert.created_at).getTime()) / 60000) || 1
+  );
+
+  return `
+    <div class="alert-item">
+      <div style="flex:1;">
+        <div class="alert-copy">${safe(alert.text, "Clinical alert surfaced")}</div>
+        <div class="alert-sub">
+          ${safe(alert.patient_id, "Patient")} · ${safe(alert.unit, "Unit")} · ${safe(alert.severity, "Stable")}
+          · ${safe(alert.clinical_priority, "Priority 4")} · ${minutesOpen}m open
         </div>
-        <div class="status-pill ${pill}">${safe(alert.severity, "Live")}</div>
+        <div class="alert-sub" style="margin-top:6px;">${safe(alert.recommended_action, "Continue monitoring.")}</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
+          <button class="status-pill live" onclick="ackAlert('${alert.patient_id}')">Acknowledge</button>
+          <button class="status-pill critical" onclick="escalateAlert('${alert.patient_id}')">Escalate</button>
+          <div class="status-pill ${pill}">${state}</div>
+        </div>
       </div>
-    `;
+      <div class="status-pill ${pill}">${safe(alert.severity, "Live")}</div>
+    </div>
+  `;
+}
+
+function renderPatients(patients){
+  let source = (patients && patients.length) ? patients.map(normalizePatient).filter(Boolean) : fallbackPatients;
+  if (selectedUnit !== "all") {
+    source = source.filter(p => safe(p.unit) === selectedUnit || safe(p.bed) === selectedUnit);
   }
+  wall.innerHTML = source.slice(0, 4).map(renderMonitor).join("");
+}
 
-  function renderPatients(patients) {
-    const source = (patients && patients.length) ? patients.map(normalizePatient).filter(Boolean) : fallbackPatients;
-    if (wall) wall.innerHTML = source.slice(0, 4).map(renderMonitor).join("");
+function renderAlertsList(alerts){
+  let source = (alerts && alerts.length) ? alerts.map(normalizeAlert).filter(Boolean) : fallbackAlerts;
+  if (selectedUnit !== "all") {
+    source = source.filter(a => safe(a.unit) === selectedUnit);
   }
+  queue.innerHTML = source.slice(0, 6).map(renderAlert).join("");
+}
 
-  function renderAlertsList(alerts) {
-    const source = (alerts && alerts.length) ? alerts.map(normalizeAlert).filter(Boolean) : fallbackAlerts;
-    if (queue) queue.innerHTML = source.slice(0, 6).map(renderAlert).join("");
+function renderTopRiskPatients(patients){
+  if (!topRiskList) return;
+  let source = (patients && patients.length) ? patients.map(normalizePatient).filter(Boolean) : fallbackPatients;
+  if (selectedUnit !== "all") {
+    source = source.filter(p => safe(p.unit) === selectedUnit || safe(p.bed) === selectedUnit);
   }
+  source.sort((a, b) => Number(b.risk_score || 0) - Number(a.risk_score || 0));
+  topRiskList.innerHTML = source.slice(0, 5).map((p, i) => `
+    <div class="queue-item">
+      <div class="queue-copy">#${i + 1} ${safe(p.patient_id)} · ${safe(p.unit)} · Risk ${Number(p.risk_score || 0).toFixed(1)}</div>
+      <div class="status-pill ${statusClass(p.status)}">${pulseLabel(p.status)}</div>
+    </div>
+  `).join("");
+}
 
-  function updateSummary(patients, alerts) {
-    const sourcePatients = (patients && patients.length)
-      ? patients.map(normalizePatient).filter(Boolean)
-      : fallbackPatients;
+function renderAIReasoning(patients){
+  if (!aiReasoningPanel) return;
+  let source = (patients && patients.length) ? patients.map(normalizePatient).filter(Boolean) : fallbackPatients;
+  source.sort((a, b) => Number(b.risk_score || 0) - Number(a.risk_score || 0));
+  const p = source[0];
+  aiReasoningPanel.innerHTML = `
+    <div class="why-line">Highest risk patient: ${safe(p.patient_id)} in ${safe(p.unit)}</div>
+    <div class="why-line">Primary signal: SpO₂ ${safe(p.spo2)} with HR ${safe(p.heart_rate)} and BP ${safe(p.bp_systolic)}/${safe(p.bp_diastolic)}</div>
+    <div class="why-line">AI recommendation: ${safe(p.recommended_action)}</div>
+    <div class="why-line">Trend: ${safe(p.trend)} · Confidence: ${safe(p.confidence)}%</div>
+  `;
+}
 
-    const sourceAlerts = (alerts && alerts.length)
-      ? alerts.map(normalizeAlert).filter(Boolean)
-      : fallbackAlerts;
+function renderWorkflowFromState(){
+  const values = Object.values(alertState);
+  const ack = values.filter(v => v === "acknowledged").length;
+  const escalated = values.filter(v => v === "escalated").length;
+  const newCount = Math.max(0, Object.keys(alertState).length - ack - escalated);
 
-    const openAlerts = sourceAlerts.length;
-    const criticalAlerts = sourceAlerts.filter(
-      (a) => String(a.severity || "").toLowerCase() === "critical"
-    ).length;
+  const wfNew = document.getElementById("wf-new");
+  const wfAck = document.getElementById("wf-ack");
+  const wfEsc = document.getElementById("wf-esc");
 
-    const avgRisk = sourcePatients.length
-      ? sourcePatients.reduce((n, p) => n + Number(p.risk_score || 0), 0) / sourcePatients.length
-      : 0;
+  if (wfNew) wfNew.textContent = newCount;
+  if (wfAck) wfAck.textContent = ack;
+  if (wfEsc) wfEsc.textContent = escalated;
+}
 
-    const openNode = document.getElementById("open-alerts");
-    const criticalNode = document.getElementById("critical-alerts");
-    const avgNode = document.getElementById("avg-risk");
+function renderWorkflow(alerts){
+  let source = (alerts && alerts.length) ? alerts.map(normalizeAlert).filter(Boolean) : fallbackAlerts;
+  source.forEach(a => {
+    if (!alertState[a.patient_id]) {
+      alertState[a.patient_id] = "new";
+    }
+  });
+  renderWorkflowFromState();
+}
 
-    if (openNode) openNode.textContent = String(openAlerts);
-    if (criticalNode) criticalNode.textContent = String(criticalAlerts);
-    if (avgNode) avgNode.textContent = avgRisk.toFixed(1);
-  }
+function renderSystemHealth(patients, alerts){
+  const sourcePatients = (patients && patients.length) ? patients.map(normalizePatient).filter(Boolean) : fallbackPatients;
+  const sourceAlerts = (alerts && alerts.length) ? alerts.map(normalizeAlert).filter(Boolean) : fallbackAlerts;
 
-  function applyPayload(payload){
+  if (healthDevices) healthDevices.textContent = String(sourcePatients.length);
+  if (healthStreams) healthStreams.textContent = String(sourcePatients.length);
+  if (healthLatency) healthLatency.textContent = sourceAlerts.length ? "~2s" : "~0s";
+  if (healthStatus) healthStatus.textContent = "Operational";
+}
+
+function renderStaffingLoad(patients, alerts){
+  const sourcePatients = (patients && patients.length) ? patients.map(normalizePatient).filter(Boolean) : fallbackPatients;
+  const sourceAlerts = (alerts && alerts.length) ? alerts.map(normalizeAlert).filter(Boolean) : fallbackAlerts;
+
+  const criticalPatients = sourcePatients.filter(p => String(p.status).toLowerCase() === "critical").length;
+  const responseLoad = sourceAlerts.length >= 5 ? "High" : sourceAlerts.length >= 3 ? "Moderate" : "Stable";
+
+  if (staffOpenAlerts) staffOpenAlerts.textContent = String(sourceAlerts.length);
+  if (staffCriticalPatients) staffCriticalPatients.textContent = String(criticalPatients);
+  if (staffResponseLoad) staffResponseLoad.textContent = responseLoad;
+}
+
+function renderAuditTrail(){
+  const auditPanel = document.getElementById("audit-panel");
+  if (!auditPanel) return;
+  auditPanel.innerHTML = auditTrail.slice(0, 6).map(item => `
+    <div class="queue-item">
+      <div class="queue-copy">${item.ts} · ${item.action} · ${item.patient_id}</div>
+      <div class="status-pill live">Logged</div>
+    </div>
+  `).join("") || `<div class="queue-item"><div class="queue-copy">No actions logged yet.</div><div class="status-pill live">Ready</div></div>`;
+}
+
+function updateSummary(patients, alerts){
+  const sourcePatients = (patients && patients.length) ? patients.map(normalizePatient).filter(Boolean) : fallbackPatients;
+  const sourceAlerts = (alerts && alerts.length) ? alerts.map(normalizeAlert).filter(Boolean) : fallbackAlerts;
+
+  const filteredPatients = selectedUnit === "all"
+    ? sourcePatients
+    : sourcePatients.filter(p => safe(p.unit) === selectedUnit || safe(p.bed) === selectedUnit);
+
+  const filteredAlerts = selectedUnit === "all"
+    ? sourceAlerts
+    : sourceAlerts.filter(a => safe(a.unit) === selectedUnit);
+
+  const openAlerts = filteredAlerts.length;
+  const criticalAlerts = filteredAlerts.filter(a => String(a.severity || "").toLowerCase() === "critical").length;
+  const avgRisk = filteredPatients.length
+    ? filteredPatients.reduce((n, p) => n + Number(p.risk_score || 0), 0) / filteredPatients.length
+    : 0;
+
+  const openNode = document.getElementById("open-alerts");
+  const criticalNode = document.getElementById("critical-alerts");
+  const avgNode = document.getElementById("avg-risk");
+
+  if (openNode) openNode.textContent = String(openAlerts);
+  if (criticalNode) criticalNode.textContent = String(criticalAlerts);
+  if (avgNode) avgNode.textContent = avgRisk.toFixed(1);
+
+  const unitFilterMount = document.getElementById("unit-filter-mount");
+  if (unitFilterMount) unitFilterMount.innerHTML = buildUnitFilters(filteredPatients);
+}
+
+function applyPayload(payload){
   if (payload && Array.isArray(payload.patients)) {
     renderPatients(payload.patients);
     renderAlertsList(payload.alerts || []);
@@ -2034,6 +2223,7 @@ function renderMonitor(patient) {
     renderWorkflow(payload.alerts || []);
     renderSystemHealth(payload.patients, payload.alerts || []);
     renderStaffingLoad(payload.patients, payload.alerts || []);
+    renderAuditTrail();
     return;
   }
 
@@ -2046,6 +2236,7 @@ function renderMonitor(patient) {
     renderWorkflow([]);
     renderSystemHealth(payload, []);
     renderStaffingLoad(payload, []);
+    renderAuditTrail();
     return;
   }
 
@@ -2055,7 +2246,13 @@ function renderMonitor(patient) {
       patient_id: payload.patient_id || "Patient",
       severity: payload.risk.severity || "Stable",
       text: payload.risk.alert_message || "Clinical alert surfaced",
-      unit: payload.room || "Unit"
+      unit: payload.room || "Unit",
+      risk_score: payload.risk.risk_score || 0,
+      confidence: payload.risk.confidence || "--",
+      recommended_action: payload.risk.recommended_action || "Continue monitoring.",
+      clinical_priority: payload.risk.clinical_priority || "Priority 4",
+      trend_direction: payload.risk.trend_direction || "Stable",
+      created_at: new Date().toISOString()
     }] : [];
 
     renderPatients(onePatient);
@@ -2066,6 +2263,7 @@ function renderMonitor(patient) {
     renderWorkflow(oneAlert);
     renderSystemHealth(onePatient, oneAlert);
     renderStaffingLoad(onePatient, oneAlert);
+    renderAuditTrail();
     return;
   }
 
@@ -2077,7 +2275,10 @@ function renderMonitor(patient) {
   renderWorkflow([]);
   renderSystemHealth([], []);
   renderStaffingLoad([], []);
+  renderAuditTrail();
 }
+
+
 
   async function refreshFallback() {
     try {
