@@ -1109,6 +1109,206 @@ COMMAND_CENTER_HTML = r"""
     </section>
   </div>
 
+  <section class="roi-section">
+  <div class="roi-card">
+
+    <div class="roi-kicker">Hospital Value</div>
+
+    <h2>Hospital Impact / ROI Metrics</h2>
+
+    <p class="roi-lead">
+      Early Risk Alert AI is designed to help hospitals identify deterioration sooner,
+      improve monitoring visibility, support faster intervention, and strengthen operational efficiency.
+    </p>
+
+    <div class="roi-grid">
+
+      <div class="roi-metric">
+        <div class="roi-value">Earlier</div>
+        <div class="roi-title">Intervention Timing</div>
+        <p>
+          Surfaces subtle deterioration signals sooner so clinical teams can respond before
+          a patient reaches a more severe escalation threshold.
+        </p>
+      </div>
+
+      <div class="roi-metric">
+        <div class="roi-value">Lower</div>
+        <div class="roi-title">Escalation Risk</div>
+        <p>
+          Supports proactive care decisions that may reduce avoidable respiratory or
+          hemodynamic deterioration events.
+        </p>
+      </div>
+
+      <div class="roi-metric">
+        <div class="roi-value">Better</div>
+        <div class="roi-title">Monitoring Visibility</div>
+        <p>
+          Gives command-center and clinical teams a clearer real-time view of which patients
+          need attention first.
+        </p>
+      </div>
+
+      <div class="roi-metric">
+        <div class="roi-value">Stronger</div>
+        <div class="roi-title">Operational Awareness</div>
+        <p>
+          Combines patient risk, alert prioritization, and dashboard visibility into one
+          unified hospital workflow.
+        </p>
+      </div>
+
+    </div>
+
+    <div class="roi-bottom-grid">
+
+      <div class="roi-panel">
+        <h3>Potential Clinical Benefits</h3>
+        <ul>
+          <li>Earlier recognition of respiratory deterioration</li>
+          <li>Faster response to rising-risk patients</li>
+          <li>Improved prioritization across monitored patients</li>
+          <li>More visible escalation trends for care teams</li>
+        </ul>
+      </div>
+
+      <div class="roi-panel">
+        <h3>Potential Operational Benefits</h3>
+        <ul>
+          <li>Stronger command-center oversight</li>
+          <li>Improved staff attention allocation</li>
+          <li>Better visibility into high-risk patient clusters</li>
+          <li>Investor- and executive-ready workflow presentation</li>
+        </ul>
+      </div>
+
+    </div>
+
+  </div>
+</section>
+
+<style>
+.roi-section{
+  max-width:1460px;
+  margin:40px auto;
+  padding:0 16px 70px;
+}
+
+.roi-card{
+  background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015));
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:26px;
+  padding:28px;
+  box-shadow:0 20px 60px rgba(0,0,0,.34);
+}
+
+.roi-kicker{
+  font-size:11px;
+  font-weight:900;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  color:#9adfff;
+  margin-bottom:10px;
+}
+
+.roi-card h2{
+  margin:0 0 12px;
+  font-size:40px;
+  font-weight:1000;
+  letter-spacing:-.04em;
+  line-height:1.05;
+}
+
+.roi-lead{
+  margin:0 0 24px;
+  font-size:16px;
+  line-height:1.7;
+  color:#cfe0f4;
+  max-width:920px;
+}
+
+.roi-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:16px;
+  margin-bottom:18px;
+}
+
+.roi-metric{
+  border:1px solid rgba(255,255,255,.07);
+  border-radius:18px;
+  padding:18px;
+  background:rgba(255,255,255,.03);
+}
+
+.roi-value{
+  font-size:30px;
+  font-weight:1000;
+  line-height:1;
+  letter-spacing:-.03em;
+  color:#7aa2ff;
+  margin-bottom:10px;
+}
+
+.roi-title{
+  font-size:18px;
+  font-weight:900;
+  margin-bottom:8px;
+}
+
+.roi-metric p{
+  margin:0;
+  font-size:14px;
+  line-height:1.6;
+  color:#c7d7ef;
+}
+
+.roi-bottom-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:16px;
+}
+
+.roi-panel{
+  border:1px solid rgba(255,255,255,.07);
+  border-radius:18px;
+  padding:20px;
+  background:rgba(255,255,255,.03);
+}
+
+.roi-panel h3{
+  margin:0 0 12px;
+  font-size:20px;
+  font-weight:900;
+}
+
+.roi-panel ul{
+  margin:0;
+  padding-left:18px;
+  color:#d8e6f8;
+  line-height:1.8;
+  font-size:14px;
+}
+
+@media(max-width:1100px){
+  .roi-grid{
+    grid-template-columns:1fr 1fr;
+  }
+}
+
+@media(max-width:760px){
+  .roi-grid,
+  .roi-bottom-grid{
+    grid-template-columns:1fr;
+  }
+
+  .roi-card h2{
+    font-size:32px;
+  }
+}
+</style>
+
   <section class="use-case-section">
   <div class="use-case-card">
 
