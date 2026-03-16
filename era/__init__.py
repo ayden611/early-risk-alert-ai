@@ -2024,7 +2024,7 @@ function renderMonitor(patient) {
     if (avgNode) avgNode.textContent = avgRisk.toFixed(1);
   }
 
-  ffunction applyPayload(payload){
+  function applyPayload(payload){
   if (payload && Array.isArray(payload.patients)) {
     renderPatients(payload.patients);
     renderAlertsList(payload.alerts || []);
