@@ -2301,7 +2301,7 @@ def workflow_action():
                 time.sleep(2)
         return Response(generate(), mimetype="text/event-stream")
 
-        ```python
+        
 # ============================================================
 # PILOT OPERATIONS BUNDLE
 # Early Risk Alert AI
