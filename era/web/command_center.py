@@ -75,9 +75,10 @@ COMMAND_CENTER_HTML = r"""
     .btn.secondary{
       background:rgba(255,255,255,.04);border-color:var(--line);color:var(--text);
     }
-    .btn.small{
-      padding:9px 12px;border-radius:12px;font-size:12px;
-    }
+    .btn.small{padding:9px 12px;border-radius:12px;font-size:12px}
+    .btn.critical-btn{background:linear-gradient(135deg,#ff667d,#ff8fa0);color:#08111f}
+    .btn.live-btn{background:linear-gradient(135deg,#3ad38f,#8ff3c1);color:#08111f}
+    .btn.warn-btn{background:linear-gradient(135deg,#f4bd6a,#ffe09b);color:#2a1b00}
 
     .hero{
       margin-top:18px;
@@ -91,9 +92,7 @@ COMMAND_CENTER_HTML = r"""
       box-shadow:var(--shadow);
       padding:22px;
     }
-    .hero-grid{
-      display:grid;grid-template-columns:1.2fr .8fr;gap:18px;align-items:stretch;
-    }
+    .hero-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:18px;align-items:stretch}
     .hero-copy,.hero-side{
       border:1px solid var(--line);
       border-radius:26px;
@@ -106,27 +105,19 @@ COMMAND_CENTER_HTML = r"""
     .hero-copy h1{
       margin:0 0 12px;font-size:clamp(38px,5vw,68px);line-height:.92;letter-spacing:-.06em;font-weight:1000;
     }
-    .hero-copy p,.hero-side p{
-      margin:0;color:#d0def2;font-size:16px;line-height:1.68;
-    }
+    .hero-copy p,.hero-side p{margin:0;color:#d0def2;font-size:16px;line-height:1.68}
     .hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:18px}
-    .hero-mini-grid{
-      margin-top:18px;display:grid;grid-template-columns:repeat(4,1fr);gap:12px;
-    }
+    .hero-mini-grid{margin-top:18px;display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
     .hero-mini{
       border:1px solid var(--line2);border-radius:18px;padding:14px;background:rgba(255,255,255,.03);
     }
     .hero-mini .k{
       font-size:11px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:#8fdcff;margin-bottom:8px;
     }
-    .hero-mini .v{
-      font-size:18px;font-weight:1000;line-height:1.12;letter-spacing:-.03em;
-    }
+    .hero-mini .v{font-size:18px;font-weight:1000;line-height:1.12;letter-spacing:-.03em}
 
     .ticker-wrap{
-      margin-top:18px;
-      border:1px solid var(--line);
-      border-radius:20px;
+      margin-top:18px;border:1px solid var(--line);border-radius:20px;
       background:
         linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.018)),
         linear-gradient(180deg, rgba(12,22,38,.82), rgba(8,15,28,.92));
@@ -137,27 +128,15 @@ COMMAND_CENTER_HTML = r"""
       animation:tickerMove 28s linear infinite;
     }
     .ticker-item{
-      display:inline-flex;align-items:center;gap:10px;
-      border:1px solid var(--line);
-      border-radius:999px;
-      padding:10px 14px;
-      background:rgba(255,255,255,.03);
-      margin-left:14px;
-      font-size:14px;font-weight:800;color:#deebff;
+      display:inline-flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:999px;
+      padding:10px 14px;background:rgba(255,255,255,.03);margin-left:14px;font-size:14px;font-weight:800;color:#deebff;
     }
-    .ticker-dot{
-      width:10px;height:10px;border-radius:50%;
-      box-shadow:0 0 20px currentColor;
-      flex:0 0 auto;
-    }
+    .ticker-dot{width:10px;height:10px;border-radius:50%;box-shadow:0 0 20px currentColor;flex:0 0 auto}
     .dot-green{color:var(--green);background:var(--green)}
     .dot-amber{color:var(--amber);background:var(--amber)}
     .dot-red{color:var(--red);background:var(--red)}
     .dot-blue{color:var(--blue2);background:var(--blue2)}
-    @keyframes tickerMove{
-      0%{transform:translateX(0)}
-      100%{transform:translateX(-50%)}
-    }
+    @keyframes tickerMove{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
 
     .section{margin-top:18px}
     .section-card{
@@ -185,20 +164,15 @@ COMMAND_CENTER_HTML = r"""
     .status-pill.critical{color:#fff3f5;background:linear-gradient(135deg,#ff667d,#ff8e99)}
     .status-pill.info{color:#07101c;background:linear-gradient(135deg,var(--blue),var(--blue2))}
 
-    .toolbar{
-      display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px;
-    }
+    .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
     .toolbar select{
       background:#0d1728;border:1px solid rgba(255,255,255,.08);border-radius:14px;color:var(--text);
       padding:12px 14px;font:inherit;font-weight:800;
     }
 
-    .telemetry-top{
-      display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px;
-    }
+    .telemetry-top{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px}
     .stat-card{
-      border:1px solid var(--line);
-      border-radius:20px;
+      border:1px solid var(--line);border-radius:20px;
       background:
         linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.018)),
         linear-gradient(180deg, rgba(13,23,40,.90), rgba(8,15,28,.95));
@@ -212,27 +186,18 @@ COMMAND_CENTER_HTML = r"""
     .stat-card .k{
       font-size:11px;font-weight:900;letter-spacing:.16em;text-transform:uppercase;color:#8ddcff;margin-bottom:10px;
     }
-    .stat-card .v{
-      font-size:42px;font-weight:1000;line-height:.92;letter-spacing:-.05em;
-    }
-    .stat-card .hint{
-      margin-top:8px;font-size:13px;line-height:1.5;color:#c8d8ef;
-    }
+    .stat-card .v{font-size:42px;font-weight:1000;line-height:.92;letter-spacing:-.05em}
+    .stat-card .hint{margin-top:8px;font-size:13px;line-height:1.5;color:#c8d8ef}
 
-    .command-grid{
-      display:grid;grid-template-columns:1.55fr .95fr;gap:18px;align-items:start;
-    }
-    .monitor-grid{
-      display:grid;grid-template-columns:1fr 1fr;gap:16px;
-    }
+    .command-grid{display:grid;grid-template-columns:1.55fr .95fr;gap:18px;align-items:start}
+    .monitor-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
     .monitor{
-      border:1px solid var(--line);
-      border-radius:26px;
+      border:1px solid var(--line);border-radius:26px;
       background:
         linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.012)),
         linear-gradient(180deg, rgba(11,20,35,.96), rgba(6,12,22,.98));
       box-shadow:0 16px 44px rgba(0,0,0,.32);
-      padding:18px;position:relative;overflow:hidden;min-height:356px;
+      padding:18px;position:relative;overflow:hidden;min-height:390px;
     }
     .monitor::before{
       content:"";position:absolute;inset:0;
@@ -242,20 +207,14 @@ COMMAND_CENTER_HTML = r"""
       opacity:.12;pointer-events:none;
     }
     .monitor-top{
-      position:relative;z-index:1;
-      display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
-      margin-bottom:14px;
+      position:relative;z-index:1;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px;
     }
     .monitor-bed{
       font-size:11px;font-weight:1000;letter-spacing:.16em;text-transform:uppercase;color:#95ddff;margin-bottom:6px;
     }
-    .monitor-title{
-      font-size:34px;font-weight:1000;line-height:.92;letter-spacing:-.05em;
-    }
+    .monitor-title{font-size:30px;font-weight:1000;line-height:.92;letter-spacing:-.05em}
     .monitor-wave{
-      position:relative;z-index:1;
-      border:1px solid rgba(255,255,255,.06);
-      border-radius:20px;min-height:138px;
+      position:relative;z-index:1;border:1px solid rgba(255,255,255,.06);border-radius:20px;min-height:138px;
       background:
         linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.01)),
         rgba(0,0,0,.18);
@@ -263,104 +222,84 @@ COMMAND_CENTER_HTML = r"""
     }
     .monitor-wave svg{width:100%;height:118px;display:block}
     .ecg-path{
-      fill:none;stroke-width:4;stroke-linecap:round;stroke-linejoin:round;
-      stroke-dasharray:920;stroke-dashoffset:0;
-      animation:ecgMove 2.8s linear infinite;
-      filter:drop-shadow(0 0 10px currentColor);
+      fill:none;stroke-width:4;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:920;stroke-dashoffset:0;
+      animation:ecgMove 2.8s linear infinite;filter:drop-shadow(0 0 10px currentColor);
     }
-    @keyframes ecgMove{
-      0%{stroke-dashoffset:920}
-      100%{stroke-dashoffset:0}
-    }
+    @keyframes ecgMove{0%{stroke-dashoffset:920}100%{stroke-dashoffset:0}}
     .ecg-green{stroke:#77ffb4;color:#77ffb4}
     .ecg-amber{stroke:#ffd96c;color:#ffd96c}
     .ecg-red{stroke:#ff7c8d;color:#ff7c8d}
 
     .monitor-metrics{
-      position:relative;z-index:1;
-      margin-top:14px;display:grid;grid-template-columns:repeat(4,1fr);gap:10px;
+      position:relative;z-index:1;margin-top:14px;display:grid;grid-template-columns:repeat(4,1fr);gap:10px;
     }
     .metric-box{
-      border:1px solid rgba(255,255,255,.06);
-      border-radius:16px;background:rgba(255,255,255,.03);
+      border:1px solid rgba(255,255,255,.06);border-radius:16px;background:rgba(255,255,255,.03);
       padding:12px;min-height:78px;display:flex;flex-direction:column;justify-content:space-between;
     }
-    .metric-k{
-      font-size:11px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:#9eb8dc;
-    }
-    .metric-v{
-      font-size:18px;font-weight:1000;line-height:1;letter-spacing:-.03em;
-    }
+    .metric-k{font-size:11px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:#9eb8dc}
+    .metric-v{font-size:18px;font-weight:1000;line-height:1;letter-spacing:-.03em}
 
     .monitor-story{
-      position:relative;z-index:1;
-      margin-top:14px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+      position:relative;z-index:1;margin-top:14px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
     }
-    .story-text{
-      font-size:13px;color:#cfe0f4;line-height:1.55;max-width:75%;
-    }
-    .monitor-actions{
-      position:relative;z-index:1;
-      margin-top:14px;display:flex;gap:8px;flex-wrap:wrap;
-    }
+    .story-text{font-size:13px;color:#cfe0f4;line-height:1.55;max-width:74%}
+    .monitor-actions{position:relative;z-index:1;margin-top:14px;display:flex;gap:8px;flex-wrap:wrap}
 
     .side-stack{display:grid;gap:16px}
     .intel-card{
-      border:1px solid var(--line);
-      border-radius:24px;
+      border:1px solid var(--line);border-radius:24px;
       background:
         linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.018)),
         linear-gradient(180deg, rgba(12,22,38,.76), rgba(9,16,30,.88));
-      padding:18px;
-      box-shadow:0 14px 36px rgba(0,0,0,.26);
+      padding:18px;box-shadow:0 14px 36px rgba(0,0,0,.26);
     }
-    .intel-card h3{
-      margin:0 0 12px;font-size:20px;font-weight:1000;letter-spacing:-.03em;
-    }
+    .intel-card h3{margin:0 0 12px;font-size:20px;font-weight:1000;letter-spacing:-.03em}
 
-    .alert-feed,.queue-list,.timeline-panel,.why-now{display:grid;gap:10px}
-    .alert-item,.queue-item,.timeline-item,.why-line{
-      border:1px solid rgba(255,255,255,.06);
-      border-radius:16px;padding:12px;background:rgba(255,255,255,.03);
+    .alert-feed,.queue-list,.timeline-panel,.why-now,.audit-list{display:grid;gap:10px}
+    .alert-item,.queue-item,.timeline-item,.why-line,.audit-item{
+      border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:12px;background:rgba(255,255,255,.03);
     }
-    .alert-item,.queue-item{
-      display:flex;align-items:flex-start;justify-content:space-between;gap:10px;
-    }
-    .alert-copy,.queue-copy{
-      font-size:14px;font-weight:900;line-height:1.45;color:#e4efff;
-    }
-    .alert-sub{
-      font-size:12px;color:#acc0dd;font-weight:700;margin-top:4px;
-    }
+    .alert-item,.queue-item,.audit-item{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+    .alert-copy,.queue-copy,.audit-copy{font-size:14px;font-weight:900;line-height:1.45;color:#e4efff}
+    .alert-sub,.audit-sub{font-size:12px;color:#acc0dd;font-weight:700;margin-top:4px}
 
-    .timeline-item{
-      display:grid;grid-template-columns:78px 1fr;gap:12px;align-items:start;
-    }
-    .timeline-time{
-      font-size:12px;font-weight:1000;letter-spacing:.12em;text-transform:uppercase;color:#8fdcff;
-    }
-    .timeline-copy{
-      font-size:13px;line-height:1.55;color:#e4efff;
-    }
+    .timeline-item{display:grid;grid-template-columns:78px 1fr;gap:12px;align-items:start}
+    .timeline-time{font-size:12px;font-weight:1000;letter-spacing:.12em;text-transform:uppercase;color:#8fdcff}
+    .timeline-copy{font-size:13px;line-height:1.55;color:#e4efff}
 
-    .ops-strip{
-      margin-top:18px;
-      display:grid;grid-template-columns:repeat(4,1fr);gap:16px;
+    .detail-drawer{
+      position:fixed;top:0;right:-460px;width:440px;max-width:100%;height:100vh;z-index:120;
+      background:linear-gradient(180deg, rgba(12,22,38,.98), rgba(7,14,26,.99));
+      border-left:1px solid var(--line);box-shadow:-20px 0 60px rgba(0,0,0,.35);
+      transition:right .25s ease;padding:18px;overflow:auto;
     }
+    .detail-drawer.open{right:0}
+    .drawer-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:16px}
+    .drawer-title{font-size:28px;font-weight:1000;letter-spacing:-.04em;margin:0}
+    .drawer-sub{font-size:13px;color:var(--muted);line-height:1.5;margin-top:6px}
+    .drawer-block{
+      border:1px solid rgba(255,255,255,.06);border-radius:18px;padding:14px;background:rgba(255,255,255,.03);margin-bottom:12px;
+    }
+    .drawer-k{font-size:11px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:#9eb8dc;margin-bottom:8px}
+    .drawer-v{font-size:18px;font-weight:1000;line-height:1.4;color:#eef4ff}
+    .drawer-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .overlay{
+      position:fixed;inset:0;background:rgba(0,0,0,.42);z-index:110;display:none;
+    }
+    .overlay.show{display:block}
+
+    .ops-strip{margin-top:18px;display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
     .ops-card{
-      border:1px solid var(--line);
-      border-radius:22px;
+      border:1px solid var(--line);border-radius:22px;
       background:
         linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.018)),
         linear-gradient(180deg, rgba(12,22,38,.76), rgba(9,16,30,.88));
       padding:16px;box-shadow:0 14px 34px rgba(0,0,0,.24);min-height:168px;
     }
-    .ops-card h3{
-      margin:0 0 12px;font-size:18px;font-weight:1000;letter-spacing:-.03em;
-    }
+    .ops-card h3{margin:0 0 12px;font-size:18px;font-weight:1000;letter-spacing:-.03em}
     .trend-bar{
-      position:relative;height:16px;border-radius:999px;overflow:hidden;
-      background:rgba(255,255,255,.05);
+      position:relative;height:16px;border-radius:999px;overflow:hidden;background:rgba(255,255,255,.05);
       border:1px solid rgba(255,255,255,.06);margin-top:14px;
     }
     .trend-fill{
@@ -368,34 +307,21 @@ COMMAND_CENTER_HTML = r"""
       background:linear-gradient(90deg, rgba(91,212,255,.10), rgba(91,212,255,.82), rgba(91,212,255,.10));
       animation:trendMove 3.6s linear infinite;
     }
-    @keyframes trendMove{
-      0%{transform:translateX(0)}
-      100%{transform:translateX(230%)}
-    }
+    @keyframes trendMove{0%{transform:translateX(0)}100%{transform:translateX(230%)}}
     .trend-labels{
-      display:flex;justify-content:space-between;gap:8px;margin-top:12px;
-      font-size:12px;font-weight:900;color:#b2c6e3;
+      display:flex;justify-content:space-between;gap:8px;margin-top:12px;font-size:12px;font-weight:900;color:#b2c6e3;
     }
     .forecast{display:grid;gap:10px;margin-top:10px}
     .forecast div{
-      border:1px solid rgba(255,255,255,.06);
-      border-radius:14px;padding:10px 12px;background:rgba(255,255,255,.03);
+      border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:10px 12px;background:rgba(255,255,255,.03);
       font-size:14px;font-weight:900;color:#e3efff;
     }
     .forecast-mid{color:#ffd27d}
     .forecast-high{color:#ffb162}
     .forecast-critical{color:#ff7f91}
-
-    .capacity-value{
-      display:block;font-size:44px;font-weight:1000;line-height:.92;letter-spacing:-.05em;
-    }
-    .capacity-label{
-      display:block;margin-top:8px;font-size:14px;font-weight:800;color:#d2e1f4;
-    }
-    .capacity-note{
-      margin-top:10px;font-size:12px;line-height:1.55;color:#a9bedb;
-    }
-
+    .capacity-value{display:block;font-size:44px;font-weight:1000;line-height:.92;letter-spacing:-.05em}
+    .capacity-label{display:block;margin-top:8px;font-size:14px;font-weight:800;color:#d2e1f4}
+    .capacity-note{margin-top:10px;font-size:12px;line-height:1.55;color:#a9bedb}
     .heatmap{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}
     .heat{height:28px;border-radius:8px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.10)}
     .low{background:linear-gradient(135deg,#46d88f,#8cffc1)}
@@ -415,6 +341,7 @@ COMMAND_CENTER_HTML = r"""
       .telemetry-top{grid-template-columns:repeat(2,1fr)}
       .monitor-grid{grid-template-columns:1fr}
       .hero-mini-grid{grid-template-columns:repeat(2,1fr)}
+      .drawer-grid{grid-template-columns:1fr}
     }
     @media (max-width:700px){
       .shell{padding:14px 10px 40px}
@@ -425,6 +352,7 @@ COMMAND_CENTER_HTML = r"""
       .hero-mini-grid,.telemetry-top,.ops-strip,.monitor-metrics{grid-template-columns:1fr}
       .story-text{max-width:100%}
       .timeline-item{grid-template-columns:1fr}
+      .detail-drawer{width:100%}
     }
   </style>
 </head>
@@ -454,8 +382,8 @@ COMMAND_CENTER_HTML = r"""
           <h1>Real-time predictive monitoring wall for hospitals.</h1>
           <p>
             Early Risk Alert AI combines ICU-style telemetry monitors, live alert operations, top-risk queue
-            visibility, clinical workflow panels, patient timeline tracking, and hospital command-center storytelling
-            into one production-ready command wall.
+            visibility, clinical workflow panels, patient timeline tracking, and audit-ready hospital command-center
+            workflows into one production-ready command wall.
           </p>
           <div class="hero-actions">
             <a class="btn primary" href="/admin/review">Open Admin Review</a>
@@ -466,16 +394,17 @@ COMMAND_CENTER_HTML = r"""
           <div class="hero-mini-grid">
             <div class="hero-mini"><div class="k">Telemetry</div><div class="v">Live waveform monitors</div></div>
             <div class="hero-mini"><div class="k">Prediction</div><div class="v">AI risk + escalation logic</div></div>
-            <div class="hero-mini"><div class="k">Workflow</div><div class="v">ACK / escalate / assign flow</div></div>
-            <div class="hero-mini"><div class="k">Operations</div><div class="v">ICU / unit segmentation wall</div></div>
+            <div class="hero-mini"><div class="k">Workflow</div><div class="v">Saved action state</div></div>
+            <div class="hero-mini"><div class="k">Audit</div><div class="v">Traceable intervention log</div></div>
           </div>
         </div>
 
         <div class="hero-side">
           <div class="hero-kicker">Command wall controls</div>
           <p>
-            Filter the telemetry wall by unit, focus on the highest-risk patients first, and surface live
-            clinical reasoning, workflow pressure, and patient timeline events in one hospital-facing view.
+            Filter the telemetry wall by unit, open a patient detail drawer, save acknowledgement and escalation
+            actions, and maintain a visible audit trail that makes the platform feel much closer to a real hospital
+            operating product.
           </p>
           <div class="toolbar" style="margin-top:18px;">
             <select id="unitFilter">
@@ -489,7 +418,7 @@ COMMAND_CENTER_HTML = r"""
             <div class="status-pill info" id="selectedUnitPill">All Units</div>
           </div>
           <div class="ticker-wrap">
-            <div class="ticker-track" id="ticker-track">
+            <div class="ticker-track">
               <div class="ticker-item"><span class="ticker-dot dot-red"></span>Critical deterioration signal surfaced</div>
               <div class="ticker-item"><span class="ticker-dot dot-amber"></span>High-priority patient moved to watch queue</div>
               <div class="ticker-item"><span class="ticker-dot dot-green"></span>Stable recovery trend confirmed</div>
@@ -512,7 +441,7 @@ COMMAND_CENTER_HTML = r"""
         <div class="section-head">
           <div>
             <h2 class="section-title">Hospital Command Wall</h2>
-            <div class="section-sub">ICU-style telemetry monitors, live triage signals, clinical workflow, system health, and patient timeline visibility.</div>
+            <div class="section-sub">ICU-style telemetry monitors, live triage signals, workflow persistence, patient detail drawer, and audit trail visibility.</div>
           </div>
           <div class="status-pill live" id="wallStatus">Live</div>
         </div>
@@ -563,7 +492,7 @@ COMMAND_CENTER_HTML = r"""
 
             <div class="intel-card">
               <h3>Clinical Workflow</h3>
-              <div class="queue-list" id="workflow-panel">
+              <div class="queue-list">
                 <div class="queue-item">
                   <div class="queue-copy">New Alerts <strong id="wf-new">0</strong></div>
                   <div class="status-pill watch">Open</div>
@@ -576,12 +505,16 @@ COMMAND_CENTER_HTML = r"""
                   <div class="queue-copy">Escalated <strong id="wf-escalated">0</strong></div>
                   <div class="status-pill critical">Priority</div>
                 </div>
+                <div class="queue-item">
+                  <div class="queue-copy">Assigned Nurse <strong id="wf-assigned">0</strong></div>
+                  <div class="status-pill info">Assigned</div>
+                </div>
               </div>
             </div>
 
             <div class="intel-card">
               <h3>System Health</h3>
-              <div class="queue-list" id="system-health-panel">
+              <div class="queue-list">
                 <div class="queue-item">
                   <div class="queue-copy">Telemetry Devices Connected</div>
                   <div class="status-pill live" id="health-devices">--</div>
@@ -607,6 +540,19 @@ COMMAND_CENTER_HTML = r"""
                 <div class="timeline-item">
                   <div class="timeline-time">Now</div>
                   <div class="timeline-copy">Waiting for active patient timeline...</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="intel-card">
+              <h3>Audit Trail</h3>
+              <div class="audit-list" id="audit-log">
+                <div class="audit-item">
+                  <div>
+                    <div class="audit-copy">System initialized</div>
+                    <div class="audit-sub">Awaiting user actions</div>
+                  </div>
+                  <div class="status-pill info">Log</div>
                 </div>
               </div>
             </div>
@@ -670,7 +616,7 @@ COMMAND_CENTER_HTML = r"""
           <div class="ops-card">
             <h3>Workflow Readiness</h3>
             <div class="forecast">
-              <div>ACK controls: Enabled</div>
+              <div>ACK persistence: Enabled</div>
               <div>Escalation routing: Ready</div>
               <div>Nurse assignment: Active</div>
             </div>
@@ -679,9 +625,9 @@ COMMAND_CENTER_HTML = r"""
           <div class="ops-card">
             <h3>Operations Wall Mode</h3>
             <div class="forecast">
-              <div>ICU / Unit segmentation: Enabled</div>
+              <div>Patient detail drawer: Enabled</div>
               <div>Top risk queue: Live</div>
-              <div>Timeline intelligence: Live</div>
+              <div>Audit trail: Live</div>
             </div>
           </div>
         </div>
@@ -689,9 +635,65 @@ COMMAND_CENTER_HTML = r"""
     </section>
 
     <div class="footer">
-      Early Risk Alert AI LLC · Predictive clinical intelligence platform · Hospital command center wall · Live telemetry + workflow visibility
+      Early Risk Alert AI LLC · Predictive clinical intelligence platform · Hospital command center wall · Workflow persistence · Patient detail panel · Audit trail
     </div>
   </div>
+
+  <div class="overlay" id="drawerOverlay" onclick="closePatientDrawer()"></div>
+
+  <aside class="detail-drawer" id="patientDrawer">
+    <div class="drawer-top">
+      <div>
+        <h3 class="drawer-title" id="drawerPatientName">Patient</h3>
+        <div class="drawer-sub" id="drawerPatientSub">Patient details</div>
+      </div>
+      <button class="btn secondary small" onclick="closePatientDrawer()">Close</button>
+    </div>
+
+    <div class="drawer-block">
+      <div class="drawer-k">Clinical Summary</div>
+      <div class="drawer-v" id="drawerSummary">Waiting for patient selection.</div>
+    </div>
+
+    <div class="drawer-grid">
+      <div class="drawer-block">
+        <div class="drawer-k">Heart Rate</div>
+        <div class="drawer-v" id="drawerHr">--</div>
+      </div>
+      <div class="drawer-block">
+        <div class="drawer-k">SpO₂</div>
+        <div class="drawer-v" id="drawerSpo2">--</div>
+      </div>
+      <div class="drawer-block">
+        <div class="drawer-k">Blood Pressure</div>
+        <div class="drawer-v" id="drawerBp">--</div>
+      </div>
+      <div class="drawer-block">
+        <div class="drawer-k">Risk Score</div>
+        <div class="drawer-v" id="drawerRisk">--</div>
+      </div>
+    </div>
+
+    <div class="drawer-block">
+      <div class="drawer-k">Recommended Action</div>
+      <div class="drawer-v" id="drawerAction">--</div>
+    </div>
+
+    <div class="drawer-block">
+      <div class="drawer-k">Workflow Status</div>
+      <div class="drawer-v" id="drawerWorkflow">No workflow action saved yet.</div>
+    </div>
+
+    <div class="drawer-block">
+      <div class="drawer-k">Timeline Snapshot</div>
+      <div class="timeline-panel" id="drawerTimeline">
+        <div class="timeline-item">
+          <div class="timeline-time">Now</div>
+          <div class="timeline-copy">No patient selected.</div>
+        </div>
+      </div>
+    </div>
+  </aside>
 
   <script>
     const fallbackPatients = [
@@ -731,15 +733,61 @@ COMMAND_CENTER_HTML = r"""
 
     let activePatients = [];
     let activeAlerts = [];
-    let acknowledgedPatients = new Set();
-    let escalatedPatients = new Set();
-    let assignedPatients = new Set();
     let currentUnitFilter = "all";
+    let selectedPatientId = null;
 
-    const wall = document.getElementById("wall");
-    const queue = document.getElementById("queue");
-    const unitFilter = document.getElementById("unitFilter");
-    const selectedUnitPill = document.getElementById("selectedUnitPill");
+    const STORAGE_KEY = "era_command_workflow_state_v1";
+    const AUDIT_KEY = "era_command_audit_log_v1";
+
+    let workflowState = {};
+    let auditLog = [];
+
+    function loadSavedState(){
+      try{
+        workflowState = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+      }catch(e){
+        workflowState = {};
+      }
+      try{
+        auditLog = JSON.parse(localStorage.getItem(AUDIT_KEY) || "[]");
+      }catch(e){
+        auditLog = [];
+      }
+    }
+
+    function saveWorkflowState(){
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(workflowState));
+    }
+
+    function saveAuditLog(){
+      localStorage.setItem(AUDIT_KEY, JSON.stringify(auditLog.slice(0, 40)));
+    }
+
+    function addAuditEntry(type, patientId, message){
+      const entry = {
+        id: Date.now() + "_" + Math.random().toString(36).slice(2,7),
+        type: type,
+        patient_id: patientId,
+        message: message,
+        at: new Date().toLocaleTimeString()
+      };
+      auditLog.unshift(entry);
+      auditLog = auditLog.slice(0, 40);
+      saveAuditLog();
+      renderAuditLog();
+    }
+
+    function getWorkflowRecord(patientId){
+      if (!workflowState[patientId]) {
+        workflowState[patientId] = {
+          ack: false,
+          escalated: false,
+          assigned_nurse: false,
+          assigned_label: ""
+        };
+      }
+      return workflowState[patientId];
+    }
 
     function safe(v, fallback="--"){
       return v === undefined || v === null || v === "" ? fallback : v;
@@ -765,14 +813,6 @@ COMMAND_CENTER_HTML = r"""
       if (s === "critical") return "ecg-red";
       if (s === "high" || s === "moderate") return "ecg-amber";
       return "ecg-green";
-    }
-
-    function severityRank(sev){
-      const s = String(sev || "").toLowerCase();
-      if (s === "critical") return 4;
-      if (s === "high") return 3;
-      if (s === "moderate") return 2;
-      return 1;
     }
 
     function roomToUnit(room){
@@ -813,23 +853,22 @@ COMMAND_CENTER_HTML = r"""
       const vitals = raw.vitals || {};
       const risk = raw.risk || {};
       const room = raw.room || raw.bed || "ICU Bed";
-
       return {
         patient_id: raw.patient_id || "p---",
         name: raw.patient_name || raw.name || "Patient",
         bed: room,
         unit: roomToUnit(room),
-        title:
-          raw.title ||
-          risk.alert_message ||
-          (risk.alert_type ? String(risk.alert_type).replace(/_/g, " ") : "Predictive Risk Monitor"),
+        program: raw.program || "Clinical Monitoring",
+        title: risk.alert_message || "Predictive Risk Monitor",
         heart_rate: raw.heart_rate ?? vitals.heart_rate ?? "--",
         spo2: raw.spo2 ?? vitals.spo2 ?? "--",
         bp_systolic: raw.bp_systolic ?? vitals.systolic_bp ?? "--",
         bp_diastolic: raw.bp_diastolic ?? vitals.diastolic_bp ?? "--",
         risk_score: raw.risk_score ?? risk.risk_score ?? "--",
         status: raw.status || risk.severity || "Stable",
-        story: raw.story || risk.recommended_action || "Predictive monitoring active."
+        story: raw.story || risk.recommended_action || "Predictive monitoring active.",
+        alert_message: risk.alert_message || "Vitals stable",
+        recommended_action: risk.recommended_action || "Continue routine monitoring."
       };
     }
 
@@ -849,12 +888,69 @@ COMMAND_CENTER_HTML = r"""
       return source.filter(p => p.unit === currentUnitFilter);
     }
 
+    function findPatient(patientId){
+      return activePatients.find(p => String(p.patient_id) === String(patientId)) || null;
+    }
+
+    function workflowText(patientId){
+      const record = getWorkflowRecord(patientId);
+      const parts = [];
+      if (record.ack) parts.push("Acknowledged");
+      if (record.escalated) parts.push("Escalated");
+      if (record.assigned_nurse) parts.push(record.assigned_label || "Nurse assigned");
+      return parts.length ? parts.join(" · ") : "No workflow action saved yet.";
+    }
+
+    function openPatientDrawer(patientId){
+      const patient = findPatient(patientId);
+      if (!patient) return;
+      selectedPatientId = patientId;
+
+      document.getElementById("drawerPatientName").textContent = safe(patient.name);
+      document.getElementById("drawerPatientSub").textContent = `${safe(patient.patient_id)} · ${safe(patient.bed)} · ${safe(patient.program)}`;
+      document.getElementById("drawerSummary").textContent = safe(patient.alert_message);
+      document.getElementById("drawerHr").textContent = safe(patient.heart_rate);
+      document.getElementById("drawerSpo2").textContent = safe(patient.spo2);
+      document.getElementById("drawerBp").textContent = `${safe(patient.bp_systolic)}/${safe(patient.bp_diastolic)}`;
+      document.getElementById("drawerRisk").textContent = typeof patient.risk_score === "number" ? patient.risk_score.toFixed(1) : safe(patient.risk_score);
+      document.getElementById("drawerAction").textContent = safe(patient.recommended_action);
+      document.getElementById("drawerWorkflow").textContent = workflowText(patientId);
+
+      document.getElementById("drawerTimeline").innerHTML = `
+        <div class="timeline-item">
+          <div class="timeline-time">Now</div>
+          <div class="timeline-copy">${safe(patient.name)} is currently ${safe(patient.status)} with risk ${typeof patient.risk_score === "number" ? patient.risk_score.toFixed(1) : safe(patient.risk_score)}.</div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-time">-15 min</div>
+          <div class="timeline-copy">Trend drift detected across oxygen saturation and heart rate signals.</div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-time">-30 min</div>
+          <div class="timeline-copy">Predictive model increased deterioration probability before standard threshold alarm.</div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-time">Action</div>
+          <div class="timeline-copy">${safe(patient.recommended_action)}</div>
+        </div>
+      `;
+
+      document.getElementById("patientDrawer").classList.add("open");
+      document.getElementById("drawerOverlay").classList.add("show");
+    }
+
+    function closePatientDrawer(){
+      document.getElementById("patientDrawer").classList.remove("open");
+      document.getElementById("drawerOverlay").classList.remove("show");
+    }
+
     function renderMonitor(patient){
       const status = String(patient.status || "").toLowerCase();
       const ecg = ecgClass(status);
       const path = buildPath(waveformPoints(status === "critical" ? "critical" : status === "high" ? "high" : "stable"));
       const riskText = typeof patient.risk_score === "number" ? patient.risk_score.toFixed(1) : safe(patient.risk_score);
       const pid = safe(patient.patient_id);
+      const record = getWorkflowRecord(pid);
 
       return `
         <div class="monitor">
@@ -866,7 +962,7 @@ COMMAND_CENTER_HTML = r"""
             <div class="status-pill ${statusClass(patient.status)}">${pulseLabel(patient.status)}</div>
           </div>
 
-          <div class="monitor-wave">
+          <div class="monitor-wave" onclick="openPatientDrawer('${pid}')" style="cursor:pointer;">
             <svg viewBox="0 0 640 120" preserveAspectRatio="none" aria-hidden="true">
               <path class="ecg-path ${ecg}" d="${path}"></path>
             </svg>
@@ -892,14 +988,15 @@ COMMAND_CENTER_HTML = r"""
           </div>
 
           <div class="monitor-story">
-            <div class="story-text">${safe(patient.story, "Predictive monitoring active.")}</div>
+            <div class="story-text">${safe(patient.story)}</div>
             <div class="status-pill ${statusClass(patient.status)}">${pid}</div>
           </div>
 
           <div class="monitor-actions">
-            <button class="btn secondary small" onclick="ackPatient('${pid}')">ACK</button>
-            <button class="btn secondary small" onclick="escalatePatient('${pid}')">Escalate</button>
-            <button class="btn secondary small" onclick="assignNurse('${pid}')">Assign Nurse</button>
+            <button class="btn ${record.ack ? 'live-btn' : 'secondary'} small" onclick="ackPatient('${pid}')">${record.ack ? 'ACK Saved' : 'ACK'}</button>
+            <button class="btn ${record.escalated ? 'critical-btn' : 'secondary'} small" onclick="escalatePatient('${pid}')">${record.escalated ? 'Escalated' : 'Escalate'}</button>
+            <button class="btn ${record.assigned_nurse ? 'warn-btn' : 'secondary'} small" onclick="assignNurse('${pid}')">${record.assigned_nurse ? 'Assigned' : 'Assign Nurse'}</button>
+            <button class="btn secondary small" onclick="openPatientDrawer('${pid}')">Details</button>
           </div>
         </div>
       `;
@@ -911,10 +1008,10 @@ COMMAND_CENTER_HTML = r"""
       return `
         <div class="alert-item">
           <div>
-            <div class="alert-copy">${safe(alert.text, "Clinical alert surfaced")}</div>
-            <div class="alert-sub">${safe(alert.patient_id, "Patient")} · ${safe(alert.unit, "Unit")} · ${safe(alert.severity, "Stable")}</div>
+            <div class="alert-copy">${safe(alert.text)}</div>
+            <div class="alert-sub">${safe(alert.patient_id)} · ${safe(alert.unit)} · ${safe(alert.severity)}</div>
           </div>
-          <div class="status-pill ${pill}">${safe(alert.severity, "Live")}</div>
+          <div class="status-pill ${pill}">${safe(alert.severity)}</div>
         </div>
       `;
     }
@@ -923,7 +1020,7 @@ COMMAND_CENTER_HTML = r"""
       const source = filterPatientsByUnit((patients && patients.length ? patients : fallbackPatients))
         .sort((a,b) => Number(b.risk_score || 0) - Number(a.risk_score || 0))
         .slice(0, 4);
-      wall.innerHTML = source.map(renderMonitor).join("");
+      document.getElementById("wall").innerHTML = source.map(renderMonitor).join("");
     }
 
     function renderAlertsList(alerts){
@@ -934,18 +1031,15 @@ COMMAND_CENTER_HTML = r"""
         {patient_id:"p404", severity:"stable", text:"Clinical alert surfaced", unit:"Ward-21"}
       ]).map(normalizeAlert).filter(Boolean).slice(0, 6);
 
-      queue.innerHTML = source.map(renderAlert).join("");
+      document.getElementById("queue").innerHTML = source.map(renderAlert).join("");
     }
 
     function renderTopRiskPatients(patients){
-      const target = document.getElementById("top-risk-list");
-      if (!target) return;
-
       const source = filterPatientsByUnit((patients && patients.length ? patients : fallbackPatients))
         .sort((a,b) => Number(b.risk_score || 0) - Number(a.risk_score || 0))
         .slice(0,4);
 
-      target.innerHTML = source.map(p => `
+      document.getElementById("top-risk-list").innerHTML = source.map(p => `
         <div class="queue-item">
           <div class="queue-copy">
             ${safe(p.name)} · ${safe(p.patient_id)} · Risk ${typeof p.risk_score === "number" ? p.risk_score.toFixed(1) : safe(p.risk_score)}
@@ -956,13 +1050,12 @@ COMMAND_CENTER_HTML = r"""
     }
 
     function renderAIReasoning(patients){
-      const panel = document.getElementById("ai-reasoning-panel");
-      if (!panel) return;
-
       const source = filterPatientsByUnit((patients && patients.length ? patients : fallbackPatients))
         .sort((a,b) => Number(b.risk_score || 0) - Number(a.risk_score || 0));
 
       const top = source[0];
+      const panel = document.getElementById("ai-reasoning-panel");
+
       if (!top) {
         panel.innerHTML = `<div class="why-line">Waiting for patient intelligence stream...</div>`;
         return;
@@ -977,42 +1070,34 @@ COMMAND_CENTER_HTML = r"""
 
     function renderWorkflow(alerts){
       const source = (alerts && alerts.length ? alerts : []).map(normalizeAlert).filter(Boolean);
-      const newCount = source.length;
-      const escalatedCount = escalatedPatients.size;
-      const ackCount = acknowledgedPatients.size;
+      const allRecords = Object.values(workflowState);
+      const ackCount = allRecords.filter(r => r.ack).length;
+      const escalatedCount = allRecords.filter(r => r.escalated).length;
+      const assignedCount = allRecords.filter(r => r.assigned_nurse).length;
 
-      const wfNew = document.getElementById("wf-new");
-      const wfAck = document.getElementById("wf-ack");
-      const wfEsc = document.getElementById("wf-escalated");
-
-      if (wfNew) wfNew.textContent = String(newCount);
-      if (wfAck) wfAck.textContent = String(ackCount);
-      if (wfEsc) wfEsc.textContent = String(escalatedCount);
+      document.getElementById("wf-new").textContent = String(source.length);
+      document.getElementById("wf-ack").textContent = String(ackCount);
+      document.getElementById("wf-escalated").textContent = String(escalatedCount);
+      document.getElementById("wf-assigned").textContent = String(assignedCount);
     }
 
     function renderSystemHealth(patients, alerts){
-      const devices = document.getElementById("health-devices");
-      const streams = document.getElementById("health-streams");
-      const latency = document.getElementById("health-latency");
-      const status = document.getElementById("health-status");
-
       const patientCount = filterPatientsByUnit((patients && patients.length ? patients : fallbackPatients)).length;
       const alertCount = (alerts && alerts.length) ? alerts.length : 0;
 
-      if (devices) devices.textContent = String(patientCount);
-      if (streams) streams.textContent = String(patientCount);
-      if (latency) latency.textContent = alertCount > 0 ? "Low" : "--";
-      if (status) status.textContent = "Operational";
+      document.getElementById("health-devices").textContent = String(patientCount);
+      document.getElementById("health-streams").textContent = String(patientCount);
+      document.getElementById("health-latency").textContent = alertCount > 0 ? "Low" : "--";
+      document.getElementById("health-status").textContent = "Operational";
     }
 
     function renderPatientTimeline(patients){
-      const panel = document.getElementById("patient-timeline");
-      if (!panel) return;
-
       const source = filterPatientsByUnit((patients && patients.length ? patients : fallbackPatients))
         .sort((a,b) => Number(b.risk_score || 0) - Number(a.risk_score || 0));
 
       const top = source[0];
+      const panel = document.getElementById("patient-timeline");
+
       if (!top) {
         panel.innerHTML = `
           <div class="timeline-item">
@@ -1038,9 +1123,35 @@ COMMAND_CENTER_HTML = r"""
         </div>
         <div class="timeline-item">
           <div class="timeline-time">Action</div>
-          <div class="timeline-copy">${safe(top.story)}</div>
+          <div class="timeline-copy">${safe(top.recommended_action)}</div>
         </div>
       `;
+    }
+
+    function renderAuditLog(){
+      const target = document.getElementById("audit-log");
+      if (!auditLog.length){
+        target.innerHTML = `
+          <div class="audit-item">
+            <div>
+              <div class="audit-copy">System initialized</div>
+              <div class="audit-sub">Awaiting user actions</div>
+            </div>
+            <div class="status-pill info">Log</div>
+          </div>
+        `;
+        return;
+      }
+
+      target.innerHTML = auditLog.slice(0, 8).map(entry => `
+        <div class="audit-item">
+          <div>
+            <div class="audit-copy">${safe(entry.message)}</div>
+            <div class="audit-sub">${safe(entry.patient_id)} · ${safe(entry.at)}</div>
+          </div>
+          <div class="status-pill info">${safe(entry.type)}</div>
+        </div>
+      `).join("");
     }
 
     function updateSummary(patients, alerts){
@@ -1053,61 +1164,41 @@ COMMAND_CENTER_HTML = r"""
         ? (sourcePatients.reduce((n, p) => n + Number(p.risk_score || 0), 0) / sourcePatients.length)
         : 0;
 
-      const openNode = document.getElementById("open-alerts");
-      const criticalNode = document.getElementById("critical-alerts");
-      const avgNode = document.getElementById("avg-risk");
-      const unitNode = document.getElementById("unit-count");
-
-      if (openNode) openNode.textContent = String(openAlerts);
-      if (criticalNode) criticalNode.textContent = String(criticalAlerts);
-      if (avgNode) avgNode.textContent = avgRisk.toFixed(1);
-      if (unitNode) unitNode.textContent = unitLabel(currentUnitFilter);
+      document.getElementById("open-alerts").textContent = String(openAlerts);
+      document.getElementById("critical-alerts").textContent = String(criticalAlerts);
+      document.getElementById("avg-risk").textContent = avgRisk.toFixed(1);
+      document.getElementById("unit-count").textContent = unitLabel(currentUnitFilter);
     }
 
     function ackPatient(patientId){
-      acknowledgedPatients.add(String(patientId));
-      renderWorkflow(activeAlerts);
+      const record = getWorkflowRecord(patientId);
+      record.ack = true;
+      saveWorkflowState();
+      addAuditEntry("ACK", patientId, `Alert acknowledged for ${patientId}`);
+      rerenderAll();
+      if (selectedPatientId === patientId) openPatientDrawer(patientId);
     }
 
     function escalatePatient(patientId){
-      escalatedPatients.add(String(patientId));
-      renderWorkflow(activeAlerts);
+      const record = getWorkflowRecord(patientId);
+      record.escalated = true;
+      saveWorkflowState();
+      addAuditEntry("Escalate", patientId, `Patient escalated for urgent clinical review: ${patientId}`);
+      rerenderAll();
+      if (selectedPatientId === patientId) openPatientDrawer(patientId);
     }
 
     function assignNurse(patientId){
-      assignedPatients.add(String(patientId));
-      const panel = document.getElementById("ai-reasoning-panel");
-      if (panel) {
-        panel.innerHTML += `<div class="why-line">Nurse assigned to ${safe(patientId)} for follow-up.</div>`;
-      }
-      renderWorkflow(activeAlerts);
+      const record = getWorkflowRecord(patientId);
+      record.assigned_nurse = true;
+      record.assigned_label = "Nurse assigned";
+      saveWorkflowState();
+      addAuditEntry("Assign", patientId, `Nurse assigned to patient workflow: ${patientId}`);
+      rerenderAll();
+      if (selectedPatientId === patientId) openPatientDrawer(patientId);
     }
 
-    function applyPayload(payload){
-      if (payload && Array.isArray(payload.patients)) {
-        activePatients = payload.patients.map(normalizePatient).filter(Boolean);
-        activeAlerts = (payload.alerts || []).map(normalizeAlert).filter(Boolean);
-
-        renderPatients(activePatients);
-        renderAlertsList(activeAlerts);
-        updateSummary(activePatients, activeAlerts);
-        renderTopRiskPatients(activePatients);
-        renderAIReasoning(activePatients);
-        renderWorkflow(activeAlerts);
-        renderSystemHealth(activePatients, activeAlerts);
-        renderPatientTimeline(activePatients);
-        return;
-      }
-
-      const fallback = fallbackPatients.map(normalizePatient).filter(Boolean);
-      activePatients = fallback;
-      activeAlerts = [
-        {patient_id:"p101", severity:"critical", text:"Clinical alert surfaced", unit:"ICU-12"},
-        {patient_id:"p202", severity:"high", text:"Clinical alert surfaced", unit:"Stepdown-04"},
-        {patient_id:"p303", severity:"high", text:"Clinical alert surfaced", unit:"Telemetry-09"},
-        {patient_id:"p404", severity:"stable", text:"Clinical alert surfaced", unit:"Ward-21"}
-      ];
-
+    function rerenderAll(){
       renderPatients(activePatients);
       renderAlertsList(activeAlerts);
       updateSummary(activePatients, activeAlerts);
@@ -1116,6 +1207,23 @@ COMMAND_CENTER_HTML = r"""
       renderWorkflow(activeAlerts);
       renderSystemHealth(activePatients, activeAlerts);
       renderPatientTimeline(activePatients);
+      renderAuditLog();
+    }
+
+    function applyPayload(payload){
+      if (payload && Array.isArray(payload.patients)) {
+        activePatients = payload.patients.map(normalizePatient).filter(Boolean);
+        activeAlerts = (payload.alerts || []).map(normalizeAlert).filter(Boolean);
+      } else {
+        activePatients = fallbackPatients.map(normalizePatient).filter(Boolean);
+        activeAlerts = [
+          {patient_id:"p101", severity:"critical", text:"Clinical alert surfaced", unit:"ICU-12"},
+          {patient_id:"p202", severity:"high", text:"Clinical alert surfaced", unit:"Stepdown-04"},
+          {patient_id:"p303", severity:"high", text:"Clinical alert surfaced", unit:"Telemetry-09"},
+          {patient_id:"p404", severity:"stable", text:"Clinical alert surfaced", unit:"Ward-21"}
+        ];
+      }
+      rerenderAll();
     }
 
     async function refreshFallback(){
@@ -1133,12 +1241,14 @@ COMMAND_CENTER_HTML = r"""
       }
     }
 
-    unitFilter.addEventListener("change", function(){
+    document.getElementById("unitFilter").addEventListener("change", function(){
       currentUnitFilter = this.value;
-      selectedUnitPill.textContent = unitLabel(currentUnitFilter);
-      applyPayload({patients: activePatients, alerts: activeAlerts});
+      document.getElementById("selectedUnitPill").textContent = unitLabel(currentUnitFilter);
+      rerenderAll();
     });
 
+    loadSavedState();
+    renderAuditLog();
     applyPayload({});
     refreshFallback();
     setInterval(refreshFallback, 5000);
