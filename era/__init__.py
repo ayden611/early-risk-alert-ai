@@ -1309,6 +1309,175 @@ COMMAND_CENTER_HTML = r"""
 }
 </style>
 
+<section class="who-section">
+  <div class="who-card">
+
+    <div class="who-kicker">Who this platform serves</div>
+
+    <h2>Who This Is For</h2>
+
+    <p class="who-lead">
+      Early Risk Alert AI is designed for multiple healthcare and business audiences,
+      giving each stakeholder a clear view of value, workflow impact, and platform relevance.
+    </p>
+
+    <div class="who-grid">
+
+      <div class="who-box">
+        <div class="who-icon">🏥</div>
+        <h3>Hospitals</h3>
+        <p>
+          Built for hospitals that need earlier deterioration visibility, stronger monitoring workflows,
+          and clearer command-center prioritization across patient populations.
+        </p>
+      </div>
+
+      <div class="who-box">
+        <div class="who-icon">🩺</div>
+        <h3>Clinics</h3>
+        <p>
+          Helps outpatient and specialty clinics strengthen patient oversight, identify rising-risk trends,
+          and improve escalation awareness in monitored care settings.
+        </p>
+      </div>
+
+      <div class="who-box">
+        <div class="who-icon">📡</div>
+        <h3>RPM Providers</h3>
+        <p>
+          Supports remote patient monitoring programs by surfacing early warning patterns before patients
+          cross critical alert thresholds.
+        </p>
+      </div>
+
+      <div class="who-box">
+        <div class="who-icon">💼</div>
+        <h3>Executives & Operators</h3>
+        <p>
+          Gives leadership teams a polished operational view of alert pressure, monitoring visibility,
+          workflow readiness, and enterprise value.
+        </p>
+      </div>
+
+      <div class="who-box">
+        <div class="who-icon">📈</div>
+        <h3>Investors</h3>
+        <p>
+          Presents a healthcare AI platform with hospital relevance, command-center presentation,
+          live workflow storytelling, and scalable enterprise SaaS positioning.
+        </p>
+      </div>
+
+      <div class="who-box">
+        <div class="who-icon">🧠</div>
+        <h3>Care Teams</h3>
+        <p>
+          Helps nurses, respiratory teams, and clinicians identify which patients may need earlier
+          intervention and closer follow-up attention.
+        </p>
+      </div>
+
+    </div>
+
+  </div>
+</section>
+
+<style>
+.who-section{
+  max-width:1460px;
+  margin:0 auto 70px;
+  padding:0 16px;
+}
+
+.who-card{
+  background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015));
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:26px;
+  padding:28px;
+  box-shadow:0 20px 60px rgba(0,0,0,.34);
+}
+
+.who-kicker{
+  font-size:11px;
+  font-weight:900;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  color:#9adfff;
+  margin-bottom:10px;
+}
+
+.who-card h2{
+  margin:0 0 12px;
+  font-size:40px;
+  font-weight:1000;
+  letter-spacing:-.04em;
+  line-height:1.05;
+}
+
+.who-lead{
+  margin:0 0 24px;
+  font-size:16px;
+  line-height:1.7;
+  color:#cfe0f4;
+  max-width:920px;
+}
+
+.who-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:16px;
+}
+
+.who-box{
+  border:1px solid rgba(255,255,255,.07);
+  border-radius:20px;
+  padding:20px;
+  background:rgba(255,255,255,.03);
+  transition:transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+}
+
+.who-box:hover{
+  transform:translateY(-2px);
+  border-color:rgba(122,162,255,.24);
+  box-shadow:0 12px 28px rgba(0,0,0,.18);
+}
+
+.who-icon{
+  font-size:28px;
+  margin-bottom:12px;
+}
+
+.who-box h3{
+  margin:0 0 10px;
+  font-size:20px;
+  font-weight:900;
+  letter-spacing:-.02em;
+}
+
+.who-box p{
+  margin:0;
+  font-size:14px;
+  line-height:1.65;
+  color:#c7d7ef;
+}
+
+@media(max-width:1100px){
+  .who-grid{
+    grid-template-columns:1fr 1fr;
+  }
+}
+
+@media(max-width:760px){
+  .who-grid{
+    grid-template-columns:1fr;
+  }
+
+  .who-card h2{
+    font-size:32px;
+  }
+}
+</style>
+
   <section class="use-case-section">
   <div class="use-case-card">
 
