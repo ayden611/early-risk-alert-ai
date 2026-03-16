@@ -1968,45 +1968,23 @@ if (avgNode){
       const source = alerts && alerts.length ? alerts : fallbackAlerts;
       queue.innerHTML = source.slice(0, 6).map(renderAlert).join("");
     }
+function applyPayload(payload){
 
-    function applyPayload(payload){
-
-  // store latest payload
+  // store latest snapshot
   window.latestSnapshot = payload;
 
-  if (payload && Array.isArray(payload.patients)) {
-    renderPatients(payload.patients);
-    renderAlerts(payload.alerts || []);
-    updateSummary(payload.patients, payload.alerts || []);
-    return;
-  }
+  const patients = payload && payload.patients ? payload.patients : [];
+  const alerts = payload && payload.alerts ? payload.alerts : [];
 
-  if (Array.isArray(payload)) {
-    renderPatients(payload);
-    renderAlerts([]);
-    updateSummary(payload, []);
-    return;
-  }
-
-  if (payload && (payload.patient_id || payload.heart_rate || payload.risk_score)) {
-    const arr = [payload];
-    const alerts = [{
-      patient_id: payload.patient_id || "Patient",
-      severity: payload.status || "Stable",
-      text: payload.alert_text || "Predictive clinical alert surfaced",
-      unit: payload.unit || "ICU"
-    }];
-
-    renderPatients(arr);
+  if (patients.length > 0){
+    renderPatients(patients);
     renderAlerts(alerts);
-    updateSummary(arr, alerts);
-    return;
+    updateSummary(patients, alerts);
+  } else {
+    renderPatients(fallbackPatients);
+    renderAlerts(fallbackAlerts);
+    updateSummary(fallbackPatients, fallbackAlerts);
   }
-
-  // fallback if nothing valid arrives
-  renderPatients(fallbackPatients);
-  renderAlerts(fallbackAlerts);
-  updateSummary(fallbackPatients, fallbackAlerts);
 }
 
     async function refreshFallback(){
