@@ -1109,6 +1109,285 @@ COMMAND_CENTER_HTML = r"""
     </section>
   </div>
 
+  <section class="use-case-section">
+  <div class="use-case-card">
+
+    <div class="use-case-kicker">Clinical Use Case Scenario</div>
+
+    <h2>Early Detection of Respiratory Deterioration</h2>
+
+    <p class="use-case-lead">
+      Early Risk Alert AI enables care teams to detect respiratory decline sooner by identifying subtle warning
+      patterns before traditional hospital alarm thresholds are reached.
+    </p>
+
+    <div class="use-case-body">
+
+      <p>
+        A patient is admitted with moderate respiratory risk and placed under standard monitoring.
+        Continuous vital signals are collected including oxygen saturation, heart rate,
+        respiratory rate, and blood pressure.
+      </p>
+
+      <p>
+        Early Risk Alert AI analyzes these signals in real time using predictive risk models.
+        The platform detects subtle deterioration patterns in oxygen saturation trends and
+        respiratory variability that may not yet trigger standard hospital alarms.
+      </p>
+
+      <p>
+        The system generates an early risk alert indicating an increasing probability of
+        respiratory deterioration within the next monitoring window. Clinical staff receive
+        the alert through the command center dashboard, providing earlier visibility into
+        patient risk.
+      </p>
+
+      <p>
+        Care teams can intervene sooner by adjusting oxygen support, increasing monitoring
+        intensity, and reassessing the patient before the condition reaches a critical
+        escalation threshold.
+      </p>
+
+    </div>
+
+    <div class="use-case-results">
+
+      <div class="result-box">
+        Earlier intervention
+      </div>
+
+      <div class="result-box">
+        Reduced escalation risk
+      </div>
+
+      <div class="result-box">
+        Improved patient monitoring visibility
+      </div>
+
+    </div>
+
+  </div>
+</section>
+
+<style>
+
+.use-case-section{
+max-width:1460px;
+margin:40px auto;
+padding:0 16px;
+}
+
+.use-case-card{
+background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015));
+border:1px solid rgba(255,255,255,.08);
+border-radius:26px;
+padding:28px;
+box-shadow:0 20px 60px rgba(0,0,0,.34);
+}
+
+.use-case-kicker{
+font-size:11px;
+font-weight:900;
+letter-spacing:.16em;
+text-transform:uppercase;
+color:#9adfff;
+margin-bottom:10px;
+}
+
+.use-case-card h2{
+margin:0 0 12px;
+font-size:40px;
+font-weight:1000;
+letter-spacing:-.04em;
+}
+
+.use-case-lead{
+margin-bottom:18px;
+font-size:16px;
+line-height:1.7;
+color:#cfe0f4;
+max-width:820px;
+}
+
+.use-case-body{
+display:grid;
+gap:14px;
+}
+
+.use-case-body p{
+margin:0;
+font-size:15px;
+line-height:1.75;
+color:#c7d7ef;
+}
+
+.use-case-results{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:14px;
+margin-top:24px;
+}
+
+.result-box{
+border:1px solid rgba(255,255,255,.07);
+border-radius:18px;
+padding:16px;
+background:rgba(255,255,255,.03);
+font-weight:900;
+text-align:center;
+color:#eef4ff;
+}
+
+@media(max-width:900px){
+.use-case-results{
+grid-template-columns:1fr;
+}
+}
+
+</style>
+
+<section class="ai-explain-section">
+  <div class="ai-explain-card">
+
+    <div class="ai-explain-kicker">AI Intelligence Layer</div>
+
+    <h2>How Early Risk Alert AI Works</h2>
+
+    <p class="ai-explain-lead">
+      Early Risk Alert AI continuously analyzes patient vital signals using predictive models
+      designed to detect deterioration patterns earlier than traditional monitoring systems.
+    </p>
+
+    <div class="ai-process-grid">
+
+      <div class="ai-step">
+        <div class="ai-step-number">1</div>
+        <h3>Signal Collection</h3>
+        <p>
+          Continuous vital signals including oxygen saturation, heart rate, respiratory rate,
+          and blood pressure are collected from patient monitoring systems.
+        </p>
+      </div>
+
+      <div class="ai-step">
+        <div class="ai-step-number">2</div>
+        <h3>Pattern Analysis</h3>
+        <p>
+          The AI analyzes signal variability, trend drift, and subtle physiological patterns
+          that may indicate early clinical deterioration.
+        </p>
+      </div>
+
+      <div class="ai-step">
+        <div class="ai-step-number">3</div>
+        <h3>Risk Prediction</h3>
+        <p>
+          Predictive models calculate dynamic risk scores and estimate the probability of
+          deterioration within upcoming monitoring windows.
+        </p>
+      </div>
+
+      <div class="ai-step">
+        <div class="ai-step-number">4</div>
+        <h3>Clinical Alert</h3>
+        <p>
+          When risk thresholds increase, the platform generates an early alert visible
+          in the command center dashboard for rapid clinical response.
+        </p>
+      </div>
+
+    </div>
+
+  </div>
+</section>
+
+<style>
+
+.ai-explain-section{
+max-width:1460px;
+margin:40px auto;
+padding:0 16px 60px;
+}
+
+.ai-explain-card{
+background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015));
+border:1px solid rgba(255,255,255,.08);
+border-radius:26px;
+padding:28px;
+box-shadow:0 20px 60px rgba(0,0,0,.34);
+}
+
+.ai-explain-kicker{
+font-size:11px;
+font-weight:900;
+letter-spacing:.16em;
+text-transform:uppercase;
+color:#9adfff;
+margin-bottom:10px;
+}
+
+.ai-explain-card h2{
+margin:0 0 12px;
+font-size:40px;
+font-weight:1000;
+letter-spacing:-.04em;
+}
+
+.ai-explain-lead{
+margin-bottom:24px;
+font-size:16px;
+line-height:1.7;
+color:#cfe0f4;
+max-width:900px;
+}
+
+.ai-process-grid{
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:16px;
+}
+
+.ai-step{
+border:1px solid rgba(255,255,255,.07);
+border-radius:18px;
+padding:18px;
+background:rgba(255,255,255,.03);
+}
+
+.ai-step-number{
+font-size:24px;
+font-weight:1000;
+margin-bottom:10px;
+color:#7aa2ff;
+}
+
+.ai-step h3{
+margin:0 0 8px;
+font-size:18px;
+font-weight:900;
+}
+
+.ai-step p{
+margin:0;
+font-size:14px;
+line-height:1.6;
+color:#c7d7ef;
+}
+
+@media(max-width:1000px){
+.ai-process-grid{
+grid-template-columns:1fr 1fr;
+}
+}
+
+@media(max-width:700px){
+.ai-process-grid{
+grid-template-columns:1fr;
+}
+}
+
+</style>
+
   <script>
     const fallbackPatients = [
       {
