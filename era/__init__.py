@@ -2024,39 +2024,60 @@ function renderMonitor(patient) {
     if (avgNode) avgNode.textContent = avgRisk.toFixed(1);
   }
 
-  function applyPayload(payload) {
-    if (payload && Array.isArray(payload.patients)) {
-      renderPatients(payload.patients);
-      renderAlertsList(payload.alerts || []);
-      updateSummary(payload.patients, payload.alerts || []);
-      return;
-    }
-
-    if (Array.isArray(payload)) {
-      renderPatients(payload);
-      renderAlertsList([]);
-      updateSummary(payload, []);
-      return;
-    }
-
-    if (payload && (payload.patient_id || payload.vitals || payload.risk)) {
-      const onePatient = [payload];
-      const oneAlert = payload.risk ? [{
-        patient_id: payload.patient_id || "Patient",
-        severity: payload.risk.severity || "Stable",
-        text: payload.risk.alert_message || "Clinical alert surfaced",
-        unit: payload.room || "Unit"
-      }] : [];
-      renderPatients(onePatient);
-      renderAlertsList(oneAlert);
-      updateSummary(onePatient, oneAlert);
-      return;
-    }
-
-    renderPatients([]);
-    renderAlertsList([]);
-    updateSummary([], []);
+  ffunction applyPayload(payload){
+  if (payload && Array.isArray(payload.patients)) {
+    renderPatients(payload.patients);
+    renderAlertsList(payload.alerts || []);
+    updateSummary(payload.patients, payload.alerts || []);
+    renderTopRiskPatients(payload.patients);
+    renderAIReasoning(payload.patients);
+    renderWorkflow(payload.alerts || []);
+    renderSystemHealth(payload.patients, payload.alerts || []);
+    renderStaffingLoad(payload.patients, payload.alerts || []);
+    return;
   }
+
+  if (Array.isArray(payload)) {
+    renderPatients(payload);
+    renderAlertsList([]);
+    updateSummary(payload, []);
+    renderTopRiskPatients(payload);
+    renderAIReasoning(payload);
+    renderWorkflow([]);
+    renderSystemHealth(payload, []);
+    renderStaffingLoad(payload, []);
+    return;
+  }
+
+  if (payload && (payload.patient_id || payload.vitals || payload.risk)) {
+    const onePatient = [payload];
+    const oneAlert = payload.risk ? [{
+      patient_id: payload.patient_id || "Patient",
+      severity: payload.risk.severity || "Stable",
+      text: payload.risk.alert_message || "Clinical alert surfaced",
+      unit: payload.room || "Unit"
+    }] : [];
+
+    renderPatients(onePatient);
+    renderAlertsList(oneAlert);
+    updateSummary(onePatient, oneAlert);
+    renderTopRiskPatients(onePatient);
+    renderAIReasoning(onePatient);
+    renderWorkflow(oneAlert);
+    renderSystemHealth(onePatient, oneAlert);
+    renderStaffingLoad(onePatient, oneAlert);
+    return;
+  }
+
+  renderPatients([]);
+  renderAlertsList([]);
+  updateSummary([], []);
+  renderTopRiskPatients([]);
+  renderAIReasoning([]);
+  renderWorkflow([]);
+  renderSystemHealth([], []);
+  renderStaffingLoad([], []);
+}
 
   async function refreshFallback() {
     try {
