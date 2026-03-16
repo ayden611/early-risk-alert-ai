@@ -1118,6 +1118,83 @@ COMMAND_CENTER_HTML = r"""
     </section>
   </div>
 
+  <div id="unit-filter-mount"></div>
+
+<div class="intel-card">
+  <h3>Top Risk Patients</h3>
+  <div class="queue-list" id="top-risk-list"></div>
+</div>
+
+<div class="intel-card">
+  <h3>AI Clinical Reasoning</h3>
+  <div class="why-now" id="ai-reasoning-panel">
+    <div class="why-line">Waiting for patient intelligence stream...</div>
+  </div>
+</div>
+
+<div class="intel-card">
+  <h3>Clinical Workflow</h3>
+  <div class="queue-list" id="workflow-panel">
+    <div class="queue-item">
+      <div class="queue-copy">New Alerts <strong id="wf-new">0</strong></div>
+      <div class="status-pill watch">Open</div>
+    </div>
+    <div class="queue-item">
+      <div class="queue-copy">Acknowledged <strong id="wf-ack">0</strong></div>
+      <div class="status-pill live">Tracked</div>
+    </div>
+    <div class="queue-item">
+      <div class="queue-copy">Escalated <strong id="wf-esc">0</strong></div>
+      <div class="status-pill critical">Priority</div>
+    </div>
+  </div>
+</div>
+
+<div class="intel-card">
+  <h3>System Health</h3>
+  <div class="queue-list">
+    <div class="queue-item">
+      <div class="queue-copy">Telemetry Devices Connected</div>
+      <div class="status-pill live" id="health-devices">--</div>
+    </div>
+    <div class="queue-item">
+      <div class="queue-copy">Active Patient Streams</div>
+      <div class="status-pill live" id="health-streams">--</div>
+    </div>
+    <div class="queue-item">
+      <div class="queue-copy">Data Latency</div>
+      <div class="status-pill watch" id="health-latency">--</div>
+    </div>
+    <div class="queue-item">
+      <div class="queue-copy">System Status</div>
+      <div class="status-pill live" id="health-status">Operational</div>
+    </div>
+  </div>
+</div>
+
+<div class="intel-card">
+  <h3>Staffing Load</h3>
+  <div class="queue-list" id="staffing-panel">
+    <div class="queue-item">
+      <div class="queue-copy">Open Alerts</div>
+      <div class="status-pill watch" id="staff-open-alerts">0</div>
+    </div>
+    <div class="queue-item">
+      <div class="queue-copy">Critical Patients</div>
+      <div class="status-pill critical" id="staff-critical-patients">0</div>
+    </div>
+    <div class="queue-item">
+      <div class="queue-copy">Response Load</div>
+      <div class="status-pill live" id="staff-response-load">Stable</div>
+    </div>
+  </div>
+</div>
+
+<div class="intel-card">
+  <h3>Audit Trail</h3>
+  <div class="queue-list" id="audit-panel"></div>
+</div>
+
   <section class="roi-section">
   <div class="roi-card">
 
