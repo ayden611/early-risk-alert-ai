@@ -1626,6 +1626,7 @@ const fallbackPatients = [
   ];
 
 const wall = document.getElementById("wall");
+let activeUnitFilter = "all";
 const queue = document.getElementById("queue");
 const topRiskList = document.getElementById("top-risk-list");
 const aiReasoningPanel = document.getElementById("ai-reasoning-panel");
@@ -1684,6 +1685,7 @@ function normalizePatient(raw) {
     patient_id: raw.patient_id || "p---",
     name: raw.patient_name || raw.name || "Patient",
     bed: raw.room || raw.bed || "ICU Bed",
+    unit: String(raw.unit || raw.program || raw.room || "icu").toLowerCase(),
     title:
       raw.title ||
       risk.alert_message ||
@@ -1875,11 +1877,23 @@ function renderAlert(alert){
 }
 
 function renderPatients(patients){
-  let source = (patients && patients.length) ? patients.map(normalizePatient).filter(Boolean) : fallbackPatients;
-  if (selectedUnit !== "all") {
-    source = source.filter(p => safe(p.unit) === selectedUnit || safe(p.bed) === selectedUnit);
+  const source = patients && patients.length ? patients : fallbackPatients;
+  const normalized = source.map(normalizePatient).filter(Boolean);
+
+  const filtered = activeUnitFilter === "all"
+    ? normalized
+    : normalized.filter(p => String(p.unit || "").toLowerCase().includes(activeUnitFilter));
+
+  wall.innerHTML = filtered.slice(0, 8).map(renderMonitor).join("");
+
+  if (!filtered.length) {
+    wall.innerHTML = `
+      <div class="intel-card" style="grid-column:1/-1;">
+        <h3>No monitors in this unit</h3>
+        <div class="intel-note">No live patients matched the selected hospital unit filter.</div>
+      </div>
+    `;
   }
-  wall.innerHTML = source.slice(0, 4).map(renderMonitor).join("");
 }
 
 function renderAlertsList(alerts){
