@@ -232,6 +232,7 @@ COMMAND_CENTER_HTML = r"""
     .status-pill.live{color:#0b1528;background:linear-gradient(135deg,var(--green),#7ef5c0);box-shadow:0 0 24px rgba(58,211,143,.18)}
     .status-pill.watch{color:#2a1b00;background:linear-gradient(135deg,var(--amber),#ffdba5)}
     .status-pill.critical{color:#fff3f5;background:linear-gradient(135deg,#ff667d,#ff8e99)}
+    
 
     .cockpit-grid{
       margin-top:20px;
@@ -239,6 +240,23 @@ COMMAND_CENTER_HTML = r"""
       grid-template-columns:1.75fr 1.05fr;
       gap:18px;
       align-items:start;
+    }
+
+    .risk-actions{
+      display:flex;
+      gap:10px;
+      margin-top:10px;
+    }
+
+    .risk-btn{
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.03);
+      color:#eef4ff;
+      padding:8px 12px;
+      border-radius:8px;
+      font-size:12px;
+      font-weight:800;
+      cursor:pointer;
     }
 
     .telemetry-wall,
@@ -788,6 +806,11 @@ COMMAND_CENTER_HTML = r"""
   <div class="intel-card">
     <h3>Top Risk Patients</h3>
     <div class="queue-list" id="top-risk-list"></div>
+
+<div class="risk-actions">
+  <button class="risk-btn ack-risk">Acknowledge</button>
+  <button class="risk-btn escalate-risk">Escalate Case</button>
+</div>
   </div>
 
   <div class="intel-card">
@@ -2171,6 +2194,36 @@ function applyPayload(payload){
     btn.classList.add("active");
     activeUnitFilter = btn.dataset.unit || "all";
     refreshFallback();
+  });
+});
+
+document.querySelectorAll(".alert-action.ack").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    console.log("Alert acknowledged");
+  });
+});
+
+document.querySelectorAll(".alert-action.escalate").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    console.log("Alert escalated to critical care team");
+  });
+});
+
+document.querySelectorAll(".alert-action.assign").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    console.log("Nurse assigned to patient case");
+  });
+});
+
+document.querySelectorAll(".risk-btn.ack-risk").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    console.log("Top risk patient acknowledged");
+  });
+});
+
+document.querySelectorAll(".risk-btn.escalate-risk").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    console.log("Risk escalation initiated");
   });
 });
 
