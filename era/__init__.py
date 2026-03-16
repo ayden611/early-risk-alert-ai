@@ -1762,7 +1762,7 @@ grid-template-columns:1fr;
 
 </style>
 
-  <script><script>
+  <script>
   const fallbackPatients = [
     {
       patient_id: "p101",
