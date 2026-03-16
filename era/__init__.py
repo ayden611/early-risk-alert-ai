@@ -1960,10 +1960,37 @@ if (avgNode){
 }
 
     function renderPatients(patients){
-      const source = patients && patients.length ? patients : fallbackPatients;
-      wall.innerHTML = source.slice(0, 4).map(renderMonitor).join("");
+  const source = patients && patients.length ? patients : fallbackPatients;
+
+  const normalized = source.slice(0, 4).map((patient) => {
+    // already-flat fallback/demo cards
+    if (patient.name || patient.bed || patient.heart_rate || patient.bp_systolic) {
+      return patient;
     }
 
+    // API-shaped patients from /api/v1/live-snapshot
+    const vitals = patient.vitals || {};
+    const risk = patient.risk || {};
+
+    return {
+      patient_id: patient.patient_id || "p---",
+      name: patient.patient_name || patient.name || "Patient",
+      bed: patient.room || patient.bed || "ICU Bed",
+      title: patient.patient_name || patient.title || "Telemetry Monitor",
+      heart_rate: vitals.heart_rate ?? patient.heart_rate ?? "--",
+      spo2: vitals.spo2 ?? patient.spo2 ?? "--",
+      bp_systolic: vitals.systolic_bp ?? patient.bp_systolic ?? "--",
+      bp_diastolic: vitals.diastolic_bp ?? patient.bp_diastolic ?? "--",
+      risk_score: risk.risk_score ?? patient.risk_score ?? "--",
+      status: risk.severity
+        ? risk.severity.charAt(0).toUpperCase() + risk.severity.slice(1)
+        : (patient.status || "Stable"),
+      story: risk.recommended_action || patient.story || "Predictive monitoring active."
+    };
+  });
+
+  wall.innerHTML = normalized.map(renderMonitor).join("");
+}
     function renderAlerts(alerts){
       const source = alerts && alerts.length ? alerts : fallbackAlerts;
       queue.innerHTML = source.slice(0, 6).map(renderAlert).join("");
