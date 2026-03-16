@@ -2218,22 +2218,22 @@ def create_app() -> Flask:
     @app.post("/api/workflow/action")
     def workflow_action():
 
-    if not session.get("logged_in"):
+        if not session.get("logged_in"):
         return jsonify({"ok": False, "error": "login required"}), 401
 
-    payload = request.get_json() or {}
+        payload = request.get_json() or {}
 
-    patient_id = str(payload.get("patient_id", "")).strip()
-    action = str(payload.get("action", "")).strip().lower()
-    role = _current_role()
+        patient_id = str(payload.get("patient_id", "")).strip()
+        action = str(payload.get("action", "")).strip().lower()
+        role = _current_role()
 
-    if not patient_id:
+        if not patient_id:
         return jsonify({"ok": False, "error": "patient_id required"}), 400
 
-    store = _load_workflow()
-    record = _get_record(store, patient_id)
+        store = _load_workflow()
+        record = _get_record(store, patient_id)
 
-    if action == "ack":
+        if action == "ack":
         if not _has_permission("ack"):
             return jsonify({"ok": False, "error": "permission denied"}), 403
         record["ack"] = True
