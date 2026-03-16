@@ -2194,28 +2194,28 @@ def create_app() -> Flask:
         })
 
     @app.get("/api/v1/live-snapshot")
-def live_snapshot():
-    snapshot = _simulated_snapshot()
-    tenant_id = request.args.get("tenant_id", "demo")
-    patient_id = request.args.get("patient_id", "p101")
+    def live_snapshot():
+        snapshot = _simulated_snapshot()
+        tenant_id = request.args.get("tenant_id", "demo")
+        patient_id = request.args.get("patient_id", "p101")
 
-    patients = snapshot.get("patients", []) or []
-    alerts = snapshot.get("alerts", []) or []
-    summary = snapshot.get("summary", {}) or {}
+        patients = snapshot.get("patients", []) or []
+        alerts = snapshot.get("alerts", []) or []
+        summary = snapshot.get("summary", {}) or {}
 
-    focus = next(
-        (p for p in patients if str(p.get("patient_id")) == str(patient_id)),
-        patients[0] if patients else None
-    )
+        focus = next(
+            (p for p in patients if str(p.get("patient_id")) == str(patient_id)),
+            patients[0] if patients else None
+        )
 
-    if not summary:
-        risk_values = []
-        critical_alerts = 0
+        if not summary:
+            risk_values = []
+            critical_alerts = 0
 
-        for p in patients:
-            risk = p.get("risk", {}) or {}
-            risk_score = risk.get("risk_score", 0)
-            severity = str(risk.get("severity", "")).lower()
+            for p in patients:
+                risk = p.get("risk", {}) or {}
+                risk_score = risk.get("risk_score", 0)
+                severity = str(risk.get("severity", "")).lower()
 
             try:
                 risk_values.append(float(risk_score))
@@ -2225,9 +2225,9 @@ def live_snapshot():
             if severity == "critical":
                 critical_alerts += 1
 
-        avg_risk_score = round(sum(risk_values) / len(risk_values), 1) if risk_values else 0.0
+            avg_risk_score = round(sum(risk_values) / len(risk_values), 1) if risk_values else 0.0
 
-        summary = {
+            summary = {
             "patient_count": len(patients),
             "open_alerts": len(alerts),
             "critical_alerts": critical_alerts,
@@ -2235,35 +2235,35 @@ def live_snapshot():
             "patients_with_alerts": len([a for a in alerts if a.get("patient_id")]),
             "focus_patient_id": focus.get("patient_id") if focus else None,
         }
-    else:
-        summary["patient_count"] = len(patients)
-        summary["open_alerts"] = len(alerts)
-        summary["focus_patient_id"] = focus.get("patient_id") if focus else None
+            else:
+            summary["patient_count"] = len(patients)
+            summary["open_alerts"] = len(alerts)
+            summary["focus_patient_id"] = focus.get("patient_id") if focus else None
 
-        if "avg_risk_score" not in summary:
-            risk_values = []
-            for p in patients:
-                risk = p.get("risk", {}) or {}
-                try:
-                    risk_values.append(float(risk.get("risk_score", 0)))
-                except Exception:
-                    pass
-            summary["avg_risk_score"] = round(sum(risk_values) / len(risk_values), 1) if risk_values else 0.0
+            if "avg_risk_score" not in summary:
+                risk_values = []
+                for p in patients:
+                    risk = p.get("risk", {}) or {}
+                    try:
+                        risk_values.append(float(risk.get("risk_score", 0)))
+                    except Exception:
+                        pass
+                summary["avg_risk_score"] = round(sum(risk_values) / len(risk_values), 1) if risk_values else 0.0
 
-        if "critical_alerts" not in summary:
-            summary["critical_alerts"] = sum(
-                1 for p in patients
-                if str((p.get("risk", {}) or {}).get("severity", "")).lower() == "critical"
-            )
+            if "critical_alerts" not in summary:
+                summary["critical_alerts"] = sum(
+                    1 for p in patients
+                    if str((p.get("risk", {}) or {}).get("severity", "")).lower() == "critical"
+          )
 
-    return jsonify({
-        "tenant_id": tenant_id,
-        "generated_at": snapshot.get("generated_at"),
-        "alerts": alerts,
-        "focus_patient": focus,
-        "patients": patients,
-        "summary": summary,
-    })
+            return jsonify({
+                "tenant_id": tenant_id,
+                "generated_at": snapshot.get("generated_at"),
+                "alerts": alerts,
+                "focus_patient": focus,
+                "patients": patients,
+                "summary": summary,
+          })
 
     @app.get("/api/v1/stream/channels")
     def stream_channels():
