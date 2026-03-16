@@ -2121,6 +2121,15 @@ function applyPayload(payload){
     console.warn("EventSource unavailable, fallback polling only.");
   }
 
+  document.querySelectorAll(".unit-filter").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".unit-filter").forEach((b) => b.classList.remove("active"));
+    btn.classList.add("active");
+    activeUnitFilter = btn.dataset.unit || "all";
+    refreshFallback();
+  });
+});
+
   applyPayload({});
   refreshFallback();
   setInterval(refreshFallback, 5000);
