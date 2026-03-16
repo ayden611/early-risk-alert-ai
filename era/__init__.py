@@ -2208,6 +2208,71 @@ def create_app() -> Flask:
             "summary": snapshot["summary"],
         })
 
+    @app.get("/api/v1/command-workflow")
+    def command_workflow():
+        store = _load_command_workflow()
+        return jsonify({
+        "records": store.get("records", {}),
+        "audit_log": store.get("audit_log", []),
+        })
+
+    @app.post("/api/v1/command-workflow/action")
+    def command_workflow_action():
+        payload = request.get_json(silent=True) or {}
+
+        patient_id = str(payload.get("patient_id", "")).strip()
+        action = str(payload.get("action", "")).strip().lower()
+        role = str(payload.get("role", "operator")).strip().lower()
+        note = str(payload.get("note", "")).strip()
+    if not patient_id:
+        return jsonify({"ok": False, "error": "patient_id is required"}), 400
+
+        valid_actions = {"ack", "escalate", "assign_nurse", "clear"}
+        if action not in valid_actions:
+        return jsonify({"ok": False, "error": "invalid action"}), 400
+
+        store = _load_command_workflow()
+        record = _get_workflow_record(store, patient_id)
+
+    if action == "ack":
+        record["ack"] = True
+        record["updated_at"] = _utc_now_iso()
+        record["role"] = role
+        _append_audit_event(store, patient_id, "ACK", role, note or "Alert acknowledged")
+
+    elif action == "escalate":
+        record["escalated"] = True
+        record["updated_at"] = _utc_now_iso()
+        record["role"] = role
+        _append_audit_event(store, patient_id, "ESCALATE", role, note or "Patient escalated")
+
+    elif action == "assign_nurse":
+        record["assigned_nurse"] = True
+        record["assigned_label"] = note or "Nurse assigned"
+        record["updated_at"] = _utc_now_iso()
+        record["role"] = role
+        _append_audit_event(store, patient_id, "ASSIGN_NURSE", role, note or "Nurse assigned")
+
+    elif action == "clear":
+        store["records"][patient_id] = {
+            "ack": False,
+            "escalated": False,
+            "assigned_nurse": False,
+            "assigned_label": "",
+            "role": role,
+            "updated_at": _utc_now_iso(),
+        }
+        _append_audit_event(store, patient_id, "CLEAR", role, note or "Workflow cleared")
+
+    _save_command_workflow(store)
+
+    return jsonify({
+        "ok": True,
+        "patient_id": patient_id,
+        "record": store["records"].get(patient_id, {}),
+        "audit_log": store.get("audit_log", [])[:12],
+    })
+
     @app.get("/api/v1/stream/channels")
     def stream_channels():
         tenant_id = request.args.get("tenant_id", "demo")
