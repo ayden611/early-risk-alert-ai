@@ -14,6 +14,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from pathlib import Path
 from typing import Any
+from era.web.command_center import COMMAND_CENTER_HTML
 
 from flask import Flask, Response, jsonify, render_template_string, request, send_file
 
