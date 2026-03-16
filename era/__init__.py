@@ -2198,72 +2198,15 @@ def create_app() -> Flask:
         snapshot = _simulated_snapshot()
         tenant_id = request.args.get("tenant_id", "demo")
         patient_id = request.args.get("patient_id", "p101")
-
-        patients = snapshot.get("patients", []) or []
-        alerts = snapshot.get("alerts", []) or []
-        summary = snapshot.get("summary", {}) or {}
-
-        focus = next(
-            (p for p in patients if str(p.get("patient_id")) == str(patient_id)),
-            patients[0] if patients else None
-        )
-
-        if not summary:
-            risk_values = []
-            critical_alerts = 0
-
-            for p in patients:
-                risk = p.get("risk", {}) or {}
-                risk_score = risk.get("risk_score", 0)
-                severity = str(risk.get("severity", "")).lower()
-
-            try:
-                risk_values.append(float(risk_score))
-            except Exception:
-                pass
-
-            if severity == "critical":
-                critical_alerts += 1
-
-            avg_risk_score = round(sum(risk_values) / len(risk_values), 1) if risk_values else 0.0
-
-            summary = {
-            "patient_count": len(patients),
-            "open_alerts": len(alerts),
-            "critical_alerts": critical_alerts,
-            "avg_risk_score": avg_risk_score,
-            "patients_with_alerts": len([a for a in alerts if a.get("patient_id")]),
-            "focus_patient_id": focus.get("patient_id") if focus else None,
-        }
-            else:
-            summary["patient_count"] = len(patients)
-            summary["open_alerts"] = len(alerts)
-            summary["focus_patient_id"] = focus.get("patient_id") if focus else None
-
-            if "avg_risk_score" not in summary:
-                risk_values = []
-                for p in patients:
-                    risk = p.get("risk", {}) or {}
-                    try:
-                        risk_values.append(float(risk.get("risk_score", 0)))
-                    except Exception:
-                        pass
-                summary["avg_risk_score"] = round(sum(risk_values) / len(risk_values), 1) if risk_values else 0.0
-
-            if "critical_alerts" not in summary:
-                summary["critical_alerts"] = sum(
-                    1 for p in patients
-                    if str((p.get("risk", {}) or {}).get("severity", "")).lower() == "critical"
-          )
-
-            return jsonify({
-                "tenant_id": tenant_id,
-                "generated_at": snapshot.get("generated_at"),
-                "alerts": alerts,
-                "focus_patient": focus,
-                "patients": patients,
-                "summary": summary,
-          })
+        focus = next((r for r in snapshot["patients"] if r["patient_id"] == patient_id), snapshot["patients"][0] if snapshot["patients"] else {})
+        return jsonify({
+            "tenant_id": tenant_id,
+            "generated_at": snapshot["generated_at"],
+            "alerts": snapshot["alerts"],
+            "focus_patient": focus,
+            "patients": snapshot["patients"],
+            "summary": snapshot["summary"],
+        })
 
     @app.get("/api/v1/stream/channels")
     def stream_channels():
