@@ -1850,7 +1850,7 @@ grid-template-columns:1fr;
       title:
         raw.title ||
         risk.alert_message ||
-        (risk.alert_type ? String(risk.alert_type).replace(/_/g, " ") : "Telemetry Monitor"),
+        (risk.alert_type ? String(risk.alert_type).replace(/_/g, " ") : "Predoctove Risk Monitor"),
       heart_rate: raw.heart_rate ?? vitals.heart_rate ?? "--",
       spo2: raw.spo2 ?? vitals.spo2 ?? "--",
       bp_systolic: raw.bp_systolic ?? vitals.systolic_bp ?? "--",
@@ -1926,7 +1926,7 @@ function renderMonitor(patient) {
       <div class="monitor-top">
         <div>
           <div class="monitor-bed">${safe(patient.bed, "ICU Bed")}</div>
-          <div class="monitor-title">${safe(patient.title, safe(patient.name, "Telemetry Monitor"))}</div>
+          <div class="monitor-title">${safe(patient.title, safe(patient.name, "Clinical Telemetry Monitor"))}</div>
         </div>
         <div class="status-pill ${statusClass(patient.status)}">${pulseLabel(patient.status)}</div>
       </div>
