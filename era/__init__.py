@@ -2299,4 +2299,256 @@ def create_app() -> Flask:
                 time.sleep(2)
         return Response(generate(), mimetype="text/event-stream")
 
+        ```python
+# ============================================================
+# PILOT OPERATIONS BUNDLE
+# Early Risk Alert AI
+# Adds workflow persistence, audit logs, reporting,
+# system health, thresholds, and pilot mode infrastructure
+# ============================================================
+
+import time
+from pathlib import Path
+
+workflow_file = data_dir / "command_center_workflow.json"
+threshold_file = data_dir / "risk_thresholds.json"
+
+# -------------------------------
+# Pilot configuration
+# -------------------------------
+
+PILOT_MODE = True
+
+# -------------------------------
+# Threshold defaults
+# -------------------------------
+
+DEFAULT_THRESHOLDS = {
+    "icu": {"risk_alert": 7.0},
+    "stepdown": {"risk_alert": 6.0},
+    "telemetry": {"risk_alert": 5.0},
+    "ward": {"risk_alert": 4.5},
+    "rpm": {"risk_alert": 4.0}
+}
+
+
+def _load_thresholds():
+    data = _read_json(threshold_file)
+    if not isinstance(data, dict):
+        data = DEFAULT_THRESHOLDS
+    return data
+
+
+def _save_thresholds(data):
+    _write_json(threshold_file, data)
+
+
+# -------------------------------
+# Workflow persistence
+# -------------------------------
+
+def _load_workflow():
+    data = _read_json(workflow_file)
+    if not isinstance(data, dict):
+        data = {"records": {}, "audit_log": []}
+    data.setdefault("records", {})
+    data.setdefault("audit_log", [])
+    return data
+
+
+def _save_workflow(data):
+    _write_json(workflow_file, data)
+
+
+def _get_record(store, patient_id):
+    records = store["records"]
+
+    if patient_id not in records:
+        records[patient_id] = {
+            "state": "new",
+            "ack": False,
+            "assigned": False,
+            "escalated": False,
+            "role": "",
+            "updated_at": ""
+        }
+
+    return records[patient_id]
+
+
+def _audit(store, patient_id, action, role, note=""):
+    log = store["audit_log"]
+
+    log.insert(0, {
+        "id": f"{patient_id}-{int(time.time()*1000)}",
+        "patient_id": patient_id,
+        "action": action,
+        "role": role,
+        "note": note,
+        "timestamp": _utc_now_iso()
+    })
+
+    del log[100:]
+
+
+# -------------------------------
+# Workflow API
+# -------------------------------
+
+@app.get("/api/workflow")
+def get_workflow():
+
+    store = _load_workflow()
+
+    return jsonify({
+        "records": store["records"],
+        "audit_log": store["audit_log"]
+    })
+
+
+@app.post("/api/workflow/action")
+def workflow_action():
+
+    payload = request.get_json() or {}
+
+    patient_id = str(payload.get("patient_id", "")).strip()
+    action = payload.get("action")
+    role = payload.get("role", "operator")
+
+    if not patient_id:
+        return jsonify({"ok": False, "error": "patient_id required"}), 400
+
+    store = _load_workflow()
+
+    record = _get_record(store, patient_id)
+
+    if action == "ack":
+
+        record["ack"] = True
+        record["state"] = "acknowledged"
+
+        _audit(store, patient_id, "ACK", role)
+
+    elif action == "assign":
+
+        record["assigned"] = True
+        record["state"] = "assigned"
+
+        _audit(store, patient_id, "ASSIGN", role)
+
+    elif action == "escalate":
+
+        record["escalated"] = True
+        record["state"] = "escalated"
+
+        _audit(store, patient_id, "ESCALATE", role)
+
+    elif action == "resolve":
+
+        record["state"] = "resolved"
+
+        _audit(store, patient_id, "RESOLVE", role)
+
+    record["updated_at"] = _utc_now_iso()
+    record["role"] = role
+
+    _save_workflow(store)
+
+    return jsonify({
+        "ok": True,
+        "record": record
+    })
+
+
+# -------------------------------
+# Reporting endpoint
+# -------------------------------
+
+@app.get("/api/reporting")
+def reporting():
+
+    store = _load_workflow()
+
+    records = store["records"].values()
+
+    return jsonify({
+
+        "total_patients": len(records),
+
+        "acknowledged":
+            len([r for r in records if r["ack"]]),
+
+        "assigned":
+            len([r for r in records if r["assigned"]]),
+
+        "escalated":
+            len([r for r in records if r["escalated"]]),
+
+        "resolved":
+            len([r for r in records if r["state"] == "resolved"]),
+
+        "audit_events":
+            len(store["audit_log"])
+    })
+
+
+# -------------------------------
+# Export audit log
+# -------------------------------
+
+@app.get("/api/audit/export")
+def export_audit():
+
+    store = _load_workflow()
+
+    return jsonify({
+        "audit_log": store["audit_log"]
+    })
+
+
+# -------------------------------
+# Threshold configuration
+# -------------------------------
+
+@app.get("/api/thresholds")
+def get_thresholds():
+
+    return jsonify(_load_thresholds())
+
+
+@app.post("/api/thresholds")
+def update_thresholds():
+
+    data = request.get_json()
+
+    _save_thresholds(data)
+
+    return jsonify({"ok": True})
+
+
+# -------------------------------
+# System health
+# -------------------------------
+
+@app.get("/api/system-health")
+def system_health():
+
+    snapshot_time = _utc_now_iso()
+
+    return jsonify({
+
+        "status": "operational",
+
+        "pilot_mode": PILOT_MODE,
+
+        "timestamp": snapshot_time,
+
+        "streams": "active",
+
+        "workflow_storage": workflow_file.exists(),
+
+        "thresholds_loaded": True
+
+    })
+
     return app
