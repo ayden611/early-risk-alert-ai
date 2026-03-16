@@ -1036,75 +1036,84 @@ COMMAND_CENTER_HTML = r"""
   <div class="telemetry-wall">
     <div class="monitor-grid" id="wall"></div>
   </div>
+<div class="intel-column">
 
-  <div class="intel-column">
-    <div class="intel-card">
-      <h3>Live Alerts Feed</h3>
-      <div class="alert-feed" id="queue"></div>
+  <div class="intel-card">
+    <h3>Live Alerts Feed</h3>
+    <div class="alert-feed" id="queue"></div>
+  </div>
+
+  <div class="intel-card">
+    <h3>Top Risk Patients</h3>
+    <div class="queue-list" id="top-risk-list"></div>
+  </div>
+
+  <div class="intel-card">
+    <h3>AI Clinical Reasoning</h3>
+    <div class="why-now" id="ai-reasoning-panel">
+      <div class="why-line">Waiting for patient intelligence stream...</div>
     </div>
+  </div>
 
-    <div class="intel-card">
-      <h3>Why this matters now</h3>
-      <div class="why-now">
-        <div class="why-line">Predictive risk surfaced before full clinical collapse.</div>
-        <div class="why-line">Command-center telemetry prioritizes intervention timing.</div>
-        <div class="why-line">Hospital operators can see pressure, escalation, and stability in one wall.</div>
+  <div class="intel-card">
+    <h3>Clinical Workflow</h3>
+    <div class="queue-list" id="workflow-panel">
+      <div class="queue-item">
+        <div class="queue-copy">New Alerts <strong id="wf-new">0</strong></div>
+        <div class="status-pill watch">Open</div>
+      </div>
+      <div class="queue-item">
+        <div class="queue-copy">Acknowledged <strong id="wf-ack">0</strong></div>
+        <div class="status-pill live">Tracked</div>
+      </div>
+      <div class="queue-item">
+        <div class="queue-copy">Escalated <strong id="wf-escalated">0</strong></div>
+        <div class="status-pill critical">Priority</div>
       </div>
     </div>
   </div>
-</div>
 
-      <div class="ops-strip">
-        <div class="ops-card">
-          <h3>Oxygen Trend</h3>
-          <div class="trend-bar"><div class="trend-fill"></div></div>
-          <div class="trend-labels"><span>Stable</span><span>Drift</span><span>Recovery</span></div>
-        </div>
+  <div class="intel-card">
+    <h3>System Health</h3>
+    <div class="queue-list" id="system-health-panel">
+      <div class="queue-item">
+        <div class="queue-copy">Telemetry Devices Connected</div>
+        <div class="status-pill live" id="health-devices">--</div>
+      </div>
+      <div class="queue-item">
+        <div class="queue-copy">Active Patient Streams</div>
+        <div class="status-pill live" id="health-streams">--</div>
+      </div>
+      <div class="queue-item">
+        <div class="queue-copy">Data Latency</div>
+        <div class="status-pill watch" id="health-latency">--</div>
+      </div>
+      <div class="queue-item">
+        <div class="queue-copy">System Status</div>
+        <div class="status-pill live" id="health-status">Operational</div>
+      </div>
+    </div>
+  </div>
 
-        <div class="ops-card">
-          <h3>Risk Prediction Timeline</h3>
-          <div class="trend-bar"><div class="trend-fill"></div></div>
-          <div class="trend-labels"><span>15 min</span><span>1 hr</span><span>4 hr</span></div>
-        </div>
+  <div class="intel-card">
+    <h3>Staffing Load</h3>
+    <div class="queue-list" id="staffing-panel">
+      <div class="queue-item">
+        <div class="queue-copy">Open Alerts</div>
+        <div class="status-pill watch" id="staff-open-alerts">0</div>
+      </div>
+      <div class="queue-item">
+        <div class="queue-copy">Critical Patients</div>
+        <div class="status-pill critical" id="staff-critical-patients">0</div>
+      </div>
+      <div class="queue-item">
+        <div class="queue-copy">Response Load</div>
+        <div class="status-pill live" id="staff-response-load">Stable</div>
+      </div>
+    </div>
+  </div>
 
-        <div class="ops-card">
-          <h3>Deterioration Forecast</h3>
-          <div class="forecast">
-            <div>15 min: <span class="forecast-mid">Moderate</span></div>
-            <div>1 hr: <span class="forecast-high">Elevated</span></div>
-            <div>4 hr: <span class="forecast-critical">Critical</span></div>
-          </div>
-        </div>
-
-        <div class="ops-card">
-          <h3>Predictive Alert Clusters</h3>
-          <div class="cluster">Respiratory: 3</div>
-          <div class="cluster">Cardiac: 2</div>
-          <div class="cluster">Hemodynamic: 1</div>
-        </div>
-
-        <div class="ops-card">
-          <h3>Hospital Capacity</h3>
-          <div class="capacity-block">
-            <span class="capacity-value">78%</span>
-            <span class="capacity-label">Beds Occupied</span>
-            <div class="capacity-note">Telemetry coverage and escalation pressure remain within controllable range.</div>
-          </div>
-        </div>
-
-        <div class="ops-card">
-          <h3>Unit Heatmap</h3>
-          <div class="heatmap">
-            <div class="heat low"></div>
-            <div class="heat medium"></div>
-            <div class="heat high"></div>
-            <div class="heat medium"></div>
-            <div class="heat medium"></div>
-            <div class="heat low"></div>
-            <div class="heat high"></div>
-            <div class="heat medium"></div>
-          </div>
-        </div>
+</div>>
       </div>
     </section>
   </div>
