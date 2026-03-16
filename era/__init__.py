@@ -2551,4 +2551,314 @@ def system_health():
 
     })
 
+    from functools import wraps
+from flask import session
+
+
+PILOT_MODE = True
+
+ROLE_PERMISSIONS = {
+    "viewer": {"read"},
+    "operator": {"read", "ack", "assign"},
+    "nurse": {"read", "ack", "assign"},
+    "physician": {"read", "ack", "assign", "escalate", "resolve"},
+    "admin": {"read", "ack", "assign", "escalate", "resolve", "admin"},
+}
+
+
+def _current_role() -> str:
+    return str(session.get("user_role", "viewer")).strip().lower()
+
+
+def _current_user() -> str:
+    return str(session.get("user_name", "Guest")).strip() or "Guest"
+
+
+def _has_permission(action: str) -> bool:
+    role = _current_role()
+    allowed = ROLE_PERMISSIONS.get(role, ROLE_PERMISSIONS["viewer"])
+    return action in allowed
+
+
+def _login_required(view_func):
+    @wraps(view_func)
+    def wrapped(*args, **kwargs):
+        if not session.get("logged_in"):
+            return redirect("/login")
+        return view_func(*args, **kwargs)
+    return wrapped
+
+
+def _role_required(*allowed_roles):
+    def decorator(view_func):
+        @wraps(view_func)
+        def wrapped(*args, **kwargs):
+            if not session.get("logged_in"):
+                return redirect("/login")
+            if _current_role() not in allowed_roles:
+                return redirect("/login")
+            return view_func(*args, **kwargs)
+        return wrapped
+    return decorator
+
+
+LOGIN_HTML = """
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Login — Early Risk Alert AI Pilot Access</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root{
+      --bg:#07101c;--bg2:#0b1528;--panel:#101a2d;--line:rgba(255,255,255,.08);
+      --text:#eef4ff;--muted:#a7bddc;--blue:#7aa2ff;--blue2:#5bd4ff;--amber:#f4bd6a;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;min-height:100vh;display:grid;place-items:center;padding:20px;
+      font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(122,162,255,.14), transparent 24%),
+        radial-gradient(circle at 88% 10%, rgba(91,212,255,.10), transparent 20%),
+        linear-gradient(180deg, var(--bg), var(--bg2));
+    }
+    .card{
+      width:min(100%, 560px);
+      border:1px solid var(--line);border-radius:28px;padding:28px;
+      background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.018));
+      box-shadow:0 20px 60px rgba(0,0,0,.34);
+    }
+    .kicker{font-size:11px;font-weight:1000;letter-spacing:.16em;text-transform:uppercase;color:#9adfff}
+    h1{margin:10px 0 12px;font-size:42px;line-height:.94;letter-spacing:-.05em}
+    p{color:var(--muted);line-height:1.7}
+    form{display:grid;gap:14px;margin-top:18px}
+    label{font-size:12px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:#9eb8dc}
+    input,select{
+      width:100%;padding:14px 16px;border-radius:16px;border:1px solid rgba(255,255,255,.08);
+      background:#0d1728;color:var(--text);font:inherit
+    }
+    .btn{
+      display:inline-flex;align-items:center;justify-content:center;
+      padding:14px 18px;border-radius:16px;border:0;cursor:pointer;
+      background:linear-gradient(135deg,var(--blue),var(--blue2));
+      color:#08111f;font-weight:1000;font-size:14px
+    }
+    .notice{
+      margin-top:16px;padding:14px 16px;border-radius:16px;
+      background:rgba(244,189,106,.12);border:1px solid rgba(244,189,106,.20);color:#ffe4b6;
+      font-size:13px;line-height:1.6
+    }
+    .links{margin-top:16px;display:flex;gap:12px;flex-wrap:wrap}
+    .links a{color:#dce9ff;text-decoration:none;font-weight:800;font-size:14px}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="kicker">Pilot-safe access</div>
+    <h1>Early Risk Alert AI Pilot Login</h1>
+    <p>
+      This environment is intended for platform evaluation, pilot demonstrations, and workflow review.
+      It is not a production clinical system and does not replace clinician judgment, hospital policy,
+      or emergency response procedures.
+    </p>
+
+    <form method="post">
+      <div>
+        <label>Name</label>
+        <input name="user_name" placeholder="Enter your name" required>
+      </div>
+      <div>
+        <label>Role</label>
+        <select name="user_role" required>
+          <option value="viewer">Viewer</option>
+          <option value="operator">Operator</option>
+          <option value="nurse">Nurse</option>
+          <option value="physician">Physician</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
+      <button class="btn" type="submit">Enter Pilot Environment</button>
+    </form>
+
+    <div class="notice">
+      Pilot Mode is enabled. Demo and pilot workflows should be reviewed within your organization's
+      own clinical, compliance, legal, privacy, and technical evaluation process.
+    </div>
+
+    <div class="links">
+      <a href="/terms">Terms</a>
+      <a href="/privacy">Privacy</a>
+      <a href="/pilot-disclaimer">Pilot Disclaimer</a>
+    </div>
+  </div>
+</body>
+</html>
+"""
+
+LEGAL_PAGE_HTML = """
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>__TITLE__</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root{
+      --bg:#07101c;--bg2:#0b1528;--panel:#101a2d;--line:rgba(255,255,255,.08);
+      --text:#eef4ff;--muted:#a7bddc;--blue:#7aa2ff;--blue2:#5bd4ff;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;padding:20px;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(122,162,255,.14), transparent 24%),
+        radial-gradient(circle at 88% 10%, rgba(91,212,255,.10), transparent 20%),
+        linear-gradient(180deg, var(--bg), var(--bg2));
+    }
+    .wrap{max-width:980px;margin:0 auto}
+    .card{
+      border:1px solid var(--line);border-radius:28px;padding:28px;
+      background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.018));
+      box-shadow:0 20px 60px rgba(0,0,0,.34);
+    }
+    .kicker{font-size:11px;font-weight:1000;letter-spacing:.16em;text-transform:uppercase;color:#9adfff}
+    h1{margin:10px 0 16px;font-size:42px;line-height:.94;letter-spacing:-.05em}
+    h2{margin:24px 0 8px;font-size:20px}
+    p{color:var(--muted);line-height:1.75}
+    .actions{margin-top:20px;display:flex;gap:12px;flex-wrap:wrap}
+    .btn{
+      display:inline-flex;align-items:center;justify-content:center;padding:12px 16px;border-radius:16px;
+      text-decoration:none;font-weight:1000;font-size:14px
+    }
+    .primary{background:linear-gradient(135deg,var(--blue),var(--blue2));color:#08111f}
+    .secondary{background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--text)}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <div class="kicker">Pilot safety</div>
+      <h1>__TITLE__</h1>
+      __CONTENT__
+      <div class="actions">
+        <a class="btn primary" href="/login">Back to Login</a>
+        <a class="btn secondary" href="/">Home</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+"""
+
+
+@app.route("/login", methods=["GET", "POST"])
+def pilot_login():
+    if request.method == "POST":
+        user_name = request.form.get("user_name", "").strip() or "Pilot User"
+        user_role = request.form.get("user_role", "viewer").strip().lower()
+
+        if user_role not in ROLE_PERMISSIONS:
+            user_role = "viewer"
+
+        session["logged_in"] = True
+        session["user_name"] = user_name
+        session["user_role"] = user_role
+        session["pilot_mode"] = True
+
+        return redirect("/command-center")
+
+    return render_template_string(LOGIN_HTML)
+
+
+@app.get("/logout")
+def pilot_logout():
+    session.clear()
+    return redirect("/login")
+
+
+@app.get("/terms")
+def terms_page():
+    content = """
+    <h2>Evaluation Use</h2>
+    <p>This platform environment is intended for demonstration, pilot review, and workflow evaluation. It is not represented as a production medical device or as a replacement for licensed clinical judgment.</p>
+    <h2>No Clinical Replacement</h2>
+    <p>Users must not rely on this pilot environment as a sole basis for diagnosis, treatment, emergency escalation, or formal clinical decision-making.</p>
+    <h2>Organizational Review</h2>
+    <p>Any hospital, clinic, insurer, or reviewer should evaluate the platform in accordance with their own internal clinical, legal, compliance, procurement, and technical standards.</p>
+    """
+    return render_template_string(LEGAL_PAGE_HTML.replace("__TITLE__", "Terms of Use").replace("__CONTENT__", content))
+
+
+@app.get("/privacy")
+def privacy_page():
+    content = """
+    <h2>Privacy Notice</h2>
+    <p>This pilot environment may display simulated data, demonstration workflows, evaluation alerts, and user-entered pilot activity records.</p>
+    <h2>Non-Production Handling</h2>
+    <p>Production patient data should only be used in appropriately secured and compliant deployment environments with proper access control, governance, and security review.</p>
+    <h2>Pilot Records</h2>
+    <p>Workflow actions, audit events, and pilot configuration changes may be stored for evaluation, reporting, and system testing purposes.</p>
+    """
+    return render_template_string(LEGAL_PAGE_HTML.replace("__TITLE__", "Privacy Notice").replace("__CONTENT__", content))
+
+
+@app.get("/pilot-disclaimer")
+def pilot_disclaimer_page():
+    content = """
+    <h2>Pilot Environment</h2>
+    <p>This environment is provided for workflow demonstration, pilot evaluation, user testing, and stakeholder review.</p>
+    <h2>Not for Emergency Response</h2>
+    <p>It must not be used as a substitute for established clinical escalation protocols, bedside assessment, or emergency response systems.</p>
+    <h2>Professional Review Required</h2>
+    <p>All outputs, alerts, recommendations, and risk signals should be interpreted by qualified professionals within the context of clinical judgment and local policy.</p>
+    """
+    return render_template_string(LEGAL_PAGE_HTML.replace("__TITLE__", "Pilot Disclaimer").replace("__CONTENT__", content))
+
+
+@app.get("/api/pilot-status")
+def pilot_status():
+    return jsonify({
+        "pilot_mode": bool(session.get("pilot_mode", PILOT_MODE)),
+        "logged_in": bool(session.get("logged_in")),
+        "user_name": _current_user(),
+        "user_role": _current_role(),
+        "permissions": sorted(list(ROLE_PERMISSIONS.get(_current_role(), {"read"}))),
+    })
+
+
+@app.before_request
+def protect_pilot_routes():
+    protected_prefixes = (
+        "/command-center",
+        "/admin/review",
+        "/api/workflow",
+        "/api/reporting",
+        "/api/audit/export",
+        "/api/thresholds",
+        "/api/system-health",
+        "/api/pilot-status",
+    )
+
+    open_prefixes = (
+        "/login",
+        "/logout",
+        "/terms",
+        "/privacy",
+        "/pilot-disclaimer",
+        "/healthz",
+        "/api/v1/health",
+    )
+
+    path = request.path or "/"
+
+    if path.startswith(open_prefixes):
+        return None
+
+    if path.startswith(protected_prefixes) and not session.get("logged_in"):
+        return redirect("/login")
+
+    return None
+
     return app
