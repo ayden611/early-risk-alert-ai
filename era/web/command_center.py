@@ -55,7 +55,7 @@ COMMAND_CENTER_HTML = r"""
       font-size:11px;font-weight:1000;letter-spacing:.16em;text-transform:uppercase;color:#9adfff;
     }
     .brand-title{
-      font-size:clamp(28px,3vw,44px);font-weight:1000;line-height:.92;letter-spacing:-.05em;
+      font-size:clamp(26px,3vw,44px);font-weight:1000;line-height:.92;letter-spacing:-.05em;
     }
     .brand-sub{font-size:14px;font-weight:800;color:var(--muted)}
     .nav-links{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
@@ -91,6 +91,7 @@ COMMAND_CENTER_HTML = r"""
         linear-gradient(180deg, rgba(10,19,34,.86), rgba(7,14,26,.96));
       box-shadow:var(--shadow);
       padding:22px;
+      overflow:hidden;
     }
     .hero-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:18px;align-items:stretch}
     .hero-copy,.hero-side{
@@ -98,18 +99,26 @@ COMMAND_CENTER_HTML = r"""
       border-radius:26px;
       background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.018));
       padding:20px;
+      min-width:0;
     }
     .hero-kicker{
       font-size:11px;font-weight:1000;letter-spacing:.16em;text-transform:uppercase;color:#91ddff;margin-bottom:10px;
     }
     .hero-copy h1{
-      margin:0 0 12px;font-size:clamp(38px,5vw,68px);line-height:.92;letter-spacing:-.06em;font-weight:1000;
+      margin:0 0 12px;
+      font-size:clamp(34px,4.3vw,62px);
+      line-height:.94;
+      letter-spacing:-.055em;
+      font-weight:1000;
+      max-width:100%;
+      word-break:break-word;
     }
     .hero-copy p,.hero-side p{margin:0;color:#d0def2;font-size:16px;line-height:1.68}
     .hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:18px}
     .hero-mini-grid{margin-top:18px;display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
     .hero-mini{
       border:1px solid var(--line2);border-radius:18px;padding:14px;background:rgba(255,255,255,.03);
+      min-width:0;
     }
     .hero-mini .k{
       font-size:11px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:#8fdcff;margin-bottom:8px;
@@ -147,6 +156,7 @@ COMMAND_CENTER_HTML = r"""
         linear-gradient(180deg, rgba(12,22,38,.76), rgba(9,16,30,.88));
       box-shadow:0 14px 36px rgba(0,0,0,.26);
       padding:18px;
+      overflow:hidden;
     }
     .section-head{
       display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:14px;
@@ -212,7 +222,11 @@ COMMAND_CENTER_HTML = r"""
     .monitor-bed{
       font-size:11px;font-weight:1000;letter-spacing:.16em;text-transform:uppercase;color:#95ddff;margin-bottom:6px;
     }
-    .monitor-title{font-size:30px;font-weight:1000;line-height:.92;letter-spacing:-.05em}
+    .monitor-title{
+      font-size:clamp(24px,2.2vw,30px);
+      font-weight:1000;line-height:.94;letter-spacing:-.05em;
+      word-break:break-word;
+    }
     .monitor-wave{
       position:relative;z-index:1;border:1px solid rgba(255,255,255,.06);border-radius:20px;min-height:138px;
       background:
@@ -238,7 +252,7 @@ COMMAND_CENTER_HTML = r"""
       padding:12px;min-height:78px;display:flex;flex-direction:column;justify-content:space-between;
     }
     .metric-k{font-size:11px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:#9eb8dc}
-    .metric-v{font-size:18px;font-weight:1000;line-height:1;letter-spacing:-.03em}
+    .metric-v{font-size:18px;font-weight:1000;line-height:1;letter-spacing:-.03em;word-break:break-word}
 
     .monitor-story{
       position:relative;z-index:1;margin-top:14px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
@@ -253,6 +267,7 @@ COMMAND_CENTER_HTML = r"""
         linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.018)),
         linear-gradient(180deg, rgba(12,22,38,.76), rgba(9,16,30,.88));
       padding:18px;box-shadow:0 14px 36px rgba(0,0,0,.26);
+      overflow:hidden;
     }
     .intel-card h3{margin:0 0 12px;font-size:20px;font-weight:1000;letter-spacing:-.03em}
 
@@ -328,6 +343,38 @@ COMMAND_CENTER_HTML = r"""
     .medium{background:linear-gradient(135deg,#ffd965,#ffe79e)}
     .high{background:linear-gradient(135deg,#ff7b71,#ff9f95)}
 
+    .grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+    .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+    .grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+    .info-card{
+      border:1px solid var(--line);border-radius:22px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.018)),
+        linear-gradient(180deg, rgba(12,22,38,.76), rgba(9,16,30,.88));
+      padding:18px;
+      min-width:0;
+    }
+    .info-card h3,.info-card h4{margin:0 0 10px;font-weight:1000;letter-spacing:-.03em}
+    .info-card h3{font-size:18px}
+    .info-card h4{font-size:16px}
+    .info-card p,.info-card li{
+      color:#d0def2;font-size:14px;line-height:1.65;
+    }
+    .pill-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}
+    .impact-pill{
+      border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:14px;background:rgba(255,255,255,.03);
+      text-align:center;font-weight:1000;color:#eef4ff;
+    }
+    .steps-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+    .step-card{
+      border:1px solid rgba(255,255,255,.06);border-radius:20px;padding:18px;background:rgba(255,255,255,.03);
+    }
+    .step-num{
+      width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,var(--blue),var(--blue2));
+      color:#08111f;display:flex;align-items:center;justify-content:center;font-weight:1000;margin-bottom:12px;
+    }
+    .legal-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+
     .footer{
       margin-top:18px;border:1px solid var(--line);border-radius:22px;padding:18px;
       background:rgba(255,255,255,.03);color:#a7bddc;font-size:13px;line-height:1.6;text-align:center;
@@ -335,24 +382,26 @@ COMMAND_CENTER_HTML = r"""
 
     @media (max-width:1280px){
       .hero-grid,.command-grid{grid-template-columns:1fr}
-      .ops-strip{grid-template-columns:repeat(2,1fr)}
+      .ops-strip,.grid-4,.steps-grid{grid-template-columns:repeat(2,1fr)}
+      .grid-3{grid-template-columns:1fr 1fr}
     }
     @media (max-width:980px){
       .telemetry-top{grid-template-columns:repeat(2,1fr)}
       .monitor-grid{grid-template-columns:1fr}
-      .hero-mini-grid{grid-template-columns:repeat(2,1fr)}
+      .hero-mini-grid,.pill-row,.grid-4,.grid-3,.grid-2,.steps-grid,.legal-grid{grid-template-columns:1fr}
       .drawer-grid{grid-template-columns:1fr}
     }
     @media (max-width:700px){
       .shell{padding:14px 10px 40px}
       .hero{padding:16px}
-      .hero-copy h1{font-size:clamp(32px,11vw,52px)}
+      .hero-copy h1{font-size:clamp(30px,10vw,44px)}
       .hero-actions{flex-direction:column}
       .btn{width:100%}
-      .hero-mini-grid,.telemetry-top,.ops-strip,.monitor-metrics{grid-template-columns:1fr}
+      .hero-mini-grid,.telemetry-top,.ops-strip,.monitor-metrics,.pill-row,.grid-4,.grid-3,.grid-2,.steps-grid,.legal-grid{grid-template-columns:1fr}
       .story-text{max-width:100%}
       .timeline-item{grid-template-columns:1fr}
       .detail-drawer{width:100%}
+      .brand-title{font-size:32px}
     }
   </style>
 </head>
@@ -629,6 +678,176 @@ COMMAND_CENTER_HTML = r"""
               <div>Top risk queue: Live</div>
               <div>Audit trail: Live</div>
             </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-card">
+        <div class="hero-kicker">Hospital value</div>
+        <h2 class="section-title">Hospital Impact / ROI Metrics</h2>
+        <div class="section-sub">
+          Early Risk Alert AI is designed to help hospitals identify deterioration sooner, improve monitoring visibility,
+          support faster intervention, and strengthen operational efficiency.
+        </div>
+
+        <div class="grid-4" style="margin-top:16px;">
+          <div class="info-card">
+            <h3>Earlier</h3>
+            <h4>Intervention Timing</h4>
+            <p>Surfaces subtle deterioration signals sooner so clinical teams can respond before a patient reaches a more severe escalation threshold.</p>
+          </div>
+          <div class="info-card">
+            <h3>Lower</h3>
+            <h4>Escalation Risk</h4>
+            <p>Supports proactive care decisions that may reduce avoidable respiratory or hemodynamic deterioration events.</p>
+          </div>
+          <div class="info-card">
+            <h3>Better</h3>
+            <h4>Monitoring Visibility</h4>
+            <p>Gives command-center and clinical teams a clearer real-time view of which patients need attention first.</p>
+          </div>
+          <div class="info-card">
+            <h3>Stronger</h3>
+            <h4>Operational Awareness</h4>
+            <p>Combines patient risk, alert prioritization, and dashboard visibility into one unified hospital workflow.</p>
+          </div>
+        </div>
+
+        <div class="grid-2" style="margin-top:16px;">
+          <div class="info-card">
+            <h3>Potential Clinical Benefits</h3>
+            <ul>
+              <li>Earlier recognition of respiratory deterioration</li>
+              <li>Faster response to rising-risk patients</li>
+              <li>Improved prioritization across monitored patients</li>
+              <li>More visible escalation trends for care teams</li>
+            </ul>
+          </div>
+          <div class="info-card">
+            <h3>Potential Operational Benefits</h3>
+            <ul>
+              <li>Stronger command-center oversight</li>
+              <li>Improved staff attention allocation</li>
+              <li>Better visibility into high-risk patient clusters</li>
+              <li>Investor- and executive-ready workflow presentation</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-card">
+        <div class="hero-kicker">Who this platform serves</div>
+        <h2 class="section-title">Who This Is For</h2>
+        <div class="section-sub">
+          Early Risk Alert AI is designed for multiple healthcare and business audiences, giving each stakeholder a clear view of value,
+          workflow impact, and platform relevance.
+        </div>
+
+        <div class="grid-3" style="margin-top:16px;">
+          <div class="info-card"><h3>Hospitals</h3><p>Built for hospitals that need earlier deterioration visibility, stronger monitoring workflows, and clearer command-center prioritization across patient populations.</p></div>
+          <div class="info-card"><h3>Clinics</h3><p>Helps outpatient and specialty clinics strengthen patient oversight, identify rising-risk trends, and improve escalation awareness in monitored care settings.</p></div>
+          <div class="info-card"><h3>RPM Providers</h3><p>Supports remote patient monitoring programs by surfacing early warning patterns before patients cross critical alert thresholds.</p></div>
+          <div class="info-card"><h3>Executives & Operators</h3><p>Gives leadership teams a polished operational view of alert pressure, monitoring visibility, workflow readiness, and enterprise value.</p></div>
+          <div class="info-card"><h3>Investors</h3><p>Presents a healthcare AI platform with hospital relevance, command-center presentation, live workflow storytelling, and scalable enterprise SaaS positioning.</p></div>
+          <div class="info-card"><h3>Care Teams</h3><p>Helps nurses, respiratory teams, and clinicians identify which patients may need earlier intervention and closer follow-up attention.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-card">
+        <div class="hero-kicker">Clinical use case scenario</div>
+        <h2 class="section-title">Early Detection of Respiratory Deterioration</h2>
+        <div class="section-sub" style="max-width:none;color:#d0def2;">
+          Early Risk Alert AI enables care teams to detect respiratory decline sooner by identifying subtle warning patterns
+          before traditional hospital alarm thresholds are reached.
+          <br><br>
+          A patient is admitted with moderate respiratory risk and placed under standard monitoring. Continuous vital signals
+          are collected including oxygen saturation, heart rate, respiratory rate, and blood pressure.
+          <br><br>
+          Early Risk Alert AI analyzes these signals in real time using predictive risk models. The platform detects subtle
+          deterioration patterns in oxygen saturation trends and respiratory variability that may not yet trigger standard
+          hospital alarms.
+          <br><br>
+          The system generates an early risk alert indicating an increasing probability of respiratory deterioration within the
+          next monitoring window. Clinical staff receive the alert through the command center dashboard, providing earlier visibility into patient risk.
+          <br><br>
+          Care teams can intervene sooner by adjusting oxygen support, increasing monitoring intensity, and reassessing the
+          patient before the condition reaches a critical escalation threshold.
+        </div>
+
+        <div class="pill-row">
+          <div class="impact-pill">Earlier intervention</div>
+          <div class="impact-pill">Reduced escalation risk</div>
+          <div class="impact-pill">Improved patient monitoring visibility</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-card">
+        <div class="hero-kicker">AI intelligence layer</div>
+        <h2 class="section-title">How Early Risk Alert AI Works</h2>
+        <div class="section-sub">
+          Early Risk Alert AI continuously analyzes patient vital signals using predictive models designed to detect deterioration
+          patterns earlier than traditional monitoring systems.
+        </div>
+
+        <div class="steps-grid" style="margin-top:16px;">
+          <div class="step-card">
+            <div class="step-num">1</div>
+            <h3>Signal Collection</h3>
+            <p>Continuous vital signals including oxygen saturation, heart rate, respiratory rate, and blood pressure are collected from patient monitoring systems.</p>
+          </div>
+          <div class="step-card">
+            <div class="step-num">2</div>
+            <h3>Pattern Analysis</h3>
+            <p>The AI analyzes signal variability, trend drift, and subtle physiological patterns that may indicate early clinical deterioration.</p>
+          </div>
+          <div class="step-card">
+            <div class="step-num">3</div>
+            <h3>Risk Prediction</h3>
+            <p>Predictive models calculate dynamic risk scores and estimate the probability of deterioration within upcoming monitoring windows.</p>
+          </div>
+          <div class="step-card">
+            <div class="step-num">4</div>
+            <h3>Clinical Alert</h3>
+            <p>When risk thresholds increase, the platform generates an early alert visible in the command center dashboard for rapid clinical response.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-card">
+        <div class="hero-kicker">Terms & privacy</div>
+        <h2 class="section-title">Terms of Use + Privacy Notice</h2>
+        <div class="legal-grid" style="margin-top:16px;">
+          <div class="info-card">
+            <h3>Terms of Use</h3>
+            <p>
+              This platform presentation is intended for product demonstration, workflow evaluation, and commercial review.
+              It is not intended to replace licensed clinical judgment, hospital policy, or emergency response procedures.
+            </p>
+            <p>
+              Hospital operators, investors, executives, and reviewers should evaluate the platform in accordance with their
+              own internal clinical, legal, compliance, procurement, and technical review processes.
+            </p>
+          </div>
+          <div class="info-card">
+            <h3>Privacy Notice</h3>
+            <p>
+              Demo content shown in this command center may include simulated patient records, generated risk events, and
+              workflow state used for presentation purposes. Sensitive production patient data should only be used in secure,
+              compliant deployment environments with appropriate access control, logging, and policy protections.
+            </p>
+            <p>
+              Form submissions should be handled in accordance with your organization’s privacy, security, and retention practices.
+            </p>
           </div>
         </div>
       </div>
