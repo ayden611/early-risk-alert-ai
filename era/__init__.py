@@ -1905,60 +1905,64 @@ grid-template-columns:1fr;
     }
     return [[0,78],[48,78],[82,78],[96,76],[110,78],[126,78],[138,66],[146,84],[156,52],[166,88],[178,78],[220,78],[254,78],[268,76],[282,78],[298,78],[310,68],[318,84],[328,56],[338,88],[350,78],[392,78],[426,78],[440,76],[454,78],[470,78],[482,68],[490,84],[500,56],[510,88],[522,78],[566,78],[600,78]];
   }
+function renderMonitor(patient) {
+  const status = String(patient.status || "").toLowerCase();
+  const ecg = ecgClass(status);
+  const path = buildPath(
+    waveformPoints(status === "critical" ? "critical" : status === "high" ? "high" : "stable")
+  );
 
-  function renderMonitor(patient) {
-    const status = String(patient.status || "").toLowerCase();
-    const ecg = ecgClass(status);
-    const path = buildPath(
-      waveformPoints(status === "critical" ? "critical" : status === "high" ? "high" : "stable")
-    );
+  const hr = Number(patient.heart_rate || 0);
+  const spo2 = Number(patient.spo2 || 0);
+  const sys = Number(patient.bp_systolic || 0);
+  const dia = Number(patient.bp_diastolic || 0);
+  const risk =
+    typeof patient.risk_score === "number"
+      ? patient.risk_score.toFixed(1)
+      : safe(patient.risk_score);
 
-    return `
-      <div class="monitor">
-        <div class="monitor-top">
-          <div>
-            <div class="monitor-bed">${safe(patient.bed, "ICU Bed")}</div>
-            <div class="monitor-title">${safe(patient.title, safe(patient.name, "Telemetry Monitor"))}</div>
-          </div>
-          <div class="status-pill ${statusClass(patient.status)}">${pulseLabel(patient.status)}</div>
+  return `
+    <div class="monitor">
+      <div class="monitor-top">
+        <div>
+          <div class="monitor-bed">${safe(patient.bed, "ICU Bed")}</div>
+          <div class="monitor-title">${safe(patient.title, safe(patient.name, "Telemetry Monitor"))}</div>
         </div>
+        <div class="status-pill ${statusClass(patient.status)}">${pulseLabel(patient.status)}</div>
+      </div>
 
-        <div class="monitor-wave">
-          <svg viewBox="0 0 640 120" preserveAspectRatio="none" aria-hidden="true">
-            <path class="ecg-path ${ecg}" d="${path}"></path>
-          </svg>
+      <div class="monitor-wave">
+        <svg viewBox="0 0 640 120" preserveAspectRatio="none" aria-hidden="true">
+          <path class="ecg-path ${ecg}" d="${path}"></path>
+        </svg>
+      </div>
+
+      <div class="monitor-metrics">
+        <div class="metric-box">
+          <span class="metric-k">HR</span>
+          <span class="metric-v">${hr ? Math.round(hr) : "--"}</span>
         </div>
-
-        <div class="monitor-metrics">
-          <div class="metric-box">
-            <span class="metric-k">HR</span>
-            <span class="metric-v">${safe(patient.heart_rate)}</span>
-          </div>
-          <div class="metric-box">
-            <span class="metric-k">SpO₂</span>
-            <span class="metric-v">${safe(patient.spo2)}</span>
-          </div>
-          <div class="metric-box">
-            <span class="metric-k">BP</span>
-            <span class="metric-v">${safe(patient.bp_systolic)}/${safe(patient.bp_diastolic)}</span>
-          </div>
-          <div class="metric-box">
-            <span class="metric-k">Risk</span>
-            <span class="metric-v">${
-              typeof patient.risk_score === "number"
-                ? patient.risk_score.toFixed(1)
-                : safe(patient.risk_score)
-            }</span>
-          </div>
+        <div class="metric-box">
+          <span class="metric-k">SpO₂</span>
+          <span class="metric-v">${spo2 ? Math.round(spo2) : "--"}</span>
         </div>
-
-        <div class="monitor-story">
-          <div class="story-text">${safe(patient.story, "Predictive monitoring active.")}</div>
-          <div class="status-pill ${statusClass(patient.status)}">${safe(patient.patient_id, "p---")}</div>
+        <div class="metric-box">
+          <span class="metric-k">BP</span>
+          <span class="metric-v">${sys ? Math.round(sys) : "--"}/${dia ? Math.round(dia) : "--"}</span>
+        </div>
+        <div class="metric-box">
+          <span class="metric-k">Risk</span>
+          <span class="metric-v">${risk}</span>
         </div>
       </div>
-    `;
-  }
+
+      <div class="monitor-story">
+        <div class="story-text">${safe(patient.story, "Predictive monitoring active.")}</div>
+        <div class="status-pill ${statusClass(patient.status)}">${safe(patient.patient_id, "p---")}</div>
+      </div>
+    </div>
+  `;
+}
 
   function renderAlert(alert) {
     const sev = String(alert.severity || "").toLowerCase();
