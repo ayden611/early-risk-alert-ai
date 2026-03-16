@@ -1309,6 +1309,11 @@ COMMAND_CENTER_HTML = r"""
 }
 </style>
 
+<div style="text-align:center;margin:40px 0 10px;font-size:14px;color:#9fb4d6;font-weight:700;">
+Early Risk Alert AI — Predictive Monitoring Platform
+Built for Hospitals, Care Networks, and Remote Monitoring Systems
+</div>
+
 <section class="who-section">
   <div class="who-card">
 
