@@ -1054,23 +1054,6 @@ COMMAND_CENTER_HTML = r"""
   </div>
 </div>
 
-        <div class="intel-column">
-          <div class="intel-card">
-            <h3>Live Alerts Feed</h3>
-            <div class="alert-feed" id="queue"></div>
-          </div>
-
-          <div class="intel-card">
-            <h3>Why this matters now</h3>
-            <div class="why-now">
-              <div class="why-line">Predictive risk surfaced before full clinical collapse.</div>
-              <div class="why-line">Command-center telemetry prioritizes intervention timing.</div>
-              <div class="why-line">Hospital operators can see pressure, escalation, and stability in one wall.</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <div class="ops-strip">
         <div class="ops-card">
           <h3>Oxygen Trend</h3>
