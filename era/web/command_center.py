@@ -25,7 +25,7 @@ COMMAND_CENTER_HTML = r"""
       --shadow:0 20px 60px rgba(0,0,0,.34);
       --radius:24px;
       --max:1460px;
-    }
+    }    
 
     *{box-sizing:border-box}
     html{scroll-behavior:smooth}
@@ -73,6 +73,44 @@ COMMAND_CENTER_HTML = r"""
     .btn.secondary{
       background:rgba(255,255,255,.04);border-color:var(--line);color:var(--text);
     }
+
+    .alert-actions-panel{
+  display:flex;
+  gap:10px;
+  margin-top:12px;
+}
+
+.alert-action{
+  border:1px solid rgba(255,255,255,.08);
+  background:rgba(255,255,255,.03);
+  color:#e6f0ff;
+  padding:10px 14px;
+  border-radius:10px;
+  font-weight:800;
+  letter-spacing:.06em;
+  cursor:pointer;
+  transition:all .18s ease;
+}
+
+.alert-action:hover{
+  transform:translateY(-1px);
+  border-color:rgba(91,212,255,.25);
+}
+
+.alert-action.ack{
+  background:linear-gradient(135deg,#5bd38d,#2fbf71);
+  color:#07101c;
+}
+
+.alert-action.escalate{
+  background:linear-gradient(135deg,#ff6b6b,#ff8b8b);
+  color:#07101c;
+}
+
+.alert-action.assign{
+  background:linear-gradient(135deg,#7aa2ff,#5bd4ff);
+  color:#07101c;
+}
 
     .ticker-wrap{
       margin-top:18px;
@@ -739,6 +777,12 @@ COMMAND_CENTER_HTML = r"""
   <div class="intel-card">
     <h3>Live Alerts Feed</h3>
     <div class="alert-feed" id="queue"></div>
+
+<div class="alert-actions-panel">
+  <button class="alert-action ack">ACK</button>
+  <button class="alert-action escalate">ESCALATE</button>
+  <button class="alert-action assign">ASSIGN NURSE</button>
+</div>
   </div>
 
   <div class="intel-card">
