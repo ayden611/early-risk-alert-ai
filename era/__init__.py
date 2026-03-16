@@ -1970,40 +1970,44 @@ if (avgNode){
     }
 
     function applyPayload(payload){
-      window.latestSnapshot = payload;
+
+  // store latest payload
+  window.latestSnapshot = payload;
+
+  if (payload && Array.isArray(payload.patients)) {
+    renderPatients(payload.patients);
+    renderAlerts(payload.alerts || []);
+    updateSummary(payload.patients, payload.alerts || []);
+    return;
+  }
+
+  if (Array.isArray(payload)) {
+    renderPatients(payload);
+    renderAlerts([]);
+    updateSummary(payload, []);
+    return;
+  }
+
+  if (payload && (payload.patient_id || payload.heart_rate || payload.risk_score)) {
+    const arr = [payload];
+    const alerts = [{
+      patient_id: payload.patient_id || "Patient",
+      severity: payload.status || "Stable",
+      text: payload.alert_text || "Predictive clinical alert surfaced",
+      unit: payload.unit || "ICU"
+    }];
+
+    renderPatients(arr);
+    renderAlerts(alerts);
+    updateSummary(arr, alerts);
+    return;
+  }
+
+  // fallback if nothing valid arrives
+  renderPatients(fallbackPatients);
+  renderAlerts(fallbackAlerts);
+  updateSummary(fallbackPatients, fallbackAlerts);
 }
-      if (payload && Array.isArray(payload.patients)) {
-        renderPatients(payload.patients);
-        renderAlerts(payload.alerts || []);
-        updateSummary(payload.patients, payload.alerts || []);
-        return;
-      }
-
-      if (Array.isArray(payload)) {
-        renderPatients(payload);
-        renderAlerts([]);
-        updateSummary(payload, []);
-        return;
-      }
-
-      if (payload && (payload.patient_id || payload.heart_rate || payload.risk_score)) {
-        const arr = [payload];
-        const alerts = [{
-          patient_id: payload.patient_id || "Patient",
-          severity: payload.status || "Stable",
-          text: payload.alert_text || "Predictive clinical alert surfaced",
-          unit: payload.unit || "ICU"
-        }];
-        renderPatients(arr);
-        renderAlerts(alerts);
-        updateSummary(arr, alerts);
-        return;
-      }
-
-      renderPatients([]);
-      renderAlerts([]);
-      updateSummary([], []);
-    }
 
     async function refreshFallback(){
       try{
