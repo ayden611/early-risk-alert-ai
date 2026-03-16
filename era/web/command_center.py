@@ -350,6 +350,91 @@ COMMAND_CENTER_HTML = r"""
       font-size:13px;color:#cfe0f4;line-height:1.55;max-width:78%;
     }
 
+    .wall-toolbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  flex-wrap:wrap;
+  margin-bottom:14px;
+}
+
+.wall-toolbar-left{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+.wall-title-block{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+
+.wall-kicker{
+  font-size:11px;
+  font-weight:900;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  color:#8fdcff;
+}
+
+.wall-title{
+  font-size:22px;
+  font-weight:1000;
+  letter-spacing:-.03em;
+  color:#eef4ff;
+}
+
+.wall-toolbar-right{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.unit-filter{
+  border:1px solid rgba(255,255,255,.08);
+  background:rgba(255,255,255,.03);
+  color:#dce9ff;
+  border-radius:999px;
+  padding:10px 14px;
+  font-size:12px;
+  font-weight:900;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  cursor:pointer;
+  transition:all .18s ease;
+}
+
+.unit-filter:hover{
+  transform:translateY(-1px);
+  border-color:rgba(91,212,255,.25);
+}
+
+.unit-filter.active{
+  background:linear-gradient(135deg,var(--blue),var(--blue2));
+  color:#07101c;
+  border-color:transparent;
+  box-shadow:0 10px 24px rgba(91,212,255,.20);
+}
+
+.command-wall-frame{
+  border:1px solid var(--line);
+  border-radius:24px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015)),
+    linear-gradient(180deg, rgba(9,16,28,.96), rgba(6,12,22,.98));
+  padding:16px;
+  box-shadow:0 16px 44px rgba(0,0,0,.28);
+}
+
+@media (max-width:900px){
+  .wall-toolbar{
+    flex-direction:column;
+    align-items:flex-start;
+  }
+}
+
     .intel-column{
       align-content:start;
     }
@@ -627,7 +712,27 @@ COMMAND_CENTER_HTML = r"""
 
       <div class="cockpit-grid">
   <div class="telemetry-wall">
-    <div class="monitor-grid" id="wall"></div>
+    <div class="wall-toolbar">
+  <div class="wall-toolbar-left">
+    <div class="wall-title-block">
+      <div class="wall-kicker">Hospital Command Wall</div>
+      <div class="wall-title">Live Unit Monitor View</div>
+    </div>
+  </div>
+
+  <div class="wall-toolbar-right">
+    <button class="unit-filter active" data-unit="all" type="button">All Units</button>
+    <button class="unit-filter" data-unit="icu" type="button">ICU</button>
+    <button class="unit-filter" data-unit="stepdown" type="button">Stepdown</button>
+    <button class="unit-filter" data-unit="telemetry" type="button">Telemetry</button>
+    <button class="unit-filter" data-unit="ward" type="button">Ward</button>
+    <button class="unit-filter" data-unit="rpm" type="button">RPM</button>
+  </div>
+</div>
+
+<div class="command-wall-frame">
+  <div class="monitor-grid" id="wall"></div>
+</div>
   </div>
 <div class="intel-column">
 
