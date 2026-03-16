@@ -712,22 +712,19 @@ COMMAND_CENTER_HTML = r"""
     }
     .monitor-wave svg{width:100%;height:118px;display:block}
     .ecg-path{
-  fill:none;
-  stroke-width:3;
-  stroke-linecap:round;
-  stroke-linejoin:round;
-  stroke-dasharray:6 4;
-  animation: ecgMove 2s linear infinite;
-}
+      fill:none;
+      stroke-width:4;
+      stroke-linecap:round;
+      stroke-linejoin:round;
+      stroke-dasharray:920;
+      stroke-dashoffset:0;
+      animation:ecgMove 2.8s linear infinite;
+      filter:drop-shadow(0 0 10px currentColor);
     }
     @keyframes ecgMove{
-  0%{
-    stroke-dashoffset:0;
-  }
-  100%{
-    stroke-dashoffset:-200;
-  }
-}
+      0%{stroke-dashoffset:920}
+      100%{stroke-dashoffset:0}
+    }
     .ecg-green{stroke:#77ffb4;color:#77ffb4}
     .ecg-amber{stroke:#ffd96c;color:#ffd96c}
     .ecg-red{stroke:#ff7c8d;color:#ff7c8d}
@@ -1853,7 +1850,7 @@ grid-template-columns:1fr;
       title:
         raw.title ||
         risk.alert_message ||
-        (risk.alert_type ? String(risk.alert_type).replace(/_/g, " ") : "Predoctove Risk Monitor"),
+        (risk.alert_type ? String(risk.alert_type).replace(/_/g, " ") : "Predictive Risk Monitor"),
       heart_rate: raw.heart_rate ?? vitals.heart_rate ?? "--",
       spo2: raw.spo2 ?? vitals.spo2 ?? "--",
       bp_systolic: raw.bp_systolic ?? vitals.systolic_bp ?? "--",
