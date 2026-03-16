@@ -2469,42 +2469,41 @@ def workflow_action():
 @app.get("/api/reporting")
 def reporting():
 
-    store = _load_workflow()
+    if not session.get("logged_in"):
+        return jsonify({"ok": False, "error": "login required"}), 401
 
+    store = _load_workflow()
     records = store["records"].values()
 
     return jsonify({
-
         "total_patients": len(records),
-
-        "acknowledged":
-            len([r for r in records if r["ack"]]),
-
-        "assigned":
-            len([r for r in records if r["assigned"]]),
-
-        "escalated":
-            len([r for r in records if r["escalated"]]),
-
-        "resolved":
-            len([r for r in records if r["state"] == "resolved"]),
-
-        "audit_events":
-            len(store["audit_log"])
+        "acknowledged": len([r for r in records if r["ack"]]),
+        "assigned": len([r for r in records if r["assigned"]]),
+        "escalated": len([r for r in records if r["escalated"]]),
+        "resolved": len([r for r in records if r["state"] == "resolved"]),
+        "audit_events": len(store["audit_log"]),
+        "pilot_mode": bool(session.get("pilot_mode", PILOT_MODE)),
+        "user_role": _current_role(),
+        "user_name": _current_user(),
     })
 
-
-# -------------------------------
-# Export audit log
-# -------------------------------
 
 @app.get("/api/audit/export")
 def export_audit():
 
+    if not session.get("logged_in"):
+        return jsonify({"ok": False, "error": "login required"}), 401
+
+    if not _has_permission("admin"):
+        return jsonify({"ok": False, "error": "permission denied"}), 403
+
     store = _load_workflow()
 
     return jsonify({
-        "audit_log": store["audit_log"]
+        "audit_log": store["audit_log"],
+        "exported_by": _current_user(),
+        "exported_role": _current_role(),
+        "pilot_mode": bool(session.get("pilot_mode", PILOT_MODE)),
     })
 
 
