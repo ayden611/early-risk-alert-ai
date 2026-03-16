@@ -1546,60 +1546,78 @@ grid-template-columns:1fr;
 
 </style>
 <script>
-  const fallbackPatients = [
-    {
-      patient_id: "p101",
-      name: "Patient 1042",
-      bed: "ICU Bed A",
-      title: "Critical Deterioration Monitor",
-      heart_rate: 127,
-      spo2: 87,
-      bp_systolic: 162,
-      bp_diastolic: 98,
-      risk_score: 9.3,
-      status: "Critical",
-      story: "Oxygen trend sharply below target. Predictive layer recommends immediate escalation."
-    },
-    {
-      patient_id: "p102",
-      name: "Patient 2188",
-      bed: "ICU Bed B",
-      title: "Escalation Watch Monitor",
-      heart_rate: 113,
-      spo2: 92,
-      bp_systolic: 150,
-      bp_diastolic: 88,
-      risk_score: 7.4,
-      status: "High",
-      story: "High-risk cardiac drift surfaced. Telemetry indicates worsening trend over the next hour."
-    },
-    {
-      patient_id: "p103",
-      name: "Patient 3045",
-      bed: "ICU Bed C",
-      title: "Stable Recovery Monitor",
-      heart_rate: 84,
-      spo2: 98,
-      bp_systolic: 122,
-      bp_diastolic: 78,
-      risk_score: 3.5,
-      status: "Stable",
-      story: "Patient remains stable. Recovery trend confirmed across oxygen and hemodynamic signals."
-    },
-    {
-      patient_id: "p104",
-      name: "Patient 4172",
-      bed: "ICU Bed D",
-      title: "Priority Intervention Monitor",
-      heart_rate: 109,
-      spo2: 94,
-      bp_systolic: 144,
-      bp_diastolic: 86,
-      risk_score: 7.1,
-      status: "High",
-      story: "Escalation pressure remains elevated. Intervention queue should continue active surveillance."
-    }
-  ];
+const fallbackPatients = [
+  {
+    patient_id: "p101",
+    name: "Patient 1042",
+    bed: "ICU Bed A",
+    unit: "icu",
+    title: "Predictive Risk Monitor",
+    heart_rate: 128,
+    spo2: 89,
+    bp_systolic: 165,
+    bp_diastolic: 102,
+    risk_score: 9.1,
+    status: "Critical",
+    story: "Oxygen trend sharply below target. Immediate bedside review recommended."
+  },
+  {
+    patient_id: "p102",
+    name: "Patient 2188",
+    bed: "Stepdown Bed B",
+    unit: "stepdown",
+    title: "Predictive Risk Monitor",
+    heart_rate: 100,
+    spo2: 93,
+    bp_systolic: 150,
+    bp_diastolic: 90,
+    risk_score: 3.3,
+    status: "Stable",
+    story: "Moderate signal drift detected. Continue close observation."
+  },
+  {
+    patient_id: "p103",
+    name: "Patient 3045",
+    bed: "Telemetry Bed C",
+    unit: "telemetry",
+    title: "Predictive Risk Monitor",
+    heart_rate: 84,
+    spo2: 98,
+    bp_systolic: 122,
+    bp_diastolic: 80,
+    risk_score: 1.6,
+    status: "Stable",
+    story: "Recovery pattern continues across monitored vitals."
+  },
+  {
+    patient_id: "p104",
+    name: "Patient 4172",
+    bed: "Ward Bed D",
+    unit: "ward",
+    title: "Predictive Risk Monitor",
+    heart_rate: 91,
+    spo2: 95,
+    bp_systolic: 136,
+    bp_diastolic: 84,
+    risk_score: 2.8,
+    status: "Stable",
+    story: "General floor visibility remains stable."
+  },
+  {
+    patient_id: "p105",
+    name: "Patient 5221",
+    bed: "RPM Home A",
+    unit: "rpm",
+    title: "Remote Monitoring View",
+    heart_rate: 87,
+    spo2: 96,
+    bp_systolic: 132,
+    bp_diastolic: 82,
+    risk_score: 2.1,
+    status: "Stable",
+    story: "Remote monitoring stream active with no immediate escalation."
+  }
+];
 
   const fallbackAlerts = [
     { patient_id: "p101", severity: "Critical", text: "Oxygen saturation critical", unit: "ICU-12" },
