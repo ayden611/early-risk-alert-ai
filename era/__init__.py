@@ -2215,8 +2215,8 @@ def create_app() -> Flask:
         "records": store.get("records", {}),
         "audit_log": store.get("audit_log", []),
         })
-@app.post("/api/workflow/action")
-def workflow_action():
+    @app.post("/api/workflow/action")
+    def workflow_action():
 
     if not session.get("logged_in"):
         return jsonify({"ok": False, "error": "login required"}), 401
