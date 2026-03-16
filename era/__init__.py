@@ -1944,14 +1944,19 @@ function updateSummary(patients, alerts){
   const avgRisk = validRiskScores.length
     ? validRiskScores.reduce((sum, value) => sum + value, 0) / validRiskScores.length
     : 0;
+const openNode = document.getElementById("open-alerts");
+const criticalNode = document.getElementById("critical-alerts");
+const avgNode = document.getElementById("avg-risk");
 
-  const openNode = document.getElementById("open-alerts");
-  const criticalNode = document.getElementById("critical-alerts");
-  const avgNode = document.getElementById("avg-risk");
+if (openNode) openNode.textContent = String(openAlerts);
+if (criticalNode) criticalNode.textContent = String(criticalAlerts);
 
-  if (openNode) openNode.textContent = String(openAlerts);
-  if (criticalNode) criticalNode.textContent = String(criticalAlerts);
-  if (avgNode) avgNode.textContent = avgRisk.toFixed(1);
+if (avgNode){
+  if (window.latestSnapshot && window.latestSnapshot.avg_risk_score){
+    avgNode.textContent = Number(window.latestSnapshot.avg_risk_score).toFixed(1);
+  } else {
+    avgNode.textContent = avgRisk.toFixed(1);
+  }
 }
 
     function renderPatients(patients){
@@ -1965,6 +1970,8 @@ function updateSummary(patients, alerts){
     }
 
     function applyPayload(payload){
+      window.latestSnapshot = payload;
+}
       if (payload && Array.isArray(payload.patients)) {
         renderPatients(payload.patients);
         renderAlerts(payload.alerts || []);
