@@ -1761,8 +1761,7 @@ grid-template-columns:1fr;
 }
 
 </style>
-
-  <script>
+<script>
   const fallbackPatients = [
     {
       patient_id: "p101",
@@ -1827,73 +1826,42 @@ grid-template-columns:1fr;
   const wall = document.getElementById("wall");
   const queue = document.getElementById("queue");
 
-  function safe(v, fallback="--"){
+  function safe(v, fallback = "--") {
     return v === undefined || v === null || v === "" ? fallback : v;
   }
 
-  function statusClass(status){
-    const s = String(status || "").toLowerCase();
-    if (s === "critical") return "critical";
-    if (s === "high") return "watch";
-    return "live";
-  }
-
-  function ecgClass(status){
-    const s = String(status || "").toLowerCase();
-    if (s === "critical") return "ecg-red";
-    if (s === "high") return "ecg-amber";
-    return "ecg-green";
-  }
-
-  function pulseLabel(status){
-    const s = String(status || "").toLowerCase();
+  function riskSeverityLabel(severity) {
+    const s = String(severity || "").toLowerCase();
     if (s === "critical") return "Critical";
     if (s === "high") return "High";
     return "Stable";
   }
 
-  function buildPath(points){
-    return points.map((p, i) => (i === 0 ? "M" : "L") + p[0] + "," + p[1]).join(" ");
-  }
+  function normalizePatient(raw) {
+    if (!raw) return null;
 
-  function waveformPoints(mode){
-    if (mode === "critical") {
-      return [[0,72],[30,72],[46,72],[58,70],[72,72],[86,72],[98,50],[106,100],[116,24],[126,108],[136,72],[162,72],[186,72],[204,70],[220,72],[236,72],[250,54],[258,96],[268,22],[278,106],[290,72],[318,72],[336,72],[352,70],[368,72],[382,72],[398,46],[406,104],[416,20],[428,110],[440,72],[466,72],[486,72],[504,70],[520,72],[536,72],[550,52],[558,98],[568,24],[578,106],[592,72],[620,72]];
-    }
-    if (mode === "high") {
-      return [[0,76],[36,76],[60,76],[74,74],[88,76],[104,76],[118,56],[126,90],[136,38],[146,96],[158,76],[190,76],[214,76],[228,74],[242,76],[258,76],[272,54],[280,88],[290,40],[300,94],[314,76],[348,76],[372,76],[388,74],[402,76],[418,76],[432,58],[440,92],[452,42],[464,96],[478,76],[514,76],[538,76],[552,74],[566,76],[582,76],[596,60],[604,94],[614,44],[624,98],[640,76]];
-    }
-    return [[0,78],[48,78],[82,78],[96,76],[110,78],[126,78],[138,66],[146,84],[156,52],[166,88],[178,78],[220,78],[254,78],[268,76],[282,78],[298,78],[310,68],[318,84],[328,56],[338,88],[350,78],[392,78],[426,78],[440,76],[454,78],[470,78],[482,68],[490,84],[500,56],[510,88],[522,78],[566,78],[600,78]];
-  }
-
-  function normalizePatient(patient){
-    if (!patient) return null;
-
-    if (patient.name || patient.bed || patient.bp_systolic !== undefined) {
-      return patient;
-    }
-
-    const vitals = patient.vitals || {};
-    const risk = patient.risk || {};
+    const vitals = raw.vitals || {};
+    const risk = raw.risk || {};
 
     return {
-      patient_id: patient.patient_id || "p---",
-      name: patient.patient_name || "Patient",
-      bed: patient.room || "ICU Bed",
-      title: patient.patient_name || "Telemetry Monitor",
-      heart_rate: vitals.heart_rate ?? "--",
-      spo2: vitals.spo2 ?? "--",
-      bp_systolic: vitals.systolic_bp ?? "--",
-      bp_diastolic: vitals.diastolic_bp ?? "--",
-      risk_score: risk.risk_score ?? "--",
-      status: risk.severity
-        ? risk.severity.charAt(0).toUpperCase() + risk.severity.slice(1)
-        : "Stable",
-      story: risk.recommended_action || "Predictive monitoring active."
+      patient_id: raw.patient_id || "p---",
+      name: raw.patient_name || raw.name || "Patient",
+      bed: raw.room || raw.bed || "ICU Bed",
+      title:
+        raw.title ||
+        risk.alert_message ||
+        (risk.alert_type ? String(risk.alert_type).replace(/_/g, " ") : "Telemetry Monitor"),
+      heart_rate: raw.heart_rate ?? vitals.heart_rate ?? "--",
+      spo2: raw.spo2 ?? vitals.spo2 ?? "--",
+      bp_systolic: raw.bp_systolic ?? vitals.systolic_bp ?? "--",
+      bp_diastolic: raw.bp_diastolic ?? vitals.diastolic_bp ?? "--",
+      risk_score: raw.risk_score ?? risk.risk_score ?? "--",
+      status: raw.status || riskSeverityLabel(risk.severity),
+      story: raw.story || risk.recommended_action || "Predictive monitoring active."
     };
   }
 
-  function normalizeAlert(alert){
+  function normalizeAlert(alert) {
     if (!alert) return null;
     return {
       patient_id: alert.patient_id || "Patient",
@@ -1903,13 +1871,46 @@ grid-template-columns:1fr;
     };
   }
 
-  function renderMonitor(patient){
+  function statusClass(status) {
+    const s = String(status || "").toLowerCase();
+    if (s === "critical") return "critical";
+    if (s === "high") return "watch";
+    return "live";
+  }
+
+  function ecgClass(status) {
+    const s = String(status || "").toLowerCase();
+    if (s === "critical") return "ecg-red";
+    if (s === "high") return "ecg-amber";
+    return "ecg-green";
+  }
+
+  function pulseLabel(status) {
+    const s = String(status || "").toLowerCase();
+    if (s === "critical") return "Critical";
+    if (s === "high") return "High";
+    return "Stable";
+  }
+
+  function buildPath(points) {
+    return points.map((p, i) => (i === 0 ? "M" : "L") + p[0] + "," + p[1]).join(" ");
+  }
+
+  function waveformPoints(mode) {
+    if (mode === "critical") {
+      return [[0,72],[30,72],[46,72],[58,70],[72,72],[86,72],[98,50],[106,100],[116,24],[126,108],[136,72],[162,72],[186,72],[204,70],[220,72],[236,72],[250,54],[258,96],[268,22],[278,106],[290,72],[318,72],[336,72],[352,70],[368,72],[382,72],[398,46],[406,104],[416,20],[428,110],[440,72],[466,72],[486,72],[504,70],[520,72],[536,72],[550,52],[558,98],[568,24],[578,106],[592,72],[620,72]];
+    }
+    if (mode === "high") {
+      return [[0,76],[36,76],[60,76],[74,74],[88,76],[104,76],[118,56],[126,90],[136,38],[146,96],[158,76],[190,76],[214,76],[228,74],[242,76],[258,76],[272,54],[280,88],[290,40],[300,94],[314,76],[348,76],[372,76],[388,74],[402,76],[418,76],[432,58],[440,92],[452,42],[464,96],[478,76],[514,76],[538,76],[552,74],[566,76],[582,76],[596,60],[604,94],[614,44],[624,98],[640,76]];
+    }
+    return [[0,78],[48,78],[82,78],[96,76],[110,78],[126,78],[138,66],[146,84],[156,52],[166,88],[178,78],[220,78],[254,78],[268,76],[282,78],[298,78],[310,68],[318,84],[328,56],[338,88],[350,78],[392,78],[426,78],[440,76],[454,78],[470,78],[482,68],[490,84],[500,56],[510,88],[522,78],[566,78],[600,78]];
+  }
+
+  function renderMonitor(patient) {
     const status = String(patient.status || "").toLowerCase();
     const ecg = ecgClass(status);
     const path = buildPath(
-      waveformPoints(
-        status === "critical" ? "critical" : status === "high" ? "high" : "stable"
-      )
+      waveformPoints(status === "critical" ? "critical" : status === "high" ? "high" : "stable")
     );
 
     return `
@@ -1959,7 +1960,7 @@ grid-template-columns:1fr;
     `;
   }
 
-  function renderAlert(alert){
+  function renderAlert(alert) {
     const sev = String(alert.severity || "").toLowerCase();
     const pill = sev === "critical" ? "critical" : sev === "high" ? "watch" : "live";
     return `
@@ -1973,24 +1974,29 @@ grid-template-columns:1fr;
     `;
   }
 
-  function renderPatients(patients){
-    const source = (patients && patients.length) ? patients : fallbackPatients;
-    const normalized = source.map(normalizePatient).filter(Boolean).slice(0, 4);
-    wall.innerHTML = normalized.map(renderMonitor).join("");
+  function renderPatients(patients) {
+    const source = (patients && patients.length) ? patients.map(normalizePatient).filter(Boolean) : fallbackPatients;
+    if (wall) wall.innerHTML = source.slice(0, 4).map(renderMonitor).join("");
   }
 
-  function renderAlertsList(alerts){
-    const source = (alerts && alerts.length) ? alerts : fallbackAlerts;
-    const normalized = source.map(normalizeAlert).filter(Boolean).slice(0, 6);
-    queue.innerHTML = normalized.map(renderAlert).join("");
+  function renderAlertsList(alerts) {
+    const source = (alerts && alerts.length) ? alerts.map(normalizeAlert).filter(Boolean) : fallbackAlerts;
+    if (queue) queue.innerHTML = source.slice(0, 6).map(renderAlert).join("");
   }
 
-  function updateSummary(patients, alerts){
-    const sourcePatients = (patients && patients.length) ? patients.map(normalizePatient).filter(Boolean) : fallbackPatients;
-    const sourceAlerts = (alerts && alerts.length) ? alerts.map(normalizeAlert).filter(Boolean) : fallbackAlerts;
+  function updateSummary(patients, alerts) {
+    const sourcePatients = (patients && patients.length)
+      ? patients.map(normalizePatient).filter(Boolean)
+      : fallbackPatients;
+
+    const sourceAlerts = (alerts && alerts.length)
+      ? alerts.map(normalizeAlert).filter(Boolean)
+      : fallbackAlerts;
 
     const openAlerts = sourceAlerts.length;
-    const criticalAlerts = sourceAlerts.filter(a => String(a.severity || "").toLowerCase() === "critical").length;
+    const criticalAlerts = sourceAlerts.filter(
+      (a) => String(a.severity || "").toLowerCase() === "critical"
+    ).length;
 
     const avgRisk = sourcePatients.length
       ? sourcePatients.reduce((n, p) => n + Number(p.risk_score || 0), 0) / sourcePatients.length
@@ -2005,7 +2011,7 @@ grid-template-columns:1fr;
     if (avgNode) avgNode.textContent = avgRisk.toFixed(1);
   }
 
-  function applyPayload(payload){
+  function applyPayload(payload) {
     if (payload && Array.isArray(payload.patients)) {
       renderPatients(payload.patients);
       renderAlertsList(payload.alerts || []);
@@ -2025,8 +2031,8 @@ grid-template-columns:1fr;
       const oneAlert = payload.risk ? [{
         patient_id: payload.patient_id || "Patient",
         severity: payload.risk.severity || "Stable",
-        message: payload.risk.alert_message || "Clinical alert surfaced",
-        room: payload.room || "Unit"
+        text: payload.risk.alert_message || "Clinical alert surfaced",
+        unit: payload.room || "Unit"
       }] : [];
       renderPatients(onePatient);
       renderAlertsList(oneAlert);
@@ -2039,32 +2045,44 @@ grid-template-columns:1fr;
     updateSummary([], []);
   }
 
-  async function refreshFallback(){
+  async function refreshFallback() {
     try {
       const res = await fetch("/api/v1/live-snapshot?tenant_id=demo&patient_id=p101&refresh=" + Date.now(), {
         cache: "no-store"
       });
-
       if (!res.ok) {
         applyPayload({});
         return;
       }
-
       const payload = await res.json();
       applyPayload(payload);
     } catch (err) {
-      console.error("Command center refresh failed", err);
+      console.error("Command center fallback refresh failed", err);
       applyPayload({});
     }
   }
 
-  renderPatients([]);
-  renderAlertsList([]);
-  updateSummary([], []);
+  try {
+    const evt = new EventSource("/api/command-center-stream");
+    evt.onmessage = function(e) {
+      try {
+        const payload = JSON.parse(e.data || "{}");
+        applyPayload(payload);
+      } catch (err) {
+        console.error("Command center stream parse error", err);
+      }
+    };
+    evt.onerror = function() {
+      console.warn("Command center stream error, fallback polling remains active.");
+    };
+  } catch (err) {
+    console.warn("EventSource unavailable, fallback polling only.");
+  }
 
+  applyPayload({});
   refreshFallback();
   setInterval(refreshFallback, 5000);
-  </script>
+</script>
 </body>
 </html>
 """
