@@ -2240,40 +2240,40 @@ def create_app() -> Flask:
         record["state"] = "acknowledged"
         _audit(store, patient_id, "ACK", role)
 
-    elif action == "assign":
+        elif action == "assign":
         if not _has_permission("assign"):
             return jsonify({"ok": False, "error": "permission denied"}), 403
         record["assigned"] = True
         record["state"] = "assigned"
         _audit(store, patient_id, "ASSIGN", role)
 
-    elif action == "escalate":
+        elif action == "escalate":
         if not _has_permission("escalate"):
             return jsonify({"ok": False, "error": "permission denied"}), 403
         record["escalated"] = True
         record["state"] = "escalated"
         _audit(store, patient_id, "ESCALATE", role)
 
-    elif action == "resolve":
+        elif action == "resolve":
         if not _has_permission("resolve"):
             return jsonify({"ok": False, "error": "permission denied"}), 403
         record["state"] = "resolved"
         _audit(store, patient_id, "RESOLVE", role)
 
-    else:
+        else:
             return jsonify({"ok": False, "error": "invalid action"}), 400
 
-    record["updated_at"] = _utc_now_iso()
-    record["role"] = role
+            record["updated_at"] = _utc_now_iso()
+            record["role"] = role
 
-    _save_workflow(store)
+            _save_workflow(store)
 
-    return jsonify({
-        "ok": True,
-        "record": record,
-        "user_role": role,
-        "user_name": _current_user(),
-    })
+            return jsonify({
+                "ok": True,
+                "record": record,
+                "user_role": role,
+                "user_name": _current_user(),
+        })
 
     @app.get("/api/v1/stream/channels")
     def stream_channels():
