@@ -1323,50 +1323,50 @@ def _lead_score(payload: dict[str, Any], lead_type: str) -> int:
         facility_type = (payload.get("facility_type") or "").lower()
         if "health system" in facility_type:
             score += 22
-        elif "hospital" in facility_type:
+    elif "hospital" in facility_type:
             score += 18
-        elif "rpm" in facility_type:
+    elif "rpm" in facility_type:
             score += 16
-        elif "clinic" in facility_type:
+    elif "clinic" in facility_type:
             score += 10
-        if any(x in message for x in ["pilot", "integration", "deployment", "command center", "live", "clinical", "alerts"]):
+    if any(x in message for x in ["pilot", "integration", "deployment", "command center", "live", "clinical", "alerts"]):
             score += 14
 
-        elif lead_type == "executive":
+    elif lead_type == "executive":
         priority = (payload.get("priority") or "").lower()
-        if "enterprise" in priority:
+    if "enterprise" in priority:
             score += 20
-        elif "strategic" in priority:
+    elif "strategic" in priority:
             score += 18
-        elif "pilot" in priority:
+    elif "pilot" in priority:
             score += 16
-        elif "operational" in priority:
+    elif "operational" in priority:
             score += 14
-        if any(x in message for x in ["budget", "review", "rollout", "leadership", "system", "hospital", "partnership"]):
+    if any(x in message for x in ["budget", "review", "rollout", "leadership", "system", "hospital", "partnership"]):
             score += 12
 
-        elif lead_type == "investor":
+    elif lead_type == "investor":
         investor_type = (payload.get("investor_type") or "").lower()
         check_size = (payload.get("check_size") or "").lower()
-        if "healthcare vc" in investor_type:
+    if "healthcare vc" in investor_type:
             score += 24
-        elif "strategic" in investor_type:
+    elif "strategic" in investor_type:
             score += 22
-        elif "seed fund" in investor_type:
+    elif "seed fund" in investor_type:
             score += 18
-        elif "angel" in investor_type:
+    elif "angel" in investor_type:
             score += 12
-        elif "family office" in investor_type:
+    elif "family office" in investor_type:
             score += 16
 
-        if "250" in check_size or "500" in check_size or "1m" in check_size:
+    if "250" in check_size or "500" in check_size or "1m" in check_size:
             score += 22
-        elif "100" in check_size:
+    elif "100" in check_size:
             score += 14
-        elif "50" in check_size:
+    elif "50" in check_size:
             score += 10
 
-        if any(x in message for x in ["deck", "traction", "pilot", "hospital", "funding", "partnership", "due diligence", "customers"]):
+    if any(x in message for x in ["deck", "traction", "pilot", "hospital", "funding", "partnership", "due diligence", "customers"]):
             score += 14
 
     if any(x in org for x in ["hospital", "health", "medical", "care", "system", "clinic", "capital", "ventures"]):
