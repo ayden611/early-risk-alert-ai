@@ -24,7 +24,7 @@ COMMAND_CENTER_HTML = r"""
       --purple:#b58cff;
       --shadow:0 20px 60px rgba(0,0,0,.34);
       --radius:24px;
-      --max:1480px;
+      --max:1500px;
     }
 
     *{box-sizing:border-box}
@@ -42,9 +42,9 @@ COMMAND_CENTER_HTML = r"""
     .shell{max-width:var(--max);margin:0 auto;padding:20px 16px 56px}
 
     .topbar{
-      position:sticky;top:0;z-index:60;
+      position:sticky;top:0;z-index:80;
       border-bottom:1px solid var(--line);
-      background:rgba(7,16,28,.84);
+      background:rgba(7,16,28,.86);
       backdrop-filter:blur(16px);
     }
     .topbar-inner{
@@ -66,6 +66,7 @@ COMMAND_CENTER_HTML = r"""
       padding:12px 16px;border-radius:16px;font-size:14px;font-weight:900;
       border:1px solid transparent;cursor:pointer;
       transition:transform .18s ease, box-shadow .18s ease, opacity .18s ease, border-color .18s ease;
+      font-family:inherit;
     }
     .btn:hover{transform:translateY(-2px)}
     .btn.primary{
@@ -79,6 +80,18 @@ COMMAND_CENTER_HTML = r"""
     .btn.critical-btn{background:linear-gradient(135deg,#ff667d,#ff8fa0);color:#08111f}
     .btn.live-btn{background:linear-gradient(135deg,#3ad38f,#8ff3c1);color:#08111f}
     .btn.warn-btn{background:linear-gradient(135deg,#f4bd6a,#ffe09b);color:#2a1b00}
+    .btn[disabled]{opacity:.45;cursor:not-allowed;transform:none !important}
+
+    .status-pill{
+      display:inline-flex;align-items:center;justify-content:center;
+      padding:10px 14px;border-radius:999px;font-size:12px;font-weight:1000;letter-spacing:.14em;text-transform:uppercase;
+      border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);
+    }
+    .status-pill.live{color:#0b1528;background:linear-gradient(135deg,var(--green),#7ef5c0)}
+    .status-pill.watch{color:#2a1b00;background:linear-gradient(135deg,var(--amber),#ffdba5)}
+    .status-pill.critical{color:#fff3f5;background:linear-gradient(135deg,#ff667d,#ff8e99)}
+    .status-pill.info{color:#07101c;background:linear-gradient(135deg,var(--blue),var(--blue2))}
+    .status-pill.muted{color:#dce9ff;background:rgba(255,255,255,.05)}
 
     .hero{
       margin-top:18px;
@@ -93,7 +106,7 @@ COMMAND_CENTER_HTML = r"""
       padding:22px;
       overflow:hidden;
     }
-    .hero-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:18px;align-items:stretch}
+    .hero-grid{display:grid;grid-template-columns:1.18fr .82fr;gap:18px;align-items:stretch}
     .hero-copy,.hero-side{
       border:1px solid var(--line);
       border-radius:26px;
@@ -106,7 +119,7 @@ COMMAND_CENTER_HTML = r"""
     }
     .hero-copy h1{
       margin:0 0 12px;
-      font-size:clamp(34px,4.3vw,62px);
+      font-size:clamp(32px,4.3vw,60px);
       line-height:.94;
       letter-spacing:-.055em;
       font-weight:1000;
@@ -124,6 +137,27 @@ COMMAND_CENTER_HTML = r"""
       font-size:11px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:#8fdcff;margin-bottom:8px;
     }
     .hero-mini .v{font-size:18px;font-weight:1000;line-height:1.12;letter-spacing:-.03em}
+
+    .pilot-banner{
+      display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;
+      margin-bottom:14px;padding:14px 16px;border-radius:18px;
+      background:rgba(244,189,106,.12);border:1px solid rgba(244,189,106,.18);color:#ffe4b6;
+    }
+    .pilot-banner strong{color:#fff0cf}
+    .banner-links{display:flex;gap:10px;flex-wrap:wrap}
+    .banner-links a{
+      display:inline-flex;align-items:center;justify-content:center;padding:8px 12px;border-radius:999px;
+      background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);font-size:12px;font-weight:900;
+    }
+
+    .toolbar{
+      display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:18px;
+    }
+    .toolbar select{
+      background:#0d1728;border:1px solid rgba(255,255,255,.08);border-radius:14px;color:var(--text);
+      padding:12px 14px;font:inherit;font-weight:800;
+    }
+    .health-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
 
     .ticker-wrap{
       margin-top:18px;border:1px solid var(--line);border-radius:20px;
@@ -164,22 +198,6 @@ COMMAND_CENTER_HTML = r"""
     .section-title{font-size:28px;font-weight:1000;letter-spacing:-.04em;margin:0}
     .section-sub{font-size:14px;color:var(--muted);line-height:1.55;margin:6px 0 0}
 
-    .status-pill{
-      display:inline-flex;align-items:center;justify-content:center;
-      padding:10px 14px;border-radius:999px;font-size:12px;font-weight:1000;letter-spacing:.14em;text-transform:uppercase;
-      border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);
-    }
-    .status-pill.live{color:#0b1528;background:linear-gradient(135deg,var(--green),#7ef5c0)}
-    .status-pill.watch{color:#2a1b00;background:linear-gradient(135deg,var(--amber),#ffdba5)}
-    .status-pill.critical{color:#fff3f5;background:linear-gradient(135deg,#ff667d,#ff8e99)}
-    .status-pill.info{color:#07101c;background:linear-gradient(135deg,var(--blue),var(--blue2))}
-
-    .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
-    .toolbar select{
-      background:#0d1728;border:1px solid rgba(255,255,255,.08);border-radius:14px;color:var(--text);
-      padding:12px 14px;font:inherit;font-weight:800;
-    }
-
     .telemetry-top{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px}
     .stat-card{
       border:1px solid var(--line);border-radius:20px;
@@ -207,7 +225,7 @@ COMMAND_CENTER_HTML = r"""
         linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.012)),
         linear-gradient(180deg, rgba(11,20,35,.96), rgba(6,12,22,.98));
       box-shadow:0 16px 44px rgba(0,0,0,.32);
-      padding:18px;position:relative;overflow:hidden;min-height:390px;
+      padding:18px;position:relative;overflow:hidden;min-height:406px;
     }
     .monitor::before{
       content:"";position:absolute;inset:0;
@@ -271,13 +289,13 @@ COMMAND_CENTER_HTML = r"""
     }
     .intel-card h3{margin:0 0 12px;font-size:20px;font-weight:1000;letter-spacing:-.03em}
 
-    .alert-feed,.queue-list,.timeline-panel,.why-now,.audit-list{display:grid;gap:10px}
-    .alert-item,.queue-item,.timeline-item,.why-line,.audit-item{
+    .alert-feed,.queue-list,.timeline-panel,.why-now,.audit-list,.report-list,.threshold-list{display:grid;gap:10px}
+    .alert-item,.queue-item,.timeline-item,.why-line,.audit-item,.report-item,.threshold-item{
       border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:12px;background:rgba(255,255,255,.03);
     }
-    .alert-item,.queue-item,.audit-item{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
-    .alert-copy,.queue-copy,.audit-copy{font-size:14px;font-weight:900;line-height:1.45;color:#e4efff}
-    .alert-sub,.audit-sub{font-size:12px;color:#acc0dd;font-weight:700;margin-top:4px}
+    .alert-item,.queue-item,.audit-item,.report-item,.threshold-item{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+    .alert-copy,.queue-copy,.audit-copy,.report-copy{font-size:14px;font-weight:900;line-height:1.45;color:#e4efff}
+    .alert-sub,.audit-sub,.report-sub{font-size:12px;color:#acc0dd;font-weight:700;margin-top:4px}
 
     .timeline-item{display:grid;grid-template-columns:78px 1fr;gap:12px;align-items:start}
     .timeline-time{font-size:12px;font-weight:1000;letter-spacing:.12em;text-transform:uppercase;color:#8fdcff}
@@ -419,20 +437,33 @@ COMMAND_CENTER_HTML = r"""
         <a href="/investor-intake">Investors</a>
         <a href="/executive-walkthrough">Executives</a>
         <a href="/admin/review">Admin Review</a>
+        <a href="/logout">Logout</a>
       </div>
     </div>
   </div>
 
   <div class="shell">
     <section class="hero">
+      <div class="pilot-banner">
+        <div>
+          <strong>Pilot Mode / Evaluation Environment</strong><br>
+          This environment is intended for pilot review, workflow testing, and stakeholder evaluation. It is not a substitute for clinician judgment, hospital policy, or emergency response systems.
+        </div>
+        <div class="banner-links">
+          <a href="/terms">Terms</a>
+          <a href="/privacy">Privacy</a>
+          <a href="/pilot-disclaimer">Pilot Disclaimer</a>
+        </div>
+      </div>
+
       <div class="hero-grid">
         <div class="hero-copy">
           <div class="hero-kicker">Hospital mission control</div>
           <h1>Real-time predictive monitoring wall for hospitals.</h1>
           <p>
             Early Risk Alert AI combines ICU-style telemetry monitors, live alert operations, top-risk queue
-            visibility, clinical workflow panels, patient timeline tracking, and audit-ready hospital command-center
-            workflows into one production-ready command wall.
+            visibility, clinical workflow panels, patient timeline tracking, pilot-safe operating controls,
+            reporting, thresholds, and audit-ready hospital command-center workflows into one production-style command wall.
           </p>
           <div class="hero-actions">
             <a class="btn primary" href="/admin/review">Open Admin Review</a>
@@ -442,20 +473,20 @@ COMMAND_CENTER_HTML = r"""
           </div>
           <div class="hero-mini-grid">
             <div class="hero-mini"><div class="k">Telemetry</div><div class="v">Live waveform monitors</div></div>
-            <div class="hero-mini"><div class="k">Prediction</div><div class="v">AI risk + escalation logic</div></div>
-            <div class="hero-mini"><div class="k">Workflow</div><div class="v">Saved action state</div></div>
-            <div class="hero-mini"><div class="k">Audit</div><div class="v">Traceable intervention log</div></div>
+            <div class="hero-mini"><div class="k">Prediction</div><div class="v">AI risk + explainable reasons</div></div>
+            <div class="hero-mini"><div class="k">Workflow</div><div class="v">Backend-saved action state</div></div>
+            <div class="hero-mini"><div class="k">Audit</div><div class="v">Role-based intervention log</div></div>
           </div>
         </div>
 
         <div class="hero-side">
-          <div class="hero-kicker">Command wall controls</div>
+          <div class="hero-kicker">Pilot control layer</div>
           <p>
-            Filter the telemetry wall by unit, open a patient detail drawer, save acknowledgement and escalation
-            actions, and maintain a visible audit trail that makes the platform feel much closer to a real hospital
-            operating product.
+            Filter the telemetry wall by unit, review current user role, track feed freshness, monitor system health,
+            and operate within a pilot-safe environment with visible legal, privacy, and disclaimer controls.
           </p>
-          <div class="toolbar" style="margin-top:18px;">
+
+          <div class="toolbar">
             <select id="unitFilter">
               <option value="all">All Units</option>
               <option value="icu">ICU</option>
@@ -465,7 +496,16 @@ COMMAND_CENTER_HTML = r"""
               <option value="rpm">RPM / Home</option>
             </select>
             <div class="status-pill info" id="selectedUnitPill">All Units</div>
+            <div class="status-pill muted" id="currentRolePill">Role: --</div>
+            <div class="status-pill muted" id="currentUserPill">User: --</div>
           </div>
+
+          <div class="health-row">
+            <div class="status-pill muted" id="pilotModePill">Pilot Mode</div>
+            <div class="status-pill live" id="feedHealthPill">Feed Live</div>
+            <div class="status-pill info" id="lastUpdatedPill">Last Updated --</div>
+          </div>
+
           <div class="ticker-wrap">
             <div class="ticker-track">
               <div class="ticker-item"><span class="ticker-dot dot-red"></span>Critical deterioration signal surfaced</div>
@@ -490,7 +530,7 @@ COMMAND_CENTER_HTML = r"""
         <div class="section-head">
           <div>
             <h2 class="section-title">Hospital Command Wall</h2>
-            <div class="section-sub">ICU-style telemetry monitors, live triage signals, workflow persistence, patient detail drawer, and audit trail visibility.</div>
+            <div class="section-sub">ICU-style telemetry monitors, live triage signals, backend workflow persistence, patient detail drawer, and audit trail visibility.</div>
           </div>
           <div class="status-pill live" id="wallStatus">Live</div>
         </div>
@@ -551,34 +591,26 @@ COMMAND_CENTER_HTML = r"""
                   <div class="status-pill live">Tracked</div>
                 </div>
                 <div class="queue-item">
+                  <div class="queue-copy">Assigned <strong id="wf-assigned">0</strong></div>
+                  <div class="status-pill info">Assigned</div>
+                </div>
+                <div class="queue-item">
                   <div class="queue-copy">Escalated <strong id="wf-escalated">0</strong></div>
                   <div class="status-pill critical">Priority</div>
                 </div>
                 <div class="queue-item">
-                  <div class="queue-copy">Assigned Nurse <strong id="wf-assigned">0</strong></div>
-                  <div class="status-pill info">Assigned</div>
+                  <div class="queue-copy">Resolved <strong id="wf-resolved">0</strong></div>
+                  <div class="status-pill live">Resolved</div>
                 </div>
               </div>
             </div>
 
             <div class="intel-card">
               <h3>System Health</h3>
-              <div class="queue-list">
+              <div class="queue-list" id="system-health-list">
                 <div class="queue-item">
-                  <div class="queue-copy">Telemetry Devices Connected</div>
-                  <div class="status-pill live" id="health-devices">--</div>
-                </div>
-                <div class="queue-item">
-                  <div class="queue-copy">Active Patient Streams</div>
-                  <div class="status-pill live" id="health-streams">--</div>
-                </div>
-                <div class="queue-item">
-                  <div class="queue-copy">Data Latency</div>
-                  <div class="status-pill watch" id="health-latency">--</div>
-                </div>
-                <div class="queue-item">
-                  <div class="queue-copy">System Status</div>
-                  <div class="status-pill live" id="health-status">Operational</div>
+                  <div class="queue-copy">Waiting for system health...</div>
+                  <div class="status-pill muted">--</div>
                 </div>
               </div>
             </div>
@@ -602,6 +634,33 @@ COMMAND_CENTER_HTML = r"""
                     <div class="audit-sub">Awaiting user actions</div>
                   </div>
                   <div class="status-pill info">Log</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="intel-card">
+              <h3>Reporting Dashboard</h3>
+              <div class="report-list" id="reporting-panel">
+                <div class="report-item">
+                  <div>
+                    <div class="report-copy">Loading reporting...</div>
+                    <div class="report-sub">Pilot metrics</div>
+                  </div>
+                  <div class="status-pill info">Report</div>
+                </div>
+              </div>
+              <div class="hero-actions" style="margin-top:12px;">
+                <button class="btn secondary small" id="refreshReportingBtn" type="button">Refresh Reporting</button>
+                <button class="btn secondary small" id="exportAuditBtn" type="button">Export Audit Log</button>
+              </div>
+            </div>
+
+            <div class="intel-card">
+              <h3>Configurable Thresholds</h3>
+              <div class="threshold-list" id="threshold-panel">
+                <div class="threshold-item">
+                  <div class="report-copy">Loading thresholds...</div>
+                  <div class="status-pill info">Config</div>
                 </div>
               </div>
             </div>
@@ -665,9 +724,9 @@ COMMAND_CENTER_HTML = r"""
           <div class="ops-card">
             <h3>Workflow Readiness</h3>
             <div class="forecast">
-              <div>ACK persistence: Enabled</div>
-              <div>Escalation routing: Ready</div>
-              <div>Nurse assignment: Active</div>
+              <div>Backend persistence: Enabled</div>
+              <div>Role enforcement: Active</div>
+              <div>Audit trail: Live</div>
             </div>
           </div>
 
@@ -675,8 +734,8 @@ COMMAND_CENTER_HTML = r"""
             <h3>Operations Wall Mode</h3>
             <div class="forecast">
               <div>Patient detail drawer: Enabled</div>
-              <div>Top risk queue: Live</div>
-              <div>Audit trail: Live</div>
+              <div>Stale feed detection: Enabled</div>
+              <div>Pilot banner: Active</div>
             </div>
           </div>
         </div>
@@ -830,7 +889,7 @@ COMMAND_CENTER_HTML = r"""
           <div class="info-card">
             <h3>Terms of Use</h3>
             <p>
-              This platform presentation is intended for product demonstration, workflow evaluation, and commercial review.
+              This platform environment is intended for product demonstration, workflow evaluation, and pilot review.
               It is not intended to replace licensed clinical judgment, hospital policy, or emergency response procedures.
             </p>
             <p>
@@ -846,7 +905,7 @@ COMMAND_CENTER_HTML = r"""
               compliant deployment environments with appropriate access control, logging, and policy protections.
             </p>
             <p>
-              Form submissions should be handled in accordance with your organization’s privacy, security, and retention practices.
+              Workflow actions, audit events, and pilot configuration changes may be stored for evaluation, reporting, and system testing purposes.
             </p>
           </div>
         </div>
@@ -854,7 +913,7 @@ COMMAND_CENTER_HTML = r"""
     </section>
 
     <div class="footer">
-      Early Risk Alert AI LLC · Predictive clinical intelligence platform · Hospital command center wall · Workflow persistence · Patient detail panel · Audit trail
+      Early Risk Alert AI LLC · Predictive clinical intelligence platform · Hospital command center wall · Backend workflow persistence · Patient detail panel · Audit trail · Pilot-safe environment
     </div>
   </div>
 
@@ -896,6 +955,11 @@ COMMAND_CENTER_HTML = r"""
     <div class="drawer-block">
       <div class="drawer-k">Recommended Action</div>
       <div class="drawer-v" id="drawerAction">--</div>
+    </div>
+
+    <div class="drawer-block">
+      <div class="drawer-k">Explainable Alert Reason</div>
+      <div class="drawer-v" id="drawerExplainability">--</div>
     </div>
 
     <div class="drawer-block">
@@ -954,59 +1018,14 @@ COMMAND_CENTER_HTML = r"""
     let activeAlerts = [];
     let currentUnitFilter = "all";
     let selectedPatientId = null;
-
-    const STORAGE_KEY = "era_command_workflow_state_v1";
-    const AUDIT_KEY = "era_command_audit_log_v1";
-
     let workflowState = {};
     let auditLog = [];
-
-    function loadSavedState(){
-      try{
-        workflowState = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
-      }catch(e){
-        workflowState = {};
-      }
-      try{
-        auditLog = JSON.parse(localStorage.getItem(AUDIT_KEY) || "[]");
-      }catch(e){
-        auditLog = [];
-      }
-    }
-
-    function saveWorkflowState(){
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(workflowState));
-    }
-
-    function saveAuditLog(){
-      localStorage.setItem(AUDIT_KEY, JSON.stringify(auditLog.slice(0, 40)));
-    }
-
-    function addAuditEntry(type, patientId, message){
-      const entry = {
-        id: Date.now() + "_" + Math.random().toString(36).slice(2,7),
-        type: type,
-        patient_id: patientId,
-        message: message,
-        at: new Date().toLocaleTimeString()
-      };
-      auditLog.unshift(entry);
-      auditLog = auditLog.slice(0, 40);
-      saveAuditLog();
-      renderAuditLog();
-    }
-
-    function getWorkflowRecord(patientId){
-      if (!workflowState[patientId]) {
-        workflowState[patientId] = {
-          ack: false,
-          escalated: false,
-          assigned_nurse: false,
-          assigned_label: ""
-        };
-      }
-      return workflowState[patientId];
-    }
+    let reportingData = {};
+    let thresholdData = {};
+    let pilotStatusData = {};
+    let systemHealthData = {};
+    let lastSnapshotAt = null;
+    let consecutiveFeedErrors = 0;
 
     function safe(v, fallback="--"){
       return v === undefined || v === null || v === "" ? fallback : v;
@@ -1015,7 +1034,7 @@ COMMAND_CENTER_HTML = r"""
     function statusClass(status){
       const s = String(status || "").toLowerCase();
       if (s === "critical") return "critical";
-      if (s === "high" || s === "moderate") return "watch";
+      if (s === "high" || s === "moderate" || s === "acknowledged" || s === "assigned") return "watch";
       return "live";
     }
 
@@ -1024,6 +1043,9 @@ COMMAND_CENTER_HTML = r"""
       if (s === "critical") return "Critical";
       if (s === "high") return "High";
       if (s === "moderate") return "Moderate";
+      if (s === "acknowledged") return "Acknowledged";
+      if (s === "assigned") return "Assigned";
+      if (s === "resolved") return "Resolved";
       return "Stable";
     }
 
@@ -1053,6 +1075,21 @@ COMMAND_CENTER_HTML = r"""
       return "All Units";
     }
 
+    function roleLabel(role){
+      const r = String(role || "").toLowerCase();
+      if (r === "viewer") return "Viewer";
+      if (r === "operator") return "Operator";
+      if (r === "nurse") return "Nurse";
+      if (r === "physician") return "Physician";
+      if (r === "admin") return "Admin";
+      return "Viewer";
+    }
+
+    function hasPermission(action){
+      const permissions = pilotStatusData.permissions || [];
+      return permissions.includes(action) || permissions.includes("admin");
+    }
+
     function buildPath(points){
       return points.map((p, i) => (i === 0 ? "M" : "L") + p[0] + "," + p[1]).join(" ");
     }
@@ -1067,6 +1104,45 @@ COMMAND_CENTER_HTML = r"""
       return [[0,78],[48,78],[82,78],[96,76],[110,78],[126,78],[138,66],[146,84],[156,52],[166,88],[178,78],[220,78],[254,78],[268,76],[282,78],[298,78],[310,68],[318,84],[328,56],[338,88],[350,78],[392,78],[426,78],[440,76],[454,78],[470,78],[482,68],[490,84],[500,56],[510,88],[522,78],[566,78],[600,78]];
     }
 
+    function formatTime(iso){
+      if (!iso) return "--";
+      try{
+        return new Date(iso).toLocaleTimeString();
+      }catch(e){
+        return "--";
+      }
+    }
+
+    function secondsSince(iso){
+      if (!iso) return 99999;
+      try{
+        const then = new Date(iso).getTime();
+        const now = Date.now();
+        return Math.floor((now - then) / 1000);
+      }catch(e){
+        return 99999;
+      }
+    }
+
+    function explainabilityForPatient(patient){
+      const parts = [];
+      const spo2 = Number(patient.spo2 || 0);
+      const hr = Number(patient.heart_rate || 0);
+      const sbp = Number(patient.bp_systolic || 0);
+
+      if (spo2 && spo2 < 90) parts.push("SpO₂ fell below 90%");
+      else if (spo2 && spo2 < 94) parts.push("SpO₂ dropped below target range");
+
+      if (hr && hr >= 130) parts.push("heart rate reached critical range");
+      else if (hr && hr >= 110) parts.push("heart rate remained elevated");
+
+      if (sbp && sbp >= 180) parts.push("systolic blood pressure reached crisis range");
+      else if (sbp && sbp >= 160) parts.push("systolic blood pressure remained elevated");
+
+      if (!parts.length) parts.push("combined vital pattern suggests current risk state");
+      return parts.join(", ") + ".";
+    }
+
     function normalizePatient(raw) {
       if (!raw) return null;
       const vitals = raw.vitals || {};
@@ -1078,7 +1154,7 @@ COMMAND_CENTER_HTML = r"""
         bed: room,
         unit: roomToUnit(room),
         program: raw.program || "Clinical Monitoring",
-        title: risk.alert_message || "Predictive Risk Monitor",
+        title: risk.alert_message || raw.title || "Predictive Risk Monitor",
         heart_rate: raw.heart_rate ?? vitals.heart_rate ?? "--",
         spo2: raw.spo2 ?? vitals.spo2 ?? "--",
         bp_systolic: raw.bp_systolic ?? vitals.systolic_bp ?? "--",
@@ -1111,13 +1187,162 @@ COMMAND_CENTER_HTML = r"""
       return activePatients.find(p => String(p.patient_id) === String(patientId)) || null;
     }
 
+    function getWorkflowRecord(patientId){
+      return workflowState[String(patientId)] || {
+        state: "new",
+        ack: false,
+        assigned: false,
+        escalated: false,
+        role: "",
+        updated_at: ""
+      };
+    }
+
     function workflowText(patientId){
       const record = getWorkflowRecord(patientId);
       const parts = [];
-      if (record.ack) parts.push("Acknowledged");
-      if (record.escalated) parts.push("Escalated");
-      if (record.assigned_nurse) parts.push(record.assigned_label || "Nurse assigned");
+      if (record.state) parts.push(String(record.state).replace(/_/g, " "));
+      if (record.role) parts.push("by " + roleLabel(record.role));
+      if (record.updated_at) parts.push("updated " + formatTime(record.updated_at));
       return parts.length ? parts.join(" · ") : "No workflow action saved yet.";
+    }
+
+    async function loadPilotStatus(){
+      try{
+        const res = await fetch("/api/pilot-status", {cache:"no-store"});
+        if (!res.ok) return;
+        pilotStatusData = await res.json();
+      }catch(err){
+        console.error("Failed to load pilot status", err);
+      }
+    }
+
+    async function loadWorkflowState(){
+      try{
+        const res = await fetch("/api/workflow", {cache:"no-store"});
+        if (!res.ok) return;
+        const payload = await res.json();
+        workflowState = payload.records || {};
+        auditLog = payload.audit_log || [];
+      }catch(err){
+        console.error("Failed to load workflow state", err);
+      }
+    }
+
+    async function loadReporting(){
+      try{
+        const res = await fetch("/api/reporting", {cache:"no-store"});
+        if (!res.ok) return;
+        reportingData = await res.json();
+      }catch(err){
+        console.error("Failed to load reporting", err);
+      }
+    }
+
+    async function loadThresholds(){
+      try{
+        const res = await fetch("/api/thresholds", {cache:"no-store"});
+        if (!res.ok) return;
+        thresholdData = await res.json();
+      }catch(err){
+        console.error("Failed to load thresholds", err);
+      }
+    }
+
+    async function loadSystemHealth(){
+      try{
+        const res = await fetch("/api/system-health", {cache:"no-store"});
+        if (!res.ok) return;
+        systemHealthData = await res.json();
+      }catch(err){
+        console.error("Failed to load system health", err);
+      }
+    }
+
+    async function postWorkflowAction(patientId, action){
+      try{
+        const res = await fetch("/api/workflow/action", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({
+            patient_id: patientId,
+            action: action
+          })
+        });
+
+        const payload = await res.json();
+        if (!res.ok || !payload.ok){
+          alert(payload.error || "Action not permitted.");
+          return false;
+        }
+
+        workflowState[String(patientId)] = payload.record || {};
+        await loadWorkflowState();
+        await loadReporting();
+        return true;
+      }catch(err){
+        console.error("Workflow action request failed", err);
+        alert("Unable to save workflow action.");
+        return false;
+      }
+    }
+
+    async function exportAudit(){
+      try{
+        const res = await fetch("/api/audit/export", {cache:"no-store"});
+        const payload = await res.json();
+
+        if (!res.ok){
+          alert(payload.error || "Export unavailable.");
+          return;
+        }
+
+        const blob = new Blob([JSON.stringify(payload, null, 2)], {type:"application/json"});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "early_risk_alert_audit_export.json";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      }catch(err){
+        console.error("Export failed", err);
+        alert("Unable to export audit log.");
+      }
+    }
+
+    function renderPilotStatus(){
+      document.getElementById("currentRolePill").textContent = "Role: " + roleLabel(pilotStatusData.user_role || "--");
+      document.getElementById("currentUserPill").textContent = "User: " + safe(pilotStatusData.user_name, "--");
+      document.getElementById("pilotModePill").textContent = (pilotStatusData.pilot_mode ? "Pilot Mode On" : "Pilot Mode Off");
+      document.getElementById("pilotModePill").className = pilotStatusData.pilot_mode ? "status-pill watch" : "status-pill muted";
+    }
+
+    function renderFeedStatus(){
+      const lastUpdatedPill = document.getElementById("lastUpdatedPill");
+      const feedHealthPill = document.getElementById("feedHealthPill");
+
+      if (!lastSnapshotAt){
+        lastUpdatedPill.textContent = "Last Updated --";
+        feedHealthPill.textContent = "Feed Pending";
+        feedHealthPill.className = "status-pill watch";
+        return;
+      }
+
+      lastUpdatedPill.textContent = "Last Updated " + formatTime(lastSnapshotAt);
+      const age = secondsSince(lastSnapshotAt);
+
+      if (consecutiveFeedErrors >= 2 || age > 20){
+        feedHealthPill.textContent = "Feed Stale";
+        feedHealthPill.className = "status-pill critical";
+      } else if (age > 10){
+        feedHealthPill.textContent = "Feed Delayed";
+        feedHealthPill.className = "status-pill watch";
+      } else {
+        feedHealthPill.textContent = "Feed Live";
+        feedHealthPill.className = "status-pill live";
+      }
     }
 
     function openPatientDrawer(patientId){
@@ -1133,6 +1358,7 @@ COMMAND_CENTER_HTML = r"""
       document.getElementById("drawerBp").textContent = `${safe(patient.bp_systolic)}/${safe(patient.bp_diastolic)}`;
       document.getElementById("drawerRisk").textContent = typeof patient.risk_score === "number" ? patient.risk_score.toFixed(1) : safe(patient.risk_score);
       document.getElementById("drawerAction").textContent = safe(patient.recommended_action);
+      document.getElementById("drawerExplainability").textContent = explainabilityForPatient(patient);
       document.getElementById("drawerWorkflow").textContent = workflowText(patientId);
 
       document.getElementById("drawerTimeline").innerHTML = `
@@ -1163,6 +1389,21 @@ COMMAND_CENTER_HTML = r"""
       document.getElementById("drawerOverlay").classList.remove("show");
     }
 
+    function monitorActionButtons(patient, record, pid){
+      const canAck = hasPermission("ack");
+      const canAssign = hasPermission("assign");
+      const canEscalate = hasPermission("escalate");
+      const canResolve = hasPermission("resolve");
+
+      return `
+        <button class="btn ${record.ack ? 'live-btn' : 'secondary'} small" onclick="ackPatient('${pid}')" ${canAck ? '' : 'disabled'}>${record.ack ? 'ACK Saved' : 'ACK'}</button>
+        <button class="btn ${record.assigned ? 'warn-btn' : 'secondary'} small" onclick="assignPatient('${pid}')" ${canAssign ? '' : 'disabled'}>${record.assigned ? 'Assigned' : 'Assign'}</button>
+        <button class="btn ${record.escalated ? 'critical-btn' : 'secondary'} small" onclick="escalatePatient('${pid}')" ${canEscalate ? '' : 'disabled'}>${record.escalated ? 'Escalated' : 'Escalate'}</button>
+        <button class="btn ${record.state === 'resolved' ? 'live-btn' : 'secondary'} small" onclick="resolvePatient('${pid}')" ${canResolve ? '' : 'disabled'}>${record.state === 'resolved' ? 'Resolved' : 'Resolve'}</button>
+        <button class="btn secondary small" onclick="openPatientDrawer('${pid}')">Details</button>
+      `;
+    }
+
     function renderMonitor(patient){
       const status = String(patient.status || "").toLowerCase();
       const ecg = ecgClass(status);
@@ -1178,7 +1419,7 @@ COMMAND_CENTER_HTML = r"""
               <div class="monitor-bed">${safe(patient.bed, "ICU Bed")}</div>
               <div class="monitor-title">${safe(patient.title, safe(patient.name, "Predictive Risk Monitor"))}</div>
             </div>
-            <div class="status-pill ${statusClass(patient.status)}">${pulseLabel(patient.status)}</div>
+            <div class="status-pill ${statusClass(record.state === 'resolved' ? 'stable' : patient.status)}">${pulseLabel(record.state === "new" ? patient.status : record.state)}</div>
           </div>
 
           <div class="monitor-wave" onclick="openPatientDrawer('${pid}')" style="cursor:pointer;">
@@ -1208,14 +1449,11 @@ COMMAND_CENTER_HTML = r"""
 
           <div class="monitor-story">
             <div class="story-text">${safe(patient.story)}</div>
-            <div class="status-pill ${statusClass(patient.status)}">${pid}</div>
+            <div class="status-pill ${statusClass(record.state === 'resolved' ? 'stable' : patient.status)}">${pid}</div>
           </div>
 
           <div class="monitor-actions">
-            <button class="btn ${record.ack ? 'live-btn' : 'secondary'} small" onclick="ackPatient('${pid}')">${record.ack ? 'ACK Saved' : 'ACK'}</button>
-            <button class="btn ${record.escalated ? 'critical-btn' : 'secondary'} small" onclick="escalatePatient('${pid}')">${record.escalated ? 'Escalated' : 'Escalate'}</button>
-            <button class="btn ${record.assigned_nurse ? 'warn-btn' : 'secondary'} small" onclick="assignNurse('${pid}')">${record.assigned_nurse ? 'Assigned' : 'Assign Nurse'}</button>
-            <button class="btn secondary small" onclick="openPatientDrawer('${pid}')">Details</button>
+            ${monitorActionButtons(patient, record, pid)}
           </div>
         </div>
       `;
@@ -1262,6 +1500,7 @@ COMMAND_CENTER_HTML = r"""
         <div class="queue-item">
           <div class="queue-copy">
             ${safe(p.name)} · ${safe(p.patient_id)} · Risk ${typeof p.risk_score === "number" ? p.risk_score.toFixed(1) : safe(p.risk_score)}
+            <div class="report-sub">${explainabilityForPatient(p)}</div>
           </div>
           <div class="status-pill ${statusClass(p.status)}">${pulseLabel(p.status)}</div>
         </div>
@@ -1284,6 +1523,7 @@ COMMAND_CENTER_HTML = r"""
         <div class="why-line">Highest-risk patient: ${safe(top.name)} (${safe(top.patient_id)})</div>
         <div class="why-line">Current severity: ${safe(top.status)} · Risk ${typeof top.risk_score === "number" ? top.risk_score.toFixed(1) : safe(top.risk_score)}</div>
         <div class="why-line">${safe(top.story)}</div>
+        <div class="why-line">Explainable reason: ${explainabilityForPatient(top)}</div>
       `;
     }
 
@@ -1292,22 +1532,45 @@ COMMAND_CENTER_HTML = r"""
       const allRecords = Object.values(workflowState);
       const ackCount = allRecords.filter(r => r.ack).length;
       const escalatedCount = allRecords.filter(r => r.escalated).length;
-      const assignedCount = allRecords.filter(r => r.assigned_nurse).length;
+      const assignedCount = allRecords.filter(r => r.assigned).length;
+      const resolvedCount = allRecords.filter(r => r.state === "resolved").length;
 
       document.getElementById("wf-new").textContent = String(source.length);
       document.getElementById("wf-ack").textContent = String(ackCount);
       document.getElementById("wf-escalated").textContent = String(escalatedCount);
       document.getElementById("wf-assigned").textContent = String(assignedCount);
+      document.getElementById("wf-resolved").textContent = String(resolvedCount);
     }
 
-    function renderSystemHealth(patients, alerts){
-      const patientCount = filterPatientsByUnit((patients && patients.length ? patients : fallbackPatients)).length;
-      const alertCount = (alerts && alerts.length) ? alerts.length : 0;
+    function renderSystemHealth(){
+      const target = document.getElementById("system-health-list");
+      const status = systemHealthData.status || "unknown";
+      const pilotMode = !!systemHealthData.pilot_mode;
+      const timestamp = systemHealthData.timestamp || null;
+      const staleAge = secondsSince(lastSnapshotAt);
 
-      document.getElementById("health-devices").textContent = String(patientCount);
-      document.getElementById("health-streams").textContent = String(patientCount);
-      document.getElementById("health-latency").textContent = alertCount > 0 ? "Low" : "--";
-      document.getElementById("health-status").textContent = "Operational";
+      target.innerHTML = `
+        <div class="queue-item">
+          <div class="queue-copy">System Status<div class="report-sub">${safe(status)}</div></div>
+          <div class="status-pill ${status === 'operational' ? 'live' : 'watch'}">${safe(status)}</div>
+        </div>
+        <div class="queue-item">
+          <div class="queue-copy">Pilot Mode<div class="report-sub">${pilotMode ? 'Enabled' : 'Disabled'}</div></div>
+          <div class="status-pill ${pilotMode ? 'watch' : 'muted'}">${pilotMode ? 'On' : 'Off'}</div>
+        </div>
+        <div class="queue-item">
+          <div class="queue-copy">Workflow Storage<div class="report-sub">${safe(String(systemHealthData.workflow_storage), '--')}</div></div>
+          <div class="status-pill ${systemHealthData.workflow_storage ? 'live' : 'critical'}">${systemHealthData.workflow_storage ? 'Ready' : 'Issue'}</div>
+        </div>
+        <div class="queue-item">
+          <div class="queue-copy">Feed Freshness<div class="report-sub">age ${staleAge}s</div></div>
+          <div class="status-pill ${staleAge > 20 ? 'critical' : staleAge > 10 ? 'watch' : 'live'}">${staleAge > 20 ? 'Stale' : staleAge > 10 ? 'Delayed' : 'Fresh'}</div>
+        </div>
+        <div class="queue-item">
+          <div class="queue-copy">System Timestamp<div class="report-sub">${formatTime(timestamp)}</div></div>
+          <div class="status-pill info">Clock</div>
+        </div>
+      `;
     }
 
     function renderPatientTimeline(patients){
@@ -1365,10 +1628,95 @@ COMMAND_CENTER_HTML = r"""
       target.innerHTML = auditLog.slice(0, 8).map(entry => `
         <div class="audit-item">
           <div>
-            <div class="audit-copy">${safe(entry.message)}</div>
-            <div class="audit-sub">${safe(entry.patient_id)} · ${safe(entry.at)}</div>
+            <div class="audit-copy">${safe(entry.action)} · ${safe(entry.patient_id)}</div>
+            <div class="audit-sub">${safe(entry.role)} · ${safe(entry.timestamp || entry.at)}${entry.note ? " · " + safe(entry.note) : ""}</div>
           </div>
-          <div class="status-pill info">${safe(entry.type)}</div>
+          <div class="status-pill info">Log</div>
+        </div>
+      `).join("");
+    }
+
+    function renderReporting(){
+      const target = document.getElementById("reporting-panel");
+      if (!Object.keys(reportingData || {}).length){
+        target.innerHTML = `
+          <div class="report-item">
+            <div>
+              <div class="report-copy">Reporting unavailable</div>
+              <div class="report-sub">Try refresh</div>
+            </div>
+            <div class="status-pill watch">Report</div>
+          </div>
+        `;
+        return;
+      }
+
+      target.innerHTML = `
+        <div class="report-item">
+          <div>
+            <div class="report-copy">Total Patients</div>
+            <div class="report-sub">Tracked workflow records</div>
+          </div>
+          <div class="status-pill info">${safe(reportingData.total_patients, 0)}</div>
+        </div>
+        <div class="report-item">
+          <div>
+            <div class="report-copy">Acknowledged</div>
+            <div class="report-sub">Pilot workflow progress</div>
+          </div>
+          <div class="status-pill live">${safe(reportingData.acknowledged, 0)}</div>
+        </div>
+        <div class="report-item">
+          <div>
+            <div class="report-copy">Assigned</div>
+            <div class="report-sub">Clinical assignment state</div>
+          </div>
+          <div class="status-pill info">${safe(reportingData.assigned, 0)}</div>
+        </div>
+        <div class="report-item">
+          <div>
+            <div class="report-copy">Escalated</div>
+            <div class="report-sub">Priority interventions</div>
+          </div>
+          <div class="status-pill critical">${safe(reportingData.escalated, 0)}</div>
+        </div>
+        <div class="report-item">
+          <div>
+            <div class="report-copy">Resolved</div>
+            <div class="report-sub">Closed workflow state</div>
+          </div>
+          <div class="status-pill live">${safe(reportingData.resolved, 0)}</div>
+        </div>
+        <div class="report-item">
+          <div>
+            <div class="report-copy">Audit Events</div>
+            <div class="report-sub">Logged pilot actions</div>
+          </div>
+          <div class="status-pill watch">${safe(reportingData.audit_events, 0)}</div>
+        </div>
+      `;
+    }
+
+    function renderThresholds(){
+      const target = document.getElementById("threshold-panel");
+      if (!Object.keys(thresholdData || {}).length){
+        target.innerHTML = `
+          <div class="threshold-item">
+            <div class="report-copy">Thresholds unavailable</div>
+            <div class="status-pill watch">Config</div>
+          </div>
+        `;
+        return;
+      }
+
+      const entries = Object.entries(thresholdData);
+      target.innerHTML = entries.map(([unit, settings]) => `
+        <div class="threshold-item">
+          <div>
+            <div class="report-copy">${unitLabel(unit)}</div>
+            <div class="report-sub">risk alert threshold ${safe(settings.risk_alert, '--')}</div>
+          </div>
+          <div class="status-pill info">Config</div>
         </div>
       `).join("");
     }
@@ -1389,50 +1737,55 @@ COMMAND_CENTER_HTML = r"""
       document.getElementById("unit-count").textContent = unitLabel(currentUnitFilter);
     }
 
-    function ackPatient(patientId){
-      const record = getWorkflowRecord(patientId);
-      record.ack = true;
-      saveWorkflowState();
-      addAuditEntry("ACK", patientId, `Alert acknowledged for ${patientId}`);
+    async function ackPatient(patientId){
+      const ok = await postWorkflowAction(patientId, "ack");
+      if (!ok) return;
       rerenderAll();
       if (selectedPatientId === patientId) openPatientDrawer(patientId);
     }
 
-    function escalatePatient(patientId){
-      const record = getWorkflowRecord(patientId);
-      record.escalated = true;
-      saveWorkflowState();
-      addAuditEntry("Escalate", patientId, `Patient escalated for urgent clinical review: ${patientId}`);
+    async function assignPatient(patientId){
+      const ok = await postWorkflowAction(patientId, "assign");
+      if (!ok) return;
       rerenderAll();
       if (selectedPatientId === patientId) openPatientDrawer(patientId);
     }
 
-    function assignNurse(patientId){
-      const record = getWorkflowRecord(patientId);
-      record.assigned_nurse = true;
-      record.assigned_label = "Nurse assigned";
-      saveWorkflowState();
-      addAuditEntry("Assign", patientId, `Nurse assigned to patient workflow: ${patientId}`);
+    async function escalatePatient(patientId){
+      const ok = await postWorkflowAction(patientId, "escalate");
+      if (!ok) return;
+      rerenderAll();
+      if (selectedPatientId === patientId) openPatientDrawer(patientId);
+    }
+
+    async function resolvePatient(patientId){
+      const ok = await postWorkflowAction(patientId, "resolve");
+      if (!ok) return;
       rerenderAll();
       if (selectedPatientId === patientId) openPatientDrawer(patientId);
     }
 
     function rerenderAll(){
+      renderPilotStatus();
+      renderFeedStatus();
       renderPatients(activePatients);
       renderAlertsList(activeAlerts);
       updateSummary(activePatients, activeAlerts);
       renderTopRiskPatients(activePatients);
       renderAIReasoning(activePatients);
       renderWorkflow(activeAlerts);
-      renderSystemHealth(activePatients, activeAlerts);
+      renderSystemHealth();
       renderPatientTimeline(activePatients);
       renderAuditLog();
+      renderReporting();
+      renderThresholds();
     }
 
     function applyPayload(payload){
       if (payload && Array.isArray(payload.patients)) {
         activePatients = payload.patients.map(normalizePatient).filter(Boolean);
         activeAlerts = (payload.alerts || []).map(normalizeAlert).filter(Boolean);
+        lastSnapshotAt = payload.generated_at || new Date().toISOString();
       } else {
         activePatients = fallbackPatients.map(normalizePatient).filter(Boolean);
         activeAlerts = [
@@ -1441,23 +1794,34 @@ COMMAND_CENTER_HTML = r"""
           {patient_id:"p303", severity:"high", text:"Clinical alert surfaced", unit:"Telemetry-09"},
           {patient_id:"p404", severity:"stable", text:"Clinical alert surfaced", unit:"Ward-21"}
         ];
+        lastSnapshotAt = new Date().toISOString();
       }
       rerenderAll();
     }
 
-    async function refreshFallback(){
+    async function refreshSnapshot(){
       try{
         const res = await fetch("/api/v1/live-snapshot?tenant_id=demo&patient_id=p101&refresh=" + Date.now(), {cache:"no-store"});
-        if (!res.ok){
-          applyPayload({});
-          return;
-        }
+        if (!res.ok) throw new Error("snapshot failed");
         const payload = await res.json();
+        consecutiveFeedErrors = 0;
         applyPayload(payload);
       }catch(err){
-        console.error("Command center refresh failed", err);
+        consecutiveFeedErrors += 1;
+        console.error("Command center snapshot failed", err);
         applyPayload({});
       }
+    }
+
+    async function refreshAllSideData(){
+      await Promise.all([
+        loadPilotStatus(),
+        loadWorkflowState(),
+        loadReporting(),
+        loadThresholds(),
+        loadSystemHealth()
+      ]);
+      rerenderAll();
     }
 
     document.getElementById("unitFilter").addEventListener("change", function(){
@@ -1466,12 +1830,34 @@ COMMAND_CENTER_HTML = r"""
       rerenderAll();
     });
 
-    loadSavedState();
-    renderAuditLog();
-    applyPayload({});
-    refreshFallback();
-    setInterval(refreshFallback, 5000);
+    document.getElementById("refreshReportingBtn").addEventListener("click", async function(){
+      await loadReporting();
+      rerenderAll();
+    });
+
+    document.getElementById("exportAuditBtn").addEventListener("click", async function(){
+      await exportAudit();
+    });
+
+    async function boot(){
+      await refreshAllSideData();
+      await refreshSnapshot();
+      rerenderAll();
+
+      setInterval(async () => {
+        await refreshSnapshot();
+        await loadSystemHealth();
+        rerenderAll();
+      }, 5000);
+
+      setInterval(async () => {
+        await loadWorkflowState();
+        await loadReporting();
+        rerenderAll();
+      }, 10000);
+    }
+
+    boot();
   </script>
 </body>
 </html>
-"""
