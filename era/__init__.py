@@ -2404,31 +2404,6 @@ def _audit(store, patient_id, action, role, note=""):
 
 
 
-
-
-
-@app.get("/api/reporting")
-def reporting():
-
-    if not session.get("logged_in"):
-        return jsonify({"ok": False, "error": "login required"}), 401
-
-    store = _load_workflow()
-    records = store["records"].values()
-
-    return jsonify({
-        "total_patients": len(records),
-        "acknowledged": len([r for r in records if r["ack"]]),
-        "assigned": len([r for r in records if r["assigned"]]),
-        "escalated": len([r for r in records if r["escalated"]]),
-        "resolved": len([r for r in records if r["state"] == "resolved"]),
-        "audit_events": len(store["audit_log"]),
-        "pilot_mode": bool(session.get("pilot_mode", PILOT_MODE)),
-        "user_role": _current_role(),
-        "user_name": _current_user(),
-    })
-
-
 @app.get("/api/audit/export")
 def export_audit():
 
