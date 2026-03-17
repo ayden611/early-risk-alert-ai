@@ -2312,7 +2312,7 @@ def create_app() -> Flask:
 
 import time
 from pathlib import Path
-
+data_dir = _data_dir()
 workflow_file = data_dir / "command_center_workflow.json"
 threshold_file = data_dir / "risk_thresholds.json"
 
