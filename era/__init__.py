@@ -2404,6 +2404,9 @@ def _audit(store, patient_id, action, role, note=""):
 
 
 
+
+
+
 @app.get("/api/reporting")
 def reporting():
 
@@ -2424,13 +2427,6 @@ def reporting():
         "user_role": _current_role(),
         "user_name": _current_user(),
     })
-
-
-
-# -------------------------------
-# Reporting endpoint
-# -------------------------------
-
 
 
 @app.get("/api/audit/export")
