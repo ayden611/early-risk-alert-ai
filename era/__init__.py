@@ -2234,7 +2234,7 @@ def create_app() -> Flask:
         record = _get_record(store, patient_id)
 
         if action == "ack":
-          if not _has_permission("ack"):
+        if not _has_permission("ack"):
             return jsonify({"ok": False, "error": "permission denied"}), 403
         record["ack"] = True
         record["state"] = "acknowledged"
