@@ -2273,7 +2273,7 @@ def create_app() -> Flask:
         "record": record,
         "user_role": role,
         "user_name": _current_user(),
-    })     "user_name": _current_user(),
+        "user_name": _current_user(),
         })
 
     @app.get("/api/v1/stream/channels")
