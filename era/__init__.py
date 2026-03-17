@@ -1332,7 +1332,7 @@ def _lead_score(payload: dict[str, Any], lead_type: str) -> int:
         if any(x in message for x in ["pilot", "integration", "deployment", "command center", "live", "clinical", "alerts"]):
             score += 14
 
-    elif lead_type == "executive":
+        elif lead_type == "executive":
         priority = (payload.get("priority") or "").lower()
         if "enterprise" in priority:
             score += 20
@@ -1345,7 +1345,7 @@ def _lead_score(payload: dict[str, Any], lead_type: str) -> int:
         if any(x in message for x in ["budget", "review", "rollout", "leadership", "system", "hospital", "partnership"]):
             score += 12
 
-    elif lead_type == "investor":
+        elif lead_type == "investor":
         investor_type = (payload.get("investor_type") or "").lower()
         check_size = (payload.get("check_size") or "").lower()
         if "healthcare vc" in investor_type:
