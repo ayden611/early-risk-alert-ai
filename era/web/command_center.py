@@ -1861,3 +1861,4 @@ COMMAND_CENTER_HTML = r"""
   </script>
 </body>
 </html>
+"""
