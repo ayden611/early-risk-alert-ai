@@ -2398,69 +2398,6 @@ def _audit(store, patient_id, action, role, note=""):
 # Workflow API
 # -------------------------------
 
-@app.get("/api/workflow")
-def get_workflow():
-
-    store = _load_workflow()
-
-    return jsonify({
-        "records": store["records"],
-        "audit_log": store["audit_log"]
-    })
-
-
-@app.post("/api/workflow/action")
-def workflow_action():
-
-    payload = request.get_json() or {}
-
-    patient_id = str(payload.get("patient_id", "")).strip()
-    action = payload.get("action")
-    role = payload.get("role", "operator")
-
-    if not patient_id:
-        return jsonify({"ok": False, "error": "patient_id required"}), 400
-
-    store = _load_workflow()
-
-    record = _get_record(store, patient_id)
-
-    if action == "ack":
-
-        record["ack"] = True
-        record["state"] = "acknowledged"
-
-        _audit(store, patient_id, "ACK", role)
-
-    elif action == "assign":
-
-        record["assigned"] = True
-        record["state"] = "assigned"
-
-        _audit(store, patient_id, "ASSIGN", role)
-
-    elif action == "escalate":
-
-        record["escalated"] = True
-        record["state"] = "escalated"
-
-        _audit(store, patient_id, "ESCALATE", role)
-
-    elif action == "resolve":
-
-        record["state"] = "resolved"
-
-        _audit(store, patient_id, "RESOLVE", role)
-
-    record["updated_at"] = _utc_now_iso()
-    record["role"] = role
-
-    _save_workflow(store)
-
-    return jsonify({
-        "ok": True,
-        "record": record
-    })
 
 
 # -------------------------------
