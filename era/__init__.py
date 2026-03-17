@@ -5,6 +5,10 @@ import html
 import io
 import json
 import math
+import math
+import math
+import math
+import math
 import os
 import random
 import smtplib
@@ -2451,19 +2455,13 @@ def export_audit():
 
 @app.get("/api/thresholds")
 def get_thresholds():
-
     return jsonify(_load_thresholds())
-
 
 @app.post("/api/thresholds")
 def update_thresholds():
-
     data = request.get_json()
-
     _save_thresholds(data)
-
     return jsonify({"ok": True})
-
 
 # -------------------------------
 # System health
