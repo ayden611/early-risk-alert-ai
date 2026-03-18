@@ -1817,9 +1817,9 @@ def create_app() -> Flask:
     app = Flask(__name__)
     app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "era-dev-secret")
 
-# -------------------------------
-# Workflow API
-# -------------------------------
+    # -------------------------------
+    # Workflow API
+    # -------------------------------
 
     @app.get("/api/audit/export")
     def export_audit():
