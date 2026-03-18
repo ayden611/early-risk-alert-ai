@@ -1357,6 +1357,22 @@ def create_app() -> Flask:
             "permissions": sorted(list(ROLE_PERMISSIONS.get(_current_role(), {"read"}))),
         })
 
+    # -----------------------------
+    # PILOT MODE STATE
+    # -----------------------------
+    _PILOT_STATE = {"enabled": True}
+
+    @app.get("/api/pilot-mode")
+    def get_pilot_mode():
+        return jsonify(_PILOT_STATE)
+
+    @app.post("/api/pilot-mode")
+    def set_pilot_mode():
+        data = request.get_json(silent=True) or {}
+        enabled = bool(data.get("enabled", True))
+        _PILOT_STATE["enabled"] = enabled
+        return jsonify(_PILOT_STATE)
+
     @app.get("/api/workflow")
     @_login_required
     def get_workflow():
