@@ -1588,63 +1588,7 @@ def create_app() -> Flask:
             "audit_log": store["audit_log"],
         })
 
-    @app.post("/api/workflow/action")
-    @_login_required
-    def workflow_action():
-        payload = request.get_json() or {}
-
-        patient_id = str(payload.get("patient_id", "")).strip()
-        action = str(payload.get("action", "")).strip().lower()
-        role = _current_role()
-
-        if not patient_id:
-            return jsonify({"ok": False, "error": "patient_id required"}), 400
-
-        store = _load_workflow()
-        record = _get_record(store, patient_id)
-
-        if action == "ack":
-            if not _has_permission("ack"):
-                return jsonify({"ok": False, "error": "permission denied"}), 403
-            record["ack"] = True
-            record["state"] = "acknowledged"
-            _audit(store, patient_id, "ACK", role)
-
-        elif action == "assign":
-            if not _has_permission("assign"):
-                return jsonify({"ok": False, "error": "permission denied"}), 403
-            record["assigned"] = True
-            record["state"] = "assigned"
-            _audit(store, patient_id, "ASSIGN", role)
-
-        elif action == "escalate":
-            if not _has_permission("escalate"):
-                return jsonify({"ok": False, "error": "permission denied"}), 403
-            record["escalated"] = True
-            record["state"] = "escalated"
-            _audit(store, patient_id, "ESCALATE", role)
-
-        elif action == "resolve":
-            if not _has_permission("resolve"):
-                return jsonify({"ok": False, "error": "permission denied"}), 403
-            record["state"] = "resolved"
-            _audit(store, patient_id, "RESOLVE", role)
-
-        else:
-            return jsonify({"ok": False, "error": "invalid action"}), 400
-
-        record["updated_at"] = _utc_now_iso()
-        record["role"] = role
-
-        _save_workflow(store)
-
-        return jsonify({
-            "ok": True,
-            "record": record,
-            "user_role": role,
-            "user_name": _current_user(),
-        })
-
+   
     @app.get("/api/reporting")
     @_login_required
     def reporting():
