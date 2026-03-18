@@ -977,888 +977,771 @@ COMMAND_CENTER_HTML = r"""
       </div>
     </div>
   </aside>
+<script>
+  const fallbackPatients = [
+    {
+      patient_id: "p101",
+      patient_name: "Patient 1042",
+      room: "ICU-12",
+      program: "Cardiac",
+      vitals: {heart_rate:128, systolic_bp:165, diastolic_bp:102, spo2:89},
+      risk: {risk_score:9.1, severity:"critical", alert_message:"Oxygen saturation critical", recommended_action:"Escalate immediately to respiratory response and bedside reassessment."}
+    },
+    {
+      patient_id: "p202",
+      patient_name: "Patient 2188",
+      room: "Stepdown-04",
+      program: "Pulmonary",
+      vitals: {heart_rate:100, systolic_bp:150, diastolic_bp:90, spo2:93},
+      risk: {risk_score:3.3, severity:"high", alert_message:"Oxygen saturation below target", recommended_action:"Notify assigned clinician, review vitals, and reassess within 15 minutes."}
+    },
+    {
+      patient_id: "p303",
+      patient_name: "Patient 3045",
+      room: "Telemetry-09",
+      program: "Cardiac",
+      vitals: {heart_rate:111, systolic_bp:162, diastolic_bp:97, spo2:95},
+      risk: {risk_score:4.4, severity:"high", alert_message:"Blood pressure elevated", recommended_action:"Notify assigned clinician, review vitals, and reassess within 15 minutes."}
+    },
+    {
+      patient_id: "p404",
+      patient_name: "Patient 4172",
+      room: "Ward-21",
+      program: "Recovery",
+      vitals: {heart_rate:84, systolic_bp:128, diastolic_bp:82, spo2:97},
+      risk: {risk_score:1.8, severity:"stable", alert_message:"Vitals stable", recommended_action:"Continue routine monitoring."}
+    }
+  ];
 
-  <script>
-    const fallbackPatients = [
-      {
-        patient_id: "p101",
-        patient_name: "Patient 1042",
-        room: "ICU-12",
-        program: "Cardiac",
-        vitals: {heart_rate:128, systolic_bp:165, diastolic_bp:102, spo2:89},
-        risk: {risk_score:9.1, severity:"critical", alert_message:"Oxygen saturation critical", recommended_action:"Escalate immediately to respiratory response and bedside reassessment."}
-      },
-      {
-        patient_id: "p202",
-        patient_name: "Patient 2188",
-        room: "Stepdown-04",
-        program: "Pulmonary",
-        vitals: {heart_rate:100, systolic_bp:150, diastolic_bp:90, spo2:93},
-        risk: {risk_score:3.3, severity:"high", alert_message:"Oxygen saturation below target", recommended_action:"Notify assigned clinician, review vitals, and reassess within 15 minutes."}
-      },
-      {
-        patient_id: "p303",
-        patient_name: "Patient 3045",
-        room: "Telemetry-09",
-        program: "Cardiac",
-        vitals: {heart_rate:111, systolic_bp:162, diastolic_bp:97, spo2:95},
-        risk: {risk_score:4.4, severity:"high", alert_message:"Blood pressure elevated", recommended_action:"Notify assigned clinician, review vitals, and reassess within 15 minutes."}
-      },
-      {
-        patient_id: "p404",
-        patient_name: "Patient 4172",
-        room: "Ward-21",
-        program: "Recovery",
-        vitals: {heart_rate:84, systolic_bp:128, diastolic_bp:82, spo2:97},
-        risk: {risk_score:1.8, severity:"stable", alert_message:"Vitals stable", recommended_action:"Continue routine monitoring."}
-      }
-    ];
+  let activePatients = [];
+  let activeAlerts = [];
+  let currentUnitFilter = "all";
+  let selectedPatientId = null;
+  let workflowState = {};
+  let auditLog = [];
+  let pilotModeEnabled = true;
+  let currentRole = "viewer";
+  let lastSystemHealth = {};
+  let lastBanner = {};
+  let lastUpdatedAt = null;
 
-    let activePatients = [];
-    let activeAlerts = [];
-    let currentUnitFilter = "all";
-    let selectedPatientId = null;
-    let workflowState = {};
-    let auditLog = [];
-    let reportingData = {};
-    let thresholdData = {};
-    let pilotStatusData = {};
-    let systemHealthData = {};
-    let lastSnapshotAt = null;
-    let consecutiveFeedErrors = 0;
+  function safe(v, fallback="--"){
+    return v === undefined || v === null || v === "" ? fallback : v;
+  }
 
-    function safe(v, fallback="--"){
-      return v === undefined || v === null || v === "" ? fallback : v;
+  function statusClass(status){
+    const s = String(status || "").toLowerCase();
+    if (s === "critical" || s === "escalated") return "critical";
+    if (s === "high" || s === "moderate" || s === "acknowledged" || s === "assigned") return "watch";
+    return "live";
+  }
+
+  function pulseLabel(status){
+    const s = String(status || "").toLowerCase();
+    if (s === "critical") return "Critical";
+    if (s === "high") return "High";
+    if (s === "moderate") return "Moderate";
+    if (s === "acknowledged") return "Acknowledged";
+    if (s === "assigned") return "Assigned";
+    if (s === "escalated") return "Escalated";
+    if (s === "resolved") return "Resolved";
+    return "Stable";
+  }
+
+  function ecgClass(status){
+    const s = String(status || "").toLowerCase();
+    if (s === "critical" || s === "escalated") return "ecg-red";
+    if (s === "high" || s === "moderate" || s === "acknowledged" || s === "assigned") return "ecg-amber";
+    return "ecg-green";
+  }
+
+  function roomToUnit(room){
+    const r = String(room || "").toLowerCase();
+    if (r.includes("icu")) return "icu";
+    if (r.includes("stepdown")) return "stepdown";
+    if (r.includes("telemetry")) return "telemetry";
+    if (r.includes("ward")) return "ward";
+    if (r.includes("rpm") || r.includes("home")) return "rpm";
+    return "other";
+  }
+
+  function unitLabel(unit){
+    if (unit === "icu") return "ICU";
+    if (unit === "stepdown") return "Stepdown";
+    if (unit === "telemetry") return "Telemetry";
+    if (unit === "ward") return "Ward";
+    if (unit === "rpm") return "RPM / Home";
+    return "All Units";
+  }
+
+  function roleLabel(role){
+    const r = String(role || "").toLowerCase();
+    if (r === "viewer") return "Viewer";
+    if (r === "operator") return "Operator";
+    if (r === "nurse") return "Nurse";
+    if (r === "physician") return "Physician";
+    if (r === "admin") return "Admin";
+    return "Viewer";
+  }
+
+  function hasPermission(action){
+    const perms = {
+      viewer: [],
+      nurse: ["ack"],
+      operator: ["ack", "assign_nurse"],
+      physician: ["ack", "escalate"],
+      admin: ["ack", "assign_nurse", "escalate", "resolve", "clear"]
+    };
+    return (perms[currentRole] || []).includes(action);
+  }
+
+  function formatLocalTime(iso){
+    if (!iso) return "--";
+    try{
+      return new Date(iso).toLocaleTimeString();
+    }catch(e){
+      return "--";
+    }
+  }
+
+  function buildPath(points){
+    return points.map((p, i) => (i === 0 ? "M" : "L") + p[0] + "," + p[1]).join(" ");
+  }
+
+  function waveformPoints(mode){
+    if (mode === "critical") {
+      return [[0,72],[30,72],[46,72],[58,70],[72,72],[86,72],[98,50],[106,100],[116,24],[126,108],[136,72],[162,72],[186,72],[204,70],[220,72],[236,72],[250,54],[258,96],[268,22],[278,106],[290,72],[318,72],[336,72],[352,70],[368,72],[382,72],[398,46],[406,104],[416,20],[428,110],[440,72],[466,72],[486,72],[504,70],[520,72],[536,72],[550,52],[558,98],[568,24],[578,106],[592,72],[620,72]];
+    }
+    if (mode === "high") {
+      return [[0,76],[36,76],[60,76],[74,74],[88,76],[104,76],[118,56],[126,90],[136,38],[146,96],[158,76],[190,76],[214,76],[228,74],[242,76],[258,76],[272,54],[280,88],[290,40],[300,94],[314,76],[348,76],[372,76],[388,74],[402,76],[418,76],[432,58],[440,92],[452,42],[464,96],[478,76],[514,76],[538,76],[552,74],[566,76],[582,76],[596,60],[604,94],[614,44],[624,98],[640,76]];
+    }
+    return [[0,78],[48,78],[82,78],[96,76],[110,78],[126,78],[138,66],[146,84],[156,52],[166,88],[178,78],[220,78],[254,78],[268,76],[282,78],[298,78],[310,68],[318,84],[328,56],[338,88],[350,78],[392,78],[426,78],[440,76],[454,78],[470,78],[482,68],[490,84],[500,56],[510,88],[522,78],[566,78],[600,78]];
+  }
+
+  function explainabilityForPatient(patient){
+    const parts = [];
+    const spo2 = Number(patient.spo2 || 0);
+    const hr = Number(patient.heart_rate || 0);
+    const sbp = Number(patient.bp_systolic || 0);
+
+    if (spo2 && spo2 < 90) parts.push("SpO₂ below critical threshold");
+    else if (spo2 && spo2 < 94) parts.push("SpO₂ trending below target");
+    if (hr && hr >= 125) parts.push("heart rate elevated");
+    if (sbp && sbp >= 160) parts.push("blood pressure elevated");
+
+    if (!parts.length) parts.push("combined vital pattern indicates current monitoring risk");
+    return parts.join(", ") + ".";
+  }
+
+  function normalizePatient(raw) {
+    if (!raw) return null;
+    const vitals = raw.vitals || {};
+    const risk = raw.risk || {};
+    const room = raw.room || raw.bed || "ICU Bed";
+    return {
+      patient_id: raw.patient_id || "p---",
+      name: raw.patient_name || raw.name || "Patient",
+      bed: room,
+      unit: roomToUnit(room),
+      program: raw.program || "Clinical Monitoring",
+      title: risk.alert_message || raw.title || "Predictive Risk Monitor",
+      heart_rate: raw.heart_rate ?? vitals.heart_rate ?? "--",
+      spo2: raw.spo2 ?? vitals.spo2 ?? "--",
+      bp_systolic: raw.bp_systolic ?? vitals.systolic_bp ?? "--",
+      bp_diastolic: raw.bp_diastolic ?? vitals.diastolic_bp ?? "--",
+      risk_score: raw.risk_score ?? risk.risk_score ?? "--",
+      status: raw.status || risk.severity || "Stable",
+      story: raw.story || risk.recommended_action || "Predictive monitoring active.",
+      alert_message: risk.alert_message || "Vitals stable",
+      recommended_action: risk.recommended_action || "Continue routine monitoring."
+    };
+  }
+
+  function normalizeAlert(alert) {
+    if (!alert) return null;
+    return {
+      patient_id: alert.patient_id || "Patient",
+      severity: alert.severity || "Stable",
+      text: alert.message || alert.text || "Clinical alert surfaced",
+      unit: alert.room || alert.unit || "Unit"
+    };
+  }
+
+  function filterPatientsByUnit(patients){
+    const source = (patients || []).map(normalizePatient).filter(Boolean);
+    if (currentUnitFilter === "all") return source;
+    return source.filter(p => p.unit === currentUnitFilter);
+  }
+
+  function findPatient(patientId){
+    return activePatients.find(p => String(p.patient_id) === String(patientId)) || null;
+  }
+
+  function getWorkflowRecord(patientId){
+    return workflowState[String(patientId)] || {
+      ack: false,
+      escalated: false,
+      assigned_nurse: false,
+      assigned_label: "",
+      state: "new",
+      updated_at: "",
+      role: ""
+    };
+  }
+
+  function workflowText(patientId){
+    const record = getWorkflowRecord(patientId);
+    const parts = [];
+    if (record.state) parts.push(record.state);
+    if (record.role) parts.push("by " + roleLabel(record.role));
+    if (record.updated_at) parts.push("updated " + formatLocalTime(record.updated_at));
+    return parts.join(" · ");
+  }
+
+  function updatePilotBanner(){
+    const modePill = document.getElementById("pilotModePill");
+    const rolePill = document.getElementById("currentRolePill");
+    const userPill = document.getElementById("currentUserPill");
+    const feedPill = document.getElementById("feedHealthPill");
+    const updatedPill = document.getElementById("lastUpdatedPill");
+    const wallStatus = document.getElementById("wallStatus");
+
+    if (modePill) {
+      modePill.textContent = pilotModeEnabled ? "Pilot Mode On" : "Pilot Mode Off";
+      modePill.className = pilotModeEnabled ? "status-pill watch" : "status-pill critical";
+      modePill.style.cursor = currentRole === "admin" ? "pointer" : "not-allowed";
+      modePill.title = currentRole === "admin" ? "Toggle pilot mode" : "Admin only";
     }
 
-    function statusClass(status){
-      const s = String(status || "").toLowerCase();
-      if (s === "critical") return "critical";
-      if (s === "high" || s === "moderate" || s === "acknowledged" || s === "assigned") return "watch";
-      return "live";
+    if (rolePill) rolePill.textContent = "Role: " + roleLabel(currentRole);
+    if (userPill) userPill.textContent = "User: " + roleLabel(currentRole);
+
+    if (updatedPill) {
+      updatedPill.textContent = "Last Updated " + (lastUpdatedAt ? formatLocalTime(lastUpdatedAt) : "--");
     }
 
-    function pulseLabel(status){
-      const s = String(status || "").toLowerCase();
-      if (s === "critical") return "Critical";
-      if (s === "high") return "High";
-      if (s === "moderate") return "Moderate";
-      if (s === "acknowledged") return "Acknowledged";
-      if (s === "assigned") return "Assigned";
-      if (s === "resolved") return "Resolved";
-      return "Stable";
+    if (feedPill) {
+      feedPill.textContent = pilotModeEnabled ? "Feed Live" : "Feed Restricted";
+      feedPill.className = pilotModeEnabled ? "status-pill live" : "status-pill critical";
     }
 
-    function ecgClass(status){
-      const s = String(status || "").toLowerCase();
-      if (s === "critical") return "ecg-red";
-      if (s === "high" || s === "moderate") return "ecg-amber";
-      return "ecg-green";
+    if (wallStatus) {
+      wallStatus.textContent = pilotModeEnabled ? "Live" : "Restricted";
+      wallStatus.className = pilotModeEnabled ? "status-pill live" : "status-pill critical";
     }
+  }
 
-    function roomToUnit(room){
-      const r = String(room || "").toLowerCase();
-      if (r.includes("icu")) return "icu";
-      if (r.includes("stepdown")) return "stepdown";
-      if (r.includes("telemetry")) return "telemetry";
-      if (r.includes("ward")) return "ward";
-      if (r.includes("rpm") || r.includes("home")) return "rpm";
-      return "other";
+  async function loadPilotMode(){
+    try{
+      const res = await fetch("/api/pilot-mode", {cache:"no-store"});
+      const data = await res.json();
+      pilotModeEnabled = !!data.enabled;
+      currentRole = String(data.role || "viewer").toLowerCase();
+      updatePilotBanner();
+    }catch(err){
+      console.error("pilot mode load failed", err);
     }
+  }
 
-    function unitLabel(unit){
-      if (unit === "icu") return "ICU";
-      if (unit === "stepdown") return "Stepdown";
-      if (unit === "telemetry") return "Telemetry";
-      if (unit === "ward") return "Ward";
-      if (unit === "rpm") return "RPM / Home";
-      return "All Units";
+  async function togglePilotMode(){
+    if (currentRole !== "admin") {
+      alert("Only admin can change pilot mode.");
+      return;
     }
-
-    function roleLabel(role){
-      const r = String(role || "").toLowerCase();
-      if (r === "viewer") return "Viewer";
-      if (r === "operator") return "Operator";
-      if (r === "nurse") return "Nurse";
-      if (r === "physician") return "Physician";
-      if (r === "admin") return "Admin";
-      return "Viewer";
+    try{
+      const res = await fetch("/api/pilot-mode/toggle", {method:"POST"});
+      const data = await res.json();
+      pilotModeEnabled = !!data.enabled;
+      updatePilotBanner();
+      await loadSystemBanner();
+      await loadWorkflowState();
+      rerenderAll();
+    }catch(err){
+      console.error("pilot toggle failed", err);
     }
+  }
 
-    function hasPermission(action){
-      const permissions = pilotStatusData.permissions || [];
-      return permissions.includes(action) || permissions.includes("admin");
+  async function loadSystemHealth(){
+    try{
+      const res = await fetch("/api/system/health", {cache:"no-store"});
+      lastSystemHealth = await res.json();
+    }catch(err){
+      console.error("system health failed", err);
     }
+  }
 
-    function buildPath(points){
-      return points.map((p, i) => (i === 0 ? "M" : "L") + p[0] + "," + p[1]).join(" ");
+  async function loadSystemBanner(){
+    try{
+      const res = await fetch("/api/system/banner", {cache:"no-store"});
+      lastBanner = await res.json();
+    }catch(err){
+      console.error("system banner failed", err);
     }
+  }
 
-    function waveformPoints(mode){
-      if (mode === "critical") {
-        return [[0,72],[30,72],[46,72],[58,70],[72,72],[86,72],[98,50],[106,100],[116,24],[126,108],[136,72],[162,72],[186,72],[204,70],[220,72],[236,72],[250,54],[258,96],[268,22],[278,106],[290,72],[318,72],[336,72],[352,70],[368,72],[382,72],[398,46],[406,104],[416,20],[428,110],[440,72],[466,72],[486,72],[504,70],[520,72],[536,72],[550,52],[558,98],[568,24],[578,106],[592,72],[620,72]];
-      }
-      if (mode === "high") {
-        return [[0,76],[36,76],[60,76],[74,74],[88,76],[104,76],[118,56],[126,90],[136,38],[146,96],[158,76],[190,76],[214,76],[228,74],[242,76],[258,76],[272,54],[280,88],[290,40],[300,94],[314,76],[348,76],[372,76],[388,74],[402,76],[418,76],[432,58],[440,92],[452,42],[464,96],[478,76],[514,76],[538,76],[552,74],[566,76],[582,76],[596,60],[604,94],[614,44],[624,98],[640,76]];
-      }
-      return [[0,78],[48,78],[82,78],[96,76],[110,78],[126,78],[138,66],[146,84],[156,52],[166,88],[178,78],[220,78],[254,78],[268,76],[282,78],[298,78],[310,68],[318,84],[328,56],[338,88],[350,78],[392,78],[426,78],[440,76],[454,78],[470,78],[482,68],[490,84],[500,56],[510,88],[522,78],[566,78],[600,78]];
+  async function loadWorkflowState(){
+    try{
+      const res = await fetch("/api/workflow", {cache:"no-store"});
+      const payload = await res.json();
+      workflowState = payload.records || {};
+      auditLog = payload.audit_log || [];
+    }catch(err){
+      console.error("workflow load failed", err);
     }
+  }
 
-    function formatTime(iso){
-      if (!iso) return "--";
-      try{
-        return new Date(iso).toLocaleTimeString();
-      }catch(e){
-        return "--";
-      }
-    }
+  async function postWorkflowAction(patientId, action, note=""){
+    try{
+      const res = await fetch("/api/workflow/action", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+          patient_id: patientId,
+          action: action,
+          note: note
+        })
+      });
 
-    function secondsSince(iso){
-      if (!iso) return 99999;
-      try{
-        const then = new Date(iso).getTime();
-        const now = Date.now();
-        return Math.floor((now - then) / 1000);
-      }catch(e){
-        return 99999;
-      }
-    }
-
-    function explainabilityForPatient(patient){
-      const parts = [];
-      const spo2 = Number(patient.spo2 || 0);
-      const hr = Number(patient.heart_rate || 0);
-      const sbp = Number(patient.bp_systolic || 0);
-
-      if (spo2 && spo2 < 90) parts.push("SpO₂ fell below 90%");
-      else if (spo2 && spo2 < 94) parts.push("SpO₂ dropped below target range");
-
-      if (hr && hr >= 130) parts.push("heart rate reached critical range");
-      else if (hr && hr >= 110) parts.push("heart rate remained elevated");
-
-      if (sbp && sbp >= 180) parts.push("systolic blood pressure reached crisis range");
-      else if (sbp && sbp >= 160) parts.push("systolic blood pressure remained elevated");
-
-      if (!parts.length) parts.push("combined vital pattern suggests current risk state");
-      return parts.join(", ") + ".";
-    }
-
-    function normalizePatient(raw) {
-      if (!raw) return null;
-      const vitals = raw.vitals || {};
-      const risk = raw.risk || {};
-      const room = raw.room || raw.bed || "ICU Bed";
-      return {
-        patient_id: raw.patient_id || "p---",
-        name: raw.patient_name || raw.name || "Patient",
-        bed: room,
-        unit: roomToUnit(room),
-        program: raw.program || "Clinical Monitoring",
-        title: risk.alert_message || raw.title || "Predictive Risk Monitor",
-        heart_rate: raw.heart_rate ?? vitals.heart_rate ?? "--",
-        spo2: raw.spo2 ?? vitals.spo2 ?? "--",
-        bp_systolic: raw.bp_systolic ?? vitals.systolic_bp ?? "--",
-        bp_diastolic: raw.bp_diastolic ?? vitals.diastolic_bp ?? "--",
-        risk_score: raw.risk_score ?? risk.risk_score ?? "--",
-        status: raw.status || risk.severity || "Stable",
-        story: raw.story || risk.recommended_action || "Predictive monitoring active.",
-        alert_message: risk.alert_message || "Vitals stable",
-        recommended_action: risk.recommended_action || "Continue routine monitoring."
-      };
-    }
-
-    function normalizeAlert(alert) {
-      if (!alert) return null;
-      return {
-        patient_id: alert.patient_id || "Patient",
-        severity: alert.severity || "Stable",
-        text: alert.message || alert.text || "Clinical alert surfaced",
-        unit: alert.room || alert.unit || "Unit"
-      };
-    }
-
-    function filterPatientsByUnit(patients){
-      const source = (patients || []).map(normalizePatient).filter(Boolean);
-      if (currentUnitFilter === "all") return source;
-      return source.filter(p => p.unit === currentUnitFilter);
-    }
-
-    function findPatient(patientId){
-      return activePatients.find(p => String(p.patient_id) === String(patientId)) || null;
-    }
-
-    function getWorkflowRecord(patientId){
-      return workflowState[String(patientId)] || {
-        state: "new",
-        ack: false,
-        assigned: false,
-        escalated: false,
-        role: "",
-        updated_at: ""
-      };
-    }
-
-    function workflowText(patientId){
-      const record = getWorkflowRecord(patientId);
-      const parts = [];
-      if (record.state) parts.push(String(record.state).replace(/_/g, " "));
-      if (record.role) parts.push("by " + roleLabel(record.role));
-      if (record.updated_at) parts.push("updated " + formatTime(record.updated_at));
-      return parts.length ? parts.join(" · ") : "No workflow action saved yet.";
-    }
-
-    async function loadPilotStatus(){
-      try{
-        const res = await fetch("/api/pilot-status", {cache:"no-store"});
-        if (!res.ok) return;
-        pilotStatusData = await res.json();
-      }catch(err){
-        console.error("Failed to load pilot status", err);
-      }
-    }
-
-    async function loadWorkflowState(){
-      try{
-        const res = await fetch("/api/workflow", {cache:"no-store"});
-        if (!res.ok) return;
-        const payload = await res.json();
-        workflowState = payload.records || {};
-        auditLog = payload.audit_log || [];
-      }catch(err){
-        console.error("Failed to load workflow state", err);
-      }
-    }
-
-    async function loadReporting(){
-      try{
-        const res = await fetch("/api/reporting", {cache:"no-store"});
-        if (!res.ok) return;
-        reportingData = await res.json();
-      }catch(err){
-        console.error("Failed to load reporting", err);
-      }
-    }
-
-    async function loadThresholds(){
-      try{
-        const res = await fetch("/api/thresholds", {cache:"no-store"});
-        if (!res.ok) return;
-        thresholdData = await res.json();
-      }catch(err){
-        console.error("Failed to load thresholds", err);
-      }
-    }
-
-    async function loadSystemHealth(){
-      try{
-        const res = await fetch("/api/system-health", {cache:"no-store"});
-        if (!res.ok) return;
-        systemHealthData = await res.json();
-      }catch(err){
-        console.error("Failed to load system health", err);
-      }
-    }
-
-    async function postWorkflowAction(patientId, action){
-      try{
-        const res = await fetch("/api/workflow/action", {
-          method: "POST",
-          headers: {"Content-Type": "application/json"},
-          body: JSON.stringify({
-            patient_id: patientId,
-            action: action
-          })
-        });
-
-        const payload = await res.json();
-        if (!res.ok || !payload.ok){
-          alert(payload.error || "Action not permitted.");
-          return false;
-        }
-
-        workflowState[String(patientId)] = payload.record || {};
-        await loadWorkflowState();
-        await loadReporting();
-        return true;
-      }catch(err){
-        console.error("Workflow action request failed", err);
-        alert("Unable to save workflow action.");
+      const payload = await res.json();
+      if (!res.ok || !payload.ok) {
+        alert(payload.error || "Action not allowed");
         return false;
       }
+
+      await loadWorkflowState();
+      return true;
+    }catch(err){
+      console.error("workflow action failed", err);
+      alert("Unable to save workflow action.");
+      return false;
+    }
+  }
+
+  function openPatientDrawer(patientId){
+    const patient = findPatient(patientId);
+    if (!patient) return;
+    selectedPatientId = patientId;
+
+    document.getElementById("drawerPatientName").textContent = safe(patient.name);
+    document.getElementById("drawerPatientSub").textContent = `${safe(patient.patient_id)} · ${safe(patient.bed)} · ${safe(patient.program)}`;
+    document.getElementById("drawerSummary").textContent = safe(patient.alert_message);
+    document.getElementById("drawerHr").textContent = safe(patient.heart_rate);
+    document.getElementById("drawerSpo2").textContent = safe(patient.spo2);
+    document.getElementById("drawerBp").textContent = `${safe(patient.bp_systolic)}/${safe(patient.bp_diastolic)}`;
+    document.getElementById("drawerRisk").textContent = typeof patient.risk_score === "number" ? patient.risk_score.toFixed(1) : safe(patient.risk_score);
+    document.getElementById("drawerAction").textContent = safe(patient.recommended_action);
+
+    const explainNode = document.getElementById("drawerExplainability");
+    if (explainNode) explainNode.textContent = explainabilityForPatient(patient);
+
+    document.getElementById("drawerWorkflow").textContent = workflowText(patientId);
+
+    document.getElementById("drawerTimeline").innerHTML = `
+      <div class="timeline-item">
+        <div class="timeline-time">Now</div>
+        <div class="timeline-copy">${safe(patient.name)} is currently ${safe(patient.status)} with risk ${typeof patient.risk_score === "number" ? patient.risk_score.toFixed(1) : safe(patient.risk_score)}.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-time">-15 min</div>
+        <div class="timeline-copy">Trend drift detected across oxygen saturation and heart rate signals.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-time">-30 min</div>
+        <div class="timeline-copy">Predictive model increased deterioration probability before standard threshold alarm.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-time">Action</div>
+        <div class="timeline-copy">${safe(patient.recommended_action)}</div>
+      </div>
+    `;
+
+    document.getElementById("patientDrawer").classList.add("open");
+    document.getElementById("drawerOverlay").classList.add("show");
+  }
+
+  function closePatientDrawer(){
+    document.getElementById("patientDrawer").classList.remove("open");
+    document.getElementById("drawerOverlay").classList.remove("show");
+  }
+
+  function renderActionButtons(patient, record, pid){
+    const ackDisabled = (!pilotModeEnabled || !hasPermission("ack")) ? "disabled" : "";
+    const assignDisabled = (!pilotModeEnabled || !hasPermission("assign_nurse")) ? "disabled" : "";
+    const escalateDisabled = (!pilotModeEnabled || !hasPermission("escalate")) ? "disabled" : "";
+    const resolveDisabled = (!pilotModeEnabled || !hasPermission("resolve")) ? "disabled" : "";
+
+    return `
+      <button class="btn ${record.ack ? 'live-btn' : 'secondary'} small" onclick="ackPatient('${pid}')" ${ackDisabled}>${record.ack ? 'ACK Saved' : 'ACK'}</button>
+      <button class="btn ${(record.assigned_nurse || record.state === 'assigned') ? 'warn-btn' : 'secondary'} small" onclick="assignNurse('${pid}')" ${assignDisabled}>${(record.assigned_nurse || record.state === 'assigned') ? 'Assigned' : 'Assign Nurse'}</button>
+      <button class="btn ${record.escalated ? 'critical-btn' : 'secondary'} small" onclick="escalatePatient('${pid}')" ${escalateDisabled}>${record.escalated ? 'Escalated' : 'Escalate'}</button>
+      <button class="btn ${record.state === 'resolved' ? 'live-btn' : 'secondary'} small" onclick="resolvePatient('${pid}')" ${resolveDisabled}>${record.state === 'resolved' ? 'Resolved' : 'Resolve'}</button>
+      <button class="btn secondary small" onclick="openPatientDrawer('${pid}')">Details</button>
+    `;
+  }
+
+  function renderMonitor(patient){
+    const status = String(patient.status || "").toLowerCase();
+    const ecg = ecgClass(status);
+    const path = buildPath(waveformPoints(status === "critical" ? "critical" : status === "high" ? "high" : "stable"));
+    const riskText = typeof patient.risk_score === "number" ? patient.risk_score.toFixed(1) : safe(patient.risk_score);
+    const pid = safe(patient.patient_id);
+    const record = getWorkflowRecord(pid);
+
+    return `
+      <div class="monitor">
+        <div class="monitor-top">
+          <div>
+            <div class="monitor-bed">${safe(patient.bed, "ICU Bed")}</div>
+            <div class="monitor-title">${safe(patient.title, safe(patient.name, "Predictive Risk Monitor"))}</div>
+          </div>
+          <div class="status-pill ${statusClass(record.state !== 'new' ? record.state : patient.status)}">${pulseLabel(record.state !== 'new' ? record.state : patient.status)}</div>
+        </div>
+
+        <div class="monitor-wave" onclick="openPatientDrawer('${pid}')" style="cursor:pointer;">
+          <svg viewBox="0 0 640 120" preserveAspectRatio="none" aria-hidden="true">
+            <path class="ecg-path ${ecg}" d="${path}"></path>
+          </svg>
+        </div>
+
+        <div class="monitor-metrics">
+          <div class="metric-box">
+            <span class="metric-k">HR</span>
+            <span class="metric-v">${safe(Math.round(Number(patient.heart_rate || 0)) || "", "--")}</span>
+          </div>
+          <div class="metric-box">
+            <span class="metric-k">SpO₂</span>
+            <span class="metric-v">${safe(Math.round(Number(patient.spo2 || 0)) || "", "--")}</span>
+          </div>
+          <div class="metric-box">
+            <span class="metric-k">BP</span>
+            <span class="metric-v">${safe(Math.round(Number(patient.bp_systolic || 0)) || "", "--")}/${safe(Math.round(Number(patient.bp_diastolic || 0)) || "", "--")}</span>
+          </div>
+          <div class="metric-box">
+            <span class="metric-k">Risk</span>
+            <span class="metric-v">${riskText}</span>
+          </div>
+        </div>
+
+        <div class="monitor-story">
+          <div class="story-text">${safe(patient.story)}</div>
+          <div class="status-pill ${statusClass(record.state !== 'new' ? record.state : patient.status)}">${pid}</div>
+        </div>
+
+        <div class="monitor-actions">
+          ${renderActionButtons(patient, record, pid)}
+        </div>
+      </div>
+    `;
+  }
+
+  function renderAlert(alert){
+    const sev = String(alert.severity || "").toLowerCase();
+    const pill = sev === "critical" ? "critical" : (sev === "high" || sev === "moderate") ? "watch" : "live";
+    return `
+      <div class="alert-item">
+        <div>
+          <div class="alert-copy">${safe(alert.text)}</div>
+          <div class="alert-sub">${safe(alert.patient_id)} · ${safe(alert.unit)} · ${safe(alert.severity)}</div>
+        </div>
+        <div class="status-pill ${pill}">${safe(alert.severity)}</div>
+      </div>
+    `;
+  }
+
+  function renderPatients(patients){
+    const source = filterPatientsByUnit((patients && patients.length ? patients : fallbackPatients))
+      .sort((a,b) => Number(b.risk_score || 0) - Number(a.risk_score || 0))
+      .slice(0, 4);
+    document.getElementById("wall").innerHTML = source.map(renderMonitor).join("");
+  }
+
+  function renderAlertsList(alerts){
+    const source = (alerts && alerts.length ? alerts : [
+      {patient_id:"p101", severity:"critical", text:"Clinical alert surfaced", unit:"ICU-12"},
+      {patient_id:"p202", severity:"high", text:"Clinical alert surfaced", unit:"Stepdown-04"},
+      {patient_id:"p303", severity:"high", text:"Clinical alert surfaced", unit:"Telemetry-09"},
+      {patient_id:"p404", severity:"stable", text:"Clinical alert surfaced", unit:"Ward-21"}
+    ]).map(normalizeAlert).filter(Boolean).slice(0, 6);
+
+    document.getElementById("queue").innerHTML = source.map(renderAlert).join("");
+  }
+
+  function renderTopRiskPatients(patients){
+    const source = filterPatientsByUnit((patients && patients.length ? patients : fallbackPatients))
+      .sort((a,b) => Number(b.risk_score || 0) - Number(a.risk_score || 0))
+      .slice(0,4);
+
+    document.getElementById("top-risk-list").innerHTML = source.map(p => `
+      <div class="queue-item">
+        <div class="queue-copy">
+          ${safe(p.name)} · ${safe(p.patient_id)} · Risk ${typeof p.risk_score === "number" ? p.risk_score.toFixed(1) : safe(p.risk_score)}
+          <div class="alert-sub">${explainabilityForPatient(p)}</div>
+        </div>
+        <div class="status-pill ${statusClass(p.status)}">${pulseLabel(p.status)}</div>
+      </div>
+    `).join("");
+  }
+
+  function renderAIReasoning(patients){
+    const source = filterPatientsByUnit((patients && patients.length ? patients : fallbackPatients))
+      .sort((a,b) => Number(b.risk_score || 0) - Number(a.risk_score || 0));
+
+    const top = source[0];
+    const panel = document.getElementById("ai-reasoning-panel");
+
+    if (!top) {
+      panel.innerHTML = `<div class="why-line">Waiting for patient intelligence stream...</div>`;
+      return;
     }
 
-    async function exportAudit(){
-      try{
-        const res = await fetch("/api/audit/export", {cache:"no-store"});
-        const payload = await res.json();
+    panel.innerHTML = `
+      <div class="why-line">Highest-risk patient: ${safe(top.name)} (${safe(top.patient_id)})</div>
+      <div class="why-line">Current severity: ${safe(top.status)} · Risk ${typeof top.risk_score === "number" ? top.risk_score.toFixed(1) : safe(top.risk_score)}</div>
+      <div class="why-line">${safe(top.story)}</div>
+      <div class="why-line">Explainable reason: ${explainabilityForPatient(top)}</div>
+    `;
+  }
 
-        if (!res.ok){
-          alert(payload.error || "Export unavailable.");
-          return;
-        }
+  function renderWorkflow(alerts){
+    const source = (alerts && alerts.length ? alerts : []).map(normalizeAlert).filter(Boolean);
+    const allRecords = Object.values(workflowState);
+    const ackCount = allRecords.filter(r => r.ack).length;
+    const escalatedCount = allRecords.filter(r => r.escalated).length;
+    const assignedCount = allRecords.filter(r => r.assigned_nurse || r.state === "assigned").length;
+    const resolvedCount = allRecords.filter(r => r.state === "resolved").length;
 
-        const blob = new Blob([JSON.stringify(payload, null, 2)], {type:"application/json"});
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "early_risk_alert_audit_export.json";
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        URL.revokeObjectURL(url);
-      }catch(err){
-        console.error("Export failed", err);
-        alert("Unable to export audit log.");
-      }
-    }
+    const newNode = document.getElementById("wf-new");
+    const ackNode = document.getElementById("wf-ack");
+    const escalatedNode = document.getElementById("wf-escalated");
+    const assignedNode = document.getElementById("wf-assigned");
+    const resolvedNode = document.getElementById("wf-resolved");
 
-    function renderPilotStatus(){
-      document.getElementById("currentRolePill").textContent = "Role: " + roleLabel(pilotStatusData.user_role || "--");
-      document.getElementById("currentUserPill").textContent = "User: " + safe(pilotStatusData.user_name, "--");
-      document.getElementById("pilotModePill").textContent = (pilotStatusData.pilot_mode ? "Pilot Mode On" : "Pilot Mode Off");
-      document.getElementById("pilotModePill").className = pilotStatusData.pilot_mode ? "status-pill watch" : "status-pill muted";
-    }
+    if (newNode) newNode.textContent = String(source.length);
+    if (ackNode) ackNode.textContent = String(ackCount);
+    if (escalatedNode) escalatedNode.textContent = String(escalatedCount);
+    if (assignedNode) assignedNode.textContent = String(assignedCount);
+    if (resolvedNode) resolvedNode.textContent = String(resolvedCount);
+  }
 
-    function renderFeedStatus(){
-      const lastUpdatedPill = document.getElementById("lastUpdatedPill");
-      const feedHealthPill = document.getElementById("feedHealthPill");
+  function renderSystemHealth(){
+    const list = document.getElementById("system-health-list");
+    if (!list) return;
 
-      if (!lastSnapshotAt){
-        lastUpdatedPill.textContent = "Last Updated --";
-        feedHealthPill.textContent = "Feed Pending";
-        feedHealthPill.className = "status-pill watch";
-        return;
-      }
+    list.innerHTML = `
+      <div class="queue-item">
+        <div class="queue-copy">Pilot Mode</div>
+        <div class="status-pill ${pilotModeEnabled ? 'watch' : 'critical'}">${pilotModeEnabled ? 'On' : 'Off'}</div>
+      </div>
+      <div class="queue-item">
+        <div class="queue-copy">Current Role</div>
+        <div class="status-pill info">${roleLabel(currentRole)}</div>
+      </div>
+      <div class="queue-item">
+        <div class="queue-copy">System Status</div>
+        <div class="status-pill ${safe(lastSystemHealth.status) === 'ok' ? 'live' : 'critical'}">${safe(lastSystemHealth.status, 'unknown')}</div>
+      </div>
+      <div class="queue-item">
+        <div class="queue-copy">Last Health Check</div>
+        <div class="status-pill muted">${formatLocalTime(lastSystemHealth.time)}</div>
+      </div>
+    `;
+  }
 
-      lastUpdatedPill.textContent = "Last Updated " + formatTime(lastSnapshotAt);
-      const age = secondsSince(lastSnapshotAt);
+  function renderPatientTimeline(patients){
+    const source = filterPatientsByUnit((patients && patients.length ? patients : fallbackPatients))
+      .sort((a,b) => Number(b.risk_score || 0) - Number(a.risk_score || 0));
 
-      if (consecutiveFeedErrors >= 2 || age > 20){
-        feedHealthPill.textContent = "Feed Stale";
-        feedHealthPill.className = "status-pill critical";
-      } else if (age > 10){
-        feedHealthPill.textContent = "Feed Delayed";
-        feedHealthPill.className = "status-pill watch";
-      } else {
-        feedHealthPill.textContent = "Feed Live";
-        feedHealthPill.className = "status-pill live";
-      }
-    }
+    const top = source[0];
+    const panel = document.getElementById("patient-timeline");
 
-    function openPatientDrawer(patientId){
-      const patient = findPatient(patientId);
-      if (!patient) return;
-      selectedPatientId = patientId;
+    if (!panel) return;
 
-      document.getElementById("drawerPatientName").textContent = safe(patient.name);
-      document.getElementById("drawerPatientSub").textContent = `${safe(patient.patient_id)} · ${safe(patient.bed)} · ${safe(patient.program)}`;
-      document.getElementById("drawerSummary").textContent = safe(patient.alert_message);
-      document.getElementById("drawerHr").textContent = safe(patient.heart_rate);
-      document.getElementById("drawerSpo2").textContent = safe(patient.spo2);
-      document.getElementById("drawerBp").textContent = `${safe(patient.bp_systolic)}/${safe(patient.bp_diastolic)}`;
-      document.getElementById("drawerRisk").textContent = typeof patient.risk_score === "number" ? patient.risk_score.toFixed(1) : safe(patient.risk_score);
-      document.getElementById("drawerAction").textContent = safe(patient.recommended_action);
-      document.getElementById("drawerExplainability").textContent = explainabilityForPatient(patient);
-      document.getElementById("drawerWorkflow").textContent = workflowText(patientId);
-
-      document.getElementById("drawerTimeline").innerHTML = `
+    if (!top) {
+      panel.innerHTML = `
         <div class="timeline-item">
           <div class="timeline-time">Now</div>
-          <div class="timeline-copy">${safe(patient.name)} is currently ${safe(patient.status)} with risk ${typeof patient.risk_score === "number" ? patient.risk_score.toFixed(1) : safe(patient.risk_score)}.</div>
-        </div>
-        <div class="timeline-item">
-          <div class="timeline-time">-15 min</div>
-          <div class="timeline-copy">Trend drift detected across oxygen saturation and heart rate signals.</div>
-        </div>
-        <div class="timeline-item">
-          <div class="timeline-time">-30 min</div>
-          <div class="timeline-copy">Predictive model increased deterioration probability before standard threshold alarm.</div>
-        </div>
-        <div class="timeline-item">
-          <div class="timeline-time">Action</div>
-          <div class="timeline-copy">${safe(patient.recommended_action)}</div>
+          <div class="timeline-copy">Waiting for active patient timeline...</div>
         </div>
       `;
-
-      document.getElementById("patientDrawer").classList.add("open");
-      document.getElementById("drawerOverlay").classList.add("show");
+      return;
     }
 
-    function closePatientDrawer(){
-      document.getElementById("patientDrawer").classList.remove("open");
-      document.getElementById("drawerOverlay").classList.remove("show");
-    }
+    panel.innerHTML = `
+      <div class="timeline-item">
+        <div class="timeline-time">Now</div>
+        <div class="timeline-copy">${safe(top.name)} flagged with ${safe(top.status)} severity. Risk ${typeof top.risk_score === "number" ? top.risk_score.toFixed(1) : safe(top.risk_score)}.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-time">-15 min</div>
+        <div class="timeline-copy">Trend drift detected across oxygen saturation and heart rate signals.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-time">-30 min</div>
+        <div class="timeline-copy">Predictive model increased deterioration probability before standard threshold alarm.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-time">Action</div>
+        <div class="timeline-copy">${safe(top.recommended_action)}</div>
+      </div>
+    `;
+  }
 
-    function monitorActionButtons(patient, record, pid){
-      const canAck = hasPermission("ack");
-      const canAssign = hasPermission("assign");
-      const canEscalate = hasPermission("escalate");
-      const canResolve = hasPermission("resolve");
+  function renderAuditLog(){
+    const target = document.getElementById("audit-log");
+    if (!target) return;
 
-      return `
-        <button class="btn ${record.ack ? 'live-btn' : 'secondary'} small" onclick="ackPatient('${pid}')" ${canAck ? '' : 'disabled'}>${record.ack ? 'ACK Saved' : 'ACK'}</button>
-        <button class="btn ${record.assigned ? 'warn-btn' : 'secondary'} small" onclick="assignPatient('${pid}')" ${canAssign ? '' : 'disabled'}>${record.assigned ? 'Assigned' : 'Assign'}</button>
-        <button class="btn ${record.escalated ? 'critical-btn' : 'secondary'} small" onclick="escalatePatient('${pid}')" ${canEscalate ? '' : 'disabled'}>${record.escalated ? 'Escalated' : 'Escalate'}</button>
-        <button class="btn ${record.state === 'resolved' ? 'live-btn' : 'secondary'} small" onclick="resolvePatient('${pid}')" ${canResolve ? '' : 'disabled'}>${record.state === 'resolved' ? 'Resolved' : 'Resolve'}</button>
-        <button class="btn secondary small" onclick="openPatientDrawer('${pid}')">Details</button>
-      `;
-    }
-
-    function renderMonitor(patient){
-      const status = String(patient.status || "").toLowerCase();
-      const ecg = ecgClass(status);
-      const path = buildPath(waveformPoints(status === "critical" ? "critical" : status === "high" ? "high" : "stable"));
-      const riskText = typeof patient.risk_score === "number" ? patient.risk_score.toFixed(1) : safe(patient.risk_score);
-      const pid = safe(patient.patient_id);
-      const record = getWorkflowRecord(pid);
-
-      return `
-        <div class="monitor">
-          <div class="monitor-top">
-            <div>
-              <div class="monitor-bed">${safe(patient.bed, "ICU Bed")}</div>
-              <div class="monitor-title">${safe(patient.title, safe(patient.name, "Predictive Risk Monitor"))}</div>
-            </div>
-            <div class="status-pill ${statusClass(record.state === 'resolved' ? 'stable' : patient.status)}">${pulseLabel(record.state === "new" ? patient.status : record.state)}</div>
-          </div>
-
-          <div class="monitor-wave" onclick="openPatientDrawer('${pid}')" style="cursor:pointer;">
-            <svg viewBox="0 0 640 120" preserveAspectRatio="none" aria-hidden="true">
-              <path class="ecg-path ${ecg}" d="${path}"></path>
-            </svg>
-          </div>
-
-          <div class="monitor-metrics">
-            <div class="metric-box">
-              <span class="metric-k">HR</span>
-              <span class="metric-v">${safe(Math.round(Number(patient.heart_rate || 0)) || "", "--")}</span>
-            </div>
-            <div class="metric-box">
-              <span class="metric-k">SpO₂</span>
-              <span class="metric-v">${safe(Math.round(Number(patient.spo2 || 0)) || "", "--")}</span>
-            </div>
-            <div class="metric-box">
-              <span class="metric-k">BP</span>
-              <span class="metric-v">${safe(Math.round(Number(patient.bp_systolic || 0)) || "", "--")}/${safe(Math.round(Number(patient.bp_diastolic || 0)) || "", "--")}</span>
-            </div>
-            <div class="metric-box">
-              <span class="metric-k">Risk</span>
-              <span class="metric-v">${riskText}</span>
-            </div>
-          </div>
-
-          <div class="monitor-story">
-            <div class="story-text">${safe(patient.story)}</div>
-            <div class="status-pill ${statusClass(record.state === 'resolved' ? 'stable' : patient.status)}">${pid}</div>
-          </div>
-
-          <div class="monitor-actions">
-            ${monitorActionButtons(patient, record, pid)}
-          </div>
-        </div>
-      `;
-    }
-
-    function renderAlert(alert){
-      const sev = String(alert.severity || "").toLowerCase();
-      const pill = sev === "critical" ? "critical" : (sev === "high" || sev === "moderate") ? "watch" : "live";
-      return `
-        <div class="alert-item">
+    if (!auditLog.length){
+      target.innerHTML = `
+        <div class="audit-item">
           <div>
-            <div class="alert-copy">${safe(alert.text)}</div>
-            <div class="alert-sub">${safe(alert.patient_id)} · ${safe(alert.unit)} · ${safe(alert.severity)}</div>
+            <div class="audit-copy">System initialized</div>
+            <div class="audit-sub">Awaiting user actions</div>
           </div>
-          <div class="status-pill ${pill}">${safe(alert.severity)}</div>
+          <div class="status-pill info">Log</div>
         </div>
       `;
+      return;
     }
 
-    function renderPatients(patients){
-      const source = filterPatientsByUnit((patients && patients.length ? patients : fallbackPatients))
-        .sort((a,b) => Number(b.risk_score || 0) - Number(a.risk_score || 0))
-        .slice(0, 4);
-      document.getElementById("wall").innerHTML = source.map(renderMonitor).join("");
-    }
+    target.innerHTML = auditLog.slice(-8).reverse().map(entry => `
+      <div class="audit-item">
+        <div>
+          <div class="audit-copy">${safe(entry.action)} · ${safe(entry.patient_id)}</div>
+          <div class="audit-sub">${safe(entry.role)} · ${formatLocalTime(entry.time)}${entry.note ? " · " + safe(entry.note) : ""}</div>
+        </div>
+        <div class="status-pill info">Log</div>
+      </div>
+    `).join("");
+  }
 
-    function renderAlertsList(alerts){
-      const source = (alerts && alerts.length ? alerts : [
+  function updateSummary(patients, alerts){
+    const sourcePatients = filterPatientsByUnit((patients && patients.length ? patients : fallbackPatients));
+    const sourceAlerts = (alerts && alerts.length ? alerts : []).map(normalizeAlert).filter(Boolean);
+
+    const openAlerts = sourceAlerts.length;
+    const criticalAlerts = sourceAlerts.filter(a => String(a.severity || "").toLowerCase() === "critical").length;
+    const avgRisk = sourcePatients.length
+      ? (sourcePatients.reduce((n, p) => n + Number(p.risk_score || 0), 0) / sourcePatients.length)
+      : 0;
+
+    const openNode = document.getElementById("open-alerts");
+    const criticalNode = document.getElementById("critical-alerts");
+    const avgNode = document.getElementById("avg-risk");
+    const unitNode = document.getElementById("unit-count");
+
+    if (openNode) openNode.textContent = String(openAlerts);
+    if (criticalNode) criticalNode.textContent = String(criticalAlerts);
+    if (avgNode) avgNode.textContent = avgRisk.toFixed(1);
+    if (unitNode) unitNode.textContent = unitLabel(currentUnitFilter);
+  }
+
+  async function ackPatient(patientId){
+    const ok = await postWorkflowAction(patientId, "ack");
+    if (!ok) return;
+    rerenderAll();
+    if (selectedPatientId === patientId) openPatientDrawer(patientId);
+  }
+
+  async function assignNurse(patientId){
+    const ok = await postWorkflowAction(patientId, "assign_nurse", "Assigned Nurse");
+    if (!ok) return;
+    rerenderAll();
+    if (selectedPatientId === patientId) openPatientDrawer(patientId);
+  }
+
+  async function escalatePatient(patientId){
+    const ok = await postWorkflowAction(patientId, "escalate");
+    if (!ok) return;
+    rerenderAll();
+    if (selectedPatientId === patientId) openPatientDrawer(patientId);
+  }
+
+  async function resolvePatient(patientId){
+    const ok = await postWorkflowAction(patientId, "resolve");
+    if (!ok) return;
+    rerenderAll();
+    if (selectedPatientId === patientId) openPatientDrawer(patientId);
+  }
+
+  function rerenderAll(){
+    updatePilotBanner();
+    renderPatients(activePatients);
+    renderAlertsList(activeAlerts);
+    updateSummary(activePatients, activeAlerts);
+    renderTopRiskPatients(activePatients);
+    renderAIReasoning(activePatients);
+    renderWorkflow(activeAlerts);
+    renderSystemHealth();
+    renderPatientTimeline(activePatients);
+    renderAuditLog();
+  }
+
+  function applyPayload(payload){
+    if (payload && Array.isArray(payload.patients)) {
+      activePatients = payload.patients.map(normalizePatient).filter(Boolean);
+      activeAlerts = (payload.alerts || []).map(normalizeAlert).filter(Boolean);
+      lastUpdatedAt = new Date().toISOString();
+    } else {
+      activePatients = fallbackPatients.map(normalizePatient).filter(Boolean);
+      activeAlerts = [
         {patient_id:"p101", severity:"critical", text:"Clinical alert surfaced", unit:"ICU-12"},
         {patient_id:"p202", severity:"high", text:"Clinical alert surfaced", unit:"Stepdown-04"},
         {patient_id:"p303", severity:"high", text:"Clinical alert surfaced", unit:"Telemetry-09"},
         {patient_id:"p404", severity:"stable", text:"Clinical alert surfaced", unit:"Ward-21"}
-      ]).map(normalizeAlert).filter(Boolean).slice(0, 6);
-
-      document.getElementById("queue").innerHTML = source.map(renderAlert).join("");
+      ];
+      lastUpdatedAt = new Date().toISOString();
     }
+    rerenderAll();
+  }
 
-    function renderTopRiskPatients(patients){
-      const source = filterPatientsByUnit((patients && patients.length ? patients : fallbackPatients))
-        .sort((a,b) => Number(b.risk_score || 0) - Number(a.risk_score || 0))
-        .slice(0,4);
-
-      document.getElementById("top-risk-list").innerHTML = source.map(p => `
-        <div class="queue-item">
-          <div class="queue-copy">
-            ${safe(p.name)} · ${safe(p.patient_id)} · Risk ${typeof p.risk_score === "number" ? p.risk_score.toFixed(1) : safe(p.risk_score)}
-            <div class="report-sub">${explainabilityForPatient(p)}</div>
-          </div>
-          <div class="status-pill ${statusClass(p.status)}">${pulseLabel(p.status)}</div>
-        </div>
-      `).join("");
-    }
-
-    function renderAIReasoning(patients){
-      const source = filterPatientsByUnit((patients && patients.length ? patients : fallbackPatients))
-        .sort((a,b) => Number(b.risk_score || 0) - Number(a.risk_score || 0));
-
-      const top = source[0];
-      const panel = document.getElementById("ai-reasoning-panel");
-
-      if (!top) {
-        panel.innerHTML = `<div class="why-line">Waiting for patient intelligence stream...</div>`;
-        return;
-      }
-
-      panel.innerHTML = `
-        <div class="why-line">Highest-risk patient: ${safe(top.name)} (${safe(top.patient_id)})</div>
-        <div class="why-line">Current severity: ${safe(top.status)} · Risk ${typeof top.risk_score === "number" ? top.risk_score.toFixed(1) : safe(top.risk_score)}</div>
-        <div class="why-line">${safe(top.story)}</div>
-        <div class="why-line">Explainable reason: ${explainabilityForPatient(top)}</div>
-      `;
-    }
-
-    function renderWorkflow(alerts){
-      const source = (alerts && alerts.length ? alerts : []).map(normalizeAlert).filter(Boolean);
-      const allRecords = Object.values(workflowState);
-      const ackCount = allRecords.filter(r => r.ack).length;
-      const escalatedCount = allRecords.filter(r => r.escalated).length;
-      const assignedCount = allRecords.filter(r => r.assigned).length;
-      const resolvedCount = allRecords.filter(r => r.state === "resolved").length;
-
-      document.getElementById("wf-new").textContent = String(source.length);
-      document.getElementById("wf-ack").textContent = String(ackCount);
-      document.getElementById("wf-escalated").textContent = String(escalatedCount);
-      document.getElementById("wf-assigned").textContent = String(assignedCount);
-      document.getElementById("wf-resolved").textContent = String(resolvedCount);
-    }
-
-    function renderSystemHealth(){
-      const target = document.getElementById("system-health-list");
-      const status = systemHealthData.status || "unknown";
-      const pilotMode = !!systemHealthData.pilot_mode;
-      const timestamp = systemHealthData.timestamp || null;
-      const staleAge = secondsSince(lastSnapshotAt);
-
-      target.innerHTML = `
-        <div class="queue-item">
-          <div class="queue-copy">System Status<div class="report-sub">${safe(status)}</div></div>
-          <div class="status-pill ${status === 'operational' ? 'live' : 'watch'}">${safe(status)}</div>
-        </div>
-        <div class="queue-item">
-          <div class="queue-copy">Pilot Mode<div class="report-sub">${pilotMode ? 'Enabled' : 'Disabled'}</div></div>
-          <div class="status-pill ${pilotMode ? 'watch' : 'muted'}">${pilotMode ? 'On' : 'Off'}</div>
-        </div>
-        <div class="queue-item">
-          <div class="queue-copy">Workflow Storage<div class="report-sub">${safe(String(systemHealthData.workflow_storage), '--')}</div></div>
-          <div class="status-pill ${systemHealthData.workflow_storage ? 'live' : 'critical'}">${systemHealthData.workflow_storage ? 'Ready' : 'Issue'}</div>
-        </div>
-        <div class="queue-item">
-          <div class="queue-copy">Feed Freshness<div class="report-sub">age ${staleAge}s</div></div>
-          <div class="status-pill ${staleAge > 20 ? 'critical' : staleAge > 10 ? 'watch' : 'live'}">${staleAge > 20 ? 'Stale' : staleAge > 10 ? 'Delayed' : 'Fresh'}</div>
-        </div>
-        <div class="queue-item">
-          <div class="queue-copy">System Timestamp<div class="report-sub">${formatTime(timestamp)}</div></div>
-          <div class="status-pill info">Clock</div>
-        </div>
-      `;
-    }
-
-    function renderPatientTimeline(patients){
-      const source = filterPatientsByUnit((patients && patients.length ? patients : fallbackPatients))
-        .sort((a,b) => Number(b.risk_score || 0) - Number(a.risk_score || 0));
-
-      const top = source[0];
-      const panel = document.getElementById("patient-timeline");
-
-      if (!top) {
-        panel.innerHTML = `
-          <div class="timeline-item">
-            <div class="timeline-time">Now</div>
-            <div class="timeline-copy">Waiting for active patient timeline...</div>
-          </div>
-        `;
-        return;
-      }
-
-      panel.innerHTML = `
-        <div class="timeline-item">
-          <div class="timeline-time">Now</div>
-          <div class="timeline-copy">${safe(top.name)} flagged with ${safe(top.status)} severity. Risk ${typeof top.risk_score === "number" ? top.risk_score.toFixed(1) : safe(top.risk_score)}.</div>
-        </div>
-        <div class="timeline-item">
-          <div class="timeline-time">-15 min</div>
-          <div class="timeline-copy">Trend drift detected across oxygen saturation and heart rate signals.</div>
-        </div>
-        <div class="timeline-item">
-          <div class="timeline-time">-30 min</div>
-          <div class="timeline-copy">Predictive model increased deterioration probability before standard threshold alarm.</div>
-        </div>
-        <div class="timeline-item">
-          <div class="timeline-time">Action</div>
-          <div class="timeline-copy">${safe(top.recommended_action)}</div>
-        </div>
-      `;
-    }
-
-    function renderAuditLog(){
-      const target = document.getElementById("audit-log");
-      if (!auditLog.length){
-        target.innerHTML = `
-          <div class="audit-item">
-            <div>
-              <div class="audit-copy">System initialized</div>
-              <div class="audit-sub">Awaiting user actions</div>
-            </div>
-            <div class="status-pill info">Log</div>
-          </div>
-        `;
-        return;
-      }
-
-      target.innerHTML = auditLog.slice(0, 8).map(entry => `
-        <div class="audit-item">
-          <div>
-            <div class="audit-copy">${safe(entry.action)} · ${safe(entry.patient_id)}</div>
-            <div class="audit-sub">${safe(entry.role)} · ${safe(entry.timestamp || entry.at)}${entry.note ? " · " + safe(entry.note) : ""}</div>
-          </div>
-          <div class="status-pill info">Log</div>
-        </div>
-      `).join("");
-    }
-
-    function renderReporting(){
-      const target = document.getElementById("reporting-panel");
-      if (!Object.keys(reportingData || {}).length){
-        target.innerHTML = `
-          <div class="report-item">
-            <div>
-              <div class="report-copy">Reporting unavailable</div>
-              <div class="report-sub">Try refresh</div>
-            </div>
-            <div class="status-pill watch">Report</div>
-          </div>
-        `;
-        return;
-      }
-
-      target.innerHTML = `
-        <div class="report-item">
-          <div>
-            <div class="report-copy">Total Patients</div>
-            <div class="report-sub">Tracked workflow records</div>
-          </div>
-          <div class="status-pill info">${safe(reportingData.total_patients, 0)}</div>
-        </div>
-        <div class="report-item">
-          <div>
-            <div class="report-copy">Acknowledged</div>
-            <div class="report-sub">Pilot workflow progress</div>
-          </div>
-          <div class="status-pill live">${safe(reportingData.acknowledged, 0)}</div>
-        </div>
-        <div class="report-item">
-          <div>
-            <div class="report-copy">Assigned</div>
-            <div class="report-sub">Clinical assignment state</div>
-          </div>
-          <div class="status-pill info">${safe(reportingData.assigned, 0)}</div>
-        </div>
-        <div class="report-item">
-          <div>
-            <div class="report-copy">Escalated</div>
-            <div class="report-sub">Priority interventions</div>
-          </div>
-          <div class="status-pill critical">${safe(reportingData.escalated, 0)}</div>
-        </div>
-        <div class="report-item">
-          <div>
-            <div class="report-copy">Resolved</div>
-            <div class="report-sub">Closed workflow state</div>
-          </div>
-          <div class="status-pill live">${safe(reportingData.resolved, 0)}</div>
-        </div>
-        <div class="report-item">
-          <div>
-            <div class="report-copy">Audit Events</div>
-            <div class="report-sub">Logged pilot actions</div>
-          </div>
-          <div class="status-pill watch">${safe(reportingData.audit_events, 0)}</div>
-        </div>
-      `;
-    }
-
-    function renderThresholds(){
-      const target = document.getElementById("threshold-panel");
-      if (!Object.keys(thresholdData || {}).length){
-        target.innerHTML = `
-          <div class="threshold-item">
-            <div class="report-copy">Thresholds unavailable</div>
-            <div class="status-pill watch">Config</div>
-          </div>
-        `;
-        return;
-      }
-
-      const entries = Object.entries(thresholdData);
-      target.innerHTML = entries.map(([unit, settings]) => `
-        <div class="threshold-item">
-          <div>
-            <div class="report-copy">${unitLabel(unit)}</div>
-            <div class="report-sub">risk alert threshold ${safe(settings.risk_alert, '--')}</div>
-          </div>
-          <div class="status-pill info">Config</div>
-        </div>
-      `).join("");
-    }
-
-    function updateSummary(patients, alerts){
-      const sourcePatients = filterPatientsByUnit((patients && patients.length ? patients : fallbackPatients));
-      const sourceAlerts = (alerts && alerts.length ? alerts : []).map(normalizeAlert).filter(Boolean);
-
-      const openAlerts = sourceAlerts.length;
-      const criticalAlerts = sourceAlerts.filter(a => String(a.severity || "").toLowerCase() === "critical").length;
-      const avgRisk = sourcePatients.length
-        ? (sourcePatients.reduce((n, p) => n + Number(p.risk_score || 0), 0) / sourcePatients.length)
-        : 0;
-
-      document.getElementById("open-alerts").textContent = String(openAlerts);
-      document.getElementById("critical-alerts").textContent = String(criticalAlerts);
-      document.getElementById("avg-risk").textContent = avgRisk.toFixed(1);
-      document.getElementById("unit-count").textContent = unitLabel(currentUnitFilter);
-    }
-
-    async function ackPatient(patientId){
-      const ok = await postWorkflowAction(patientId, "ack");
-      if (!ok) return;
-      rerenderAll();
-      if (selectedPatientId === patientId) openPatientDrawer(patientId);
-    }
-
-    async function assignPatient(patientId){
-      const ok = await postWorkflowAction(patientId, "assign");
-      if (!ok) return;
-      rerenderAll();
-      if (selectedPatientId === patientId) openPatientDrawer(patientId);
-    }
-
-    async function escalatePatient(patientId){
-      const ok = await postWorkflowAction(patientId, "escalate");
-      if (!ok) return;
-      rerenderAll();
-      if (selectedPatientId === patientId) openPatientDrawer(patientId);
-    }
-
-    async function resolvePatient(patientId){
-      const ok = await postWorkflowAction(patientId, "resolve");
-      if (!ok) return;
-      rerenderAll();
-      if (selectedPatientId === patientId) openPatientDrawer(patientId);
-    }
-
-    function rerenderAll(){
-      renderPilotStatus();
-      renderFeedStatus();
-      renderPatients(activePatients);
-      renderAlertsList(activeAlerts);
-      updateSummary(activePatients, activeAlerts);
-      renderTopRiskPatients(activePatients);
-      renderAIReasoning(activePatients);
-      renderWorkflow(activeAlerts);
-      renderSystemHealth();
-      renderPatientTimeline(activePatients);
-      renderAuditLog();
-      renderReporting();
-      renderThresholds();
-    }
-
-    function applyPayload(payload){
-      if (payload && Array.isArray(payload.patients)) {
-        activePatients = payload.patients.map(normalizePatient).filter(Boolean);
-        activeAlerts = (payload.alerts || []).map(normalizeAlert).filter(Boolean);
-        lastSnapshotAt = payload.generated_at || new Date().toISOString();
-      } else {
-        activePatients = fallbackPatients.map(normalizePatient).filter(Boolean);
-        activeAlerts = [
-          {patient_id:"p101", severity:"critical", text:"Clinical alert surfaced", unit:"ICU-12"},
-          {patient_id:"p202", severity:"high", text:"Clinical alert surfaced", unit:"Stepdown-04"},
-          {patient_id:"p303", severity:"high", text:"Clinical alert surfaced", unit:"Telemetry-09"},
-          {patient_id:"p404", severity:"stable", text:"Clinical alert surfaced", unit:"Ward-21"}
-        ];
-        lastSnapshotAt = new Date().toISOString();
-      }
-      rerenderAll();
-    }
-
-    async function refreshSnapshot(){
-      try{
-        const res = await fetch("/api/v1/live-snapshot?tenant_id=demo&patient_id=p101&refresh=" + Date.now(), {cache:"no-store"});
-        if (!res.ok) throw new Error("snapshot failed");
-        const payload = await res.json();
-        consecutiveFeedErrors = 0;
-        applyPayload(payload);
-      }catch(err){
-        consecutiveFeedErrors += 1;
-        console.error("Command center snapshot failed", err);
+  async function refreshFallback(){
+    try{
+      const res = await fetch("/api/v1/live-snapshot?tenant_id=demo&patient_id=p101&refresh=" + Date.now(), {cache:"no-store"});
+      if (!res.ok){
         applyPayload({});
+        return;
       }
+      const payload = await res.json();
+      applyPayload(payload);
+    }catch(err){
+      console.error("snapshot failed", err);
+      applyPayload({});
     }
+  }
 
-    async function refreshAllSideData(){
-      await Promise.all([
-        loadPilotStatus(),
-        loadWorkflowState(),
-        loadReporting(),
-        loadThresholds(),
-        loadSystemHealth()
-      ]);
-      rerenderAll();
-    }
+  async function boot(){
+    await loadPilotMode();
+    await loadWorkflowState();
+    await loadSystemHealth();
+    await loadSystemBanner();
+    applyPayload({});
+    await refreshFallback();
 
-    document.getElementById("unitFilter").addEventListener("change", function(){
-      currentUnitFilter = this.value;
-      document.getElementById("selectedUnitPill").textContent = unitLabel(currentUnitFilter);
-      rerenderAll();
-    });
-
-    document.getElementById("refreshReportingBtn").addEventListener("click", async function(){
-      await loadReporting();
-      rerenderAll();
-    });
-
-    document.getElementById("exportAuditBtn").addEventListener("click", async function(){
-      await exportAudit();
-    });
-
-    async function boot(){
-      await refreshAllSideData();
-      await refreshSnapshot();
-      rerenderAll();
-
-      setInterval(async () => {
-        await refreshSnapshot();
-        await loadSystemHealth();
+    const unitFilter = document.getElementById("unitFilter");
+    if (unitFilter) {
+      unitFilter.addEventListener("change", function(){
+        currentUnitFilter = this.value;
+        const pill = document.getElementById("selectedUnitPill");
+        if (pill) pill.textContent = unitLabel(currentUnitFilter);
         rerenderAll();
-      }, 5000);
-
-      setInterval(async () => {
-        await loadWorkflowState();
-        await loadReporting();
-        rerenderAll();
-      }, 10000);
+      });
     }
 
-    boot();
-  </script>
+    const modePill = document.getElementById("pilotModePill");
+    if (modePill) {
+      modePill.addEventListener("click", togglePilotMode);
+    }
+
+    setInterval(async () => {
+      await loadPilotMode();
+      await loadWorkflowState();
+      await loadSystemHealth();
+      await refreshFallback();
+    }, 5000);
+  }
+
+  boot();
+</script>
 </body>
 </html>
 """
