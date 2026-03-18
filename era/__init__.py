@@ -795,7 +795,7 @@ def create_app() -> Flask:
         elif lead_type == "investor":
             if any(word in stage for word in ["institutional", "strategic"]):
                 score += 3
-        elif "angel" in stage or "seed" in stage:
+            elif "angel" in stage or "seed" in stage:
                 score += 2
             if any(word in role for word in ["partner", "principal", "associate", "vc", "investor"]):
                 score += 2
