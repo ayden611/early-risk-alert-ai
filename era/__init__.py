@@ -1357,6 +1357,234 @@ def create_app() -> Flask:
             "permissions": sorted(list(ROLE_PERMISSIONS.get(_current_role(), {"read"}))),
         })
 
+    ```python
+# ================================
+# PILOT + ROLE + WORKFLOW CORE
+# ================================
+
+from flask import Flask, jsonify, request, session
+from datetime import datetime, timezone
+
+app = Flask(__name__)
+app.secret_key = "era-secret-key"
+
+
+# -----------------------------
+# UTIL
+# -----------------------------
+def utc_now():
+    return datetime.now(timezone.utc).isoformat()
+
+
+# -----------------------------
+# SESSION STATE
+# -----------------------------
+def is_pilot_mode():
+    return session.get("pilot_mode", False)
+
+def get_role():
+    return session.get("role", "viewer")
+
+
+# -----------------------------
+# ROLE PERMISSIONS
+# -----------------------------
+ROLE_PERMISSIONS = {
+    "viewer": [],
+    "nurse": ["ack"],
+    "operator": ["ack", "assign_nurse"],
+    "physician": ["ack", "escalate"],
+    "admin": ["ack", "assign_nurse", "escalate", "resolve", "clear"]
+}
+
+
+def has_permission(action):
+    role = get_role()
+    return action in ROLE_PERMISSIONS.get(role, [])
+
+
+# -----------------------------
+# IN-MEMORY STORE (PILOT SAFE)
+# -----------------------------
+STORE = {
+    "records": {},
+    "audit_log": []
+}
+
+
+def get_record(patient_id):
+    if patient_id not in STORE["records"]:
+        STORE["records"][patient_id] = {
+            "ack": False,
+            "escalated": False,
+            "assigned_nurse": False,
+            "assigned_label": "",
+            "state": "new",
+            "updated_at": utc_now(),
+            "role": ""
+        }
+    return STORE["records"][patient_id]
+
+
+def log_event(patient_id, action, role, note=""):
+    STORE["audit_log"].append({
+        "patient_id": patient_id,
+        "action": action,
+        "role": role,
+        "note": note,
+        "time": utc_now()
+    })
+
+
+# -----------------------------
+# LOGIN / PILOT ENTRY
+# -----------------------------
+@app.post("/login")
+def login():
+    data = request.get_json(silent=True) or {}
+
+    role = data.get("role", "viewer")
+
+    session["pilot_mode"] = True
+    session["role"] = role
+
+    return jsonify({
+        "ok": True,
+        "pilot_mode": True,
+        "role": role
+    })
+
+
+# -----------------------------
+# PILOT MODE CONTROL
+# -----------------------------
+@app.get("/api/pilot-mode")
+def get_pilot():
+    return jsonify({
+        "enabled": is_pilot_mode(),
+        "role": get_role()
+    })
+
+
+@app.post("/api/pilot-mode/toggle")
+def toggle_pilot():
+    current = session.get("pilot_mode", True)
+    session["pilot_mode"] = not current
+
+    return jsonify({
+        "enabled": session["pilot_mode"]
+    })
+
+
+# -----------------------------
+# WORKFLOW STATE
+# -----------------------------
+@app.get("/api/workflow")
+def get_workflow():
+    return jsonify({
+        "records": STORE["records"],
+        "audit_log": STORE["audit_log"][-50:]
+    })
+
+
+# -----------------------------
+# WORKFLOW ACTIONS
+# -----------------------------
+@app.post("/api/workflow/action")
+def workflow_action():
+    data = request.get_json(silent=True) or {}
+
+    patient_id = str(data.get("patient_id", "")).strip()
+    action = str(data.get("action", "")).lower()
+    note = str(data.get("note", "")).strip()
+
+    if not patient_id:
+        return jsonify({"ok": False, "error": "patient_id required"}), 400
+
+    # 🚨 PILOT SAFETY LAYER
+    if not is_pilot_mode():
+        return jsonify({
+            "ok": False,
+            "error": "Actions disabled outside pilot mode"
+        }), 403
+
+    # 🚨 ROLE PERMISSION CHECK
+    if not has_permission(action):
+        return jsonify({
+            "ok": False,
+            "error": f"{get_role()} not allowed to perform {action}"
+        }), 403
+
+    record = get_record(patient_id)
+    role = get_role()
+
+    # -----------------------------
+    # ACTIONS
+    # -----------------------------
+    if action == "ack":
+        record["ack"] = True
+        record["state"] = "acknowledged"
+
+    elif action == "assign_nurse":
+        record["assigned_nurse"] = True
+        record["assigned_label"] = note or "Nurse assigned"
+        record["state"] = "assigned"
+
+    elif action == "escalate":
+        record["escalated"] = True
+        record["state"] = "escalated"
+
+    elif action == "resolve":
+        record["state"] = "resolved"
+
+    elif action == "clear":
+        STORE["records"][patient_id] = {}
+        log_event(patient_id, "CLEAR", role, note or "Workflow cleared")
+        return jsonify({"ok": True})
+
+    else:
+        return jsonify({"ok": False, "error": "invalid action"}), 400
+
+    record["updated_at"] = utc_now()
+    record["role"] = role
+
+    log_event(patient_id, action.upper(), role, note)
+
+    return jsonify({
+        "ok": True,
+        "record": record
+    })
+
+
+# -----------------------------
+# SYSTEM HEALTH
+# -----------------------------
+@app.get("/api/system/health")
+def system_health():
+    return jsonify({
+        "status": "ok",
+        "pilot_mode": is_pilot_mode(),
+        "role": get_role(),
+        "time": utc_now()
+    })
+
+
+# -----------------------------
+# BANNER STATE (FOR UI)
+# -----------------------------
+@app.get("/api/system/banner")
+def system_banner():
+    if not is_pilot_mode():
+        return jsonify({
+            "message": "LIVE MODE — RESTRICTED",
+            "level": "danger"
+        })
+
+    return jsonify({
+        "message": "PILOT MODE ACTIVE — SIMULATION DATA",
+        "level": "info"
+    })
+
     # -----------------------------
     # PILOT MODE STATE
     # -----------------------------
