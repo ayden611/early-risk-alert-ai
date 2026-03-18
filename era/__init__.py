@@ -1855,7 +1855,7 @@ def create_app() -> Flask:
             rows = load_all_rows()
             merged: list[dict[str, Any]] = []
             for lead_type, data in rows.items():
-            for row in data:
+                for row in data:
                     merged.append(_normalize_row(row, lead_type))
             merged.sort(key=lambda r: (r["submitted_at"], r["lead_score"]), reverse=True)
             return merged
