@@ -583,28 +583,28 @@ def create_app() -> Flask:
         "info@earlyriskalertai.com,milton@earlyriskalertai.com"
     ).strip()
 
-    if not admin_to:
-        return
+        if not admin_to:
+            return
 
-    admin_emails = [email.strip() for email in admin_to.split(",") if email.strip()]
+        admin_emails = [email.strip() for email in admin_to.split(",") if email.strip()]
 
-    subject = f"New {lead_type.title()} Request — Early Risk Alert AI"
+        subject = f"New {lead_type.title()} Request — Early Risk Alert AI"
 
-    rows = "".join(
-        f"<tr><td style='padding:8px;border-bottom:1px solid #ddd'><strong>{k}</strong></td>"
-        f"<td style='padding:8px;border-bottom:1px solid #ddd'>{v}</td></tr>"
-        for k, v in payload.items()
-    )
+        rows = "".join(
+            f"<tr><td style='padding:8px;border-bottom:1px solid #ddd'><strong>{k}</strong></td>"
+            f"<td style='padding:8px;border-bottom:1px solid #ddd'>{v}</td></tr>"
+            for k, v in payload.items()
+        )
 
-    html_body = f"""
-    <h2>New {lead_type.title()} Request</h2>
-    <table cellspacing="0" cellpadding="0" style="border-collapse:collapse;width:100%">
-        {rows}
-    </table>
-    """
+        html_body = f"""
+        <h2>New {lead_type.title()} Request</h2>
+        <table cellspacing="0" cellpadding="0" style="border-collapse:collapse;width:100%">
+            {rows}
+        </table>
+        """
 
-    for email in admin_emails:
-        _send_email(email, subject, html_body)
+        for email in admin_emails:
+            _send_email(email, subject, html_body)
 
     def _normalize_room_to_unit(room: str) -> str:
         r = str(room or "").lower()
