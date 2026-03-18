@@ -1817,6 +1817,28 @@ def create_app() -> Flask:
     app = Flask(__name__)
     app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "era-dev-secret")
 
+# -------------------------------
+# Workflow API
+# -------------------------------
+
+@app.get("/api/audit/export")
+def export_audit():
+
+    if not session.get("logged_in"):
+        return jsonify({"ok": False, "error": "login required"}), 401
+
+    if not _has_permission("admin"):
+        return jsonify({"ok": False, "error": "permission denied"}), 403
+
+    store = _load_workflow()
+
+    return jsonify({
+        "audit_log": store["audit_log"],
+        "exported_by": _current_user(),
+        "exported_role": _current_role(),
+        "pilot_mode": bool(session.get("pilot_mode", PILOT_MODE)),
+    })
+
     data_dir = _data_dir()
     hospital_file = data_dir / "hospital_demo_requests.jsonl"
     exec_file = data_dir / "executive_walkthrough_requests.jsonl"
@@ -2393,30 +2415,6 @@ def _audit(store, patient_id, action, role, note=""):
 
     del log[100:]
 
-
-# -------------------------------
-# Workflow API
-# -------------------------------
-
-
-
-@app.get("/api/audit/export")
-def export_audit():
-
-    if not session.get("logged_in"):
-        return jsonify({"ok": False, "error": "login required"}), 401
-
-    if not _has_permission("admin"):
-        return jsonify({"ok": False, "error": "permission denied"}), 403
-
-    store = _load_workflow()
-
-    return jsonify({
-        "audit_log": store["audit_log"],
-        "exported_by": _current_user(),
-        "exported_role": _current_role(),
-        "pilot_mode": bool(session.get("pilot_mode", PILOT_MODE)),
-    })
 
 
 # -------------------------------
