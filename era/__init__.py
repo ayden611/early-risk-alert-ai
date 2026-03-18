@@ -1357,16 +1357,6 @@ def create_app() -> Flask:
             "permissions": sorted(list(ROLE_PERMISSIONS.get(_current_role(), {"read"}))),
         })
 
-    # ================================
-    # PILOT + ROLE + WORKFLOW CORE
-    # ================================
-
-    from flask import Flask, jsonify, request, session
-    from datetime import datetime, timezone
-
-    app = Flask(__name__)
-    app.secret_key = "era-secret-key"
-
 
     # -----------------------------
     # UTIL
