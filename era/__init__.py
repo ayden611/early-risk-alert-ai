@@ -2487,7 +2487,7 @@ def create_app() -> Flask:
         def _login_required(view_func):
             @wraps(view_func)
             def wrapped(*args, **kwargs):
-                 if not session.get("logged_in"):
+                if not session.get("logged_in"):
                     return redirect("/login")
                 return view_func(*args, **kwargs)
             return wrapped
