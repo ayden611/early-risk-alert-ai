@@ -578,22 +578,35 @@ def create_app() -> Flask:
         )
 
     def _send_admin_notification(lead_type: str, payload: Dict[str, Any]) -> None:
-        admin_to = os.getenv("SENDGRID_ADMIN_TO", INFO_EMAIL).strip()
-        if not admin_to:
-            return
+    admin_to = os.getenv(
+        "SENDGRID_ADMIN_TO",
+        "info@earlyriskalertai.com,milton@earlyriskalertai.com"
+    )
 
-        subject = f"New {lead_type.title()} Request — Early Risk Alert AI"
-        rows = "".join(
-            f"<tr><td style='padding:8px;border-bottom:1px solid #ddd'><strong>{k}</strong></td><td style='padding:8px;border-bottom:1px solid #ddd'>{v}</td></tr>"
-            for k, v in payload.items()
-        )
-        html_body = f"""
-        <h3>New {lead_type.title()} Request</h3>
-        <table cellspacing="0" cellpadding="0" style="border-collapse:collapse;width:100%">
-          {rows}
-        </table>
-        """
-        _send_email(admin_to, subject, html_body)
+    if not admin_to:
+        return
+
+    # 🔥 SPLIT MULTIPLE EMAILS
+    admin_emails = [email.strip() for email in admin_to.split(",")]
+
+    subject = f"New {lead_type.title()} Request — Early Risk Alert AI"
+
+    rows = "".join(
+        f"<tr><td style='padding:8px;border-bottom:1px solid #ddd'><strong>{k}</strong></td>"
+        f"<td style='padding:8px;border-bottom:1px solid #ddd'>{v}</td></tr>"
+        for k, v in payload.items()
+    )
+
+    html_body = f"""
+    <h2>🚨 New {lead_type.title()} Request</h2>
+    <table style="border-collapse:collapse;width:100%">
+        {rows}
+    </table>
+    """
+
+    # 🔥 SEND TO MULTIPLE RECIPIENTS
+    for email in admin_emails:
+        _send_email(email, subject, html_body)
 
     def _normalize_room_to_unit(room: str) -> str:
         r = str(room or "").lower()
