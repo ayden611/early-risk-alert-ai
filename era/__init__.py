@@ -1466,17 +1466,6 @@ def create_app() -> Flask:
 
 
     # -----------------------------
-    # WORKFLOW STATE
-    # -----------------------------
-    @app.get("/api/workflow")
-    def get_workflow():
-        return jsonify({
-            "records": STORE["records"],
-            "audit_log": STORE["audit_log"][-50:]
-    })
-
-
-    # -----------------------------
     # WORKFLOW ACTIONS
     # -----------------------------
     @app.post("/api/workflow/action")
