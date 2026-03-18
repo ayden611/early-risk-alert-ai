@@ -2763,6 +2763,6 @@ def create_app() -> Flask:
             if path.startswith(protected_prefixes) and not session.get("logged_in"):
                 return redirect("/login")
 
-            return None
+    return None
 
     return app
