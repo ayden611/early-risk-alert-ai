@@ -762,7 +762,13 @@ def create_app() -> Flask:
 
     def _lead_score(payload: Dict[str, Any], lead_type: str) -> int:
         score = 0
-        timeline = str(payload.get("timeline", "")).lower()
+        timeline = str(payload.get("timeline", "")).strip().lower()
+        organization = str(payload.get("organization", "")).strip().lower()
+        role = str(payload.get("role", payload.get("title", ""))).strip().lower()
+        message = str(payload.get("message", "")).strip().lower()
+        stage = str(payload.get("stage", "")).strip().lower()
+        priority = str(payload.get("priority", "")).strip().lower()
+
         if "immediate" in timeline:
             score += 3
         elif "30-60" in timeline:
@@ -770,109 +776,363 @@ def create_app() -> Flask:
         elif "quarter" in timeline:
             score += 1
 
-        if lead_type == "investor":
-            stage = str(payload.get("stage", "")).lower()
-            if "institutional" in stage:
-                score += 3
-            elif "angel" in stage:
+        if lead_type == "hospital":
+            if any(word in organization for word in ["hospital", "health", "medical", "system"]):
                 score += 2
+            if any(word in role for word in ["admin", "director", "chief", "vp", "executive"]):
+                score += 2
+            if any(word in message for word in ["pilot", "deploy", "demo", "integration", "command center"]):
+                score += 2
+
+        elif lead_type == "executive":
+            if any(word in priority for word in ["strategy", "pilot", "operations"]):
+                score += 2
+            if any(word in role for word in ["ceo", "coo", "cto", "chief", "vp", "director", "president"]):
+                score += 2
+            if any(word in message for word in ["budget", "rollout", "partnership", "pilot"]):
+                score += 2
+
+        elif lead_type == "investor":
+            if any(word in stage for word in ["institutional", "strategic"]):
+                score += 3
+        elif "angel" in stage or "seed" in stage:
+                score += 2
+            if any(word in role for word in ["partner", "principal", "associate", "vc", "investor"]):
+                score += 2
+            if any(word in message for word in ["deck", "meeting", "traction", "pilot", "hospital"]):
+                score += 2
+
         return score
 
-    def _table_html(rows: List[Dict[str, Any]]) -> str:
-        if not rows:
-            return "<p class='muted'>No submissions yet.</p>"
 
-        headers = [
-            "submitted_at",
-            "full_name",
-            "organization",
-            "role",
-            "email",
-            "phone",
-            "timeline",
-            "status",
-            "lead_score",
-        ]
-        out = ["<table><thead><tr>"]
-        for h in headers:
-            out.append(f"<th>{h.replace('_', ' ')}</th>")
-        out.append("</tr></thead><tbody>")
-        for row in rows[::-1]:
-            out.append("<tr>")
-            for h in headers:
-                out.append(f"<td>{row.get(h, '')}</td>")
-            out.append("</tr>")
-        out.append("</tbody></table>")
-        return "".join(out)
+    def _crm_status_options() -> List[str]:
+        return ["new", "contacted", "meeting set", "qualified", "closed"]
 
-    @app.get("/")
-    def command_center():
-        return render_template_string(COMMAND_CENTER_HTML)
 
-    @app.route("/login", methods=["GET", "POST"])
-    def login():
-        if request.method == "POST":
-            form = request.form or {}
-            full_name = str(form.get("full_name", "")).strip()
-            email = str(form.get("email", "")).strip()
-            user_role = str(form.get("user_role", form.get("role", "viewer"))).strip().lower()
+    def _priority_tag(lead_type: str, payload: Dict[str, Any]) -> str:
+        score = int(payload.get("lead_score", 0) or 0)
+        timeline = str(payload.get("timeline", "")).lower()
+        stage = str(payload.get("stage", "")).lower()
+        priority = str(payload.get("priority", "")).lower()
 
-            if user_role not in ROLE_PERMISSIONS:
-                user_role = "viewer"
+        if lead_type == "hospital":
+            if score >= 5 or "immediate" in timeline:
+                return "hot"
+        elif lead_type == "executive":
+            if score >= 5 or ("pilot" in priority and ("immediate" in timeline or "30-60" in timeline)):
+                return "hot"
+        elif lead_type == "investor":
+            if score >= 5 or "institutional" in stage or "strategic" in stage:
+                return "hot"
 
-            if not full_name or not email:
-                error_html = "<div class='error'>Full name and email are required.</div>"
-                return render_template_string(LOGIN_HTML.replace("__ERROR__", error_html))
+        if score >= 3:
+            return "warm"
+        return "normal"
 
-            session["logged_in"] = True
-            session["full_name"] = full_name
-            session["email"] = email
-            session["user_role"] = user_role
-            session["role"] = user_role
-            return redirect(url_for("command_center"))
 
-        return render_template_string(LOGIN_HTML.replace("__ERROR__", ""))
+    def _ensure_lead_defaults(lead_type: str, row: Dict[str, Any]) -> Dict[str, Any]:
+        item = dict(row)
+        item.setdefault("lead_type", lead_type)
+        item.setdefault("submitted_at", _utc_now_iso())
+        item.setdefault("last_updated", item.get("submitted_at", _utc_now_iso()))
+        item.setdefault("status", "New")
+        item.setdefault("crm_status", "new")
+        item.setdefault("owner", "")
+        item.setdefault("last_contacted_at", "")
+        item.setdefault("meeting_at", "")
+        item.setdefault("notes", "")
+        item.setdefault("lead_score", _lead_score(item, lead_type))
+        item["priority_tag"] = _priority_tag(lead_type, item)
+        item["is_hot"] = item["priority_tag"] == "hot"
+        return item
 
-    @app.get("/logout")
-    def logout():
-        session.clear()
-        return redirect(url_for("login"))
 
-    @app.get("/terms")
-    def terms():
-        body = """
-        <p>Early Risk Alert AI is provided for product evaluation, demonstration, internal review, and pilot discussions.</p>
-        <ul>
-          <li>It is not a substitute for clinical judgment.</li>
-          <li>Use of simulated or pilot data must be validated by participating organizations before operational use.</li>
-          <li>Production deployment requires each organization’s own legal, compliance, privacy, clinical, and technical review.</li>
-        </ul>
+    def _append_row(path: Path, row: Dict[str, Any], lead_type: str) -> Dict[str, Any]:
+        rows = _read_json(path)
+        prepared = _ensure_lead_defaults(lead_type, row)
+        rows.append(prepared)
+        _write_json(path, rows)
+        return prepared
+
+
+    def _send_hot_lead_alert(lead_type: str, payload: Dict[str, Any]) -> None:
+        if not payload.get("is_hot"):
+            return
+
+        admin_to = os.getenv(
+            "SENDGRID_ADMIN_TO",
+            "info@earlyriskalertai.com,miltonmunroe@earlyriskalertai.com"
+        ).strip()
+
+        if not admin_to:
+            return
+
+        admin_emails = [email.strip() for email in admin_to.split(",") if email.strip()]
+        subject = f"HOT {lead_type.upper()} LEAD — Early Risk Alert AI"
+
+        html_body = f"""
+        <h2 style="color:#d62828;">High Priority Lead Alert</h2>
+        <p><strong>Lead Type:</strong> {lead_type.title()}</p>
+        <p><strong>Priority:</strong> {payload.get('priority_tag', 'hot').title()}</p>
+        <p><strong>Lead Score:</strong> {payload.get('lead_score', 0)}</p>
+        <p><strong>Name:</strong> {payload.get('full_name', '')}</p>
+        <p><strong>Organization:</strong> {payload.get('organization', '')}</p>
+        <p><strong>Email:</strong> {payload.get('email', '')}</p>
+        <p><strong>Timeline:</strong> {payload.get('timeline', '')}</p>
+        <p><strong>Message:</strong> {payload.get('message', '')}</p>
+        <p><strong>Recommended Action:</strong> Follow up today and move to meeting set if qualified.</p>
         """
-        return render_template_string(LEGAL_PAGE_HTML.replace("__TITLE__", "Terms of Use").replace("__BODY__", body))
 
-    @app.get("/privacy")
-    def privacy():
-        body = """
-        <p>Early Risk Alert AI is designed to minimize unnecessary handling of personal data during demos and pilots.</p>
-        <ul>
-          <li>Demo and pilot environments should avoid real patient identifiers unless explicitly approved and properly governed.</li>
-          <li>Organizations remain responsible for their own privacy, security, and compliance obligations.</li>
-          <li>Contact submissions are used for follow-up, scheduling, and business communication.</li>
-        </ul>
-        """
-        return render_template_string(LEGAL_PAGE_HTML.replace("__TITLE__", "Privacy").replace("__BODY__", body))
+        for email in admin_emails:
+            _send_email(email, subject, html_body)
 
-    @app.get("/pilot-disclaimer")
-    def pilot_disclaimer():
-        body = """
-        <p>This environment may include simulated workflows, synthetic monitoring data, and configurable pilot-only controls.</p>
-        <ul>
-          <li>Pilot mode should be treated as an evaluation environment.</li>
-          <li>Clinical actions shown in the interface are demonstrations of workflow behavior unless formally integrated and approved.</li>
-          <li>Each pilot site must complete its own validation and governance review.</li>
-        </ul>
+
+    def _load_all_leads() -> List[Dict[str, Any]]:
+        rows: List[Dict[str, Any]] = []
+        for lead_type, path in [
+            ("hospital", hospital_file),
+            ("executive", exec_file),
+            ("investor", investor_file),
+        ]:
+            for row in _read_json(path):
+                rows.append(_ensure_lead_defaults(lead_type, row))
+        rows.sort(key=lambda r: (r.get("submitted_at", ""), int(r.get("lead_score", 0) or 0)), reverse=True)
+        return rows
+
+
+    def _save_updated_lead(lead_type: str, submitted_at: str, updated_row: Dict[str, Any]) -> bool:
+        file_map = {
+            "hospital": hospital_file,
+            "executive": exec_file,
+            "investor": investor_file,
+    }
+        path = file_map.get(lead_type)
+        if not path:
+            return False
+
+        rows = _read_json(path)
+        found = False
+        new_rows: List[Dict[str, Any]] = []
+
+        for row in rows:
+            item = _ensure_lead_defaults(lead_type, row)
+            if item.get("submitted_at") == submitted_at:
+                new_rows.append(_ensure_lead_defaults(lead_type, updated_row))
+                found = True
+            else:
+                new_rows.append(item)
+
+        if found:
+            _write_json(path, new_rows)
+        return found
+
+
+    def _lead_summary(rows: List[Dict[str, Any]]) -> Dict[str, Any]:
+        summary = {
+            "total": len(rows),
+            "hot": 0,
+            "new": 0,
+            "contacted": 0,
+            "meeting set": 0,
+            "qualified": 0,
+            "closed": 0,
+            "hospital": 0,
+            "executive": 0,
+            "investor": 0,
+    }
+
+        for row in rows:
+            crm_status = str(row.get("crm_status", "new")).lower()
+            lead_type = str(row.get("lead_type", "")).lower()
+
+            if row.get("is_hot"):
+                summary["hot"] += 1
+            if crm_status in summary:
+                summary[crm_status] += 1
+            if lead_type in summary:
+                summary[lead_type] += 1
+
+        return summary
+
+
+    def _status_badge(status: str) -> str:
+        status = str(status or "").lower()
+        color_map = {
+            "new": "#7aa2ff",
+            "contacted": "#5bd4ff",
+            "meeting set": "#f4bd6a",
+            "qualified": "#3ad38f",
+            "closed": "#9aa8c7",
+            "hot": "#ff667d",
+            "warm": "#f4bd6a",
+            "normal": "#7aa2ff",
+    }
+        color = color_map.get(status, "#7aa2ff")
+        return (
+            f"<span style='display:inline-flex;align-items:center;justify-content:center;"
+            f"padding:6px 10px;border-radius:999px;font-size:11px;font-weight:900;"
+            f"text-transform:uppercase;letter-spacing:.08em;background:{color};color:#07101c;'>{status}</span>"
+    )
+
+
+    def _dashboard_html(rows: List[Dict[str, Any]], summary: Dict[str, Any], filter_type: str, filter_status: str) -> str:
+        cards = f"""
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:18px 0 22px;">
+          <div style="padding:16px;border:1px solid rgba(255,255,255,.08);border-radius:18px;background:rgba(255,255,255,.03);">
+            <div style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#9adfff;font-weight:900;">Total Leads</div>
+            <div style="font-size:34px;font-weight:1000;line-height:1;">{summary['total']}</div>
+          </div>
+          <div style="padding:16px;border:1px solid rgba(255,255,255,.08);border-radius:18px;background:rgba(255,255,255,.03);">
+            <div style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#ff9fb0;font-weight:900;">Hot Leads</div>
+            <div style="font-size:34px;font-weight:1000;line-height:1;">{summary['hot']}</div>
+          </div>
+          <div style="padding:16px;border:1px solid rgba(255,255,255,.08);border-radius:18px;background:rgba(255,255,255,.03);">
+            <div style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#8ef0c0;font-weight:900;">Qualified</div>
+            <div style="font-size:34px;font-weight:1000;line-height:1;">{summary['qualified']}</div>
+          </div>
+          <div style="padding:16px;border:1px solid rgba(255,255,255,.08);border-radius:18px;background:rgba(255,255,255,.03);">
+            <div style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#ffd889;font-weight:900;">Meetings Set</div>
+            <div style="font-size:34px;font-weight:1000;line-height:1;">{summary['meeting set']}</div>
+          </div>
+        </div>
         """
-        return render_template_string(LEGAL_PAGE_HTML.replace("__TITLE__", "Pilot Disclaimer").replace("__BODY__", body))
+
+        filters = f"""
+        <form method="get" action="/admin/review" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px;">
+          <select name="lead_type" style="padding:12px 14px;border-radius:14px;background:#0d1728;color:#eef4ff;border:1px solid rgba(255,255,255,.08);">
+            <option value="all" {"selected" if filter_type == "all" else ""}>All Lead Types</option>
+            <option value="hospital" {"selected" if filter_type == "hospital" else ""}>Hospital</option>
+            <option value="executive" {"selected" if filter_type == "executive" else ""}>Executive</option>
+            <option value="investor" {"selected" if filter_type == "investor" else ""}>Investor</option>
+          </select>
+
+          <select name="crm_status" style="padding:12px 14px;border-radius:14px;background:#0d1728;color:#eef4ff;border:1px solid rgba(255,255,255,.08);">
+            <option value="all" {"selected" if filter_status == "all" else ""}>All CRM Statuses</option>
+            <option value="new" {"selected" if filter_status == "new" else ""}>New</option>
+            <option value="contacted" {"selected" if filter_status == "contacted" else ""}>Contacted</option>
+            <option value="meeting set" {"selected" if filter_status == "meeting set" else ""}>Meeting Set</option>
+            <option value="qualified" {"selected" if filter_status == "qualified" else ""}>Qualified</option>
+            <option value="closed" {"selected" if filter_status == "closed" else ""}>Closed</option>
+          </select>
+
+          <button type="submit" style="padding:12px 16px;border:none;border-radius:14px;background:linear-gradient(135deg,#7aa2ff,#5bd4ff);color:#07101c;font-weight:1000;cursor:pointer;">Apply Filters</button>
+          <a href="/admin/review" style="display:inline-flex;align-items:center;justify-content:center;padding:12px 16px;border-radius:14px;background:rgba(255,255,255,.06);color:#eef4ff;text-decoration:none;font-weight:900;">Reset</a>
+        </form>
+        """
+
+        hot_rows = [row for row in rows if row.get("is_hot")]
+        hot_panel = "<p style='color:#9fb4d6;'>No hot leads right now.</p>"
+        if hot_rows:
+            hot_items = []
+            for row in hot_rows[:6]:
+                hot_items.append(
+                    f"""
+                    <div style="padding:14px;border:1px solid rgba(255,255,255,.08);border-radius:16px;background:rgba(255,255,255,.03);margin-bottom:10px;">
+                      <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+                        <div>
+                          <div style="font-weight:1000;font-size:16px;">{row.get('full_name','')} · {row.get('organization','')}</div>
+                          <div style="color:#9fb4d6;font-size:13px;">{row.get('lead_type','').title()} · {row.get('timeline','')} · score {row.get('lead_score',0)}</div>
+                        </div>
+                        <div>{_status_badge('hot')}</div>
+                      </div>
+                    </div>
+                    """
+            )
+            hot_panel = "".join(hot_items)
+
+        table_rows = []
+        for row in rows:
+            options = []
+            current_status = str(row.get("crm_status", "new")).lower()
+            for opt in _crm_status_options():
+                selected = "selected" if current_status == opt else ""
+                options.append(f"<option value='{opt}' {selected}>{opt.title()}</option>")
+            options_html = "".join(options)
+
+            table_rows.append(
+                f"""
+                <tr>
+                  <td style="padding:12px;border-bottom:1px solid rgba(255,255,255,.08);vertical-align:top;">{row.get('submitted_at','')}</td>
+                  <td style="padding:12px;border-bottom:1px solid rgba(255,255,255,.08);vertical-align:top;">{row.get('lead_type','').title()}</td>
+                  <td style="padding:12px;border-bottom:1px solid rgba(255,255,255,.08);vertical-align:top;">{row.get('full_name','')}</td>
+                  <td style="padding:12px;border-bottom:1px solid rgba(255,255,255,.08);vertical-align:top;">{row.get('organization','')}</td>
+                  <td style="padding:12px;border-bottom:1px solid rgba(255,255,255,.08);vertical-align:top;">{row.get('email','')}</td>
+                  <td style="padding:12px;border-bottom:1px solid rgba(255,255,255,.08);vertical-align:top;">{row.get('timeline','')}</td>
+                  <td style="padding:12px;border-bottom:1px solid rgba(255,255,255,.08);vertical-align:top;">{row.get('lead_score',0)}</td>
+                  <td style="padding:12px;border-bottom:1px solid rgba(255,255,255,.08);vertical-align:top;">{_status_badge(row.get('priority_tag','normal'))}</td>
+                  <td style="padding:12px;border-bottom:1px solid rgba(255,255,255,.08);vertical-align:top;">
+                    <form method="post" action="/admin/lead/update" style="display:grid;gap:8px;min-width:180px;">
+                      <input type="hidden" name="lead_type" value="{row.get('lead_type','')}">
+                      <input type="hidden" name="submitted_at" value="{row.get('submitted_at','')}">
+                      <select name="crm_status" style="padding:10px 12px;border-radius:12px;background:#0d1728;color:#eef4ff;border:1px solid rgba(255,255,255,.08);">
+                        {options_html}
+                      </select>
+                      <input name="owner" value="{row.get('owner','')}" placeholder="Owner" style="padding:10px 12px;border-radius:12px;background:#0d1728;color:#eef4ff;border:1px solid rgba(255,255,255,.08);">
+                      <input name="meeting_at" value="{row.get('meeting_at','')}" placeholder="Meeting date/time" style="padding:10px 12px;border-radius:12px;background:#0d1728;color:#eef4ff;border:1px solid rgba(255,255,255,.08);">
+                      <textarea name="notes" placeholder="Notes" style="min-height:70px;padding:10px 12px;border-radius:12px;background:#0d1728;color:#eef4ff;border:1px solid rgba(255,255,255,.08);">{row.get('notes','')}</textarea>
+                      <button type="submit" style="padding:10px 12px;border:none;border-radius:12px;background:linear-gradient(135deg,#7aa2ff,#5bd4ff);color:#07101c;font-weight:1000;cursor:pointer;">Save</button>
+                    </form>
+                  </td>
+                </tr>
+                """
+        )
+
+        table_html = f"""
+        <div style="overflow:auto;">
+          <table style="width:100%;border-collapse:collapse;">
+            <thead>
+              <tr>
+                <th style="padding:12px;text-align:left;color:#9adfff;border-bottom:1px solid rgba(255,255,255,.08);">Submitted</th>
+                <th style="padding:12px;text-align:left;color:#9adfff;border-bottom:1px solid rgba(255,255,255,.08);">Type</th>
+                <th style="padding:12px;text-align:left;color:#9adfff;border-bottom:1px solid rgba(255,255,255,.08);">Name</th>
+                <th style="padding:12px;text-align:left;color:#9adfff;border-bottom:1px solid rgba(255,255,255,.08);">Organization</th>
+                <th style="padding:12px;text-align:left;color:#9adfff;border-bottom:1px solid rgba(255,255,255,.08);">Email</th>
+                <th style="padding:12px;text-align:left;color:#9adfff;border-bottom:1px solid rgba(255,255,255,.08);">Timeline</th>
+                <th style="padding:12px;text-align:left;color:#9adfff;border-bottom:1px solid rgba(255,255,255,.08);">Score</th>
+                <th style="padding:12px;text-align:left;color:#9adfff;border-bottom:1px solid rgba(255,255,255,.08);">Priority</th>
+                <th style="padding:12px;text-align:left;color:#9adfff;border-bottom:1px solid rgba(255,255,255,.08);">CRM</th>
+              </tr>
+            </thead>
+            <tbody>
+              {''.join(table_rows) if table_rows else "<tr><td colspan='9' style='padding:18px;color:#9fb4d6;'>No leads found for current filters.</td></tr>"}
+            </tbody>
+          </table>
+        </div>
+        """
+
+        return f"""
+        <div style="border:1px solid rgba(255,255,255,.08);border-radius:24px;background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.018));padding:24px;margin-top:18px;">
+          <h2 style="margin:0 0 8px;font-size:34px;line-height:.95;letter-spacing:-.04em;">Lead Dashboard</h2>
+          <div style="color:#9fb4d6;line-height:1.6;">Polished CRM layer with hot lead prioritization, filters, ownership, notes, and stage tracking.</div>
+          {cards}
+          {filters}
+
+          <div style="display:grid;grid-template-columns:1.1fr .9fr;gap:18px;align-items:start;">
+            <div style="border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:18px;background:rgba(255,255,255,.03);">
+              <div style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#ff9fb0;font-weight:900;margin-bottom:10px;">Hot Lead Queue</div>
+              {hot_panel}
+            </div>
+            <div style="border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:18px;background:rgba(255,255,255,.03);">
+              <div style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#9adfff;font-weight:900;margin-bottom:10px;">Pipeline Snapshot</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                <div>New: <strong>{summary['new']}</strong></div>
+                <div>Contacted: <strong>{summary['contacted']}</strong></div>
+                <div>Meeting Set: <strong>{summary['meeting set']}</strong></div>
+                <div>Qualified: <strong>{summary['qualified']}</strong></div>
+                <div>Closed: <strong>{summary['closed']}</strong></div>
+                <div>Hospitals: <strong>{summary['hospital']}</strong></div>
+                <div>Executives: <strong>{summary['executive']}</strong></div>
+                <div>Investors: <strong>{summary['investor']}</strong></div>
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top:18px;">
+            {table_html}
+          </div>
+        </div>
+        """
+
 
     @app.route("/hospital-demo", methods=["GET", "POST"])
     def hospital_demo():
@@ -889,17 +1149,18 @@ def create_app() -> Flask:
                 "facility_type": request.form.get("facility_type", "").strip(),
                 "timeline": request.form.get("timeline", "").strip(),
                 "message": request.form.get("message", "").strip(),
-            }
+        }
             payload["lead_score"] = _lead_score(payload, "hospital")
-            _append_row(hospital_file, payload)
+            payload = _append_row(hospital_file, payload, "hospital")
             _send_confirmation_email("hospital", payload)
             _send_admin_notification("hospital", payload)
+            _send_hot_lead_alert("hospital", payload)
 
             return render_template_string(
                 THANK_YOU_HTML
                 .replace("__MESSAGE__", "Your hospital demo request was submitted successfully.")
                 .replace("__DETAILS__", _detail_html(payload, ["full_name", "organization", "role", "email", "facility_type", "timeline"]))
-            )
+        )
 
         fields = """
         <div class="field"><label>Full Name</label><input name="full_name" required></div>
@@ -932,6 +1193,7 @@ def create_app() -> Flask:
         out = out.replace("__BUTTON__", "Submit Hospital Demo Request")
         return render_template_string(out)
 
+
     @app.route("/executive-walkthrough", methods=["GET", "POST"])
     def executive_walkthrough():
         if request.method == "POST":
@@ -947,17 +1209,18 @@ def create_app() -> Flask:
                 "priority": request.form.get("priority", "").strip(),
                 "timeline": request.form.get("timeline", "").strip(),
                 "message": request.form.get("message", "").strip(),
-            }
+        }
             payload["lead_score"] = _lead_score(payload, "executive")
-            _append_row(exec_file, payload)
+            payload = _append_row(exec_file, payload, "executive")
             _send_confirmation_email("executive", payload)
             _send_admin_notification("executive", payload)
+            _send_hot_lead_alert("executive", payload)
 
             return render_template_string(
                 THANK_YOU_HTML
                 .replace("__MESSAGE__", "Your executive walkthrough request was submitted successfully.")
                 .replace("__DETAILS__", _detail_html(payload, ["full_name", "organization", "title", "email", "priority", "timeline"]))
-            )
+        )
 
         fields = """
         <div class="field"><label>Full Name</label><input name="full_name" required></div>
@@ -990,6 +1253,7 @@ def create_app() -> Flask:
         out = out.replace("__BUTTON__", "Submit Executive Walkthrough Request")
         return render_template_string(out)
 
+
     @app.route("/investor-intake", methods=["GET", "POST"])
     def investor_intake():
         if request.method == "POST":
@@ -1005,17 +1269,18 @@ def create_app() -> Flask:
                 "stage": request.form.get("stage", "").strip(),
                 "timeline": request.form.get("timeline", "").strip(),
                 "message": request.form.get("message", "").strip(),
-            }
+        }
             payload["lead_score"] = _lead_score(payload, "investor")
-            _append_row(investor_file, payload)
+            payload = _append_row(investor_file, payload, "investor")
             _send_confirmation_email("investor", payload)
             _send_admin_notification("investor", payload)
+            _send_hot_lead_alert("investor", payload)
 
             return render_template_string(
                 THANK_YOU_HTML
                 .replace("__MESSAGE__", "Your investor intake was submitted successfully.")
                 .replace("__DETAILS__", _detail_html(payload, ["full_name", "organization", "role", "email", "stage", "timeline"]))
-            )
+        )
 
         fields = """
         <div class="field"><label>Full Name</label><input name="full_name" required></div>
@@ -1048,51 +1313,120 @@ def create_app() -> Flask:
         out = out.replace("__BUTTON__", "Submit Investor Intake")
         return render_template_string(out)
 
+
     @app.get("/admin/review")
     @_admin_required
     def admin_review():
-        hospitals = _read_json(hospital_file)
-        executives = _read_json(exec_file)
-        investors = _read_json(investor_file)
+        filter_type = str(request.args.get("lead_type", "all")).strip().lower()
+        filter_status = str(request.args.get("crm_status", "all")).strip().lower()
 
-        out = ADMIN_HTML.replace("__ROLE__", _current_role())
-        out = out.replace("__USER__", _current_user())
-        out = out.replace("__UPDATED__", _utc_now_iso())
-        out = out.replace("__HOSPITAL_TABLE__", _table_html(hospitals))
-        out = out.replace("__EXEC_TABLE__", _table_html(executives))
-        out = out.replace("__INVESTOR_TABLE__", _table_html(investors))
-        return render_template_string(out)
+        rows = _load_all_leads()
+
+        if filter_type != "all":
+            rows = [row for row in rows if str(row.get("lead_type", "")).lower() == filter_type]
+
+        if filter_status != "all":
+            rows = [row for row in rows if str(row.get("crm_status", "")).lower() == filter_status]
+
+        summary = _lead_summary(_load_all_leads())
+        dashboard = _dashboard_html(rows, summary, filter_type, filter_status)
+
+        html = f"""
+        <!doctype html>
+        <html lang="en">
+        <head>
+          <meta charset="utf-8">
+          <title>Admin Review — Early Risk Alert AI</title>
+          <meta name="viewport" content="width=device-width, initial-scale=1">
+          <style>
+            body {{
+              margin:0;padding:24px;
+              font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+              color:#eef4ff;background:linear-gradient(180deg,#07101c,#0b1528);
+        }}
+            .wrap {{max-width:1400px;margin:0 auto}}
+            .hero {{
+              border:1px solid rgba(255,255,255,.08);border-radius:24px;
+              background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.018));
+              padding:24px;margin-bottom:18px;
+        }}
+            .top {{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center}}
+            .btn {{
+              display:inline-flex;align-items:center;justify-content:center;gap:8px;
+              padding:12px 16px;border-radius:16px;font-size:14px;font-weight:900;
+              background:linear-gradient(135deg,#7aa2ff,#5bd4ff);color:#07101c;text-decoration:none;
+        }}
+            .muted {{color:#9fb4d6}}
+          </style>
+        </head>
+        <body>
+          <div class="wrap">
+            <div class="hero">
+              <div class="top">
+                <div>
+                  <h1 style="margin:0 0 10px;font-size:42px;line-height:.95;letter-spacing:-.04em;">Admin Review + Lead Dashboard</h1>
+                  <div class="muted">Role: {_current_role()} · User: {_current_user()} · Updated: {_utc_now_iso()}</div>
+                </div>
+                <div style="display:flex;gap:12px;flex-wrap:wrap">
+                  <a class="btn" href="/admin/export">Export Leads JSON</a>
+                  <a class="btn" href="/">Back to Command Center</a>
+                </div>
+              </div>
+            </div>
+
+            {dashboard}
+          </div>
+        </body>
+        </html>
+        """
+        return render_template_string(html)
+
+
+    @app.post("/admin/lead/update")
+    @_admin_required
+    def admin_lead_update():
+        lead_type = str(request.form.get("lead_type", "")).strip().lower()
+        submitted_at = str(request.form.get("submitted_at", "")).strip()
+        crm_status = str(request.form.get("crm_status", "new")).strip().lower()
+        owner = str(request.form.get("owner", "")).strip()
+        meeting_at = str(request.form.get("meeting_at", "")).strip()
+        notes = str(request.form.get("notes", "")).strip()
+
+        rows = _load_all_leads()
+        target = next(
+        (
+                row for row in rows
+                if str(row.get("lead_type", "")).lower() == lead_type
+                and str(row.get("submitted_at", "")) == submitted_at
+        ),
+            None,
+    )
+
+        if not target:
+            return redirect("/admin/review")
+
+        updated = dict(target)
+        updated["crm_status"] = crm_status if crm_status in _crm_status_options() else "new"
+        updated["owner"] = owner
+        updated["meeting_at"] = meeting_at
+        updated["notes"] = notes
+        updated["last_updated"] = _utc_now_iso()
+
+        if updated["crm_status"] in {"contacted", "meeting set", "qualified", "closed"}:
+            updated["last_contacted_at"] = _utc_now_iso()
+
+        _save_updated_lead(lead_type, submitted_at, updated)
+        return redirect("/admin/review")
+
 
     @app.get("/admin/export")
     @_admin_required
     def admin_export():
-        rows: List[Dict[str, Any]] = []
-        for label, path in [
-            ("hospital", hospital_file),
-            ("executive", exec_file),
-            ("investor", investor_file),
-        ]:
-            for row in _read_json(path):
-                item = dict(row)
-                item["lead_type"] = label
-                rows.append(item)
-
+        rows = _load_all_leads()
         export_path = data_dir / "admin_export.json"
         with export_path.open("w", encoding="utf-8") as f:
             json.dump(rows, f, indent=2)
-        return send_file(export_path, as_attachment=True, download_name="admin_export.json")
-
-    @app.get("/api/pilot-mode")
-    def get_pilot_mode():
-        store = _load_workflow()
-        return jsonify(
-            {
-                "enabled": bool(store.get("pilot_mode", True)),
-                "role": _current_role(),
-                "user": _current_user(),
-                "logged_in": _logged_in(),
-            }
-        )
+        return send_file(export_path, as_attachment=True, download_name="lead_dashboard_export.json")
 
     @app.post("/api/pilot-mode/toggle")
     def toggle_pilot_mode():
