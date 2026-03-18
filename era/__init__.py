@@ -1824,505 +1824,505 @@ def create_app() -> Flask:
     @app.get("/api/audit/export")
     def export_audit():
 
-    if not session.get("logged_in"):
-        return jsonify({"ok": False, "error": "login required"}), 401
-
-    if not _has_permission("admin"):
-        return jsonify({"ok": False, "error": "permission denied"}), 403
-
-    store = _load_workflow()
-
-    return jsonify({
-        "audit_log": store["audit_log"],
-        "exported_by": _current_user(),
-        "exported_role": _current_role(),
-        "pilot_mode": bool(session.get("pilot_mode", PILOT_MODE)),
-    })
-
-    data_dir = _data_dir()
-    hospital_file = data_dir / "hospital_demo_requests.jsonl"
-    exec_file = data_dir / "executive_walkthrough_requests.jsonl"
-    investor_file = data_dir / "investor_intake_requests.jsonl"
-
-    def load_all_rows() -> dict[str, list[dict[str, Any]]]:
-        return {
-            "hospital": _read_jsonl(hospital_file),
-            "executive": _read_jsonl(exec_file),
-            "investor": _read_jsonl(investor_file),
-        }
-
-    def build_admin_rows() -> list[dict[str, Any]]:
-        rows = load_all_rows()
-        merged: list[dict[str, Any]] = []
-        for lead_type, data in rows.items():
-            for row in data:
-                merged.append(_normalize_row(row, lead_type))
-        merged.sort(key=lambda r: (r["submitted_at"], r["lead_score"]), reverse=True)
-        return merged
-
-    def summary_payload() -> dict[str, Any]:
-        raw = load_all_rows()
-        merged = build_admin_rows()
-        open_count = sum(1 for r in merged if r["status"] != "Closed")
-        investor_stages = _investor_stage_summary(raw["investor"])
-        last_updated = max([r["last_updated"] for r in merged], default="")
-        return {
-            "hospital_count": len(raw["hospital"]),
-            "executive_count": len(raw["executive"]),
-            "investor_count": len(raw["investor"]),
-            "open_count": open_count,
-            "investor_stages": investor_stages,
-            "last_updated": _format_pretty_label(last_updated),
-            "last_updated_label": _format_pretty_label(last_updated).split(" ")[1] if last_updated else "--",
-        }
-
-    @app.get("/")
-    def home():
-        return render_template_string(HOME_HTML)
-
-    @app.get("/command-center")
-    def command_center():
-        return render_template_string(COMMAND_CENTER_HTML)
-
-    @app.get("/admin/review")
-    def admin_review():
-        return render_template_string(ADMIN_HTML)
-
-    @app.get("/healthz")
-    def healthz():
-        summary = summary_payload()
-        return jsonify({
-            "ok": True,
-            "service": "early-risk-alert-ai",
-            "time": _utc_now_iso(),
-            "hospital_requests": summary["hospital_count"],
-            "executive_requests": summary["executive_count"],
-            "investor_requests": summary["investor_count"],
-            "open_requests": summary["open_count"],
-        })
-
-    @app.get("/robots.txt")
-    def robots_txt():
-        return Response(
-            "User-agent: *\nAllow: /\nSitemap: https://earlyriskalertai.com/sitemap.xml",
-            mimetype="text/plain",
-        )
-
-    @app.route("/hospital-demo", methods=["GET", "POST"])
-    def hospital_demo():
-        if request.method == "POST":
-            payload = {
-                "submitted_at": _utc_now_iso(),
-                "last_updated": _utc_now_iso(),
-                "status": "New",
-                "full_name": request.form.get("full_name", "").strip(),
-                "organization": request.form.get("organization", "").strip(),
-                "role": request.form.get("role", "").strip(),
-                "email": request.form.get("email", "").strip(),
-                "phone": request.form.get("phone", "").strip(),
-                "facility_type": request.form.get("facility_type", "").strip(),
-                "timeline": request.form.get("timeline", "").strip(),
-                "message": request.form.get("message", "").strip(),
-            }
-            payload["lead_score"] = _lead_score(payload, "hospital")
-            payload["priority_tag"] = _priority_tag(payload["lead_score"], "hospital")
-            _append_jsonl(hospital_file, payload)
-            _send_admin_notification("hospital", payload)
-            _send_auto_reply("hospital", payload)
-
-            return render_template_string(
-                _render_thank_you(
-                    "Your hospital demo request was submitted successfully. The request is now live in admin review and ready for follow-up.",
-                    _detail_html(payload, ["full_name", "organization", "role", "email", "facility_type", "timeline", "lead_score", "priority_tag"]),
-                )
-            )
-
-        fields = """
-<div class="field"><label>Full Name</label><input name="full_name" required></div>
-<div class="field"><label>Organization</label><input name="organization" required></div>
-<div class="field"><label>Role</label><input name="role" required></div>
-<div class="field"><label>Email</label><input type="email" name="email" required></div>
-<div class="field"><label>Phone</label><input name="phone"></div>
-<div class="field"><label>Facility Type</label>
-  <select name="facility_type" required>
-    <option value="Hospital">Hospital</option>
-    <option value="Clinic">Clinic</option>
-    <option value="Health System">Health System</option>
-    <option value="RPM Provider">RPM Provider</option>
-  </select>
-</div>
-<div class="field"><label>Timeline</label>
-  <select name="timeline" required>
-    <option value="Immediate">Immediate</option>
-    <option value="30-60 days">30-60 days</option>
-    <option value="This quarter">This quarter</option>
-    <option value="Exploratory">Exploratory</option>
-  </select>
-</div>
-<div class="field"><label>What would you like to see in the demo?</label><textarea name="message"></textarea></div>
-"""
-        out = FORM_HTML.replace("__TITLE__", "Hospital Demo - Early Risk Alert AI")
-        out = out.replace("__HEADING__", "Request Hospital Demo")
-        out = out.replace("__COPY__", "Capture hospital interest, clinical use cases, and command-center demo requests.")
-        out = out.replace("__FIELDS__", fields)
-        out = out.replace("__BUTTON__", "Submit Hospital Demo Request")
-        return render_template_string(out)
-
-    @app.route("/executive-walkthrough", methods=["GET", "POST"])
-    def executive_walkthrough():
-        if request.method == "POST":
-            payload = {
-                "submitted_at": _utc_now_iso(),
-                "last_updated": _utc_now_iso(),
-                "status": "New",
-                "full_name": request.form.get("full_name", "").strip(),
-                "organization": request.form.get("organization", "").strip(),
-                "title": request.form.get("title", "").strip(),
-                "email": request.form.get("email", "").strip(),
-                "phone": request.form.get("phone", "").strip(),
-                "priority": request.form.get("priority", "").strip(),
-                "timeline": request.form.get("timeline", "").strip(),
-                "message": request.form.get("message", "").strip(),
-            }
-            payload["lead_score"] = _lead_score(payload, "executive")
-            payload["priority_tag"] = _priority_tag(payload["lead_score"], "executive")
-            _append_jsonl(exec_file, payload)
-            _send_admin_notification("executive", payload)
-            _send_auto_reply("executive", payload)
-
-            return render_template_string(
-                _render_thank_you(
-                    "Your executive walkthrough request was submitted successfully. The request is now live in admin review and ready for follow-up.",
-                    _detail_html(payload, ["full_name", "organization", "title", "email", "priority", "timeline", "lead_score", "priority_tag"]),
-                )
-            )
-
-        fields = """
-<div class="field"><label>Full Name</label><input name="full_name" required></div>
-<div class="field"><label>Organization</label><input name="organization" required></div>
-<div class="field"><label>Executive Title</label><input name="title" required></div>
-<div class="field"><label>Email</label><input type="email" name="email" required></div>
-<div class="field"><label>Phone</label><input name="phone"></div>
-<div class="field"><label>Priority</label>
-  <select name="priority" required>
-    <option value="Operational Review">Operational Review</option>
-    <option value="Pilot Evaluation">Pilot Evaluation</option>
-    <option value="Enterprise Discussion">Enterprise Discussion</option>
-    <option value="Strategic Partnership">Strategic Partnership</option>
-  </select>
-</div>
-<div class="field"><label>Timeline</label>
-  <select name="timeline" required>
-    <option value="Immediate">Immediate</option>
-    <option value="30-60 days">30-60 days</option>
-    <option value="This quarter">This quarter</option>
-    <option value="Exploratory">Exploratory</option>
-  </select>
-</div>
-<div class="field"><label>Walkthrough Focus</label><textarea name="message"></textarea></div>
-"""
-        out = FORM_HTML.replace("__TITLE__", "Executive Walkthrough - Early Risk Alert AI")
-        out = out.replace("__HEADING__", "Schedule Executive Walkthrough")
-        out = out.replace("__COPY__", "Capture leadership-focused product reviews, pilot conversations, and strategic evaluation requests.")
-        out = out.replace("__FIELDS__", fields)
-        out = out.replace("__BUTTON__", "Submit Executive Walkthrough Request")
-        return render_template_string(out)
-
-    @app.route("/investor-intake", methods=["GET", "POST"])
-    def investor_intake():
-        if request.method == "POST":
-            payload = {
-                "submitted_at": _utc_now_iso(),
-                "last_updated": _utc_now_iso(),
-                "status": "New",
-                "full_name": request.form.get("full_name", "").strip(),
-                "organization": request.form.get("organization", "").strip(),
-                "role": request.form.get("role", "").strip(),
-                "email": request.form.get("email", "").strip(),
-                "phone": request.form.get("phone", "").strip(),
-                "investor_type": request.form.get("investor_type", "").strip(),
-                "check_size": request.form.get("check_size", "").strip(),
-                "timeline": request.form.get("timeline", "").strip(),
-                "message": request.form.get("message", "").strip(),
-            }
-            payload["lead_score"] = _lead_score(payload, "investor")
-            payload["priority_tag"] = _priority_tag(payload["lead_score"], "investor")
-            _append_jsonl(investor_file, payload)
-            _send_admin_notification("investor", payload)
-            _send_auto_reply("investor", payload)
-
-            return render_template_string(
-                _render_thank_you(
-                    "Your investor intake was submitted successfully. The submission is now live in the investor pipeline and ready for follow-up.",
-                    _detail_html(payload, ["full_name", "organization", "role", "email", "investor_type", "check_size", "timeline", "lead_score", "priority_tag"]),
-                )
-            )
-
-        fields = """
-<div class="field"><label>Full Name</label><input name="full_name" required></div>
-<div class="field"><label>Organization</label><input name="organization" required></div>
-<div class="field"><label>Role</label><input name="role" required></div>
-<div class="field"><label>Email</label><input type="email" name="email" required></div>
-<div class="field"><label>Phone</label><input name="phone"></div>
-<div class="field"><label>Investor Type</label>
-  <select name="investor_type" required>
-    <option value="Angel">Angel</option>
-    <option value="Seed Fund">Seed Fund</option>
-    <option value="Strategic">Strategic</option>
-    <option value="Healthcare VC">Healthcare VC</option>
-    <option value="Family Office">Family Office</option>
-  </select>
-</div>
-<div class="field"><label>Check Size</label><input name="check_size" placeholder="$50K - $250K"></div>
-<div class="field"><label>Timeline</label>
-  <select name="timeline" required>
-    <option value="Immediate">Immediate</option>
-    <option value="30-60 days">30-60 days</option>
-    <option value="This quarter">This quarter</option>
-    <option value="Exploratory">Exploratory</option>
-  </select>
-</div>
-<div class="field"><label>Interest / Notes</label><textarea name="message" placeholder="What are you interested in learning more about?"></textarea></div>
-"""
-        out = FORM_HTML.replace("__TITLE__", "Investor Intake - Early Risk Alert AI")
-        out = out.replace("__HEADING__", "Investor Intake Form")
-        out = out.replace("__COPY__", "Capture investor interest, stage readiness, and commercial follow-up details directly from the platform.")
-        out = out.replace("__FIELDS__", fields)
-        out = out.replace("__BUTTON__", "Submit Investor Intake")
-        return render_template_string(out)
-
-    @app.get("/admin/api/data")
-    def admin_api_data():
-        raw = {
-            "hospital": _read_jsonl(hospital_file),
-            "executive": _read_jsonl(exec_file),
-            "investor": _read_jsonl(investor_file),
-        }
-
-        merged: list[dict[str, Any]] = []
-        for lead_type, data in raw.items():
-            for row in data:
-                merged.append(_normalize_row(row, lead_type))
-        merged.sort(key=lambda r: (r["submitted_at"], r["lead_score"]), reverse=True)
-
-        investor_stages = _investor_stage_summary(raw["investor"])
-        last_updated = max([r["last_updated"] for r in merged], default="")
-        return jsonify({
-            "rows": merged,
-            "summary": {
-                "hospital_count": len(raw["hospital"]),
-                "executive_count": len(raw["executive"]),
-                "investor_count": len(raw["investor"]),
-                "open_count": sum(1 for r in merged if r["status"] != "Closed"),
-                "investor_stages": investor_stages,
-                "last_updated": _format_pretty_label(last_updated),
-                "last_updated_label": _format_pretty_label(last_updated).split(" ")[1] if last_updated else "--",
-            },
-        })
-
-    @app.post("/admin/api/status")
-    def admin_api_status():
-        data = request.get_json(silent=True) or {}
-        lead_type = str(data.get("lead_type", "")).strip()
-        submitted_at = str(data.get("submitted_at", "")).strip()
-        new_status = str(data.get("status", "")).strip()
-
-        file_map = {
-            "hospital": hospital_file,
-            "executive": exec_file,
-            "investor": investor_file,
-        }
-        path = file_map.get(lead_type)
-        if not path or not submitted_at:
-            return jsonify({"ok": False}), 400
-
-        rows = _read_jsonl(path)
-        for row in rows:
-            if str(row.get("submitted_at", "")) == submitted_at:
-                row["status"] = _status_norm(new_status, lead_type)
-                row["last_updated"] = _utc_now_iso()
-        _write_jsonl(path, rows)
-        return jsonify({"ok": True})
-
-    @app.get("/admin/export.csv")
-    def admin_export_csv():
-        rows = []
-        for lead_type, path in [("hospital", hospital_file), ("executive", exec_file), ("investor", investor_file)]:
-            for row in _read_jsonl(path):
-                rows.append(_normalize_row(row, lead_type))
-        rows.sort(key=lambda r: (r["submitted_at"], r["lead_score"]), reverse=True)
-
-        output = io.StringIO()
-        writer = csv.writer(output)
-        writer.writerow([
-            "Lead Source",
-            "Submitted At",
-            "Last Updated",
-            "Lead Status",
-            "Lead Score",
-            "Priority Tag",
-            "Full Name",
-            "Organization",
-            "Role / Title",
-            "Email Address",
-            "Phone Number",
-            "Category",
-            "Timeline",
-            "Message",
-        ])
-        for row in rows:
-            writer.writerow([
-                row["lead_type"],
-                row["submitted_at"],
-                row["last_updated"],
-                row["status"],
-                row["lead_score"],
-                row["priority_tag"],
-                row["full_name"],
-                row["organization"],
-                row["role_or_title"],
-                row["email"],
-                row["phone"],
-                row["category"],
-                row["timeline"],
-                row["message"],
-            ])
-
-        mem = io.BytesIO()
-        mem.write(output.getvalue().encode("utf-8"))
-        mem.seek(0)
-        return send_file(mem, mimetype="text/csv", as_attachment=True, download_name="early_risk_alert_pipeline_export.csv")
-
-    @app.get("/api/v1/dashboard/overview")
-    def dashboard_overview():
-        snapshot = _simulated_snapshot()
-        raw = {
-            "hospital": _read_jsonl(hospital_file),
-            "executive": _read_jsonl(exec_file),
-            "investor": _read_jsonl(investor_file),
-        }
-        return jsonify({
-            "tenant_id": request.args.get("tenant_id", "demo"),
-            "patient_count": len(snapshot["patients"]),
-            "open_alerts": snapshot["summary"]["open_alerts"],
-            "critical_alerts": snapshot["summary"]["critical_alerts"],
-            "events_last_hour": snapshot["summary"]["events_last_hour"],
-            "avg_risk_score": snapshot["summary"]["avg_risk_score"],
-            "patients_with_alerts": snapshot["summary"]["patients_with_alerts"],
-            "focus_patient_id": snapshot["summary"]["focus_patient_id"],
-            "hospital_requests": len(raw["hospital"]),
-            "executive_requests": len(raw["executive"]),
-            "investor_requests": len(raw["investor"]),
-        })
-
-    @app.get("/api/v1/live-snapshot")
-    def live_snapshot():
-        snapshot = _simulated_snapshot()
-        tenant_id = request.args.get("tenant_id", "demo")
-        patient_id = request.args.get("patient_id", "p101")
-        focus = next((r for r in snapshot["patients"] if r["patient_id"] == patient_id), snapshot["patients"][0] if snapshot["patients"] else {})
-        return jsonify({
-            "tenant_id": tenant_id,
-            "generated_at": snapshot["generated_at"],
-            "alerts": snapshot["alerts"],
-            "focus_patient": focus,
-            "patients": snapshot["patients"],
-            "summary": snapshot["summary"],
-        })
-
-    @app.get("/api/v1/command-workflow")
-    def command_workflow():
-        store = _load_command_workflow()
-        return jsonify({
-        "records": store.get("records", {}),
-        "audit_log": store.get("audit_log", []),
-        })
-    @app.post("/api/workflow/action")
-    def workflow_action():
-
         if not session.get("logged_in"):
             return jsonify({"ok": False, "error": "login required"}), 401
 
-        payload = request.get_json() or {}
-
-        patient_id = str(payload.get("patient_id", "")).strip()
-        action = str(payload.get("action", "")).strip().lower()
-        role = _current_role()
-
-        if not patient_id:
-            return jsonify({"ok": False, "error": "patient_id required"}), 400
+        if not _has_permission("admin"):
+            return jsonify({"ok": False, "error": "permission denied"}), 403
 
         store = _load_workflow()
-        record = _get_record(store, patient_id)
-   
-    if action == "ack":
-        if not _has_permission("ack"):
-            return jsonify({"ok": False, "error": "permission denied"}), 403
-        record["ack"] = True
-        record["state"] = "acknowledged"
-        _audit(store, patient_id, "ACK", role)
 
-    elif action == "assign":
-        if not _has_permission("assign"):
-            return jsonify({"ok": False, "error": "permission denied"}), 403
-        record["assigned"] = True
-        record["state"] = "assigned"
-        _audit(store, patient_id, "ASSIGN", role)
-
-    elif action == "escalate":
-        if not _has_permission("escalate"):
-            return jsonify({"ok": False, "error": "permission denied"}), 403
-        record["escalated"] = True
-        record["state"] = "escalated"
-        _audit(store, patient_id, "ESCALATE", role)
-
-    elif action == "resolve":
-        if not _has_permission("resolve"):
-            return jsonify({"ok": False, "error": "permission denied"}), 403
-        record["state"] = "resolved"
-        _audit(store, patient_id, "RESOLVE", role)
-
-    else:
-        return jsonify({"ok": False, "error": "invalid action"}), 400
-
-    record["updated_at"] = _utc_now_iso()
-    record["role"] = role
-
-    _save_workflow(store)
-
-    return jsonify({
-        "ok": True,
-        "record": record,
-        "user_role": role,
-        "user_name": _current_user(),
-        "user_name": _current_user(),
+        return jsonify({
+            "audit_log": store["audit_log"],
+            "exported_by": _current_user(),
+            "exported_role": _current_role(),
+            "pilot_mode": bool(session.get("pilot_mode", PILOT_MODE)),
         })
 
-    @app.get("/api/v1/stream/channels")
-    def stream_channels():
-        tenant_id = request.args.get("tenant_id", "demo")
-        patient_id = request.args.get("patient_id", "p101")
+        data_dir = _data_dir()
+        hospital_file = data_dir / "hospital_demo_requests.jsonl"
+        exec_file = data_dir / "executive_walkthrough_requests.jsonl"
+        investor_file = data_dir / "investor_intake_requests.jsonl"
+
+        def load_all_rows() -> dict[str, list[dict[str, Any]]]:
+            return {
+                "hospital": _read_jsonl(hospital_file),
+                "executive": _read_jsonl(exec_file),
+                "investor": _read_jsonl(investor_file),
+            }
+
+        def build_admin_rows() -> list[dict[str, Any]]:
+            rows = load_all_rows()
+            merged: list[dict[str, Any]] = []
+            for lead_type, data in rows.items():
+            for row in data:
+                    merged.append(_normalize_row(row, lead_type))
+            merged.sort(key=lambda r: (r["submitted_at"], r["lead_score"]), reverse=True)
+            return merged
+
+        def summary_payload() -> dict[str, Any]:
+            raw = load_all_rows()
+            merged = build_admin_rows()
+            open_count = sum(1 for r in merged if r["status"] != "Closed")
+            investor_stages = _investor_stage_summary(raw["investor"])
+            last_updated = max([r["last_updated"] for r in merged], default="")
+            return {
+                "hospital_count": len(raw["hospital"]),
+                "executive_count": len(raw["executive"]),
+                "investor_count": len(raw["investor"]),
+                "open_count": open_count,
+                "investor_stages": investor_stages,
+                "last_updated": _format_pretty_label(last_updated),
+                "last_updated_label": _format_pretty_label(last_updated).split(" ")[1] if last_updated else "--",
+            }
+
+        @app.get("/")
+        def home():
+            return render_template_string(HOME_HTML)
+
+        @app.get("/command-center")
+        def command_center():
+            return render_template_string(COMMAND_CENTER_HTML)
+
+        @app.get("/admin/review")
+        def admin_review():
+            return render_template_string(ADMIN_HTML)
+
+        @app.get("/healthz")
+        def healthz():
+            summary = summary_payload()
+            return jsonify({
+                "ok": True,
+                "service": "early-risk-alert-ai",
+                "time": _utc_now_iso(),
+                "hospital_requests": summary["hospital_count"],
+                "executive_requests": summary["executive_count"],
+                "investor_requests": summary["investor_count"],
+                "open_requests": summary["open_count"],
+            })
+
+        @app.get("/robots.txt")
+        def robots_txt():
+            return Response(
+            "User-agent: *\nAllow: /\nSitemap: https://earlyriskalertai.com/sitemap.xml",
+                mimetype="text/plain",
+            )
+
+        @app.route("/hospital-demo", methods=["GET", "POST"])
+        def hospital_demo():
+            if request.method == "POST":
+                payload = {
+                    "submitted_at": _utc_now_iso(),
+                    "last_updated": _utc_now_iso(),
+                    "status": "New",
+                    "full_name": request.form.get("full_name", "").strip(),
+                    "organization": request.form.get("organization", "").strip(),
+                    "role": request.form.get("role", "").strip(),
+                    "email": request.form.get("email", "").strip(),
+                    "phone": request.form.get("phone", "").strip(),
+                    "facility_type": request.form.get("facility_type", "").strip(),
+                    "timeline": request.form.get("timeline", "").strip(),
+                    "message": request.form.get("message", "").strip(),
+                }
+                payload["lead_score"] = _lead_score(payload, "hospital")
+                payload["priority_tag"] = _priority_tag(payload["lead_score"], "hospital")
+                _append_jsonl(hospital_file, payload)
+                _send_admin_notification("hospital", payload)
+                _send_auto_reply("hospital", payload)
+
+                return render_template_string(
+                    _render_thank_you(
+                        "Your hospital demo request was submitted successfully. The request is now live in admin review and ready for follow-up.",
+                        _detail_html(payload, ["full_name", "organization", "role", "email", "facility_type", "timeline", "lead_score", "priority_tag"]),
+                    )
+                )
+
+            fields = """
+    <div class="field"><label>Full Name</label><input name="full_name" required></div>
+    <div class="field"><label>Organization</label><input name="organization" required></div>
+    <div class="field"><label>Role</label><input name="role" required></div>
+    <div class="field"><label>Email</label><input type="email" name="email" required></div>
+    <div class="field"><label>Phone</label><input name="phone"></div>
+    <div class="field"><label>Facility Type</label>
+      <select name="facility_type" required>
+        <option value="Hospital">Hospital</option>
+        <option value="Clinic">Clinic</option>
+        <option value="Health System">Health System</option>
+        <option value="RPM Provider">RPM Provider</option>
+      </select>
+    </div>
+    <div class="field"><label>Timeline</label>
+      <select name="timeline" required>
+        <option value="Immediate">Immediate</option>
+        <option value="30-60 days">30-60 days</option>
+        <option value="This quarter">This quarter</option>
+        <option value="Exploratory">Exploratory</option>
+      </select>
+    </div>
+    <div class="field"><label>What would you like to see in the demo?</label><textarea name="message"></textarea></div>
+    """
+            out = FORM_HTML.replace("__TITLE__", "Hospital Demo - Early Risk Alert AI")
+            out = out.replace("__HEADING__", "Request Hospital Demo")
+            out = out.replace("__COPY__", "Capture hospital interest, clinical use cases, and command-center demo requests.")
+            out = out.replace("__FIELDS__", fields)
+            out = out.replace("__BUTTON__", "Submit Hospital Demo Request")
+            return render_template_string(out)
+
+        @app.route("/executive-walkthrough", methods=["GET", "POST"])
+        def executive_walkthrough():
+            if request.method == "POST":
+                payload = {
+                    "submitted_at": _utc_now_iso(),
+                    "last_updated": _utc_now_iso(),
+                    "status": "New",
+                    "full_name": request.form.get("full_name", "").strip(),
+                    "organization": request.form.get("organization", "").strip(),
+                    "title": request.form.get("title", "").strip(),
+                    "email": request.form.get("email", "").strip(),
+                    "phone": request.form.get("phone", "").strip(),
+                    "priority": request.form.get("priority", "").strip(),
+                    "timeline": request.form.get("timeline", "").strip(),
+                    "message": request.form.get("message", "").strip(),
+                }
+                payload["lead_score"] = _lead_score(payload, "executive")
+                payload["priority_tag"] = _priority_tag(payload["lead_score"], "executive")
+                _append_jsonl(exec_file, payload)
+                _send_admin_notification("executive", payload)
+                _send_auto_reply("executive", payload)
+
+                return render_template_string(
+                    _render_thank_you(
+                        "Your executive walkthrough request was submitted successfully. The request is now live in admin review and ready for follow-up.",
+                        _detail_html(payload, ["full_name", "organization", "title", "email", "priority", "timeline", "lead_score", "priority_tag"]),
+                    )
+                )
+
+            fields = """
+    <div class="field"><label>Full Name</label><input name="full_name" required></div>
+    <div class="field"><label>Organization</label><input name="organization" required></div>
+    <div class="field"><label>Executive Title</label><input name="title" required></div>
+    <div class="field"><label>Email</label><input type="email" name="email" required></div>
+    <div class="field"><label>Phone</label><input name="phone"></div>
+    <div class="field"><label>Priority</label>
+      <select name="priority" required>
+        <option value="Operational Review">Operational Review</option>
+        <option value="Pilot Evaluation">Pilot Evaluation</option>
+        <option value="Enterprise Discussion">Enterprise Discussion</option>
+        <option value="Strategic Partnership">Strategic Partnership</option>
+      </select>
+    </div>
+    <div class="field"><label>Timeline</label>
+      <select name="timeline" required>
+        <option value="Immediate">Immediate</option>
+        <option value="30-60 days">30-60 days</option>
+        <option value="This quarter">This quarter</option>
+        <option value="Exploratory">Exploratory</option>
+      </select>
+    </div>
+      <div class="field"><label>Walkthrough Focus</label><textarea name="message"></textarea></div>
+    """
+            out = FORM_HTML.replace("__TITLE__", "Executive Walkthrough - Early Risk Alert AI")
+            out = out.replace("__HEADING__", "Schedule Executive Walkthrough")
+            out = out.replace("__COPY__", "Capture leadership-focused product reviews, pilot conversations, and strategic evaluation requests.")
+            out = out.replace("__FIELDS__", fields)
+            out = out.replace("__BUTTON__", "Submit Executive Walkthrough Request")
+            return render_template_string(out)
+
+        @app.route("/investor-intake", methods=["GET", "POST"])
+        def investor_intake():
+            if request.method == "POST":
+                payload = {
+                    "submitted_at": _utc_now_iso(),
+                    "last_updated": _utc_now_iso(),
+                    "status": "New",
+                    "full_name": request.form.get("full_name", "").strip(),
+                    "organization": request.form.get("organization", "").strip(),
+                    "role": request.form.get("role", "").strip(),
+                    "email": request.form.get("email", "").strip(),
+                    "phone": request.form.get("phone", "").strip(),
+                    "investor_type": request.form.get("investor_type", "").strip(),
+                    "check_size": request.form.get("check_size", "").strip(),
+                    "timeline": request.form.get("timeline", "").strip(),
+                    "message": request.form.get("message", "").strip(),
+                }
+                payload["lead_score"] = _lead_score(payload, "investor")
+                payload["priority_tag"] = _priority_tag(payload["lead_score"], "investor")
+                _append_jsonl(investor_file, payload)
+                _send_admin_notification("investor", payload)
+                _send_auto_reply("investor", payload)
+
+                return render_template_string(
+                    _render_thank_you(
+                      "Your investor intake was submitted successfully. The submission is now live in the investor pipeline and ready for follow-up.",
+                        _detail_html(payload, ["full_name", "organization", "role", "email", "investor_type", "check_size", "timeline", "lead_score", "priority_tag"]),
+                    )
+                )
+
+            fields = """
+    <div class="field"><label>Full Name</label><input name="full_name" required></div>
+    <div class="field"><label>Organization</label><input name="organization" required></div>
+    <div class="field"><label>Role</label><input name="role" required></div>
+    <div class="field"><label>Email</label><input type="email" name="email" required></div>
+    <div class="field"><label>Phone</label><input name="phone"></div>
+    <div class="field"><label>Investor Type</label>
+      <select name="investor_type" required>
+        <option value="Angel">Angel</option>
+        <option value="Seed Fund">Seed Fund</option>
+        <option value="Strategic">Strategic</option>
+        <option value="Healthcare VC">Healthcare VC</option>
+        <option value="Family Office">Family Office</option>
+      </select>
+    </div>
+    <div class="field"><label>Check Size</label><input name="check_size" placeholder="$50K - $250K"></div>
+    <div class="field"><label>Timeline</label>
+      <select name="timeline" required>
+        <option value="Immediate">Immediate</option>
+        <option value="30-60 days">30-60 days</option>
+        <option value="This quarter">This quarter</option>
+        <option value="Exploratory">Exploratory</option>
+      </select>
+    </div>
+    <div class="field"><label>Interest / Notes</label><textarea name="message" placeholder="What are you interested in learning more about?"></textarea></div>
+    """
+            out = FORM_HTML.replace("__TITLE__", "Investor Intake - Early Risk Alert AI")
+            out = out.replace("__HEADING__", "Investor Intake Form")
+            out = out.replace("__COPY__", "Capture investor interest, stage readiness, and commercial follow-up details directly from the platform.")
+            out = out.replace("__FIELDS__", fields)
+            out = out.replace("__BUTTON__", "Submit Investor Intake")
+            return render_template_string(out)
+
+        @app.get("/admin/api/data")
+        def admin_api_data():
+            raw = {
+                "hospital": _read_jsonl(hospital_file),
+                "executive": _read_jsonl(exec_file),
+                "investor": _read_jsonl(investor_file),
+            }
+
+            merged: list[dict[str, Any]] = []
+            for lead_type, data in raw.items():
+                for row in data:
+                    merged.append(_normalize_row(row, lead_type))
+            merged.sort(key=lambda r: (r["submitted_at"], r["lead_score"]), reverse=True)
+
+            investor_stages = _investor_stage_summary(raw["investor"])
+            last_updated = max([r["last_updated"] for r in merged], default="")
+            return jsonify({
+                "rows": merged,
+                "summary": {
+                    "hospital_count": len(raw["hospital"]),
+                    "executive_count": len(raw["executive"]),
+                    "investor_count": len(raw["investor"]),
+                    "open_count": sum(1 for r in merged if r["status"] != "Closed"),
+                    "investor_stages": investor_stages,
+                    "last_updated": _format_pretty_label(last_updated),
+                    "last_updated_label": _format_pretty_label(last_updated).split(" ")[1] if last_updated else "--",
+                },
+            })
+
+        @app.post("/admin/api/status")
+        def admin_api_status():
+            data = request.get_json(silent=True) or {}
+            lead_type = str(data.get("lead_type", "")).strip()
+            submitted_at = str(data.get("submitted_at", "")).strip()
+            new_status = str(data.get("status", "")).strip()
+
+            file_map = {
+                "hospital": hospital_file,
+                "executive": exec_file,
+                "investor": investor_file,
+            }
+            path = file_map.get(lead_type)
+            if not path or not submitted_at:
+                return jsonify({"ok": False}), 400
+
+            rows = _read_jsonl(path)
+            for row in rows:
+                if str(row.get("submitted_at", "")) == submitted_at:
+                    row["status"] = _status_norm(new_status, lead_type)
+                    row["last_updated"] = _utc_now_iso()
+            _write_jsonl(path, rows)
+            return jsonify({"ok": True})
+
+        @app.get("/admin/export.csv")
+        def admin_export_csv():
+            rows = []
+            for lead_type, path in [("hospital", hospital_file), ("executive", exec_file), ("investor", investor_file)]:
+                for row in _read_jsonl(path):
+                    rows.append(_normalize_row(row, lead_type))
+            rows.sort(key=lambda r: (r["submitted_at"], r["lead_score"]), reverse=True)
+
+            output = io.StringIO()
+            writer = csv.writer(output)
+            writer.writerow([
+                "Lead Source",
+                "Submitted At",
+                "Last Updated",
+                "Lead Status",
+                "Lead Score",
+                "Priority Tag",
+                "Full Name",
+                "Organization",
+                "Role / Title",
+                "Email Address",
+                "Phone Number",
+                "Category",
+                "Timeline",
+                "Message",
+            ])
+            for row in rows:
+                writer.writerow([
+                    row["lead_type"],
+                    row["submitted_at"],
+                    row["last_updated"],
+                    row["status"],
+                    row["lead_score"],
+                    row["priority_tag"],
+                    row["full_name"],
+                    row["organization"],
+                    row["role_or_title"],
+                    row["email"],
+                    row["phone"],
+                    row["category"],
+                    row["timeline"],
+                    row["message"],
+                ])
+
+            mem = io.BytesIO()
+            mem.write(output.getvalue().encode("utf-8"))
+            mem.seek(0)
+            return send_file(mem, mimetype="text/csv", as_attachment=True, download_name="early_risk_alert_pipeline_export.csv")
+
+        @app.get("/api/v1/dashboard/overview")
+        def dashboard_overview():
+            snapshot = _simulated_snapshot()
+            raw = {
+                "hospital": _read_jsonl(hospital_file),
+                "executive": _read_jsonl(exec_file),
+                "investor": _read_jsonl(investor_file),
+            }
+            return jsonify({
+                "tenant_id": request.args.get("tenant_id", "demo"),
+                "patient_count": len(snapshot["patients"]),
+                "open_alerts": snapshot["summary"]["open_alerts"],
+                "critical_alerts": snapshot["summary"]["critical_alerts"],
+                "events_last_hour": snapshot["summary"]["events_last_hour"],
+                "avg_risk_score": snapshot["summary"]["avg_risk_score"],
+                "patients_with_alerts": snapshot["summary"]["patients_with_alerts"],
+                "focus_patient_id": snapshot["summary"]["focus_patient_id"],
+                "hospital_requests": len(raw["hospital"]),
+                "executive_requests": len(raw["executive"]),
+                "investor_requests": len(raw["investor"]),
+            })
+
+        @app.get("/api/v1/live-snapshot")
+        def live_snapshot():
+            snapshot = _simulated_snapshot()
+            tenant_id = request.args.get("tenant_id", "demo")
+            patient_id = request.args.get("patient_id", "p101")
+            focus = next((r for r in snapshot["patients"] if r["patient_id"] == patient_id), snapshot["patients"][0] if snapshot["patients"] else {})
+            return jsonify({
+                "tenant_id": tenant_id,
+                "generated_at": snapshot["generated_at"],
+                "alerts": snapshot["alerts"],
+                "focus_patient": focus,
+                "patients": snapshot["patients"],
+                "summary": snapshot["summary"],
+            })
+
+        @app.get("/api/v1/command-workflow")
+        def command_workflow():
+            store = _load_command_workflow()
+            return jsonify({
+            "records": store.get("records", {}),
+            "audit_log": store.get("audit_log", []),
+            })
+        @app.post("/api/workflow/action")
+        def workflow_action():
+
+            if not session.get("logged_in"):
+                return jsonify({"ok": False, "error": "login required"}), 401
+
+            payload = request.get_json() or {}
+
+            patient_id = str(payload.get("patient_id", "")).strip()
+            action = str(payload.get("action", "")).strip().lower()
+            role = _current_role()
+
+            if not patient_id:
+                return jsonify({"ok": False, "error": "patient_id required"}), 400
+
+            store = _load_workflow()
+            record = _get_record(store, patient_id)
+   
+        if action == "ack":
+            if not _has_permission("ack"):
+                return jsonify({"ok": False, "error": "permission denied"}), 403
+            record["ack"] = True
+            record["state"] = "acknowledged"
+            _audit(store, patient_id, "ACK", role)
+
+        elif action == "assign":
+            if not _has_permission("assign"):
+                return jsonify({"ok": False, "error": "permission denied"}), 403
+            record["assigned"] = True
+            record["state"] = "assigned"
+            _audit(store, patient_id, "ASSIGN", role)
+
+        elif action == "escalate":
+            if not _has_permission("escalate"):
+                return jsonify({"ok": False, "error": "permission denied"}), 403
+            record["escalated"] = True
+            record["state"] = "escalated"
+            _audit(store, patient_id, "ESCALATE", role)
+
+        elif action == "resolve":
+            if not _has_permission("resolve"):
+                return jsonify({"ok": False, "error": "permission denied"}), 403
+            record["state"] = "resolved"
+            _audit(store, patient_id, "RESOLVE", role)
+
+        else:
+            return jsonify({"ok": False, "error": "invalid action"}), 400
+
+        record["updated_at"] = _utc_now_iso()
+        record["role"] = role
+
+        _save_workflow(store)
+
         return jsonify({
-            "tenant_id": tenant_id,
-            "patient_id": patient_id,
-            "channels": [
+            "ok": True,
+            "record": record,
+            "user_role": role,
+            "user_name": _current_user(),
+            "user_name": _current_user(),
+            })
+
+        @app.get("/api/v1/stream/channels")
+        def stream_channels():
+            tenant_id = request.args.get("tenant_id", "demo")
+            patient_id = request.args.get("patient_id", "p101")
+            return jsonify({
+                "tenant_id": tenant_id,
+                "patient_id": patient_id,
+                "channels": [
                 "stream:vitals",
                 f"stream:vitals:{tenant_id}",
                 f"stream:vitals:{tenant_id}:{patient_id}",
                 "stream:alerts",
                 f"stream:alerts:{tenant_id}",
                 f"stream:alerts:{tenant_id}:{patient_id}",
-            ],
-        })
+                ],
+            })
 
-    @app.get("/api/command-center-stream")
-    def command_center_stream():
-        def generate():
-            while True:
-                snapshot = _simulated_snapshot()
-                yield f"data: {json.dumps(snapshot)}\n\n"
-                time.sleep(2)
-        return Response(generate(), mimetype="text/event-stream")
+        @app.get("/api/command-center-stream")
+        def command_center_stream():
+            def generate():
+                while True:
+                    snapshot = _simulated_snapshot()
+                    yield f"data: {json.dumps(snapshot)}\n\n"
+                    time.sleep(2)
+            return Response(generate(), mimetype="text/event-stream")
 
         # ============================================================
         # PILOT OPERATIONS BUNDLE
