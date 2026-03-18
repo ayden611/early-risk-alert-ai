@@ -29,7 +29,7 @@ except Exception:
     SendGridAPIClient = None
     Mail = None
 
-FOUNDER_EMAIL = miltonmunroe@earlyriskalert1i.com
+FOUNDER_EMAIL = "miltonmunroe@earlyriskalert1i.com"
 INFO_EMAIL = "info@earlyriskalertai.com"
 BUSINESS_PHONE = "732-724-7267"
 FOUNDER_NAME = "Milton Munroe"
