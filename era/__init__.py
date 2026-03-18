@@ -581,13 +581,12 @@ def create_app() -> Flask:
     admin_to = os.getenv(
         "SENDGRID_ADMIN_TO",
         "info@earlyriskalertai.com,milton@earlyriskalertai.com"
-    )
+    ).strip()
 
     if not admin_to:
         return
 
-    # 🔥 SPLIT MULTIPLE EMAILS
-    admin_emails = [email.strip() for email in admin_to.split(",")]
+    admin_emails = [email.strip() for email in admin_to.split(",") if email.strip()]
 
     subject = f"New {lead_type.title()} Request — Early Risk Alert AI"
 
@@ -598,13 +597,12 @@ def create_app() -> Flask:
     )
 
     html_body = f"""
-    <h2>🚨 New {lead_type.title()} Request</h2>
-    <table style="border-collapse:collapse;width:100%">
+    <h2>New {lead_type.title()} Request</h2>
+    <table cellspacing="0" cellpadding="0" style="border-collapse:collapse;width:100%">
         {rows}
     </table>
     """
 
-    # 🔥 SEND TO MULTIPLE RECIPIENTS
     for email in admin_emails:
         _send_email(email, subject, html_body)
 
