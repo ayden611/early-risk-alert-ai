@@ -1635,17 +1635,6 @@ def create_app() -> Flask:
         _save_thresholds(data)
         return jsonify({"ok": True})
 
-    @app.get("/api/system-health")
-    @_login_required
-    def system_health():
-        return jsonify({
-            "status": "operational",
-            "pilot_mode": PILOT_MODE,
-            "timestamp": _utc_now_iso(),
-            "streams": "active",
-            "workflow_storage": workflow_file.exists(),
-            "thresholds_loaded": True,
-        })
 
     @app.get("/api/v1/live-snapshot")
     @_login_required
