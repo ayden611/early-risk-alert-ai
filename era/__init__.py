@@ -578,7 +578,7 @@ def create_app() -> Flask:
         )
 
     def _send_admin_notification(lead_type: str, payload: Dict[str, Any]) -> None:
-    admin_to = os.getenv(
+        admin_to = os.getenv(
         "SENDGRID_ADMIN_TO",
         "info@earlyriskalertai.com,milton@earlyriskalertai.com"
     ).strip()
