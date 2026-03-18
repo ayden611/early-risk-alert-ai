@@ -1821,8 +1821,8 @@ def create_app() -> Flask:
 # Workflow API
 # -------------------------------
 
-@app.get("/api/audit/export")
-def export_audit():
+    @app.get("/api/audit/export")
+    def export_audit():
 
     if not session.get("logged_in"):
         return jsonify({"ok": False, "error": "login required"}), 401
