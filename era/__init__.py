@@ -2459,9 +2459,9 @@ def create_app() -> Flask:
         from flask import session
 
 
-      PILOT_MODE = True
+        PILOT_MODE = True
 
-      ROLE_PERMISSIONS = {
+        ROLE_PERMISSIONS = {
             "viewer": {"read"},
             "operator": {"read", "ack", "assign"},
             "nurse": {"read", "ack", "assign"},
