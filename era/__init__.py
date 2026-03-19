@@ -322,7 +322,7 @@ ADMIN_HTML = """
         </div>
         <div style="display:flex;gap:12px;flex-wrap:wrap">
           <a class="btn" href="/admin/export">Export Requests CSV</a>
-          <a class="btn" href="/">Back to Command Center</a>
+          <a class="btn" href="/command-center">Back to Command Center</a>
         </div>
       </div>
     </div>
@@ -417,6 +417,14 @@ def _sendgrid_available() -> bool:
 def create_app() -> Flask:
     app = Flask(__name__, template_folder="../templates")
     app.secret_key = os.getenv("SECRET_KEY", "early-risk-alert-dev-secret")
+    @app.get("/")
+def home():
+    return redirect("/command-center")
+
+
+@app.get("/command-center")
+def command_center():
+    return render_template_string(COMMAND_CENTER_HTML)
 
     data_dir = Path(app.instance_path)
     data_dir.mkdir(parents=True, exist_ok=True)
