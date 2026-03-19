@@ -417,14 +417,15 @@ def _sendgrid_available() -> bool:
 def create_app() -> Flask:
     app = Flask(__name__, template_folder="../templates")
     app.secret_key = os.getenv("SECRET_KEY", "early-risk-alert-dev-secret")
+   
     @app.get("/")
-def home():
-    return redirect("/command-center")
+    def home():
+        return redirect("/command-center")
 
 
-@app.get("/command-center")
-def command_center():
-    return render_template_string(COMMAND_CENTER_HTML)
+    @app.get("/command-center")
+    def command_center():
+        return render_template_string(COMMAND_CENTER_HTML)
 
     data_dir = Path(app.instance_path)
     data_dir.mkdir(parents=True, exist_ok=True)
