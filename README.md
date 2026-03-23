@@ -1,12 +1,34 @@
 # Early Risk Alert AI
-Website: www.earlyriskalertai.com
-Demo: https://youtu.be/SVpTJgQT3Ug
 
-## Real-Time Clinical Command Center for Predictive Patient Monitoring
+Early Risk Alert AI is a real-time predictive healthcare platform designed to help hospitals detect patient deterioration earlier, prioritize risk, and improve clinical response timing.
 
-Early Risk Alert AI is a real-time clinical intelligence platform designed to help hospitals identify patient deterioration earlier, prioritize risk, and act before escalation.
+---
 
-The platform transforms traditional monitoring into a centralized command center by continuously analyzing patient signals, detecting subtle patterns, and generating explainable, actionable alerts in real time.
+## 🔴 Live Platform
+
+[https://early-risk-alert-ai-1.onrender.com/command-center]
+## 🎥 Demo Walkthrough
+
+[https://youtu.be/vg0uj4AVyN8](https://youtu.be/vg0uj4AVyN8)
+
+## 👤 Founder
+
+Milton Munroe
+Founder & CEO, Early Risk Alert AI
+LinkedIn: [https://www.linkedin.com/in/milton-munroe-3687a53b9
+---
+
+## 🧠 Platform Overview
+
+Early Risk Alert AI provides a centralized clinical command center that continuously monitors patient data and identifies early signs of deterioration before escalation.
+
+The platform transforms reactive monitoring into proactive, data-driven intervention through:
+
+* Real-time vital sign monitoring
+* Predictive risk scoring
+* Priority-based alerting system
+* Explainable AI insights
+* Operational visibility for care teams
 
 ---
 
@@ -15,110 +37,33 @@ The platform transforms traditional monitoring into a centralized command center
 Hospitals operate in reactive environments where patient deterioration is often identified too late.
 
 This results in:
-- Delayed clinical intervention  
-- Increased escalation events (ICU transfers, code events)  
-- Staff overload and burnout  
-- Preventable adverse outcomes  
+
+* Delayed clinical intervention
+* Increased escalation events (ICU transfers, code events)
+* Staff overload and burnout
+* Preventable adverse outcomes
 
 ---
 
-## ⚡ The Solution
+## 💡 The Solution
 
-Early Risk Alert AI enables proactive care through:
+Early Risk Alert AI enables care teams to:
 
-- Real-time telemetry monitoring  
-- AI-driven risk scoring and prioritization  
-- Early detection of deterioration patterns  
-- Explainable and actionable alerts  
-- Centralized command center visibility  
-
----
-
-## 🧠 How It Works
-
-1. Continuous signal collection (vitals, inputs, clinical indicators)  
-2. Pattern detection and predictive risk modeling  
-3. Real-time risk scoring and prioritization  
-4. Alert generation with clear reasoning  
-5. Actionable insights delivered to care teams  
+* Detect patient risk earlier
+* Prioritize high-risk cases
+* Improve response timing
+* Reduce preventable escalations
+* Enhance hospital-wide operational awareness
 
 ---
 
-## 🖥️ Command Center Experience
+## 🚀 Status
 
-The platform provides a unified, hospital-wide view where:
-
-- High-risk patients are surfaced immediately  
-- Alerts are ranked by urgency and severity  
-- Care teams can act faster and more efficiently  
-- Operational awareness is improved across all units  
+Currently preparing for pilot deployments with hospitals, healthcare systems, and remote patient monitoring providers.
 
 ---
 
-## 📊 Platform Capabilities
+## 📩 Contact
 
-- Predictive risk detection  
-- Real-time alerting system  
-- Explainable AI outputs  
-- Scalable cloud infrastructure  
-- Workflow integration readiness  
-
----
-
-## 🧩 Architecture (High-Level)
-
-- Backend: Python (Flask-based services)  
-- Data Processing: Real-time signal ingestion & analysis  
-- Database: PostgreSQL (cloud-hosted)  
-- Deployment: Scalable cloud environment  
-
----
-
-## 🎯 Use Cases
-
-- Hospital inpatient monitoring  
-- Remote patient monitoring (RPM)  
-- Care coordination teams  
-- Health systems seeking operational intelligence  
-
----
-
-## 🚀 Pilot & Deployment Model
-
-We deploy in phases:
-
-1. Focused pilot within a single unit  
-2. Performance validation and workflow alignment  
-3. Expansion across additional units and departments  
-
----
-
-## 📺 Product Demo
-
-▶️ **50-Second Command Center Overview** 
-![Command Center Preview]
-(https://youtu.be/SVpTJgQT3Ug)
-
----
-
-## 🤝 Partnerships & Opportunities
-
-We are currently preparing for pilot deployments and early partnerships with:
-
-- Hospitals and health systems  
-- Remote monitoring providers  
-- Clinical innovation teams  
-
----
-
-## 🔭 Vision
-
-To become the intelligence layer powering proactive healthcare systems—enabling earlier detection, faster decisions, and better patient outcomes at scale.
-
----
-
-## 👤 Founder
-
-**Milton Munroe**  
-Early Risk Alert AI  
-📞 732-724-7267
+[info@earlyriskalertai.com](mailto:info@earlyriskalertai.com)
+732-724-7267
