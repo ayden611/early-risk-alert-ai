@@ -531,63 +531,141 @@ def create_app() -> Flask:
         return defaults.get(unit, defaults["telemetry"])
 
     def _simulated_patients() -> List[Dict[str, Any]]:
+        tick = int(time.time() // 5)
+
         base = [
-            {
+        {
                 "patient_id": "p101",
                 "patient_name": "Patient 1042",
                 "room": "ICU-12",
                 "program": "Cardiac",
-                "vitals": {"heart_rate": 128, "systolic_bp": 165, "diastolic_bp": 102, "spo2": 89},
-            },
-            {
+                "baseline": {"heart_rate": 124, "systolic_bp": 160, "diastolic_bp": 98, "spo2": 90},
+                "volatility": {"heart_rate": 8, "systolic_bp": 10, "diastolic_bp": 6, "spo2": 2},
+                "trend_bias": {"heart_rate": 4, "systolic_bp": 5, "diastolic_bp": 2, "spo2": -1},
+        },
+        {
                 "patient_id": "p202",
                 "patient_name": "Patient 2188",
                 "room": "Telemetry-04",
                 "program": "Pulmonary",
-                "vitals": {"heart_rate": 100, "systolic_bp": 150, "diastolic_bp": 90, "spo2": 93},
-            },
-            {
+                "baseline": {"heart_rate": 101, "systolic_bp": 149, "diastolic_bp": 89, "spo2": 93},
+                "volatility": {"heart_rate": 6, "systolic_bp": 8, "diastolic_bp": 5, "spo2": 2},
+                "trend_bias": {"heart_rate": 2, "systolic_bp": 2, "diastolic_bp": 1, "spo2": -1},
+        },
+        {
                 "patient_id": "p303",
                 "patient_name": "Patient 3045",
                 "room": "Stepdown-09",
                 "program": "Cardiac",
-                "vitals": {"heart_rate": 111, "systolic_bp": 162, "diastolic_bp": 97, "spo2": 95},
-            },
-            {
+                "baseline": {"heart_rate": 110, "systolic_bp": 156, "diastolic_bp": 95, "spo2": 95},
+                "volatility": {"heart_rate": 7, "systolic_bp": 9, "diastolic_bp": 6, "spo2": 1},
+                "trend_bias": {"heart_rate": 3, "systolic_bp": 4, "diastolic_bp": 2, "spo2": 0},
+        },
+        {
                 "patient_id": "p404",
                 "patient_name": "Patient 4172",
                 "room": "Ward-21",
                 "program": "Recovery",
-                "vitals": {"heart_rate": 84, "systolic_bp": 128, "diastolic_bp": 82, "spo2": 97},
-            },
-            {
+                "baseline": {"heart_rate": 84, "systolic_bp": 128, "diastolic_bp": 82, "spo2": 97},
+                "volatility": {"heart_rate": 4, "systolic_bp": 6, "diastolic_bp": 4, "spo2": 1},
+                "trend_bias": {"heart_rate": 0, "systolic_bp": 0, "diastolic_bp": 0, "spo2": 0},
+        },
+        {
                 "patient_id": "p505",
                 "patient_name": "Patient 5117",
                 "room": "RPM-Home-03",
                 "program": "Home Monitoring",
-                "vitals": {"heart_rate": 107, "systolic_bp": 148, "diastolic_bp": 88, "spo2": 92},
-            },
-        ]
+                "baseline": {"heart_rate": 106, "systolic_bp": 146, "diastolic_bp": 87, "spo2": 93},
+                "volatility": {"heart_rate": 5, "systolic_bp": 7, "diastolic_bp": 4, "spo2": 2},
+                "trend_bias": {"heart_rate": 1, "systolic_bp": 1, "diastolic_bp": 1, "spo2": -1},
+        },
+    ]
+
+        def _bounded(value: float, low: int, high: int) -> int:
+            return int(max(low, min(high, round(value))))
 
         out = []
+
         for item in base:
             unit = _normalize_room_to_unit(item["room"])
             thresholds = _thresholds_for_unit(unit)
-            spo2 = _safe_float(item["vitals"]["spo2"])
-            hr = _safe_float(item["vitals"]["heart_rate"])
-            sbp = _safe_float(item["vitals"]["systolic_bp"])
+
+            seed = f"{item['patient_id']}:{tick}"
+            rng = random.Random(seed)
+
+            phase = tick % 6
+            drift_multiplier = {
+                0: -0.45,
+                1: -0.15,
+                2: 0.10,
+                3: 0.35,
+                4: 0.20,
+                5: -0.05,
+            }[phase]
+
+            baseline = item["baseline"]
+            volatility = item["volatility"]
+            trend_bias = item["trend_bias"]
+
+            hr = _bounded(
+                baseline["heart_rate"]
+                + (trend_bias["heart_rate"] * drift_multiplier)
+                + rng.randint(-volatility["heart_rate"], volatility["heart_rate"]),
+                58,
+                155,
+        )
+
+            sbp = _bounded(
+                baseline["systolic_bp"]
+                + (trend_bias["systolic_bp"] * drift_multiplier)
+                + rng.randint(-volatility["systolic_bp"], volatility["systolic_bp"]),
+                95,
+                210,
+        )
+
+            dbp = _bounded(
+                baseline["diastolic_bp"]
+                + (trend_bias["diastolic_bp"] * drift_multiplier)
+                + rng.randint(-volatility["diastolic_bp"], volatility["diastolic_bp"]),
+                55,
+                130,
+        )
+
+            spo2 = _bounded(
+                baseline["spo2"]
+                + (trend_bias["spo2"] * drift_multiplier)
+                + rng.randint(-volatility["spo2"], volatility["spo2"]),
+                84,
+                100,
+        )
+
             score = 0.0
             reasons = []
 
             if spo2 < thresholds["spo2_low"]:
-                score += 4.2
+                gap = thresholds["spo2_low"] - spo2
+                score += 3.2 + min(gap * 0.7, 2.2)
                 reasons.append(f"SpO₂ below {thresholds['spo2_low']}")
+
             if hr > thresholds["hr_high"]:
-                score += 2.3
+                gap = hr - thresholds["hr_high"]
+                score += 1.8 + min(gap * 0.08, 1.8)
                 reasons.append(f"HR above {thresholds['hr_high']}")
+
             if sbp > thresholds["sbp_high"]:
-                score += 2.6
+                gap = sbp - thresholds["sbp_high"]
+                score += 1.9 + min(gap * 0.06, 1.9)
                 reasons.append(f"SBP above {thresholds['sbp_high']}")
+
+            if spo2 <= max(thresholds["spo2_low"] - 3, 88) and hr >= thresholds["hr_high"]:
+                score += 0.8
+                reasons.append("combined oxygen and heart rate deterioration pattern")
+
+            if spo2 <= max(thresholds["spo2_low"] - 2, 89) and sbp >= thresholds["sbp_high"]:
+                score += 0.6
+                reasons.append("combined oxygen and blood pressure pressure pattern")
+
+            score = round(min(score, 9.7), 1)
 
             if score >= 7:
                 severity = "critical"
@@ -602,14 +680,43 @@ def create_app() -> Flask:
                 severity = "stable"
                 action = "Continue routine monitoring."
 
-            item["risk"] = {
-                "risk_score": round(score, 1),
-                "severity": severity,
-                "alert_message": "Clinical alert surfaced" if severity != "stable" else "Vitals stable",
-                "recommended_action": action,
-                "reasons": reasons or ["Combined signal pattern within acceptable thresholds"],
+            if not reasons:
+                reasons = ["Combined signal pattern within acceptable thresholds"]
+
+            story_map = {
+                "critical": "Predictive monitoring indicates active deterioration risk with supportive escalation priority.",
+                "high": "Supportive AI logic shows elevated deterioration attention and recommends rapid reassessment.",
+                "moderate": "Trend changes are being monitored for progression beyond routine workflow.",
+                "stable": "Signals remain within monitored range for current workflow visibility.",
+        }
+
+            alert_message = "Clinical alert surfaced" if severity != "stable" else "Vitals stable"
+
+            out.append({
+                "patient_id": item["patient_id"],
+                "patient_name": item["patient_name"],
+                "room": item["room"],
+                "program": item["program"],
+                "heart_rate": hr,
+                "bp_systolic": sbp,
+                "bp_diastolic": dbp,
+                "spo2": spo2,
+                "vitals": {
+                    "heart_rate": hr,
+                    "systolic_bp": sbp,
+                    "diastolic_bp": dbp,
+                    "spo2": spo2,
+            },
+                "story": story_map[severity],
+                "risk": {
+                    "risk_score": score,
+                    "severity": severity,
+                    "alert_message": alert_message,
+                    "recommended_action": action,
+                    "reasons": reasons,
             }
-            out.append(item)
+        })
+
         return out
 
     def _simulated_snapshot() -> Dict[str, Any]:
