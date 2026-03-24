@@ -32,6 +32,54 @@ The platform transforms reactive monitoring into proactive, data-driven interven
 
 ---
 
+## Security & Pilot Controls
+
+Early Risk Alert AI is designed with pilot-safe operational controls for healthcare environments, including authenticated access, role-based permissions, unit-restricted visibility, secure session handling, audit-aware workflows, and protected cloud configuration.
+
+The platform is built for controlled pilot evaluation and clinical decision-support use, with administrative safeguards aligned to hospital onboarding, compliance review, and secure deployment expectations.
+
+## Technology Stack
+
+Early Risk Alert AI is built as a real-time predictive clinical intelligence platform using a modern cloud-based application stack.
+
+### Backend
+
+* Python
+* Flask
+* REST API architecture
+* Session-based access control
+* Workflow and audit-aware application logic
+
+### Frontend
+
+* HTML
+* CSS
+* JavaScript
+* Interactive command center dashboard
+* Role-aware UI and pilot-safe workflow presentation
+
+### Data & Infrastructure
+
+* PostgreSQL / SQL-based persistence
+* Render cloud deployment
+* Secure environment-based configuration
+* HTTPS-enabled application delivery
+* Protected secret management through environment variables
+
+### Platform Capabilities
+
+* Real-time patient monitoring views
+* Predictive risk scoring
+* Alert prioritization workflows
+* Unit-restricted visibility controls
+* Audit-aware intervention tracking
+* Pilot-safe system health and reliability indicators
+
+### Deployment Positioning
+
+The platform is currently structured for secure pilot deployment, controlled clinical evaluation, and hospital-facing workflow demonstrations, with enterprise hardening pathways for broader production expansion.
+
+
 ## 🚨 The Problem
 
 Hospitals operate in reactive environments where patient deterioration is often identified too late.
