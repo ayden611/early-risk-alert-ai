@@ -438,32 +438,6 @@ def create_app() -> Flask:
     # -------------------------
     # 🔐 SAFE LOGIN ROUTE
     # -------------------------
-    @app.post("/login")
-    def login():
-        data = request.get_json(silent=True) or {}
-
-        username = str(data.get("username", "guest")).strip() or "guest"
-        role = str(data.get("role", "viewer")).strip().lower()
-        unit = str(data.get("unit", "ICU")).strip() or "ICU"
-
-        if role not in ROLES:
-            role = "viewer"
-
-        session["user"] = username
-        session["role"] = role
-        session["unit"] = unit
-        USER_SESSIONS[username] = {
-            "role": role,
-            "unit": unit,
-            "login_at": utc_now_iso(),
-    }
-
-        return jsonify({
-            "ok": True,
-            "user": username,
-            "role": role,
-            "unit": unit,
-    })
 
 
     # -------------------------
