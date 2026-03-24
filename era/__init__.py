@@ -105,6 +105,9 @@ LOGIN_HTML = """
         <option value="admin">Admin</option>
       </select>
 
+      <label>Admin Password (required for Admin role)</label>
+      <input name="admin_password" type="password" placeholder="Enter admin password if admin role is selected">
+
       <label>Hospital Brand</label>
       <select name="hospital_brand" required>
         <option value="early-risk-alert-ai">Early Risk Alert AI</option>
