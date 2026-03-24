@@ -344,16 +344,14 @@ def create_app() -> Flask:
     # 🔐 LOGIN SESSION TRACKING
     # -------------------------
     def current_user():
-        return session.get("user", "guest")
-
+        return session.get("full_name", "guest")
 
     def current_role():
-        role = session.get("role", "viewer")
+        role = str(session.get("user_role", "viewer")).strip().lower()
         return role if role in ROLES else "viewer"
 
-
     def current_unit():
-        return session.get("unit", "ICU")
+        return str(session.get("assigned_unit", "all")).strip().lower() or "all"
 
 
     # -------------------------
