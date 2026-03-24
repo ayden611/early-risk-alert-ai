@@ -322,6 +322,219 @@ def create_app() -> Flask:
     app = Flask(__name__)
     app.secret_key = os.getenv("SECRET_KEY", "early-risk-alert-dev-secret")
 
+    # =========================
+    # 🔐 PILOT SECURITY LAYER
+    # =========================
+    from datetime import datetime, timezone
+    from functools import wraps
+
+    from flask import jsonify, request, session
+
+    # In-memory stores (safe for pilot — upgrade later to DB)
+    AUDIT_LOGS = []
+    USER_SESSIONS = {}
+
+    # -------------------------
+    # 🔐 ROLE DEFINITIONS
+    # -------------------------
+    ROLES = {
+        "admin": ["view", "ack", "assign", "escalate", "resolve"],
+        "nurse": ["view", "ack", "assign"],
+        "viewer": ["view"],
+}
+
+    # -------------------------
+    # 🔐 LOGIN SESSION TRACKING
+    # -------------------------
+    def current_user():
+        return session.get("user", "guest")
+
+
+    def current_role():
+        role = session.get("role", "viewer")
+        return role if role in ROLES else "viewer"
+
+
+    def current_unit():
+        return session.get("unit", "ICU")
+
+
+    # -------------------------
+    # 🔐 ROLE CHECK DECORATOR
+    # -------------------------
+    def require_permission(action):
+        def decorator(f):
+            @wraps(f)
+            def wrapper(*args, **kwargs):
+                role = current_role()
+                if action not in ROLES.get(role, []):
+                    return jsonify({"ok": False, "error": "permission denied"}), 403
+                return f(*args, **kwargs)
+            return wrapper
+        return decorator
+
+
+    # -------------------------
+    # 🧾 AUDIT LOGGING
+    # -------------------------
+    def utc_now_iso():
+        return datetime.now(timezone.utc).isoformat()
+
+
+    def log_action(user, role, action, patient_id):
+        AUDIT_LOGS.append({
+            "timestamp": utc_now_iso(),
+            "user": user,
+            "role": role,
+            "action": action,
+            "patient_id": patient_id,
+            "unit": current_unit(),
+    })
+
+
+    @app.get("/api/audit")
+    def get_audit_logs():
+        role = current_role()
+        if "view" not in ROLES.get(role, []):
+            return jsonify({"ok": False, "error": "permission denied"}), 403
+
+        unit = current_unit()
+        logs = [row for row in AUDIT_LOGS if row.get("unit") == unit]
+        return jsonify(logs[-100:])
+
+
+    # -------------------------
+    # 🏥 UNIT FILTERING
+    # -------------------------
+    def filter_by_unit(records):
+        unit = current_unit()
+        return [r for r in records if r.get("unit") == unit]
+
+
+    # -------------------------
+    # 🔁 SYSTEM HEALTH
+    # -------------------------
+    LAST_UPDATE = datetime.now(timezone.utc)
+
+
+    @app.get("/api/system/health")
+    def system_health():
+        now = datetime.now(timezone.utc)
+        delta = (now - LAST_UPDATE).total_seconds()
+        status = "connected" if delta < 10 else "degraded"
+
+        return jsonify({
+            "status": status,
+            "last_update": LAST_UPDATE.isoformat(),
+            "seconds_since_update": round(delta, 2),
+    })
+
+
+    # -------------------------
+    # 🔄 UPDATE HEARTBEAT
+    # -------------------------
+    def touch_system():
+        global LAST_UPDATE
+        LAST_UPDATE = datetime.now(timezone.utc)
+
+
+    # -------------------------
+    # 🔐 SAFE LOGIN ROUTE
+    # -------------------------
+    @app.post("/login")
+    def login():
+        data = request.get_json(silent=True) or {}
+
+        username = str(data.get("username", "guest")).strip() or "guest"
+        role = str(data.get("role", "viewer")).strip().lower()
+        unit = str(data.get("unit", "ICU")).strip() or "ICU"
+
+        if role not in ROLES:
+            role = "viewer"
+
+        session["user"] = username
+        session["role"] = role
+        session["unit"] = unit
+        USER_SESSIONS[username] = {
+            "role": role,
+            "unit": unit,
+            "login_at": utc_now_iso(),
+    }
+
+        return jsonify({
+            "ok": True,
+            "user": username,
+            "role": role,
+            "unit": unit,
+    })
+
+
+    # -------------------------
+    # 🧠 ACTION ENDPOINTS (AUDITED)
+    # -------------------------
+    @app.post("/api/action/<action>/<patient_id>")
+    def take_action(action, patient_id):
+        action = str(action).strip().lower()
+        allowed_actions = {"ack", "assign", "escalate", "resolve"}
+
+        if action not in allowed_actions:
+            return jsonify({"ok": False, "error": "invalid action"}), 400
+
+        role = current_role()
+        user = current_user()
+
+        if action not in ROLES.get(role, []):
+            return jsonify({"ok": False, "error": "permission denied"}), 403
+
+        log_action(user, role, action.upper(), patient_id)
+        touch_system()
+
+        return jsonify({
+            "ok": True,
+            "action": action,
+            "patient_id": patient_id,
+            "user": user,
+            "role": role,
+            "unit": current_unit(),
+    })
+
+
+    # -------------------------
+    # 🔐 SECURITY HEADER HARDENING
+    # -------------------------
+    @app.after_request
+    def add_security_headers(response):
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+        response.headers["Cache-Control"] = "no-store"
+        # Legacy header; harmless for older browsers
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        return response
+
+
+    # =========================    
+    # ⚠️ PILOT DISCLAIMER
+    # =========================
+    PILOT_BANNER = """
+    <div style="
+    position:fixed;
+    bottom:0;
+    left:0;
+    right:0;
+    background:#0b1b2b;
+    color:#fff;
+    padding:10px;
+    text-align:center;
+    font-size:12px;
+    border-top:1px solid rgba(255,255,255,0.1);
+    z-index:9999;">
+⚠️ Pilot Environment — Decision Support Only. Not a Medical Device. Clinical decisions remain with licensed professionals.
+    </div>
+    """
+
     data_dir = Path(app.instance_path)
     data_dir.mkdir(parents=True, exist_ok=True)
 
