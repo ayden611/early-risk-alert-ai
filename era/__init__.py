@@ -1099,7 +1099,7 @@ def create_app() -> Flask:
 
     @app.get("/api/system-health")
     @_login_required
-    def system_health():
+    def api_system_health():
         snapshot = _simulated_snapshot()
         return jsonify({
             "status": "ok",
