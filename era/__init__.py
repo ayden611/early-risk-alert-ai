@@ -962,11 +962,42 @@ def create_app() -> Flask:
         if request.method == "POST":
             form = request.form or {}
             full_name = str(form.get("full_name", "")).strip()
-            email = str(form.get("email", "")).strip()
+            email = str(form.get("email", "")).strip().lower()
             user_role = str(form.get("user_role", "viewer")).strip().lower()
             hospital_brand = str(form.get("hospital_brand", "early-risk-alert-ai")).strip().lower()
             assigned_unit = str(form.get("assigned_unit", "all")).strip().lower()
+            admin_password = str(form.get("admin_password", "")).strip()
 
+            admin_email = str(os.getenv("ADMIN_EMAIL", "")).strip().lower()
+            allowed_admin_emails = {
+                e.strip().lower()
+                for e in os.getenv("ALLOWED_ADMIN_EMAILS", admin_email).split(",")
+                if e.strip()
+}
+            admin_password_hash = str(os.getenv("ADMIN_PASSWORD_HASH", "")).strip()
+
+            if user_role == "admin":
+                if not email or email not in allowed_admin_emails:
+                    return render_template_string(
+                        LOGIN_HTML.replace(
+                            "__ERROR__",
+                            "<div class='error'>Admin access denied for this email.</div>"
+            )
+        )
+                if not admin_password_hash or not admin_password:
+                    return render_template_string(
+                        LOGIN_HTML.replace(
+                            "__ERROR__",
+                            "<div class='error'>Admin password is required.</div>"
+            )
+        )
+                if not check_password_hash(admin_password_hash, admin_password):
+                    return render_template_string(
+                        LOGIN_HTML.replace(
+                            "__ERROR__",
+                            "<div class='error'>Invalid admin password.</div>"
+            )
+        )
             if user_role not in ROLE_PERMISSIONS:
                 user_role = "viewer"
             if hospital_brand not in HOSPITAL_BRANDS:
