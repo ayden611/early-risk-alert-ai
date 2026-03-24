@@ -325,10 +325,7 @@ def create_app() -> Flask:
     # =========================
     # 🔐 PILOT SECURITY LAYER
     # =========================
-    from datetime import datetime, timezone
-    from functools import wraps
 
-    from flask import jsonify, request, session
 
     # In-memory stores (safe for pilot — upgrade later to DB)
     AUDIT_LOGS = []
