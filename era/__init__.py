@@ -8,6 +8,8 @@ from datetime import datetime, timezone
 from functools import wraps
 from pathlib import Path
 from typing import Any, Dict, List
+from werkzeug.security import check_password_hash
+
 
 from flask import (
     Flask,
