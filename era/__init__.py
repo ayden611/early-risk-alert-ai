@@ -605,6 +605,56 @@ def create_app() -> Flask:
         key = unit if unit in store else "all"
         return store.get(key, DEFAULT_THRESHOLDS["all"])
 
+    def _build_review_basis(hr: int, sbp: int, spo2: int, thresholds: Dict[str, float], reasons: List[str]) -> List[str]:
+        basis = [
+            f"Unit thresholds reviewed: SpO₂ low < {thresholds['spo2_low']}, HR high > {thresholds['hr_high']}, SBP high > {thresholds['sbp_high']}",
+            f"Current signals reviewed: HR {hr}, SBP {sbp}, SpO₂ {spo2}",
+        ]
+        if reasons:
+            basis.append("Triggered review signals: " + "; ".join(reasons))
+        else:
+            basis.append("No trigger-level threshold breach detected in the current snapshot.")
+        basis.append("Output is generated from a limited pilot ruleset rather than an autonomous treatment engine.")
+        return basis
+
+    def _build_limitations(unit: str) -> List[str]:
+        return [
+            "Pilot / evaluation environment; not a production bedside deployment.",
+            "Displayed output uses a limited signal set (HR, blood pressure, SpO₂) and does not include the full chart, labs, medications, imaging, or bedside examination.",
+            f"Unit-specific thresholds for {unit.upper() if unit != 'rpm' else 'RPM'} inform the display, but clinician review and hospital protocol remain required.",
+            "Recommendations are supportive workflow suggestions and do not place orders or direct autonomous care.",
+        ]
+
+    def _build_confidence_payload(severity: str, reasons: List[str], hr: int, sbp: int, spo2: int, thresholds: Dict[str, float]) -> Dict[str, Any]:
+        supporting_signals = 0
+        if spo2 < thresholds["spo2_low"]:
+            supporting_signals += 1
+        if hr > thresholds["hr_high"]:
+            supporting_signals += 1
+        if sbp > thresholds["sbp_high"]:
+            supporting_signals += 1
+        if any("combined" in str(reason).lower() for reason in reasons):
+            supporting_signals += 1
+
+        score = 56 + (supporting_signals * 8) + (4 if severity in {"high", "critical"} else 0)
+        score = int(max(52, min(86, score)))
+
+        if score >= 78:
+            label = "supportive"
+            narrative = "Multiple reviewed signals support the displayed recommendation, but independent clinical review is still required."
+        elif score >= 66:
+            label = "moderate"
+            narrative = "Some reviewed signals support the displayed recommendation; it should be confirmed against additional context."
+        else:
+            label = "limited"
+            narrative = "The display shows limited support and should be treated as an attention flag rather than a standalone conclusion."
+
+        return {
+            "score": score,
+            "label": label,
+            "narrative": narrative,
+        }
+
     def _bounded(value: float, low: int, high: int) -> int:
         return int(max(low, min(high, round(value))))
 
@@ -753,6 +803,10 @@ def create_app() -> Flask:
             if not reasons:
                 reasons = ["Combined signal pattern within acceptable thresholds"]
 
+            review_basis = _build_review_basis(hr, sbp, spo2, thresholds, reasons)
+            limitations = _build_limitations(unit)
+            confidence = _build_confidence_payload(severity, reasons, hr, sbp, spo2, thresholds)
+
             story_map = {
                 "critical": "Predictive monitoring indicates active deterioration risk with supportive escalation priority.",
                 "high": "Supportive AI logic shows elevated deterioration attention and recommends rapid reassessment.",
@@ -761,6 +815,7 @@ def create_app() -> Flask:
             }
 
             alert_message = "Clinical alert surfaced" if severity != "stable" else "Vitals stable"
+            generated_at = _utc_now_iso()
 
             patients.append(
                 {
@@ -779,12 +834,23 @@ def create_app() -> Flask:
                         "spo2": spo2,
                     },
                     "story": story_map[severity],
+                    "data_freshness": {
+                        "generated_at": generated_at,
+                        "age_seconds": 0,
+                        "source_mode": "simulated-live-pilot",
+                        "refresh_interval_seconds": 5,
+                    },
                     "risk": {
                         "risk_score": score,
                         "severity": severity,
                         "alert_message": alert_message,
                         "recommended_action": action,
+                        "clinical_recommendation": action,
                         "reasons": reasons,
+                        "review_basis": review_basis,
+                        "confidence": confidence,
+                        "limitations": limitations,
+                        "decision_support_disclaimer": "Decision-support display only. Independent clinician review, bedside assessment, and hospital protocol remain required before action.",
                     },
                 }
             )
@@ -836,8 +902,9 @@ def create_app() -> Flask:
         runtime_state["last_update"] = datetime.now(timezone.utc)
 
         avg = sum(_safe_float(p["risk"]["risk_score"]) for p in patients) / len(patients) if patients else 0.0
+        generated_at = _utc_now_iso()
         return {
-            "generated_at": _utc_now_iso(),
+            "generated_at": generated_at,
             "patients": patients,
             "alerts": alerts,
             "summary": {
@@ -845,6 +912,15 @@ def create_app() -> Flask:
                 "open_alerts": len(alerts),
                 "critical_alerts": sum(1 for alert in alerts if alert["severity"] == "critical"),
                 "avg_risk_score": round(avg, 1),
+            },
+            "meta": {
+                "decision_support_disclaimer": "Pilot decision-support interface only. The platform does not diagnose, prescribe, or autonomously direct care. Review the recommendation basis, confidence, limitations, and data freshness before any clinical action.",
+                "data_freshness": {
+                    "generated_at": generated_at,
+                    "age_seconds": 0,
+                    "refresh_interval_seconds": 5,
+                    "source_mode": "simulated-live-pilot",
+                },
             },
         }
 
@@ -1278,6 +1354,7 @@ def create_app() -> Flask:
                     "role": _current_role(),
                     "assigned_unit": _current_unit_access(),
                 },
+                "meta": snapshot.get("meta", {}),
             }
         )
 
@@ -1293,6 +1370,7 @@ def create_app() -> Flask:
                     "generated_at": snapshot["generated_at"],
                     "patients": patients,
                     "alerts": alerts,
+                    "meta": snapshot.get("meta", {}),
                 }
                 yield f"data: {json.dumps(payload)}\n\n"
                 time.sleep(5)
