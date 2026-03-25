@@ -607,22 +607,50 @@ def create_app() -> Flask:
 
     def _build_review_basis(hr: int, sbp: int, spo2: int, thresholds: Dict[str, float], reasons: List[str]) -> List[str]:
         basis = [
-            f"Unit thresholds reviewed: SpO₂ low < {thresholds['spo2_low']}, HR high > {thresholds['hr_high']}, SBP high > {thresholds['sbp_high']}",
-            f"Current signals reviewed: HR {hr}, SBP {sbp}, SpO₂ {spo2}",
+            "HCP-facing decision-support and workflow-support display generated from structured patient medical information, trended vital sign summaries, and monitored patient context.",
+            f"Current reviewed inputs: HR {hr}, SBP {sbp}, SpO₂ {spo2}. Reference thresholds: SpO₂ low < {thresholds['spo2_low']}, HR high > {thresholds['hr_high']}, SBP high > {thresholds['sbp_high']}.",
         ]
         if reasons:
-            basis.append("Triggered review signals: " + "; ".join(reasons))
+            basis.append("Top contributing factors reviewed: " + "; ".join(reasons))
         else:
-            basis.append("No trigger-level threshold breach detected in the current snapshot.")
-        basis.append("Output is generated from a limited pilot ruleset rather than an autonomous treatment engine.")
+            basis.append("No trigger-level threshold breach detected in the current summary window.")
+        basis.append("This output assists further clinical evaluation, prioritization, and command-center awareness. It does not replace clinician judgment and is not intended to diagnose, direct treatment, or independently trigger escalation.")
         return basis
 
-    def _build_limitations(unit: str) -> List[str]:
+    def _build_current_review_inputs(hr: int, sbp: int, dbp: int, spo2: int, thresholds: Dict[str, float], generated_at: str) -> List[str]:
         return [
-            "Pilot / evaluation environment; not a production bedside deployment.",
-            "Displayed output uses a limited signal set (HR, blood pressure, SpO₂) and does not include the full chart, labs, medications, imaging, or bedside examination.",
-            f"Unit-specific thresholds for {unit.upper() if unit != 'rpm' else 'RPM'} inform the display, but clinician review and hospital protocol remain required.",
-            "Recommendations are supportive workflow suggestions and do not place orders or direct autonomous care.",
+            f"Snapshot time reviewed: {generated_at}",
+            f"Heart rate: {hr} bpm compared with review threshold > {thresholds['hr_high']}",
+            f"Blood pressure: {sbp}/{dbp} mmHg compared with review threshold SBP > {thresholds['sbp_high']}",
+            f"SpO₂: {spo2}% compared with review threshold < {thresholds['spo2_low']}",
+        ]
+
+    def _build_change_summary(item: Dict[str, Any], hr: int, sbp: int, dbp: int, spo2: int) -> List[str]:
+        baseline = item.get("baseline", {})
+        changes = [
+            f"Heart rate changed from baseline {baseline.get('heart_rate', '--')} to {hr}",
+            f"Systolic blood pressure changed from baseline {baseline.get('systolic_bp', '--')} to {sbp}",
+            f"Diastolic blood pressure changed from baseline {baseline.get('diastolic_bp', '--')} to {dbp}",
+            f"SpO₂ changed from baseline {baseline.get('spo2', '--')} to {spo2}",
+        ]
+        return changes
+
+    def _build_unknowns(unit: str) -> List[str]:
+        unit_label = unit.upper() if unit != "rpm" else "RPM"
+        return [
+            "This display does not know bedside examination findings, clinician impression, code status, active symptoms, or patient-reported changes unless they are entered elsewhere.",
+            "This display does not know full chart context such as laboratory data, medications, imaging, fluid balance, device settings, consultant input, or undocumented workflow events.",
+            f"This display does not know whether local {unit_label} escalation policy, staffing coverage, or physician instructions change the next appropriate step.",
+        ]
+
+    def _build_limitations(unit: str) -> List[str]:
+        unit_label = unit.upper() if unit != "rpm" else "RPM"
+        return [
+            "HCP-facing pilot / evaluation environment; not a production bedside deployment or system of record.",
+            "Output is decision-support and workflow-support only and is intended to assist further clinical evaluation, prioritization, and command-center awareness.",
+            "Displayed output uses structured vital sign summaries and monitored context only; it is not intended to diagnose, direct treatment, or independently trigger escalation.",
+            f"Unit-specific thresholds for {unit_label} inform the display, but clinician judgment, local escalation policy, and hospital protocol remain required.",
+            "Incomplete, delayed, or missing data may affect the displayed output.",
         ]
 
     def _build_confidence_payload(severity: str, reasons: List[str], hr: int, sbp: int, spo2: int, thresholds: Dict[str, float]) -> Dict[str, Any]:
@@ -641,13 +669,13 @@ def create_app() -> Flask:
 
         if score >= 78:
             label = "supportive"
-            narrative = "Multiple reviewed signals support the displayed recommendation, but independent clinical review is still required."
+            narrative = "Multiple reviewed inputs support this HCP-facing output, but the display still requires independent clinical review before any action."
         elif score >= 66:
             label = "moderate"
-            narrative = "Some reviewed signals support the displayed recommendation; it should be confirmed against additional context."
+            narrative = "Some reviewed inputs support this HCP-facing output; clinicians should confirm it against additional context and hospital policy."
         else:
             label = "limited"
-            narrative = "The display shows limited support and should be treated as an attention flag rather than a standalone conclusion."
+            narrative = "This display provides a limited attention flag and should not be used as a standalone conclusion or directive."
 
         return {
             "score": score,
@@ -789,33 +817,36 @@ def create_app() -> Flask:
 
             if score >= 7:
                 severity = "critical"
-                action = "Escalate immediately to bedside reassessment and senior clinician review."
+                action = "Suggested next review: urgent bedside reassessment and senior clinician review per clinician judgment and hospital protocol."
             elif score >= 4:
                 severity = "high"
-                action = "Assign nurse and reassess within the next monitoring interval."
+                action = "Suggested next review: assign clinical follow-up and reassess promptly within the next monitoring interval."
             elif score >= 2:
                 severity = "moderate"
-                action = "Continue monitoring and review trend changes."
+                action = "Suggested next review: continue monitored review and evaluate for additional clinical context."
             else:
                 severity = "stable"
-                action = "Continue routine monitoring."
+                action = "Suggested next review: continue routine monitored review."
 
             if not reasons:
-                reasons = ["Combined signal pattern within acceptable thresholds"]
+                reasons = ["Combined reviewed summary pattern within acceptable thresholds"]
 
+            generated_at = _utc_now_iso()
             review_basis = _build_review_basis(hr, sbp, spo2, thresholds, reasons)
+            current_review_inputs = _build_current_review_inputs(hr, sbp, dbp, spo2, thresholds, generated_at)
+            change_summary = _build_change_summary(item, hr, sbp, dbp, spo2)
             limitations = _build_limitations(unit)
             confidence = _build_confidence_payload(severity, reasons, hr, sbp, spo2, thresholds)
+            unknowns = _build_unknowns(unit)
 
             story_map = {
-                "critical": "Predictive monitoring indicates active deterioration risk with supportive escalation priority.",
-                "high": "Supportive AI logic shows elevated deterioration attention and recommends rapid reassessment.",
-                "moderate": "Trend changes are being monitored for progression beyond routine workflow.",
-                "stable": "Signals remain within monitored range for current workflow visibility.",
+                "critical": "HCP-facing decision-support highlights a high-priority patient for further clinical evaluation and command-center awareness.",
+                "high": "HCP-facing decision-support shows elevated monitored risk and supports prioritization for additional review.",
+                "moderate": "Monitored trend changes support continued review and workflow awareness.",
+                "stable": "Structured patient summaries remain within the current monitored review range.",
             }
 
-            alert_message = "Clinical alert surfaced" if severity != "stable" else "Vitals stable"
-            generated_at = _utc_now_iso()
+            alert_message = "Clinical review attention surfaced" if severity != "stable" else "Current review summary stable"
 
             patients.append(
                 {
@@ -837,7 +868,7 @@ def create_app() -> Flask:
                     "data_freshness": {
                         "generated_at": generated_at,
                         "age_seconds": 0,
-                        "source_mode": "simulated-live-pilot",
+                        "source_mode": "structured-vital-summary-pilot",
                         "refresh_interval_seconds": 5,
                     },
                     "risk": {
@@ -847,10 +878,14 @@ def create_app() -> Flask:
                         "recommended_action": action,
                         "clinical_recommendation": action,
                         "reasons": reasons,
+                        "top_contributing_factors": reasons,
                         "review_basis": review_basis,
+                        "current_review_inputs": current_review_inputs,
+                        "what_changed": change_summary,
+                        "what_software_does_not_know": unknowns,
                         "confidence": confidence,
                         "limitations": limitations,
-                        "decision_support_disclaimer": "Decision-support display only. Independent clinician review, bedside assessment, and hospital protocol remain required before action.",
+                        "decision_support_disclaimer": "HCP-facing decision-support and workflow-support display only. This output assists further clinical evaluation, prioritization, and command-center awareness. It does not replace clinician judgment and is not intended to diagnose, direct treatment, or independently trigger escalation.",
                     },
                 }
             )
@@ -914,12 +949,22 @@ def create_app() -> Flask:
                 "avg_risk_score": round(avg, 1),
             },
             "meta": {
-                "decision_support_disclaimer": "Pilot decision-support interface only. The platform does not diagnose, prescribe, or autonomously direct care. Review the recommendation basis, confidence, limitations, and data freshness before any clinical action.",
+                "platform_positioning": [
+                    "HCP-facing",
+                    "decision-support and workflow-support",
+                    "assists further clinical evaluation",
+                    "supports prioritization and command-center awareness",
+                    "does not replace clinician judgment",
+                    "not intended to diagnose, direct treatment, or independently trigger escalation",
+                ],
+                "decision_support_disclaimer": "HCP-facing decision-support and workflow-support platform. The output assists further clinical evaluation, prioritization, and command-center awareness. It does not replace clinician judgment and is not intended to diagnose, direct treatment, or independently trigger escalation. Review the basis, confidence, limitations, data freshness, and hospital policy before acting.",
+                "workflow_disclaimer": "Acknowledge, assign, escalate, and resolve controls record operational workflow state and user action logs only. They are not machine-issued medical orders.",
+                "limitations_banner": "Incomplete or delayed data may affect outputs. Clinicians must independently review the patient, and hospital policy governs escalation.",
                 "data_freshness": {
                     "generated_at": generated_at,
                     "age_seconds": 0,
                     "refresh_interval_seconds": 5,
-                    "source_mode": "simulated-live-pilot",
+                    "source_mode": "structured-vital-summary-pilot",
                 },
             },
         }
@@ -980,6 +1025,13 @@ def create_app() -> Flask:
         if _current_role() == "admin" or _current_unit_access() == "all":
             return rows[-100:]
         return [row for row in rows if row.get("unit") == _current_unit_access()][-100:]
+
+    def _visible_workflow_records(records: Dict[str, Any]) -> Dict[str, Any]:
+        snapshot = _simulated_snapshot()
+        visible_ids = {patient["patient_id"] for patient in _filtered_patients(snapshot)}
+        if _current_role() == "admin" or _current_unit_access() == "all":
+            return records
+        return {patient_id: row for patient_id, row in records.items() if patient_id in visible_ids}
 
     def _validate_admin_login(email: str, password: str) -> str | None:
         admin_email = str(os.getenv("ADMIN_EMAIL", "")).strip().lower()
@@ -1120,7 +1172,18 @@ def create_app() -> Flask:
     @_login_required
     def get_workflow():
         store = _load_workflow()
-        return jsonify({"records": store.get("records", {}), "audit_log": _visible_audit_rows(store.get("audit_log", []))})
+        visible_records = _visible_workflow_records(store.get("records", {}))
+        return jsonify(
+            {
+                "records": visible_records,
+                "audit_log": _visible_audit_rows(store.get("audit_log", [])),
+                "access_scope": {
+                    "role": _current_role(),
+                    "assigned_unit": _current_unit_access(),
+                    "record_count": len(visible_records),
+                },
+            }
+        )
 
     @app.post("/api/workflow/action")
     @_login_required
