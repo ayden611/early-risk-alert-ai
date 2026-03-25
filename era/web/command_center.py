@@ -572,11 +572,11 @@ COMMAND_CENTER_HTML = r"""
       <div class="pilot-banner-grid">
         <div>
           <div class="pilot-kicker">Pilot mode / evaluation environment</div>
-          <h2 class="pilot-title">Controlled demonstration environment for workflow evaluation, security review, and stakeholder readiness</h2>
+          <h2 class="pilot-title">HCP-facing decision-support and workflow-support command center for prioritized clinical review</h2>
           <p class="pilot-copy">
-            This platform is presented in a controlled pilot environment for demonstration, workflow evaluation, and stakeholder review.
-            It does not replace clinical judgment, hospital protocols, or emergency response systems.
-            All insights, alerts, forecasts, and thresholds support — not replace — licensed clinical decision-making.
+            This platform is presented as an HCP-facing decision-support and workflow-support environment.
+            It assists further clinical evaluation, prioritization, and command-center awareness, and does not replace clinician judgment.
+            It is not intended to diagnose, direct treatment, or independently trigger escalation.
           </p>
         </div>
 
@@ -606,10 +606,10 @@ COMMAND_CENTER_HTML = r"""
       <div class="hero-grid">
         <div class="hero-copy">
           <div class="hero-kicker">Pilot operating layer</div>
-          <h1 id="heroTitle">Real-time clinical command center</h1>
+          <h1 id="heroTitle">HCP-facing clinical command center</h1>
           <p id="heroCopy">
-            Early Risk Alert AI surfaces high-risk patients earlier, prioritizes deterioration patterns in real time,
-            and gives care teams a structured workflow to acknowledge, assign, escalate, and resolve clinical alerts.
+            Early Risk Alert AI is an HCP-facing decision-support and workflow-support platform that assists further clinical evaluation,
+            supports prioritization and command-center awareness, and keeps operational workflow handling separate from clinician judgment.
           </p>
 
           <div class="hero-actions">
@@ -636,7 +636,7 @@ COMMAND_CENTER_HTML = r"""
           <p>
             Hospital pilot users can be restricted to a single unit such as ICU, telemetry, stepdown, ward, or RPM.
             Admin users retain full hospital-wide visibility across all units and all pilot accounts.
-            Trend views, audit visibility, and thresholds are wired to backend routes and reflect your current access scope.
+            Role restrictions, unit restrictions, trend views, audit visibility, and thresholds are wired to backend routes and reflect your current access scope.
           </p>
 
           <div class="toolbar" style="margin-top:18px;">
@@ -667,7 +667,7 @@ COMMAND_CENTER_HTML = r"""
         <div class="section-head">
           <div>
             <h2 class="section-title">Hospital Command Wall</h2>
-            <div class="section-sub">Real-time telemetry, AI risk scoring, explainable alerts, workflow actions, true trend history, threshold controls, persistent audit visibility, and unit-based access control.</div>
+            <div class="section-sub">HCP-facing command-center visibility built from structured patient summaries, explainable review basis, operational workflow handling, persistent audit visibility, and role- / unit-based access control.</div>
           </div>
           <div class="mini-pills">
             <div class="status-pill live" id="wallStatus">Live</div>
@@ -862,7 +862,7 @@ COMMAND_CENTER_HTML = r"""
             <div class="module-head">
               <div>
                 <div class="module-title">Predictive Alert Clusters</div>
-                <div class="module-sub">Grouped signal drivers across visible patients</div>
+                <div class="module-sub">Grouped review drivers across visible patients</div>
               </div>
               <div class="status-pill watch">Grouped</div>
             </div>
@@ -922,7 +922,7 @@ COMMAND_CENTER_HTML = r"""
           <div class="mini-card">
             <div class="mini-k">Early Intervention</div>
             <div class="mini-v">Supports</div>
-            <div class="mini-copy">Supports earlier intervention by surfacing visible deterioration signals before traditional workflow lag.</div>
+            <div class="mini-copy">Supports earlier prioritization by surfacing visible changes in structured patient summaries before traditional workflow lag.</div>
           </div>
           <div class="mini-card">
             <div class="mini-k">Escalation Risk</div>
@@ -937,7 +937,7 @@ COMMAND_CENTER_HTML = r"""
           <div class="mini-card">
             <div class="mini-k">Workflow Readiness</div>
             <div class="mini-v">Faster</div>
-            <div class="mini-copy">Supports faster acknowledgment, assignment, escalation, and resolution tracking.</div>
+            <div class="mini-copy">Supports faster operational acknowledgment, assignment, escalation, and resolution tracking.</div>
           </div>
         </div>
       </div>
@@ -995,11 +995,11 @@ COMMAND_CENTER_HTML = r"""
         <div class="how-grid">
           <div class="mini-card">
             <div class="mini-k">1. Ingest</div>
-            <div class="mini-copy">Patient vitals and monitoring signals are organized into a structured command workflow.</div>
+            <div class="mini-copy">Structured patient summaries and operational workflow states are organized into a command-center review workflow.</div>
           </div>
           <div class="mini-card">
             <div class="mini-k">2. Detect</div>
-            <div class="mini-copy">AI logic highlights rising risk, signal drift, and deterioration patterns needing attention.</div>
+            <div class="mini-copy">Review logic highlights rising risk, change drift, and deterioration patterns needing attention.</div>
           </div>
           <div class="mini-card">
             <div class="mini-k">3. Prioritize</div>
@@ -1007,7 +1007,7 @@ COMMAND_CENTER_HTML = r"""
           </div>
           <div class="mini-card">
             <div class="mini-k">4. Coordinate</div>
-            <div class="mini-copy">Care teams can acknowledge, assign, escalate, resolve, and review the audit trail in one place.</div>
+            <div class="mini-copy">Care teams can log operational acknowledge, assign, escalate, and resolve states and review the audit trail in one place.</div>
           </div>
         </div>
       </div>
@@ -1026,7 +1026,7 @@ COMMAND_CENTER_HTML = r"""
     </section>
 
     <div class="footer">
-      Early Risk Alert AI · Real-Time Clinical Command Center · Unit-Based Pilot Access · Hospital Branded Accounts · Explainable Alert Workflow · Persistent Audit Visibility · Pilot / Evaluation Environment
+      Early Risk Alert AI · HCP-Facing Decision-Support and Workflow-Support · Assists Further Clinical Evaluation · Supports Prioritization and Command-Center Awareness · Does Not Replace Clinician Judgment · Not Intended to Diagnose, Direct Treatment, or Independently Trigger Escalation
     </div>
   </div>
 
@@ -1066,15 +1066,26 @@ COMMAND_CENTER_HTML = r"""
     </div>
 
     <div class="drawer-block">
-      <div class="drawer-k">Clinical Recommendation (Supportive)</div>
+      <div class="drawer-k">Suggested Next Review (Supportive / HCP-Facing)</div>
       <div class="drawer-v" id="drawerAction">--</div>
-      <div class="note-box" style="margin-top:10px;">Recommendation display is separate from workflow actions and requires licensed clinician review.</div>
+      <div class="note-box" style="margin-top:10px;">This recommendation is HCP-facing decision support only. It assists further clinical evaluation and does not replace clinician judgment or independently trigger escalation.</div>
     </div>
 
     <div class="drawer-block">
       <div class="drawer-k">Review Basis / Explainability</div>
       <div class="drawer-v" id="drawerExplainability">--</div>
       <div class="timeline-panel" id="drawerReviewBasis" style="margin-top:12px;"></div>
+    </div>
+
+    <div class="drawer-grid">
+      <div class="drawer-block">
+        <div class="drawer-k">Current Reviewed Inputs</div>
+        <div class="timeline-panel" id="drawerCurrentInputs"></div>
+      </div>
+      <div class="drawer-block">
+        <div class="drawer-k">Top Contributing Factors</div>
+        <div class="timeline-panel" id="drawerTopFactors"></div>
+      </div>
     </div>
 
     <div class="drawer-grid">
@@ -1088,6 +1099,17 @@ COMMAND_CENTER_HTML = r"""
       </div>
     </div>
 
+    <div class="drawer-grid">
+      <div class="drawer-block">
+        <div class="drawer-k">What Changed</div>
+        <div class="timeline-panel" id="drawerWhatChanged"></div>
+      </div>
+      <div class="drawer-block">
+        <div class="drawer-k">What the Software Does Not Know</div>
+        <div class="timeline-panel" id="drawerUnknowns"></div>
+      </div>
+    </div>
+
     <div class="drawer-block">
       <div class="drawer-k">Known Limitations</div>
       <div class="timeline-panel" id="drawerLimitations"></div>
@@ -1096,6 +1118,7 @@ COMMAND_CENTER_HTML = r"""
     <div class="drawer-block">
       <div class="drawer-k">Workflow Status (Operational)</div>
       <div class="drawer-v" id="drawerWorkflow">No workflow action saved yet.</div>
+      <div class="note-box" style="margin-top:10px;">Operational workflow state and user action logging only — not a machine-issued medical order.</div>
     </div>
 
     <div class="drawer-block">
@@ -1168,15 +1191,15 @@ COMMAND_CENTER_HTML = r"""
       terms: {
         title: "Terms",
         body: `
-          This pilot environment is presented for product demonstration, workflow evaluation, and stakeholder review.
-          Features, visualizations, and supportive recommendations shown here represent a controlled command-center experience.
-          Use of this environment does not establish a clinical system of record, emergency response capability, or replacement for hospital protocols.
+          This pilot environment is presented for HCP-facing product demonstration, workflow evaluation, and stakeholder review.
+          Features, visualizations, and supportive outputs shown here represent a controlled command-center experience that assists further clinical evaluation and prioritization.
+          Use of this environment does not establish a clinical system of record, emergency response capability, or replacement for clinician judgment or hospital protocol.
         `
       },
       privacy: {
         title: "Privacy",
         body: `
-          This pilot interface demonstrates how monitored patient data, risk signals, and workflow actions may be organized in a secure clinical operations environment.
+          This pilot interface demonstrates how structured patient medical information, trended vital sign summaries, and workflow-support actions may be organized in a secure clinical operations environment.
           Displayed content in this environment is part of a controlled demonstration workflow and should be handled as evaluation material.
           Production privacy, security, and deployment requirements should be validated independently within hospital and regulatory standards.
         `
@@ -1184,10 +1207,11 @@ COMMAND_CENTER_HTML = r"""
       disclaimer: {
         title: "Pilot Disclaimer",
         body: `
-          This platform is presented in a controlled pilot environment for demonstration, workflow evaluation, and stakeholder review.
-          It is a decision-support display and is not represented here as an autonomous diagnostic, prescribing, or treatment-directing system.
-          Before any clinical action, users should review the displayed recommendation basis, confidence, data freshness, and known limitations.
-          Licensed clinicians remain responsible for independent assessment, order entry, escalation decisions, and adherence to hospital protocol.
+          This platform is presented as an HCP-facing decision-support and workflow-support environment for demonstration, workflow evaluation, and stakeholder review.
+          It assists further clinical evaluation, prioritization, and command-center awareness and does not replace clinician judgment.
+          It is not intended to diagnose, direct treatment, or independently trigger escalation.
+          Before any clinical action, users should review the displayed basis, current inputs, what changed, confidence, limitations, what the software does not know, and data freshness.
+          Licensed clinicians remain responsible for independent assessment, order entry, escalation decisions, and adherence to hospital policy.
         `
       }
     };
@@ -1315,7 +1339,7 @@ COMMAND_CENTER_HTML = r"""
       return points.map((p, i) => (i === 0 ? "M" : "L") + p[0] + "," + p[1]).join(" ");
     }
 
-    function waveformPoints(mode){
+    function trendLinePoints(mode){
       if (mode === "critical") {
         return [[0,72],[30,72],[46,72],[58,70],[72,72],[86,72],[98,50],[106,100],[116,24],[126,108],[136,72],[162,72],[186,72],[204,70],[220,72],[236,72],[250,54],[258,96],[268,22],[278,106],[290,72],[318,72],[336,72],[352,70],[368,72],[382,72],[398,46],[406,104],[416,20],[428,110],[440,72],[466,72],[486,72],[504,70],[520,72],[536,72],[550,52],[558,98],[568,24],[578,106],[592,72],[620,72]];
       }
@@ -1337,8 +1361,34 @@ COMMAND_CENTER_HTML = r"""
       if (hr && hr >= safeNumber(t.hr_high, 110)) reasons.push("heart rate elevated");
       else if (hr && hr >= safeNumber(t.hr_high, 110) - 5) reasons.push("heart rate rising");
       if (sbp && sbp >= safeNumber(t.sbp_high, 150)) reasons.push("blood pressure elevated");
-      if (!reasons.length) reasons.push("combined signal pattern indicates monitored risk");
+      if (!reasons.length) reasons.push("combined reviewed summary pattern indicates monitored risk");
       return reasons.join(", ") + ".";
+    }
+
+    function fallbackCurrentInputs(patient){
+      const t = thresholdsForUnit(patient.unit || currentUnitFilter);
+      return [
+        `Heart rate ${safe(patient.heart_rate)} bpm compared with review threshold > ${safeNumber(t.hr_high, 110)}`,
+        `Blood pressure ${safe(patient.bp_systolic)}/${safe(patient.bp_diastolic)} mmHg compared with review threshold SBP > ${safeNumber(t.sbp_high, 150)}`,
+        `SpO₂ ${safe(patient.spo2)}% compared with review threshold < ${safeNumber(t.spo2_low, 93)}`,
+        `Review timestamp ${lastUpdatedAt ? formatDateTime(lastUpdatedAt) : "pending"}`
+      ];
+    }
+
+    function fallbackWhatChanged(patient){
+      return [
+        `${safe(patient.name)} remains in a ${safe(patient.status)} review state within the current summary window.`,
+        `Risk display is ${patientRiskPercent(patient)}% based on the current structured summary.`,
+        `Open the trend history below to compare recent review points.`
+      ];
+    }
+
+    function fallbackUnknowns(){
+      return [
+        "This software does not know bedside examination findings, active symptoms, or undocumented workflow context.",
+        "This software does not know the full chart, medications, labs, imaging, or staffing constraints unless provided elsewhere.",
+        "Hospital policy and clinician judgment still govern escalation and treatment."
+      ];
     }
 
     function normalizePatient(raw){
@@ -1354,24 +1404,28 @@ COMMAND_CENTER_HTML = r"""
         bed: room,
         unit: roomToUnit(room),
         program: raw.program || "Clinical Monitoring",
-        title: risk.alert_message || raw.title || "Predictive Risk Monitor",
+        title: risk.alert_message || raw.title || "Clinical Review Monitor",
         heart_rate: raw.heart_rate ?? vitals.heart_rate ?? "--",
         spo2: raw.spo2 ?? vitals.spo2 ?? "--",
         bp_systolic: raw.bp_systolic ?? vitals.systolic_bp ?? "--",
         bp_diastolic: raw.bp_diastolic ?? vitals.diastolic_bp ?? "--",
         risk_score: raw.risk_score ?? risk.risk_score ?? "--",
         status: raw.status || risk.severity || "Stable",
-        story: raw.story || risk.recommended_action || "Predictive monitoring active.",
-        alert_message: risk.alert_message || "Vitals stable",
-        recommended_action: risk.clinical_recommendation || risk.recommended_action || "Continue routine monitoring.",
+        story: raw.story || risk.recommended_action || "HCP-facing decision-support active.",
+        alert_message: risk.alert_message || "Current review summary stable",
+        recommended_action: risk.clinical_recommendation || risk.recommended_action || "Suggested next review: continue routine monitored review.",
         reasons: risk.reasons || [],
+        top_contributing_factors: risk.top_contributing_factors || risk.reasons || [],
         review_basis: risk.review_basis || [],
+        current_review_inputs: risk.current_review_inputs || [],
+        what_changed: risk.what_changed || [],
+        what_software_does_not_know: risk.what_software_does_not_know || [],
         limitations: risk.limitations || [],
         confidence_score: confidence.score ?? null,
         confidence_label: confidence.label || "review",
-        confidence_narrative: confidence.narrative || "Independent review required.",
+        confidence_narrative: confidence.narrative || "Independent clinical review required.",
         data_freshness: freshness,
-        decision_support_disclaimer: risk.decision_support_disclaimer || "Decision-support display only."
+        decision_support_disclaimer: risk.decision_support_disclaimer || "HCP-facing decision-support display only."
       };
     }
 
@@ -1814,10 +1868,22 @@ COMMAND_CENTER_HTML = r"""
       document.getElementById("drawerAction").textContent = safe(patient.recommended_action);
       document.getElementById("drawerExplainability").textContent = explainabilityForPatient(patient);
       document.getElementById("drawerReviewBasis").innerHTML = renderTimelineRows(patient.review_basis && patient.review_basis.length ? patient.review_basis : [explainabilityForPatient(patient)]);
+      document.getElementById("drawerCurrentInputs").innerHTML = renderTimelineRows(
+        patient.current_review_inputs && patient.current_review_inputs.length ? patient.current_review_inputs : fallbackCurrentInputs(patient)
+      );
+      document.getElementById("drawerTopFactors").innerHTML = renderTimelineRows(
+        patient.top_contributing_factors && patient.top_contributing_factors.length ? patient.top_contributing_factors : patient.reasons && patient.reasons.length ? patient.reasons : [explainabilityForPatient(patient)]
+      );
       const confidenceText = patient.confidence_score ? `${patient.confidence_score}% · ${safe(patient.confidence_label)} support` : safe(patient.confidence_label, "review");
       document.getElementById("drawerConfidence").textContent = confidenceText + " · " + safe(patient.confidence_narrative);
       const patientFreshness = freshnessFromTimestamp(patient.data_freshness && patient.data_freshness.generated_at ? patient.data_freshness.generated_at : lastUpdatedAt);
       document.getElementById("drawerFreshness").textContent = `${patientFreshness.text} · ${safe(patient.data_freshness && patient.data_freshness.source_mode, 'snapshot')} · refresh target ${safe(patient.data_freshness && patient.data_freshness.refresh_interval_seconds, 5)}s`;
+      document.getElementById("drawerWhatChanged").innerHTML = renderTimelineRows(
+        patient.what_changed && patient.what_changed.length ? patient.what_changed : fallbackWhatChanged(patient)
+      );
+      document.getElementById("drawerUnknowns").innerHTML = renderTimelineRows(
+        patient.what_software_does_not_know && patient.what_software_does_not_know.length ? patient.what_software_does_not_know : fallbackUnknowns()
+      );
       document.getElementById("drawerLimitations").innerHTML = renderTimelineRows(patient.limitations && patient.limitations.length ? patient.limitations : [patient.decision_support_disclaimer]);
       document.getElementById("drawerWorkflow").textContent = workflowText(patientId) || "No workflow action saved yet. Operational workflow is tracked separately from the supportive clinical recommendation above.";
 
@@ -1938,10 +2004,10 @@ COMMAND_CENTER_HTML = r"""
       const resolveDisabled = (accessRole !== "admin" && accessRole !== "physician") ? "disabled" : "";
 
       return `
-        <button class="btn ${record.ack ? 'live-btn' : 'secondary'} small" onclick="ackPatient('${pid}')" ${ackDisabled}>${record.ack ? 'ACK Saved' : 'ACK'}</button>
-        <button class="btn ${record.assigned ? 'warn-btn' : 'secondary'} small" onclick="assignPatient('${pid}')" ${assignDisabled}>${record.assigned ? 'Assigned' : 'Assign'}</button>
-        <button class="btn ${record.escalated ? 'critical-btn' : 'secondary'} small" onclick="escalatePatient('${pid}')" ${escalateDisabled}>${record.escalated ? 'Escalated' : 'Escalate'}</button>
-        <button class="btn ${record.resolved ? 'live-btn' : 'secondary'} small" onclick="resolvePatient('${pid}')" ${resolveDisabled}>${record.resolved ? 'Resolved' : 'Resolve'}</button>
+        <button class="btn ${record.ack ? 'live-btn' : 'secondary'} small" onclick="ackPatient('${pid}')" ${ackDisabled}>${record.ack ? 'ACK Logged' : 'Log ACK'}</button>
+        <button class="btn ${record.assigned ? 'warn-btn' : 'secondary'} small" onclick="assignPatient('${pid}')" ${assignDisabled}>${record.assigned ? 'Assignment Logged' : 'Log Assign'}</button>
+        <button class="btn ${record.escalated ? 'critical-btn' : 'secondary'} small" onclick="escalatePatient('${pid}')" ${escalateDisabled}>${record.escalated ? 'Escalation Logged' : 'Log Escalate'}</button>
+        <button class="btn ${record.resolved ? 'live-btn' : 'secondary'} small" onclick="resolvePatient('${pid}')" ${resolveDisabled}>${record.resolved ? 'Resolution Logged' : 'Log Resolve'}</button>
         <button class="btn secondary small" onclick="openPatientDrawer('${pid}')">Details</button>
       `;
     }
@@ -1949,7 +2015,7 @@ COMMAND_CENTER_HTML = r"""
     function renderMonitor(patient){
       const status = String(patient.status || "").toLowerCase();
       const ecg = ecgClass(status);
-      const path = buildPath(waveformPoints(status === "critical" ? "critical" : (status === "high" || status === "moderate") ? "high" : "stable"));
+      const path = buildPath(trendLinePoints(status === "critical" ? "critical" : (status === "high" || status === "moderate") ? "high" : "stable"));
       const riskText = patientRiskPercent(patient) + "%";
       const pid = safe(patient.patient_id);
       const record = getWorkflowRecord(pid);
@@ -1983,6 +2049,7 @@ COMMAND_CENTER_HTML = r"""
           </div>
 
           <div class="monitor-actions">
+            <div class="note-box" style="margin-bottom:10px;">Operational workflow controls only — logs handling state and user action history. Does not diagnose, direct treatment, or independently trigger escalation.</div>
             ${renderActionButtons(record, pid)}
           </div>
         </div>
@@ -2066,7 +2133,7 @@ COMMAND_CENTER_HTML = r"""
 
       panel.innerHTML = `
         <div class="info-line"><strong>AI Insight:</strong> Oxygen saturation is ${spo2 < 94 ? "trending downward" : "being closely monitored"} with ${hr >= 110 ? "rising heart rate pressure" : "emerging physiologic drift"}.</div>
-        <div class="info-line">Predicted deterioration attention is increasing within the ${forecastWindow} based on current signal history and workflow state.</div>
+        <div class="info-line">Predicted deterioration attention is increasing within the ${forecastWindow} based on current review history and workflow state.</div>
         <div class="info-line">Recommended response: ${safe(top.recommended_action)}</div>
       `;
     }
@@ -2170,11 +2237,11 @@ COMMAND_CENTER_HTML = r"""
         </div>
         <div class="timeline-item">
           <div class="timeline-time">-15 Min</div>
-          <div class="timeline-copy">Trend drift detected across oxygen saturation and heart rate signals.</div>
+          <div class="timeline-copy">Trend drift detected across reviewed oxygen saturation and heart rate summaries.</div>
         </div>
         <div class="timeline-item">
           <div class="timeline-time">-30 Min</div>
-          <div class="timeline-copy">Predictive monitoring logic elevated deterioration attention before standard threshold-only workflow.</div>
+          <div class="timeline-copy">HCP-facing decision-support logic elevated deterioration attention before standard threshold-only workflow.</div>
         </div>
         <div class="timeline-item">
           <div class="timeline-time">Action</div>
@@ -2190,7 +2257,7 @@ COMMAND_CENTER_HTML = r"""
           <div class="audit-item">
             <div>
               <div class="audit-copy">System initialized</div>
-              <div class="audit-sub">Awaiting user actions</div>
+              <div class="audit-sub">Awaiting user workflow actions in current role / unit scope</div>
             </div>
             <div class="status-pill info">Log</div>
           </div>
@@ -2202,7 +2269,7 @@ COMMAND_CENTER_HTML = r"""
         <div class="audit-item">
           <div>
             <div class="audit-copy">${safe(entry.action)} · ${safe(entry.patient_id)}</div>
-            <div class="audit-sub">${safe(entry.role)} · ${safe(entry.note)} · ${formatDateTime(entry.time)}</div>
+            <div class="audit-sub">${safe(entry.user || 'user')} · ${safe(entry.role)} · ${safe(entry.unit || 'scope')} · ${safe(entry.note)} · ${formatDateTime(entry.time)}</div>
           </div>
           <div class="status-pill info">Log</div>
         </div>
@@ -2215,11 +2282,16 @@ COMMAND_CENTER_HTML = r"""
       const last = auditLog[0];
       const acks = auditLog.filter(a => String(a.action).toLowerCase().includes("ack")).length;
       const escalations = auditLog.filter(a => String(a.action).toLowerCase().includes("escalate")).length;
+      const visibleUnit = accessAssignedUnit === "all" ? "All Units" : unitLabel(accessAssignedUnit);
 
       target.innerHTML = `
         <div class="queue-item">
           <div class="queue-copy">Visible audit entries</div>
           <div class="status-pill info">${total}</div>
+        </div>
+        <div class="queue-item">
+          <div class="queue-copy">Current audit scope</div>
+          <div class="status-pill muted">${safe(accessRole)} · ${safe(visibleUnit)}</div>
         </div>
         <div class="queue-item">
           <div class="queue-copy">Acknowledgments</div>
@@ -2234,7 +2306,7 @@ COMMAND_CENTER_HTML = r"""
             <div class="queue-copy">Most recent activity</div>
             <div class="alert-sub">${last ? safe(last.action) + " · " + formatDateTime(last.time) : "No activity yet"}</div>
           </div>
-          <div class="status-pill muted">${last ? safe(last.role) : "Idle"}</div>
+          <div class="status-pill muted">${last ? safe(last.user || last.role) : "Idle"}</div>
         </div>
       `;
     }
@@ -2374,7 +2446,7 @@ COMMAND_CENTER_HTML = r"""
             </div>
             <div class="timeline-item">
               <div class="timeline-time">-15</div>
-              <div class="timeline-copy">Supportive AI logic detected visible signal drift and elevated attention level.</div>
+              <div class="timeline-copy">Supportive review logic detected visible change drift and elevated attention level.</div>
             </div>
             <div class="timeline-item">
               <div class="timeline-time">Now</div>
@@ -2567,7 +2639,7 @@ COMMAND_CENTER_HTML = r"""
       const target = document.getElementById("scenario-grid");
       if (!top){
         target.innerHTML = `
-          <div class="mini-card"><div class="mini-k">Signal Change</div><div class="mini-copy">No monitored signal currently visible.</div></div>
+          <div class="mini-card"><div class="mini-k">Change Summary</div><div class="mini-copy">No monitored change currently visible.</div></div>
           <div class="mini-card"><div class="mini-k">AI Detection</div><div class="mini-copy">AI detection panel waits for active patient risk.</div></div>
           <div class="mini-card"><div class="mini-k">Workflow Action</div><div class="mini-copy">Workflow action becomes available when patient risk is visible.</div></div>
         `;
@@ -2576,16 +2648,16 @@ COMMAND_CENTER_HTML = r"""
 
       target.innerHTML = `
         <div class="mini-card">
-          <div class="mini-k">Signal Change</div>
-          <div class="mini-copy">${safe(top.name)} shows visible monitoring drift across oxygen saturation, heart rate, or blood pressure signals.</div>
+          <div class="mini-k">Change Summary</div>
+          <div class="mini-copy">${safe(top.name)} shows visible change across reviewed oxygen saturation, heart rate, or blood pressure summaries.</div>
         </div>
         <div class="mini-card">
           <div class="mini-k">AI Detection</div>
-          <div class="mini-copy">Supportive AI logic elevates deterioration attention and places the patient in the top risk view.</div>
+          <div class="mini-copy">Supportive review logic elevates deterioration attention and places the patient in the top risk view.</div>
         </div>
         <div class="mini-card">
           <div class="mini-k">Workflow Action</div>
-          <div class="mini-copy">Care team can acknowledge, assign, escalate, or resolve from a single command workflow.</div>
+          <div class="mini-copy">Care team can log acknowledge, assign, escalate, or resolve workflow states from a single command workflow.</div>
         </div>
       `;
     }
@@ -2645,6 +2717,7 @@ COMMAND_CENTER_HTML = r"""
       const basisText = top && top.review_basis && top.review_basis.length ? top.review_basis[0] : (top ? explainabilityForPatient(top) : "No active patient basis available.");
       const confidenceText = top ? `${safe(top.confidence_label, 'review')}${top.confidence_score ? ` · ${top.confidence_score}%` : ''}` : "Awaiting patient review";
       const limitationText = top && top.limitations && top.limitations.length ? top.limitations[0] : (latestSnapshotMeta.decision_support_disclaimer || "Independent clinical review remains required.");
+      const unknownText = top && top.what_software_does_not_know && top.what_software_does_not_know.length ? top.what_software_does_not_know[0] : "Open a patient record to review what the software does not know.";
       target.innerHTML = `
         <div class="mini-card">
           <div class="mini-k">Review Basis</div>
@@ -2665,6 +2738,11 @@ COMMAND_CENTER_HTML = r"""
           <div class="mini-k">Workflow vs Recommendation</div>
           <div class="mini-v">Separated</div>
           <div class="mini-copy">Operational workflow state is tracked separately from supportive clinical recommendation text. ${safe(limitationText)}</div>
+        </div>
+        <div class="mini-card">
+          <div class="mini-k">What the Software Does Not Know</div>
+          <div class="mini-v">Visible</div>
+          <div class="mini-copy">${safe(unknownText)}</div>
         </div>
       `;
     }
