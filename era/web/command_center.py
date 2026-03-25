@@ -615,6 +615,7 @@ COMMAND_CENTER_HTML = r"""
             <a class="btn primary" href="/hospital-demo">Request Live Demo</a>
             <a class="btn secondary" href="/investor-intake">Investor Access</a>
             <a class="btn secondary" href="/admin/review">Open Admin Review</a>
+            <button class="btn secondary" type="button" onclick="manualRefresh()">Refresh Now</button>
           </div>
 
           <div class="hero-pills" style="margin-top:18px;">
@@ -624,6 +625,8 @@ COMMAND_CENTER_HTML = r"""
             <div class="status-pill info" id="unitAccessPill">Unit Access</div>
             <div class="status-pill live" id="feedHealthPill">Feed Live</div>
             <div class="status-pill muted" id="lastUpdatedPill">Last Updated</div>
+            <div class="status-pill info" id="autoRefreshPill">Auto Refresh On</div>
+            <div class="status-pill muted" id="trendDataPill">Trend Sync Pending</div>
           </div>
         </div>
 
@@ -650,6 +653,7 @@ COMMAND_CENTER_HTML = r"""
 
           <div class="wall-tools" style="margin-top:14px;">
             <button class="btn wall-btn" id="wallModeBtn" type="button" onclick="toggleWallMode()">Enable Wall Mode</button>
+            <button class="btn secondary" id="autoRefreshBtn" type="button" onclick="toggleAutoRefresh()">Pause Auto Refresh</button>
             <div class="status-pill wall" id="wallModePill">Wall Mode Off</div>
             <div class="status-pill critical" id="systemBannerPill">Restricted</div>
           </div>
@@ -748,7 +752,7 @@ COMMAND_CENTER_HTML = r"""
             </div>
 
             <div class="intel-card">
-              <h3>System Health</h3>
+              <h3>System Reliability</h3>
               <div class="queue-list" id="system-health-list"></div>
             </div>
 
@@ -1114,6 +1118,10 @@ COMMAND_CENTER_HTML = r"""
     let trendCache = {};
     let trendsEndpointAvailable = false;
     let thresholdsEndpointAvailable = false;
+    let autoRefreshEnabled = true;
+    let refreshIntervalMs = 5000;
+    let refreshTimer = null;
+    let refreshInFlight = false;
 
     const DEFAULT_THRESHOLDS = {
       icu: {spo2_low:92, hr_high:120, sbp_high:160},
@@ -1542,6 +1550,7 @@ COMMAND_CENTER_HTML = r"""
       }catch(err){
         thresholdsEndpointAvailable = false;
       }
+      updateRuntimePills();
     }
 
     async function saveThresholds(){
@@ -1615,6 +1624,7 @@ COMMAND_CENTER_HTML = r"""
         trendsEndpointAvailable = false;
         if (!trendCache[patientId]) trendCache[patientId] = [];
       }
+      updateRuntimePills();
       return trendCache[patientId] || [];
     }
 
@@ -1631,6 +1641,7 @@ COMMAND_CENTER_HTML = r"""
         const drawerOpen = document.getElementById("patientDrawer").classList.contains("open");
         if (drawerOpen) openPatientDrawer(current);
       }
+      updateRuntimePills();
     }
 
     function getPatientTrendSeries(patient, metric){
@@ -1768,6 +1779,54 @@ COMMAND_CENTER_HTML = r"""
     function closePatientDrawer(){
       document.getElementById("patientDrawer").classList.remove("open");
       document.getElementById("drawerOverlay").classList.remove("show");
+    }
+
+
+    function updateRuntimePills(){
+      const autoRefreshPill = document.getElementById("autoRefreshPill");
+      const autoRefreshBtn = document.getElementById("autoRefreshBtn");
+      const trendDataPill = document.getElementById("trendDataPill");
+
+      if (autoRefreshPill){
+        autoRefreshPill.className = autoRefreshEnabled ? "status-pill info" : "status-pill dark";
+        autoRefreshPill.textContent = autoRefreshEnabled ? "Auto Refresh On" : "Auto Refresh Paused";
+      }
+
+      if (autoRefreshBtn){
+        autoRefreshBtn.textContent = autoRefreshEnabled ? "Pause Auto Refresh" : "Resume Auto Refresh";
+      }
+
+      if (trendDataPill){
+        const live = trendsEndpointAvailable && thresholdsEndpointAvailable;
+        trendDataPill.className = live ? "status-pill live" : "status-pill muted";
+        trendDataPill.textContent = live ? "Trend + Threshold Sync Live" : "Snapshot Fallback Active";
+      }
+    }
+
+    async function refreshCycle(force=false){
+      if (refreshInFlight) return;
+      if (!autoRefreshEnabled && !force) return;
+
+      refreshInFlight = true;
+      try{
+        await loadWorkflowState();
+        await loadPersistentAudit();
+        await loadThresholds();
+        await loadSystemHealth();
+        await refreshSnapshot();
+      }finally{
+        refreshInFlight = false;
+        updateRuntimePills();
+      }
+    }
+
+    function manualRefresh(){
+      refreshCycle(true);
+    }
+
+    function toggleAutoRefresh(){
+      autoRefreshEnabled = !autoRefreshEnabled;
+      updateRuntimePills();
     }
 
     function openPolicyModal(kind){
@@ -2531,6 +2590,7 @@ COMMAND_CENTER_HTML = r"""
       await loadPersistentAudit();
       await loadSystemHealth();
       await refreshSnapshot();
+      updateRuntimePills();
 
       const unitFilter = document.getElementById("unitFilter");
       if (unitFilter){
@@ -2546,13 +2606,9 @@ COMMAND_CENTER_HTML = r"""
         });
       }
 
-      setInterval(async () => {
-        await loadWorkflowState();
-        await loadPersistentAudit();
-        await loadThresholds();
-        await loadSystemHealth();
-        await refreshSnapshot();
-      }, 5000);
+      refreshTimer = setInterval(() => {
+        refreshCycle(false);
+      }, refreshIntervalMs);
     }
 
     boot();
