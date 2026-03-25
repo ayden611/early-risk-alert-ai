@@ -590,6 +590,7 @@ COMMAND_CENTER_HTML = r"""
           <div class="meta-pills">
             <div class="status-pill live-dot" id="liveSystemPill">Live System</div>
             <div class="status-pill muted" id="lastUpdatedPillTop">Last Updated --</div>
+            <div class="status-pill muted" id="dataFreshnessPill">Data Freshness --</div>
             <div class="status-pill info" id="topRiskPill">Top Risk Patient --</div>
           </div>
 
@@ -1012,6 +1013,18 @@ COMMAND_CENTER_HTML = r"""
       </div>
     </section>
 
+    <section class="section business-sections">
+      <div class="section-card">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">Decision-Support Guardrails</h2>
+            <div class="section-sub">Visible review basis, confidence, data freshness, limitations, and a clear separation between workflow state and supportive clinical recommendation.</div>
+          </div>
+        </div>
+        <div class="audience-grid" id="decision-support-guardrails"></div>
+      </div>
+    </section>
+
     <div class="footer">
       Early Risk Alert AI · Real-Time Clinical Command Center · Unit-Based Pilot Access · Hospital Branded Accounts · Explainable Alert Workflow · Persistent Audit Visibility · Pilot / Evaluation Environment
     </div>
@@ -1053,17 +1066,35 @@ COMMAND_CENTER_HTML = r"""
     </div>
 
     <div class="drawer-block">
-      <div class="drawer-k">Recommended Action</div>
+      <div class="drawer-k">Clinical Recommendation (Supportive)</div>
       <div class="drawer-v" id="drawerAction">--</div>
+      <div class="note-box" style="margin-top:10px;">Recommendation display is separate from workflow actions and requires licensed clinician review.</div>
     </div>
 
     <div class="drawer-block">
-      <div class="drawer-k">Explainable Reasoning</div>
+      <div class="drawer-k">Review Basis / Explainability</div>
       <div class="drawer-v" id="drawerExplainability">--</div>
+      <div class="timeline-panel" id="drawerReviewBasis" style="margin-top:12px;"></div>
+    </div>
+
+    <div class="drawer-grid">
+      <div class="drawer-block">
+        <div class="drawer-k">Recommendation Confidence</div>
+        <div class="drawer-v" id="drawerConfidence">--</div>
+      </div>
+      <div class="drawer-block">
+        <div class="drawer-k">Data Freshness</div>
+        <div class="drawer-v" id="drawerFreshness">--</div>
+      </div>
     </div>
 
     <div class="drawer-block">
-      <div class="drawer-k">Workflow Status</div>
+      <div class="drawer-k">Known Limitations</div>
+      <div class="timeline-panel" id="drawerLimitations"></div>
+    </div>
+
+    <div class="drawer-block">
+      <div class="drawer-k">Workflow Status (Operational)</div>
       <div class="drawer-v" id="drawerWorkflow">No workflow action saved yet.</div>
     </div>
 
@@ -1113,6 +1144,7 @@ COMMAND_CENTER_HTML = r"""
     let pilotModeEnabled = true;
     let lastSystemHealth = {};
     let lastUpdatedAt = null;
+    let latestSnapshotMeta = {};
     let wallModeEnabled = false;
     let thresholdStore = {};
     let trendCache = {};
@@ -1153,8 +1185,9 @@ COMMAND_CENTER_HTML = r"""
         title: "Pilot Disclaimer",
         body: `
           This platform is presented in a controlled pilot environment for demonstration, workflow evaluation, and stakeholder review.
-          It is not intended to replace clinical judgment, hospital protocols, or emergency response systems.
-          All insights, alerts, and predictions are designed to support — not replace — clinical decision-making.
+          It is a decision-support display and is not represented here as an autonomous diagnostic, prescribing, or treatment-directing system.
+          Before any clinical action, users should review the displayed recommendation basis, confidence, data freshness, and known limitations.
+          Licensed clinicians remain responsible for independent assessment, order entry, escalation decisions, and adherence to hospital protocol.
         `
       }
     };
@@ -1190,6 +1223,34 @@ COMMAND_CENTER_HTML = r"""
 
     function formatPercent(value){
       return Math.round(clamp(Number(value) || 0, 0, 100)) + "%";
+    }
+
+    function secondsFreshText(seconds){
+      const s = Math.max(0, Math.round(Number(seconds) || 0));
+      if (s < 60) return s + "s old";
+      const minutes = Math.floor(s / 60);
+      const rem = s % 60;
+      return minutes + "m " + rem + "s old";
+    }
+
+    function freshnessFromTimestamp(value){
+      if (!value) return {seconds:null, text:"Unknown", pill:"muted"};
+      const seconds = Math.max(0, Math.round((Date.now() - new Date(value).getTime()) / 1000));
+      const pill = seconds <= 10 ? "live" : seconds <= 30 ? "watch" : "critical";
+      return {seconds, text: secondsFreshText(seconds), pill};
+    }
+
+    function renderTimelineRows(lines){
+      const items = (lines || []).filter(Boolean);
+      if (!items.length){
+        return `<div class="timeline-item"><div class="timeline-time">Review</div><div class="timeline-copy">No structured review basis available.</div></div>`;
+      }
+      return items.map((line, idx) => `
+        <div class="timeline-item">
+          <div class="timeline-time">${idx === 0 ? 'Basis' : 'Review'}</div>
+          <div class="timeline-copy">${safe(line)}</div>
+        </div>
+      `).join("");
     }
 
     function unitLabel(unit){
@@ -1285,6 +1346,8 @@ COMMAND_CENTER_HTML = r"""
       const vitals = raw.vitals || {};
       const risk = raw.risk || {};
       const room = raw.room || raw.bed || "Unit";
+      const confidence = risk.confidence || {};
+      const freshness = raw.data_freshness || risk.data_freshness || {};
       return {
         patient_id: raw.patient_id || "p---",
         name: raw.patient_name || raw.name || "Patient",
@@ -1300,8 +1363,15 @@ COMMAND_CENTER_HTML = r"""
         status: raw.status || risk.severity || "Stable",
         story: raw.story || risk.recommended_action || "Predictive monitoring active.",
         alert_message: risk.alert_message || "Vitals stable",
-        recommended_action: risk.recommended_action || "Continue routine monitoring.",
-        reasons: risk.reasons || []
+        recommended_action: risk.clinical_recommendation || risk.recommended_action || "Continue routine monitoring.",
+        reasons: risk.reasons || [],
+        review_basis: risk.review_basis || [],
+        limitations: risk.limitations || [],
+        confidence_score: confidence.score ?? null,
+        confidence_label: confidence.label || "review",
+        confidence_narrative: confidence.narrative || "Independent review required.",
+        data_freshness: freshness,
+        decision_support_disclaimer: risk.decision_support_disclaimer || "Decision-support display only."
       };
     }
 
@@ -1605,6 +1675,7 @@ COMMAND_CENTER_HTML = r"""
         activePatients = (payload.patients || []).map(normalizePatient).filter(Boolean);
         activeAlerts = (payload.alerts || []).map(normalizeAlert).filter(Boolean);
         lastUpdatedAt = payload.generated_at || new Date().toISOString();
+        latestSnapshotMeta = payload.meta || {};
         rerenderAll();
         primeTrendCache();
       }catch(err){
@@ -1742,7 +1813,13 @@ COMMAND_CENTER_HTML = r"""
       document.getElementById("drawerRisk").textContent = patientRiskPercent(patient) + "% (" + (typeof patient.risk_score === "number" ? patient.risk_score.toFixed(1) : safe(patient.risk_score)) + ")";
       document.getElementById("drawerAction").textContent = safe(patient.recommended_action);
       document.getElementById("drawerExplainability").textContent = explainabilityForPatient(patient);
-      document.getElementById("drawerWorkflow").textContent = workflowText(patientId);
+      document.getElementById("drawerReviewBasis").innerHTML = renderTimelineRows(patient.review_basis && patient.review_basis.length ? patient.review_basis : [explainabilityForPatient(patient)]);
+      const confidenceText = patient.confidence_score ? `${patient.confidence_score}% · ${safe(patient.confidence_label)} support` : safe(patient.confidence_label, "review");
+      document.getElementById("drawerConfidence").textContent = confidenceText + " · " + safe(patient.confidence_narrative);
+      const patientFreshness = freshnessFromTimestamp(patient.data_freshness && patient.data_freshness.generated_at ? patient.data_freshness.generated_at : lastUpdatedAt);
+      document.getElementById("drawerFreshness").textContent = `${patientFreshness.text} · ${safe(patient.data_freshness && patient.data_freshness.source_mode, 'snapshot')} · refresh target ${safe(patient.data_freshness && patient.data_freshness.refresh_interval_seconds, 5)}s`;
+      document.getElementById("drawerLimitations").innerHTML = renderTimelineRows(patient.limitations && patient.limitations.length ? patient.limitations : [patient.decision_support_disclaimer]);
+      document.getElementById("drawerWorkflow").textContent = workflowText(patientId) || "No workflow action saved yet. Operational workflow is tracked separately from the supportive clinical recommendation above.";
 
       const hrSeries = getPatientTrendSeries(patient, "hr");
       document.getElementById("drawerTrendSparkline").innerHTML = sparklineSvg(hrSeries, statusClass(patient.status), true);
@@ -2028,7 +2105,7 @@ COMMAND_CENTER_HTML = r"""
         <div class="queue-item">
           <div>
             <div class="queue-copy">Pilot Protection</div>
-            <div class="alert-sub">Decision support only · not a medical device</div>
+            <div class="alert-sub">Decision-support display only · clinician review required</div>
           </div>
           <div class="status-pill critical">Protected</div>
         </div>
@@ -2538,6 +2615,13 @@ COMMAND_CENTER_HTML = r"""
       const topRiskPill = document.getElementById("topRiskPill");
       if (topRiskPill) topRiskPill.textContent = topRiskText;
 
+      const freshnessPill = document.getElementById("dataFreshnessPill");
+      const freshness = freshnessFromTimestamp((latestSnapshotMeta.data_freshness && latestSnapshotMeta.data_freshness.generated_at) || lastUpdatedAt);
+      if (freshnessPill){
+        freshnessPill.className = `status-pill ${freshness.pill}`;
+        freshnessPill.textContent = `Data Freshness ${freshness.text}`;
+      }
+
       const healthy = ["ok", "connected"].includes(String(lastSystemHealth.status || "").toLowerCase());
       const liveSystemPill = document.getElementById("liveSystemPill");
       const feedHealthPill = document.getElementById("feedHealthPill");
@@ -2553,6 +2637,38 @@ COMMAND_CENTER_HTML = r"""
       }
     }
 
+    function renderDecisionSupportGuardrails(){
+      const target = document.getElementById("decision-support-guardrails");
+      if (!target) return;
+      const top = getTopRiskPatient();
+      const freshness = freshnessFromTimestamp((latestSnapshotMeta.data_freshness && latestSnapshotMeta.data_freshness.generated_at) || lastUpdatedAt);
+      const basisText = top && top.review_basis && top.review_basis.length ? top.review_basis[0] : (top ? explainabilityForPatient(top) : "No active patient basis available.");
+      const confidenceText = top ? `${safe(top.confidence_label, 'review')}${top.confidence_score ? ` · ${top.confidence_score}%` : ''}` : "Awaiting patient review";
+      const limitationText = top && top.limitations && top.limitations.length ? top.limitations[0] : (latestSnapshotMeta.decision_support_disclaimer || "Independent clinical review remains required.");
+      target.innerHTML = `
+        <div class="mini-card">
+          <div class="mini-k">Review Basis</div>
+          <div class="mini-v">Visible</div>
+          <div class="mini-copy">${safe(basisText)}</div>
+        </div>
+        <div class="mini-card">
+          <div class="mini-k">Confidence + Limits</div>
+          <div class="mini-v">${safe(confidenceText)}</div>
+          <div class="mini-copy">${top ? safe(top.confidence_narrative) : 'Open a patient record to review supporting detail.'}</div>
+        </div>
+        <div class="mini-card">
+          <div class="mini-k">Data Freshness</div>
+          <div class="mini-v">${safe(freshness.text)}</div>
+          <div class="mini-copy">Source: ${safe(latestSnapshotMeta.data_freshness && latestSnapshotMeta.data_freshness.source_mode, 'snapshot')} · refresh target ${safe(latestSnapshotMeta.data_freshness && latestSnapshotMeta.data_freshness.refresh_interval_seconds, 5)}s.</div>
+        </div>
+        <div class="mini-card">
+          <div class="mini-k">Workflow vs Recommendation</div>
+          <div class="mini-v">Separated</div>
+          <div class="mini-copy">Operational workflow state is tracked separately from supportive clinical recommendation text. ${safe(limitationText)}</div>
+        </div>
+      `;
+    }
+
     function renderModules(){
       renderReportingDashboardModule();
       renderThresholdsModule();
@@ -2565,6 +2681,7 @@ COMMAND_CENTER_HTML = r"""
       renderWorkflowReadinessModule();
       renderOperationsWallSummary();
       renderScenarioGrid();
+      renderDecisionSupportGuardrails();
     }
 
     function rerenderAll(){
