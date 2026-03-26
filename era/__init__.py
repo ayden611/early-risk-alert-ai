@@ -1169,9 +1169,15 @@ def create_app() -> Flask:
             return "Admin password is required."
 
         if admin_password_hash:
-            if not check_password_hash(admin_password_hash, password):
-                return "Invalid admin password."
-            return None
+            try:
+                if not check_password_hash(admin_password_hash, password):
+                    return "Invalid admin password."
+                return None
+            except Exception:
+                # Safe fallback when a plain password was mistakenly stored in ADMIN_PASSWORD_HASH
+                if admin_password_plain and secrets.compare_digest(admin_password_plain, password):
+                    return None
+                return "Admin password hash is invalid. Move the plain password to ADMIN_PASSWORD or replace ADMIN_PASSWORD_HASH with a valid Werkzeug hash."
 
         if admin_password_plain:
             if not secrets.compare_digest(admin_password_plain, password):
@@ -1268,7 +1274,7 @@ def create_app() -> Flask:
     @app.get("/command-center")
     @_login_required
     def command_center():
-        return render_template_string(COMMAND_CENTER_HTML)
+        return Response(COMMAND_CENTER_HTML, mimetype="text/html; charset=utf-8")
 
     @app.get("/api/access-context")
     @_login_required
