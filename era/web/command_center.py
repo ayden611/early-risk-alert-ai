@@ -552,7 +552,7 @@ COMMAND_CENTER_HTML = r"""
   <div class="topbar">
     <div class="topbar-inner">
       <div>
-        <div class="brand-kicker" id="brandKicker">AI-powered predictive clinical intelligence</div>
+        <div class="brand-kicker" id="brandKicker">HCP-facing decision-support and workflow-support</div>
         <div class="brand-title" id="brandTitle">Early Risk Alert AI</div>
         <div class="brand-sub" id="brandSub">Clinical Command Center</div>
       </div>
@@ -562,6 +562,7 @@ COMMAND_CENTER_HTML = r"""
         <a href="/investor-intake">Investor Access</a>
         <a href="/executive-walkthrough">Executive Walkthrough</a>
         <a href="/admin/review">Admin Review</a>
+        <a href="/pilot-docs">Pilot Docs</a>
         <a href="/logout">Logout</a>
       </div>
     </div>
@@ -616,6 +617,7 @@ COMMAND_CENTER_HTML = r"""
             <a class="btn primary" href="/hospital-demo">Request Live Demo</a>
             <a class="btn secondary" href="/investor-intake">Investor Access</a>
             <a class="btn secondary" href="/admin/review">Open Admin Review</a>
+            <a class="btn secondary" href="/pilot-docs">Pilot Docs</a>
             <button class="btn secondary" type="button" onclick="manualRefresh()">Refresh Now</button>
           </div>
 
@@ -628,6 +630,7 @@ COMMAND_CENTER_HTML = r"""
             <div class="status-pill muted" id="lastUpdatedPill">Last Updated</div>
             <div class="status-pill info" id="autoRefreshPill">Auto Refresh On</div>
             <div class="status-pill muted" id="trendDataPill">Trend Sync Pending</div>
+            <div class="status-pill dark" id="pilotVersionPill">Pilot Version</div>
           </div>
         </div>
 
@@ -684,7 +687,7 @@ COMMAND_CENTER_HTML = r"""
           <div class="stat-card">
             <div class="k">Critical Alerts</div>
             <div class="v" id="critical-alerts">0</div>
-            <div class="hint">Highest urgency patients needing immediate attention.</div>
+            <div class="hint">Highest urgency patients needing prompt HCP review within the current access scope.</div>
           </div>
           <div class="stat-card">
             <div class="k">Avg Risk Score</div>
@@ -861,7 +864,7 @@ COMMAND_CENTER_HTML = r"""
           <div class="module-card">
             <div class="module-head">
               <div>
-                <div class="module-title">Predictive Alert Clusters</div>
+                <div class="module-title">Review Alert Clusters</div>
                 <div class="module-sub">Grouped review drivers across visible patients</div>
               </div>
               <div class="status-pill watch">Grouped</div>
@@ -920,7 +923,7 @@ COMMAND_CENTER_HTML = r"""
         </div>
         <div class="roi-grid">
           <div class="mini-card">
-            <div class="mini-k">Early Intervention</div>
+            <div class="mini-k">Earlier Visibility</div>
             <div class="mini-v">Supports</div>
             <div class="mini-copy">Supports earlier prioritization by surfacing visible changes in structured patient summaries before traditional workflow lag.</div>
           </div>
@@ -1025,6 +1028,34 @@ COMMAND_CENTER_HTML = r"""
       </div>
     </section>
 
+
+    <section class="section business-sections">
+      <div class="section-card">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">Pilot Governance + Documentation</h2>
+            <div class="section-sub">One stable intended-use statement, narrow support claims, visible limitations, role/unit scoping, audit controls, and lightweight pilot governance documents kept in one place for hospital and stakeholder review.</div>
+          </div>
+          <div class="section-actions">
+            <a class="btn secondary small" href="/pilot-docs">Open Pilot Docs</a>
+          </div>
+        </div>
+        <div class="audience-grid">
+          <div class="mini-card">
+            <div class="mini-k">Frozen Intended Use</div>
+            <div class="mini-copy" id="intendedUseCard">Early Risk Alert AI is an HCP-facing decision-support and workflow-support software platform intended to assist authorized health care professionals in identifying patients who may warrant further clinical evaluation, supporting patient prioritization, and improving command-center operational awareness. It does not replace clinician judgment and is not intended to diagnose, direct treatment, or independently trigger escalation.</div>
+          </div>
+          <div class="mini-card">
+            <div class="mini-k">Pilot Controls</div>
+            <div class="mini-copy">Outputs are framed as patient prioritization support, explainable review basis, confidence, limitations, freshness, and workflow-support visibility. Workflow controls record operational handling and user action logs only.</div>
+          </div>
+          <div class="mini-card">
+            <div class="mini-k">Governance Set</div>
+            <div class="mini-copy">Pilot Docs includes the regulatory-positioning summary, risk register, V&amp;V-lite sheet, release notes, version marker, and change-log guidance for keeping one stable pilot build.</div>
+          </div>
+        </div>
+      </div>
+    </section>
     <div class="footer">
       Early Risk Alert AI · HCP-Facing Decision-Support and Workflow-Support · Assists Further Clinical Evaluation · Supports Prioritization and Command-Center Awareness · Does Not Replace Clinician Judgment · Not Intended to Diagnose, Direct Treatment, or Independently Trigger Escalation
     </div>
@@ -1612,6 +1643,8 @@ COMMAND_CENTER_HTML = r"""
         const pilotModePill = document.getElementById("pilotModePill");
         const systemBannerPill = document.getElementById("systemBannerPill");
         const unitLockPill = document.getElementById("unitLockPill");
+        const pilotVersionPill = document.getElementById("pilotVersionPill");
+        const intendedUseCard = document.getElementById("intendedUseCard");
 
         if (unitFilter) {
           if (!canViewAllUnits) {
@@ -1632,6 +1665,8 @@ COMMAND_CENTER_HTML = r"""
         if (unitLockPill) {
           unitLockPill.textContent = canViewAllUnits ? "Hospital Scope" : "Unit Locked: " + unitLabel(accessAssignedUnit);
         }
+        if (pilotVersionPill) pilotVersionPill.textContent = "Version: " + safe(data.pilot_version, "pilot");
+        if (intendedUseCard && data.intended_use_statement) intendedUseCard.textContent = data.intended_use_statement;
       }catch(err){
         console.error("access context failed", err);
       }
@@ -2133,7 +2168,7 @@ COMMAND_CENTER_HTML = r"""
 
       panel.innerHTML = `
         <div class="info-line"><strong>AI Insight:</strong> Oxygen saturation is ${spo2 < 94 ? "trending downward" : "being closely monitored"} with ${hr >= 110 ? "rising heart rate pressure" : "emerging physiologic drift"}.</div>
-        <div class="info-line">Predicted deterioration attention is increasing within the ${forecastWindow} based on current review history and workflow state.</div>
+        <div class="info-line">Supportive review attention is increasing within the ${forecastWindow} based on current review history and workflow state.</div>
         <div class="info-line">Recommended response: ${safe(top.recommended_action)}</div>
       `;
     }
