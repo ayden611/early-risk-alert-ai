@@ -110,6 +110,52 @@ PILOT_RELEASE_NOTES = [
 ]
 
 
+DEFAULT_THRESHOLDS: Dict[str, Dict[str, float]] = {
+    "icu": {"spo2_low": 92, "hr_high": 120, "sbp_high": 160},
+    "telemetry": {"spo2_low": 93, "hr_high": 110, "sbp_high": 150},
+    "stepdown": {"spo2_low": 93, "hr_high": 115, "sbp_high": 155},
+    "ward": {"spo2_low": 94, "hr_high": 110, "sbp_high": 150},
+    "rpm": {"spo2_low": 94, "hr_high": 105, "sbp_high": 145},
+    "all": {"spo2_low": 93, "hr_high": 112, "sbp_high": 152},
+}
+
+VALID_UNITS = {"all", "icu", "telemetry", "stepdown", "ward", "rpm"}
+
+ROLE_ACTIONS: Dict[str, set[str]] = {
+    "viewer": {"view"},
+    "operator": {"view", "ack", "assign"},
+    "physician": {"view", "ack", "assign", "escalate", "resolve"},
+    "admin": {"view", "ack", "assign", "escalate", "resolve", "admin"},
+}
+
+HOSPITAL_BRANDS = {
+    "early-risk-alert-ai": {
+        "hospital_name": "Early Risk Alert AI",
+        "brand_name": "Early Risk Alert AI",
+        "brand_tagline": "Clinical Command Center",
+        "brand_primary": "#7aa2ff",
+        "brand_secondary": "#5bd4ff",
+    }
+}
+
+PILOT_ACCOUNTS = {
+    "admin@erapilot.com": {
+        "full_name": "ERA Pilot Admin",
+        "email": "admin@erapilot.com",
+        "user_role": "admin",
+        "assigned_unit": "all",
+        "hospital_brand": "early-risk-alert-ai",
+    },
+    "pilot@earlyriskalertai.com": {
+        "full_name": "Early Risk Alert AI Pilot User",
+        "email": "pilot@earlyriskalertai.com",
+        "user_role": "operator",
+        "assigned_unit": "all",
+        "hospital_brand": "early-risk-alert-ai",
+    },
+}
+
+
 LOGIN_HTML = """
 <!doctype html>
 <html lang="en">
@@ -214,9 +260,6 @@ LOGIN_HTML = """
       <label>Hospital Brand</label>
       <select name="hospital_brand" required>
         <option value="early-risk-alert-ai">Early Risk Alert AI</option>
-        <option value="north-star-medical">North Star Medical Center</option>
-        <option value="summit-regional">Summit Regional Hospital</option>
-        <option value="blue-valley-health">Blue Valley Health</option>
       </select>
 
       <label>Assigned Unit</label>
@@ -582,7 +625,14 @@ def create_app() -> Flask:
 
     def _load_thresholds() -> Dict[str, Dict[str, float]]:
         stored = _read_json_dict(thresholds_file, {})
-        merged = json.loads(json.dumps(DEFAULT_THRESHOLDS))
+        merged = json.loads(json.dumps(DEFAULT_THRESHOLDS or {
+            "icu": {"spo2_low": 92, "hr_high": 120, "sbp_high": 160},
+            "telemetry": {"spo2_low": 93, "hr_high": 110, "sbp_high": 150},
+            "stepdown": {"spo2_low": 93, "hr_high": 115, "sbp_high": 155},
+            "ward": {"spo2_low": 94, "hr_high": 110, "sbp_high": 150},
+            "rpm": {"spo2_low": 94, "hr_high": 105, "sbp_high": 145},
+            "all": {"spo2_low": 93, "hr_high": 112, "sbp_high": 152},
+        }))
         for unit, values in stored.items():
             if unit in merged and isinstance(values, dict):
                 merged[unit].update(
