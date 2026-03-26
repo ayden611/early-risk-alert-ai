@@ -711,7 +711,7 @@ COMMAND_CENTER_HTML = r"""
             </div>
 
             <div class="intel-card">
-              <h3>Top Priority Queue</h3>
+              <h3>Review Priority Queue</h3>
               <div class="queue-list" id="top-risk-list"></div>
             </div>
 
@@ -730,7 +730,7 @@ COMMAND_CENTER_HTML = r"""
             </div>
 
             <div class="intel-card">
-              <h3>Workflow Snapshot</h3>
+              <h3>Workflow Tracking Status</h3>
               <div class="queue-list">
                 <div class="queue-item">
                   <div class="queue-copy">Open Review Items <strong id="wf-new">0</strong></div>
@@ -1066,12 +1066,28 @@ COMMAND_CENTER_HTML = r"""
             <div class="mini-copy" id="bannedClaimsCard">Avoid autonomous-detection, bedside-treatment, diagnosis, and immediate-escalation claims in the pilot build.</div>
           </div>
           <div class="mini-card">
+            <div class="mini-k">Claims Control</div>
+            <div class="mini-copy" id="claimsControlCard">Maintain one governed list of approved and banned claims with owner, rationale, and last review date.</div>
+          </div>
+          <div class="mini-card">
             <div class="mini-k">Change Control</div>
             <div class="mini-copy" id="changeControlCard">Keep one stable intended-use statement, maintain visible review basis, and preserve role/unit scoping with audit controls.</div>
           </div>
           <div class="mini-card">
+            <div class="mini-k">Document Control Index</div>
+            <div class="mini-copy" id="documentControlCard">Track governance documents by version, owner, status, last updated date, and pilot applicability.</div>
+          </div>
+          <div class="mini-card">
             <div class="mini-k">Cybersecurity Summary</div>
-            <div class="mini-copy" id="cyberSummaryCard">Access control, patching, vulnerability handling, backup/recovery, and incident handling are kept in the pilot governance set.</div>
+            <div class="mini-copy" id="cyberSummaryCard">Access control, password policy, patching, vulnerability handling, backup/restore, and incident handling are kept in the pilot governance set.</div>
+          </div>
+          <div class="mini-card">
+            <div class="mini-k">Access + Data Handling</div>
+            <div class="mini-copy" id="accessDataCard">Provisioning, deprovisioning, retention, return, deletion, and pilot closeout handling are documented for controlled review.</div>
+          </div>
+          <div class="mini-card">
+            <div class="mini-k">Validation Packet</div>
+            <div class="mini-copy" id="validationEvidenceCard">Dated test evidence links expected results, actual results, reviewer, and screenshot evidence for the stable pilot bundle.</div>
           </div>
           <div class="mini-card">
             <div class="mini-k">Issue &amp; Change Logs</div>
@@ -1704,8 +1720,12 @@ COMMAND_CENTER_HTML = r"""
       const supportedInputsCard = document.getElementById("supportedInputsCard");
       const approvedClaimsCard = document.getElementById("approvedClaimsCard");
       const bannedClaimsCard = document.getElementById("bannedClaimsCard");
+      const claimsControlCard = document.getElementById("claimsControlCard");
       const changeControlCard = document.getElementById("changeControlCard");
+      const documentControlCard = document.getElementById("documentControlCard");
       const cyberSummaryCard = document.getElementById("cyberSummaryCard");
+      const accessDataCard = document.getElementById("accessDataCard");
+      const validationEvidenceCard = document.getElementById("validationEvidenceCard");
       const issueChangeCard = document.getElementById("issueChangeCard");
       const heroCopy = document.getElementById("heroCopy");
 
@@ -1713,18 +1733,32 @@ COMMAND_CENTER_HTML = r"""
       const supportedInputs = platformPositioning.supported_inputs || pilotGovernance.supported_inputs || [];
       const approvedClaims = platformPositioning.approved_claims || pilotGovernance.approved_claims || [];
       const bannedClaims = platformPositioning.banned_claims || pilotGovernance.banned_claims || [];
+      const claimsControlSheet = platformPositioning.claims_control_sheet || pilotGovernance.claims_control_sheet || [];
       const changeControl = pilotGovernance.change_control || [];
       const cyberSummary = pilotGovernance.cybersecurity_summary || [];
       const issueLog = pilotGovernance.complaint_issue_log || [];
       const changeApprovals = pilotGovernance.change_approval_log || [];
+      const documentControlIndex = pilotGovernance.document_control_index || [];
+      const validationEvidence = pilotGovernance.dated_validation_evidence || [];
+      const accessPolicies = pilotGovernance.user_provisioning_policy || [];
+      const dataPolicies = pilotGovernance.data_retention_policy || [];
 
       if (intendedUseCard && intendedUse) intendedUseCard.textContent = intendedUse;
       if (heroCopy && intendedUse) heroCopy.textContent = intendedUse;
       if (supportedInputsCard && supportedInputs.length) supportedInputsCard.textContent = supportedInputs.join(" · ");
       if (approvedClaimsCard && approvedClaims.length) approvedClaimsCard.textContent = approvedClaims.slice(0, 4).join(" · ");
       if (bannedClaimsCard && bannedClaims.length) bannedClaimsCard.textContent = bannedClaims.slice(0, 4).join(" · ");
+      if (claimsControlCard && claimsControlSheet.length) claimsControlCard.textContent = claimsControlSheet.slice(0, 3).map(item => `${item.status}: ${item.claim}`).join(" · ");
       if (changeControlCard && changeControl.length) changeControlCard.textContent = changeControl.slice(0, 3).join(" · ");
-      if (cyberSummaryCard && cyberSummary.length) cyberSummaryCard.textContent = cyberSummary.map(item => item.domain || item.control || "").filter(Boolean).slice(0, 5).join(" · ");
+      if (documentControlCard && documentControlIndex.length) documentControlCard.textContent = documentControlIndex.slice(0, 4).map(item => `${item.document_name} (${item.version})`).join(" · ");
+      if (cyberSummaryCard && cyberSummary.length) cyberSummaryCard.textContent = cyberSummary.map(item => item.domain || item.control || "").filter(Boolean).slice(0, 6).join(" · ");
+      if (accessDataCard) {
+        const parts = [];
+        if (accessPolicies.length) parts.push(`${accessPolicies.length} access-policy step${accessPolicies.length === 1 ? "" : "s"}`);
+        if (dataPolicies.length) parts.push(`${dataPolicies.length} data-handling topic${dataPolicies.length === 1 ? "" : "s"}`);
+        if (parts.length) accessDataCard.textContent = parts.join(" · ");
+      }
+      if (validationEvidenceCard && validationEvidence.length) validationEvidenceCard.textContent = validationEvidence.slice(0, 3).map(item => `${item.test_case_id} ${item.status}`).join(" · ");
       if (issueChangeCard) {
         const parts = [];
         if (issueLog.length) parts.push(`${issueLog.length} issue log entr${issueLog.length === 1 ? "y" : "ies"}`);
@@ -2592,7 +2626,7 @@ COMMAND_CENTER_HTML = r"""
       const top = getTopRiskPatient();
       const target = document.getElementById("forecast-module");
       if (!top){
-        target.innerHTML = `<div class="mini-copy">No priority review forecast available in current scope.</div>`;
+        target.innerHTML = `<div class="mini-copy">No near-term review context available in current scope.</div>`;
         return;
       }
 
@@ -2612,7 +2646,7 @@ COMMAND_CENTER_HTML = r"""
           <div class="mini-card">
             <div class="mini-k">Supportive Review Visibility</div>
             <div class="mini-v">${forecastPct}%</div>
-            <div class="mini-copy">Supportive review visibility based on current monitored context.</div>
+            <div class="mini-copy">Supportive review visibility based on current monitored context and recent trend movement.</div>
           </div>
         </div>
       `;
@@ -2764,7 +2798,7 @@ COMMAND_CENTER_HTML = r"""
         </div>
         <div class="mini-card">
           <div class="mini-k">Review Priority</div>
-          <div class="mini-copy">Supportive review logic elevates patient-priority attention and places the patient in the top review view.</div>
+          <div class="mini-copy">Supportive review logic raises review visibility for this patient and places the patient in the current review-priority view.</div>
         </div>
         <div class="mini-card">
           <div class="mini-k">Workflow Action</div>
