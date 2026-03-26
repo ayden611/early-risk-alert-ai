@@ -1,6 +1,6 @@
 # Early Risk Alert AI
 
-Early Risk Alert AI is a real-time predictive healthcare platform designed to help hospitals detect patient deterioration earlier, prioritize risk, and improve clinical response timing.
+Early Risk Alert AI is an HCP-facing decision-support and workflow-support platform intended to assist authorized health care professionals in identifying patients who may warrant further clinical evaluation, support patient prioritization, and improve command-center operational awareness. It does not replace clinician judgment and is not intended to diagnose, direct treatment, or independently trigger escalation.
 
 ---
 
@@ -33,10 +33,9 @@ The platform transforms reactive monitoring into proactive, data-driven interven
 ---
 
 ## Security & Pilot Controls
-
 Early Risk Alert AI is designed with pilot-safe operational controls for healthcare environments, including authenticated access, role-based permissions, unit-restricted visibility, secure session handling, audit-aware workflows, and protected cloud configuration.
 
-The platform is built for controlled pilot evaluation and clinical decision-support use, with administrative safeguards aligned to hospital onboarding, compliance review, and secure deployment expectations.
+The platform is built to support controlled pilot evaluation and HCP-facing decision-support use, with administrative safeguards aligned to hospital onboarding processes, compliance review expectations, and secure deployment standards.
 
 ## Technology Stack
 
