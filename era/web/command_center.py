@@ -558,7 +558,7 @@ COMMAND_CENTER_HTML = r"""
       </div>
       <div class="nav-links">
         <a href="/command-center">Command Center</a>
-        <a href="/hospital-demo">Hospital Demo</a>
+        <a href="/hospital-demo">Hospital Pilot Discussion</a>
         <a href="/investor-intake">Investor Access</a>
         <a href="/executive-walkthrough">Executive Walkthrough</a>
         <a href="/admin/review">Admin Review</a>
@@ -592,7 +592,7 @@ COMMAND_CENTER_HTML = r"""
             <div class="status-pill live-dot" id="liveSystemPill">Live System</div>
             <div class="status-pill muted" id="lastUpdatedPillTop">Last Updated --</div>
             <div class="status-pill muted" id="dataFreshnessPill">Data Freshness --</div>
-            <div class="status-pill info" id="topRiskPill">Top Risk Patient --</div>
+            <div class="status-pill info" id="topRiskPill">Top Priority Patient --</div>
           </div>
 
           <div class="meta-pills">
@@ -614,7 +614,7 @@ COMMAND_CENTER_HTML = r"""
           </p>
 
           <div class="hero-actions">
-            <a class="btn primary" href="/hospital-demo">Request Live Demo</a>
+            <a class="btn primary" href="/hospital-demo">Request Demo Access</a>
             <a class="btn secondary" href="/investor-intake">Investor Access</a>
             <a class="btn secondary" href="/admin/review">Open Admin Review</a>
             <a class="btn secondary" href="/pilot-docs">Pilot Docs</a>
@@ -680,14 +680,14 @@ COMMAND_CENTER_HTML = r"""
 
         <div class="telemetry-top">
           <div class="stat-card">
-            <div class="k">Open Alerts</div>
+            <div class="k">Open Review Items</div>
             <div class="v" id="open-alerts">0</div>
-            <div class="hint">Active alert count within your current access scope.</div>
+            <div class="hint">Active review-item count within your current access scope.</div>
           </div>
           <div class="stat-card">
-            <div class="k">Critical Alerts</div>
+            <div class="k">Critical Review Items</div>
             <div class="v" id="critical-alerts">0</div>
-            <div class="hint">Highest urgency patients needing prompt HCP review within the current access scope.</div>
+            <div class="hint">Highest-priority patients needing prompt HCP review within the current access scope.</div>
           </div>
           <div class="stat-card">
             <div class="k">Avg Risk Score</div>
@@ -706,26 +706,26 @@ COMMAND_CENTER_HTML = r"""
 
           <div class="side-stack">
             <div class="intel-card">
-              <h3>Live Alerts Feed</h3>
+              <h3>Live Review Feed</h3>
               <div class="alert-feed" id="queue"></div>
             </div>
 
             <div class="intel-card">
-              <h3>Top Risk Queue</h3>
+              <h3>Top Priority Queue</h3>
               <div class="queue-list" id="top-risk-list"></div>
             </div>
 
             <div class="intel-card">
-              <h3>AI Clinical Reasoning</h3>
+              <h3>Explainable Review Context</h3>
               <div class="why-now" id="ai-reasoning-panel">
                 <div class="why-line">Waiting for patient intelligence stream...</div>
               </div>
             </div>
 
             <div class="intel-card">
-              <h3>AI Insight</h3>
+              <h3>Review Priority Insight</h3>
               <div class="insight-list" id="ai-insight-panel">
-                <div class="info-line">Waiting for active deterioration insight...</div>
+                <div class="info-line">Waiting for active review-priority insight...</div>
               </div>
             </div>
 
@@ -733,7 +733,7 @@ COMMAND_CENTER_HTML = r"""
               <h3>Workflow Snapshot</h3>
               <div class="queue-list">
                 <div class="queue-item">
-                  <div class="queue-copy">New Alerts <strong id="wf-new">0</strong></div>
+                  <div class="queue-copy">Open Review Items <strong id="wf-new">0</strong></div>
                   <div class="status-pill watch">Open</div>
                 </div>
                 <div class="queue-item">
@@ -831,8 +831,8 @@ COMMAND_CENTER_HTML = r"""
           <div class="module-card">
             <div class="module-head">
               <div>
-                <div class="module-title">Risk Prediction Timeline</div>
-                <div class="module-sub">Near-term risk progression from stored trend history</div>
+                <div class="module-title">Risk-Support Timeline</div>
+                <div class="module-sub">Near-term review-priority trend from stored history</div>
               </div>
               <div class="status-pill info">AI</div>
             </div>
@@ -853,8 +853,8 @@ COMMAND_CENTER_HTML = r"""
           <div class="module-card">
             <div class="module-head">
               <div>
-                <div class="module-title">Deterioration Forecast</div>
-                <div class="module-sub">Supportive forecast, not clinical instruction</div>
+                <div class="module-title">Priority Review Forecast</div>
+                <div class="module-sub">Supportive review forecast, not clinical instruction</div>
               </div>
               <div class="status-pill critical">Priority</div>
             </div>
@@ -864,7 +864,7 @@ COMMAND_CENTER_HTML = r"""
           <div class="module-card">
             <div class="module-head">
               <div>
-                <div class="module-title">Review Alert Clusters</div>
+                <div class="module-title">Review Priority Clusters</div>
                 <div class="module-sub">Grouped review drivers across visible patients</div>
               </div>
               <div class="status-pill watch">Grouped</div>
@@ -928,9 +928,9 @@ COMMAND_CENTER_HTML = r"""
             <div class="mini-copy">Supports earlier prioritization by surfacing visible changes in structured patient summaries before traditional workflow lag.</div>
           </div>
           <div class="mini-card">
-            <div class="mini-k">Escalation Risk</div>
+            <div class="mini-k">Workflow Priority Exposure</div>
             <div class="mini-v">Potential</div>
-            <div class="mini-copy">Potential reduction in escalation risk through earlier prioritization and clearer operational visibility.</div>
+            <div class="mini-copy">Supports earlier prioritization and clearer operational visibility across monitored patients and units.</div>
           </div>
           <div class="mini-card">
             <div class="mini-k">Monitoring Visibility</div>
@@ -957,7 +957,7 @@ COMMAND_CENTER_HTML = r"""
         <div class="audience-grid">
           <div class="mini-card">
             <div class="mini-k">Hospitals</div>
-            <div class="mini-copy">Command-center visibility for monitored patients, response workflows, and unit-level alert prioritization.</div>
+            <div class="mini-copy">Command-center visibility for monitored patients, workflow coordination, and unit-level patient prioritization support.</div>
           </div>
           <div class="mini-card">
             <div class="mini-k">Clinical Leaders</div>
@@ -965,7 +965,7 @@ COMMAND_CENTER_HTML = r"""
           </div>
           <div class="mini-card">
             <div class="mini-k">RPM Programs</div>
-            <div class="mini-copy">Home monitoring visibility with supportive AI insights and escalation-aware workflow tracking.</div>
+            <div class="mini-copy">Home monitoring visibility with supportive review context and workflow-aware tracking.</div>
           </div>
           <div class="mini-card">
             <div class="mini-k">Investors / Partners</div>
@@ -979,8 +979,8 @@ COMMAND_CENTER_HTML = r"""
       <div class="section-card">
         <div class="section-head">
           <div>
-            <h2 class="section-title">Early Detection Scenario</h2>
-            <div class="section-sub">Demonstrates the product story: supportive AI reasoning, earlier visibility, and structured workflow action.</div>
+            <h2 class="section-title">Earlier Review Visibility Scenario</h2>
+            <div class="section-sub">Demonstrates the product story: supportive review context, earlier visibility, and structured workflow handling.</div>
           </div>
         </div>
         <div class="scenario-grid" id="scenario-grid"></div>
@@ -1001,12 +1001,12 @@ COMMAND_CENTER_HTML = r"""
             <div class="mini-copy">Structured patient summaries and operational workflow states are organized into a command-center review workflow.</div>
           </div>
           <div class="mini-card">
-            <div class="mini-k">2. Detect</div>
-            <div class="mini-copy">Review logic highlights rising risk, change drift, and deterioration patterns needing attention.</div>
+            <div class="mini-k">2. Review</div>
+            <div class="mini-copy">Review logic highlights rising risk, change drift, and reviewable trend patterns needing attention.</div>
           </div>
           <div class="mini-card">
             <div class="mini-k">3. Prioritize</div>
-            <div class="mini-copy">High-risk patients rise to the top with explainable reasons, trend summaries, and recommended next steps.</div>
+            <div class="mini-copy">Patients who may warrant further review rise to the top with explainable reasons, trend summaries, and supportive next-step context.</div>
           </div>
           <div class="mini-card">
             <div class="mini-k">4. Coordinate</div>
@@ -1053,11 +1053,23 @@ COMMAND_CENTER_HTML = r"""
             <div class="mini-k">Governance Set</div>
             <div class="mini-copy">Pilot Docs includes the regulatory-positioning summary, risk register, V&amp;V-lite sheet, release notes, locked stable build marker, and change-control guidance for keeping one stable pilot build.</div>
           </div>
+          <div class="mini-card">
+            <div class="mini-k">Supported Inputs</div>
+            <div class="mini-copy" id="supportedInputsCard">Structured patient medical information, trended vital-sign summaries, monitored patient context, workflow state, and review context available to the HCP.</div>
+          </div>
+          <div class="mini-card">
+            <div class="mini-k">Avoid Claims</div>
+            <div class="mini-copy" id="avoidClaimsCard">Avoid autonomous-detection, bedside-treatment, and immediate-escalation claims in the pilot build.</div>
+          </div>
+          <div class="mini-card">
+            <div class="mini-k">Change Control</div>
+            <div class="mini-copy" id="changeControlCard">Keep one stable intended-use statement, maintain visible review basis, and preserve role/unit scoping with audit controls.</div>
+          </div>
         </div>
       </div>
     </section>
     <div class="footer">
-      Early Risk Alert AI · HCP-Facing Decision-Support and Workflow-Support · Assists Further Clinical Evaluation · Supports Prioritization and Command-Center Awareness · Does Not Replace Clinician Judgment · Not Intended to Diagnose, Direct Treatment, or Independently Trigger Escalation
+      Early Risk Alert AI · HCP-Facing Decision-Support and Workflow-Support · Supports Further Clinical Evaluation, Patient Prioritization, and Command-Center Operational Awareness · Does Not Replace Clinician Judgment · Not Intended to Diagnose, Direct Treatment, or Independently Trigger Escalation
     </div>
   </div>
 
@@ -1073,7 +1085,7 @@ COMMAND_CENTER_HTML = r"""
     </div>
 
     <div class="drawer-block">
-      <div class="drawer-k">Clinical Summary</div>
+      <div class="drawer-k">Review Summary</div>
       <div class="drawer-v" id="drawerSummary">Waiting for patient selection.</div>
     </div>
 
@@ -1097,7 +1109,7 @@ COMMAND_CENTER_HTML = r"""
     </div>
 
     <div class="drawer-block">
-      <div class="drawer-k">Suggested Next Review (Supportive / HCP-Facing)</div>
+      <div class="drawer-k">Supportive Next Review Context (HCP-Facing)</div>
       <div class="drawer-v" id="drawerAction">--</div>
       <div class="note-box" style="margin-top:10px;">This recommendation is HCP-facing decision support only. It assists further clinical evaluation and does not replace clinician judgment or independently trigger escalation.</div>
     </div>
@@ -1208,6 +1220,8 @@ COMMAND_CENTER_HTML = r"""
     let refreshIntervalMs = 5000;
     let refreshTimer = null;
     let refreshInFlight = false;
+    let platformPositioning = {};
+    let pilotGovernance = {};
 
     const DEFAULT_THRESHOLDS = {
       icu: {spo2_low:92, hr_high:120, sbp_high:160},
@@ -1667,8 +1681,43 @@ COMMAND_CENTER_HTML = r"""
         }
         if (pilotVersionPill) pilotVersionPill.textContent = safe(data.pilot_build_state, "Locked Stable Pilot Build") + " · " + safe(data.pilot_version, "pilot");
         if (intendedUseCard && data.intended_use_statement) intendedUseCard.textContent = data.intended_use_statement;
+        applyPilotGovernance();
       }catch(err){
         console.error("access context failed", err);
+      }
+    }
+
+    function applyPilotGovernance(){
+      const intendedUseCard = document.getElementById("intendedUseCard");
+      const supportedInputsCard = document.getElementById("supportedInputsCard");
+      const avoidClaimsCard = document.getElementById("avoidClaimsCard");
+      const changeControlCard = document.getElementById("changeControlCard");
+      const heroCopy = document.getElementById("heroCopy");
+
+      const intendedUse = platformPositioning.intended_use_statement || pilotGovernance.intended_use_statement || "";
+      const supportedInputs = platformPositioning.supported_inputs || pilotGovernance.supported_inputs || [];
+      const avoidClaims = platformPositioning.avoid_claims || pilotGovernance.avoid_claims || [];
+      const changeControl = pilotGovernance.change_control || [];
+
+      if (intendedUseCard && intendedUse) intendedUseCard.textContent = intendedUse;
+      if (heroCopy && intendedUse) heroCopy.textContent = intendedUse;
+      if (supportedInputsCard && supportedInputs.length) supportedInputsCard.textContent = supportedInputs.join(" · ");
+      if (avoidClaimsCard && avoidClaims.length) avoidClaimsCard.textContent = avoidClaims.join(" · ");
+      if (changeControlCard && changeControl.length) changeControlCard.textContent = changeControl.slice(0, 3).join(" · ");
+    }
+
+    async function loadPilotGovernance(){
+      try{
+        const [positionRes, governanceRes] = await Promise.all([
+          fetch("/api/platform-positioning", {cache:"no-store"}),
+          fetch("/api/pilot-governance", {cache:"no-store"})
+        ]);
+
+        if (positionRes.ok) platformPositioning = await positionRes.json();
+        if (governanceRes.ok) pilotGovernance = await governanceRes.json();
+        applyPilotGovernance();
+      }catch(err){
+        console.error("pilot governance load failed", err);
       }
     }
 
@@ -2119,7 +2168,7 @@ COMMAND_CENTER_HTML = r"""
     function renderAlertsList(){
       const source = filterAlertsByUnit(activeAlerts).slice(0,6);
       document.getElementById("queue").innerHTML = source.map(renderAlert).join("") || `
-        <div class="alert-item"><div><div class="alert-copy">No active alerts in current scope.</div></div><div class="status-pill live">Clear</div></div>
+        <div class="alert-item"><div><div class="alert-copy">No active review items in current scope.</div></div><div class="status-pill live">Clear</div></div>
       `;
     }
 
@@ -2158,7 +2207,7 @@ COMMAND_CENTER_HTML = r"""
       const panel = document.getElementById("ai-insight-panel");
 
       if (!top){
-        panel.innerHTML = `<div class="info-line">Waiting for active deterioration insight...</div>`;
+        panel.innerHTML = `<div class="info-line">Waiting for active review-priority insight...</div>`;
         return;
       }
 
@@ -2167,9 +2216,9 @@ COMMAND_CENTER_HTML = r"""
       const forecastWindow = safeNumber(top.risk_score) >= 7 ? "next 60 minutes" : "next monitoring interval";
 
       panel.innerHTML = `
-        <div class="info-line"><strong>AI Insight:</strong> Oxygen saturation is ${spo2 < 94 ? "trending downward" : "being closely monitored"} with ${hr >= 110 ? "rising heart rate pressure" : "emerging physiologic drift"}.</div>
+        <div class="info-line"><strong>Review Insight:</strong> Oxygen saturation is ${spo2 < 94 ? "trending downward" : "being closely monitored"} with ${hr >= 110 ? "rising heart rate pressure" : "emerging physiologic drift"}.</div>
         <div class="info-line">Supportive review attention is increasing within the ${forecastWindow} based on current review history and workflow state.</div>
-        <div class="info-line">Recommended response: ${safe(top.recommended_action)}</div>
+        <div class="info-line">Supportive next review context: ${safe(top.recommended_action)}</div>
       `;
     }
 
@@ -2193,7 +2242,7 @@ COMMAND_CENTER_HTML = r"""
         <div class="queue-item"><div class="queue-copy">Assigned Unit</div><div class="status-pill watch">${unitLabel(accessAssignedUnit)}</div></div>
         <div class="queue-item"><div class="queue-copy">System Status</div><div class="status-pill ${healthy ? 'live' : 'critical'}">${healthy ? 'Connected' : safe(status, 'unknown')}</div></div>
         <div class="queue-item"><div class="queue-copy">Patients in Feed</div><div class="status-pill muted">${safe(lastSystemHealth.patient_count, activePatients.length)}</div></div>
-        <div class="queue-item"><div class="queue-copy">Critical Alerts</div><div class="status-pill critical">${safe(lastSystemHealth.critical_alerts, 0)}</div></div>
+        <div class="queue-item"><div class="queue-copy">Critical Review Items</div><div class="status-pill critical">${safe(lastSystemHealth.critical_alerts, 0)}</div></div>
       `;
     }
 
@@ -2276,7 +2325,7 @@ COMMAND_CENTER_HTML = r"""
         </div>
         <div class="timeline-item">
           <div class="timeline-time">-30 Min</div>
-          <div class="timeline-copy">HCP-facing decision-support logic elevated deterioration attention before standard threshold-only workflow.</div>
+          <div class="timeline-copy">HCP-facing decision-support logic elevated review priority before standard threshold-only workflow.</div>
         </div>
         <div class="timeline-item">
           <div class="timeline-time">Action</div>
@@ -2292,7 +2341,7 @@ COMMAND_CENTER_HTML = r"""
           <div class="audit-item">
             <div>
               <div class="audit-copy">System initialized</div>
-              <div class="audit-sub">Awaiting user workflow actions in current role / unit scope</div>
+              <div class="audit-sub">Awaiting user workflow actions within the current role and unit scope</div>
             </div>
             <div class="status-pill info">Log</div>
           </div>
@@ -2516,7 +2565,7 @@ COMMAND_CENTER_HTML = r"""
       const top = getTopRiskPatient();
       const target = document.getElementById("forecast-module");
       if (!top){
-        target.innerHTML = `<div class="mini-copy">No deterioration forecast available in current scope.</div>`;
+        target.innerHTML = `<div class="mini-copy">No priority review forecast available in current scope.</div>`;
         return;
       }
 
@@ -2536,7 +2585,7 @@ COMMAND_CENTER_HTML = r"""
           <div class="mini-card">
             <div class="mini-k">Forecast Attention</div>
             <div class="mini-v">${forecastPct}%</div>
-            <div class="mini-copy">Supportive deterioration attention within next 60 minutes.</div>
+            <div class="mini-copy">Supportive review attention within the next 60 minutes.</div>
           </div>
         </div>
       `;
@@ -2664,7 +2713,7 @@ COMMAND_CENTER_HTML = r"""
         <div class="mini-card">
           <div class="mini-k">Alerts in Scope</div>
           <div class="mini-v">${alerts.length}</div>
-          <div class="mini-copy">Alert workload displayed for wall mode and executive walkthrough presentation.</div>
+          <div class="mini-copy">Review workload displayed for wall mode and executive walkthrough presentation.</div>
         </div>
       `;
     }
@@ -2675,7 +2724,7 @@ COMMAND_CENTER_HTML = r"""
       if (!top){
         target.innerHTML = `
           <div class="mini-card"><div class="mini-k">Change Summary</div><div class="mini-copy">No monitored change currently visible.</div></div>
-          <div class="mini-card"><div class="mini-k">AI Detection</div><div class="mini-copy">AI detection panel waits for active patient risk.</div></div>
+          <div class="mini-card"><div class="mini-k">Review Priority</div><div class="mini-copy">Review-priority panel waits for an active patient record.</div></div>
           <div class="mini-card"><div class="mini-k">Workflow Action</div><div class="mini-copy">Workflow action becomes available when patient risk is visible.</div></div>
         `;
         return;
@@ -2687,8 +2736,8 @@ COMMAND_CENTER_HTML = r"""
           <div class="mini-copy">${safe(top.name)} shows visible change across reviewed oxygen saturation, heart rate, or blood pressure summaries.</div>
         </div>
         <div class="mini-card">
-          <div class="mini-k">AI Detection</div>
-          <div class="mini-copy">Supportive review logic elevates deterioration attention and places the patient in the top risk view.</div>
+          <div class="mini-k">Review Priority</div>
+          <div class="mini-copy">Supportive review logic elevates patient-priority attention and places the patient in the top review view.</div>
         </div>
         <div class="mini-card">
           <div class="mini-k">Workflow Action</div>
@@ -2718,7 +2767,7 @@ COMMAND_CENTER_HTML = r"""
       if (lastUpdatedPillTop) lastUpdatedPillTop.textContent = timeText;
 
       const top = getTopRiskPatient();
-      const topRiskText = top ? `Top Risk: ${safe(top.bed)} (${patientRiskPercent(top)}%)` : "Top Risk Patient --";
+      const topRiskText = top ? `Top Priority: ${safe(top.bed)} (${patientRiskPercent(top)}%)` : "Top Priority Patient --";
       const topRiskPill = document.getElementById("topRiskPill");
       if (topRiskPill) topRiskPill.textContent = topRiskText;
 
@@ -2815,6 +2864,7 @@ COMMAND_CENTER_HTML = r"""
 
     async function boot(){
       await loadAccessContext();
+      await loadPilotGovernance();
       await loadThresholds();
       await loadWorkflowState();
       await loadPersistentAudit();
