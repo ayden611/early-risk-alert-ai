@@ -687,7 +687,7 @@ COMMAND_CENTER_HTML = r"""
           <div class="stat-card">
             <div class="k">Critical Review Items</div>
             <div class="v" id="critical-alerts">0</div>
-            <div class="hint">Highest-priority patients needing prompt HCP review within the current access scope.</div>
+            <div class="hint">Highest-priority patients visible for HCP review within the current access scope.</div>
           </div>
           <div class="stat-card">
             <div class="k">Avg Risk Score</div>
@@ -723,7 +723,7 @@ COMMAND_CENTER_HTML = r"""
             </div>
 
             <div class="intel-card">
-              <h3>Review Priority Insight</h3>
+              <h3>Review Priority Summary</h3>
               <div class="insight-list" id="ai-insight-panel">
                 <div class="info-line">Waiting for active review-priority insight...</div>
               </div>
@@ -853,8 +853,8 @@ COMMAND_CENTER_HTML = r"""
           <div class="module-card">
             <div class="module-head">
               <div>
-                <div class="module-title">Priority Review Forecast</div>
-                <div class="module-sub">Supportive review forecast, not clinical instruction</div>
+                <div class="module-title">Near-Term Review Context</div>
+                <div class="module-sub">Supportive review context, not clinical instruction</div>
               </div>
               <div class="status-pill critical">Priority</div>
             </div>
@@ -939,8 +939,8 @@ COMMAND_CENTER_HTML = r"""
           </div>
           <div class="mini-card">
             <div class="mini-k">Workflow Readiness</div>
-            <div class="mini-v">Faster</div>
-            <div class="mini-copy">Supports faster operational acknowledgment, assignment, escalation, and resolution tracking.</div>
+            <div class="mini-v">Tracked</div>
+            <div class="mini-copy">Supports workflow tracking across acknowledgment, assignment, escalation logging, and resolution status.</div>
           </div>
         </div>
       </div>
@@ -1002,7 +1002,7 @@ COMMAND_CENTER_HTML = r"""
           </div>
           <div class="mini-card">
             <div class="mini-k">2. Review</div>
-            <div class="mini-copy">Review logic highlights rising risk, change drift, and reviewable trend patterns needing attention.</div>
+            <div class="mini-copy">Review logic highlights changing context, reviewable trend patterns, and monitored factors that may warrant further review.</div>
           </div>
           <div class="mini-card">
             <div class="mini-k">3. Prioritize</div>
@@ -1051,19 +1051,31 @@ COMMAND_CENTER_HTML = r"""
           </div>
           <div class="mini-card">
             <div class="mini-k">Governance Set</div>
-            <div class="mini-copy">Pilot Docs includes the regulatory-positioning summary, risk register, V&amp;V-lite sheet, release notes, locked stable build marker, and change-control guidance for keeping one stable pilot build.</div>
+            <div class="mini-copy">Pilot Docs includes the regulatory-positioning summary, risk register, complaint / issue log, change approvals, cybersecurity summary, access policies, training sheet, dated validation evidence, and release-controlled documentation.</div>
           </div>
           <div class="mini-card">
             <div class="mini-k">Supported Inputs</div>
             <div class="mini-copy" id="supportedInputsCard">Structured patient medical information, trended vital-sign summaries, monitored patient context, workflow state, and review context available to the HCP.</div>
           </div>
           <div class="mini-card">
-            <div class="mini-k">Avoid Claims</div>
-            <div class="mini-copy" id="avoidClaimsCard">Avoid autonomous-detection, bedside-treatment, and immediate-escalation claims in the pilot build.</div>
+            <div class="mini-k">Approved Claims</div>
+            <div class="mini-copy" id="approvedClaimsCard">Store only approved support claims tied to patient prioritization, explainability, and command-center workflow awareness.</div>
+          </div>
+          <div class="mini-card">
+            <div class="mini-k">Banned Claims</div>
+            <div class="mini-copy" id="bannedClaimsCard">Avoid autonomous-detection, bedside-treatment, diagnosis, and immediate-escalation claims in the pilot build.</div>
           </div>
           <div class="mini-card">
             <div class="mini-k">Change Control</div>
             <div class="mini-copy" id="changeControlCard">Keep one stable intended-use statement, maintain visible review basis, and preserve role/unit scoping with audit controls.</div>
+          </div>
+          <div class="mini-card">
+            <div class="mini-k">Cybersecurity Summary</div>
+            <div class="mini-copy" id="cyberSummaryCard">Access control, patching, vulnerability handling, backup/recovery, and incident handling are kept in the pilot governance set.</div>
+          </div>
+          <div class="mini-card">
+            <div class="mini-k">Issue &amp; Change Logs</div>
+            <div class="mini-copy" id="issueChangeCard">Complaint / issue logging, escalation paths, and change approvals are tracked in one pilot documentation set.</div>
           </div>
         </div>
       </div>
@@ -1690,20 +1702,35 @@ COMMAND_CENTER_HTML = r"""
     function applyPilotGovernance(){
       const intendedUseCard = document.getElementById("intendedUseCard");
       const supportedInputsCard = document.getElementById("supportedInputsCard");
-      const avoidClaimsCard = document.getElementById("avoidClaimsCard");
+      const approvedClaimsCard = document.getElementById("approvedClaimsCard");
+      const bannedClaimsCard = document.getElementById("bannedClaimsCard");
       const changeControlCard = document.getElementById("changeControlCard");
+      const cyberSummaryCard = document.getElementById("cyberSummaryCard");
+      const issueChangeCard = document.getElementById("issueChangeCard");
       const heroCopy = document.getElementById("heroCopy");
 
       const intendedUse = platformPositioning.intended_use_statement || pilotGovernance.intended_use_statement || "";
       const supportedInputs = platformPositioning.supported_inputs || pilotGovernance.supported_inputs || [];
-      const avoidClaims = platformPositioning.avoid_claims || pilotGovernance.avoid_claims || [];
+      const approvedClaims = platformPositioning.approved_claims || pilotGovernance.approved_claims || [];
+      const bannedClaims = platformPositioning.banned_claims || pilotGovernance.banned_claims || [];
       const changeControl = pilotGovernance.change_control || [];
+      const cyberSummary = pilotGovernance.cybersecurity_summary || [];
+      const issueLog = pilotGovernance.complaint_issue_log || [];
+      const changeApprovals = pilotGovernance.change_approval_log || [];
 
       if (intendedUseCard && intendedUse) intendedUseCard.textContent = intendedUse;
       if (heroCopy && intendedUse) heroCopy.textContent = intendedUse;
       if (supportedInputsCard && supportedInputs.length) supportedInputsCard.textContent = supportedInputs.join(" · ");
-      if (avoidClaimsCard && avoidClaims.length) avoidClaimsCard.textContent = avoidClaims.join(" · ");
+      if (approvedClaimsCard && approvedClaims.length) approvedClaimsCard.textContent = approvedClaims.slice(0, 4).join(" · ");
+      if (bannedClaimsCard && bannedClaims.length) bannedClaimsCard.textContent = bannedClaims.slice(0, 4).join(" · ");
       if (changeControlCard && changeControl.length) changeControlCard.textContent = changeControl.slice(0, 3).join(" · ");
+      if (cyberSummaryCard && cyberSummary.length) cyberSummaryCard.textContent = cyberSummary.map(item => item.domain || item.control || "").filter(Boolean).slice(0, 5).join(" · ");
+      if (issueChangeCard) {
+        const parts = [];
+        if (issueLog.length) parts.push(`${issueLog.length} issue log entr${issueLog.length === 1 ? "y" : "ies"}`);
+        if (changeApprovals.length) parts.push(`${changeApprovals.length} approved release entr${changeApprovals.length === 1 ? "y" : "ies"}`);
+        if (parts.length) issueChangeCard.textContent = parts.join(" · ");
+      }
     }
 
     async function loadPilotGovernance(){
@@ -2583,9 +2610,9 @@ COMMAND_CENTER_HTML = r"""
             <div class="mini-copy">${safe(top.bed)} · ${safe(top.status)}</div>
           </div>
           <div class="mini-card">
-            <div class="mini-k">Forecast Attention</div>
+            <div class="mini-k">Supportive Review Visibility</div>
             <div class="mini-v">${forecastPct}%</div>
-            <div class="mini-copy">Supportive review attention within the next 60 minutes.</div>
+            <div class="mini-copy">Supportive review visibility based on current monitored context.</div>
           </div>
         </div>
       `;
@@ -2698,7 +2725,7 @@ COMMAND_CENTER_HTML = r"""
         <div class="mini-card">
           <div class="mini-k">Live State</div>
           <div class="mini-v">Operational</div>
-          <div class="mini-copy">Current environment is presenting a live pilot command-center experience.</div>
+          <div class="mini-copy">Current environment is presenting a controlled pilot command-center experience.</div>
         </div>
         <div class="mini-card">
           <div class="mini-k">Visible Scope</div>
