@@ -109,6 +109,85 @@ PILOT_RELEASE_NOTES = [
     }
 ]
 
+PILOT_APPROVED_CLAIMS = [
+    "supports earlier visibility into potential deterioration",
+    "assists authorized health care professionals in identifying patients who may warrant further clinical evaluation",
+    "supports patient prioritization across monitored patients",
+    "provides explainable risk-support context",
+    "supports command-center workflow awareness and operational visibility",
+    "supports monitored patient visibility and reviewable trend context",
+]
+
+PILOT_BANNED_CLAIMS = [
+    "detects deterioration autonomously",
+    "identifies who needs immediate escalation",
+    "predicts who will clinically crash",
+    "directs bedside intervention",
+    "determines which patients need escalation now",
+    "replaces clinician judgment",
+    "provides a diagnosis",
+    "triggers escalation independently",
+]
+
+PILOT_COMPLAINT_ISSUE_LOG = [
+    {"id": "CI-001", "date_opened": "2026-03-25", "source": "Internal pilot review", "category": "Claims / Messaging", "issue": "Legacy predictive or directive language could remain in customer-facing materials after UI updates.", "severity": "Moderate", "owner": "Founder/Product", "status": "Open", "escalation_level": "Review before external release", "next_step": "Review website, video, deck, and templates against the frozen intended-use statement."},
+    {"id": "CI-002", "date_opened": "2026-03-25", "source": "Platform validation review", "category": "Explainability", "issue": "If review basis, limitations, freshness, or unknowns fail to render, users could over-rely on summary outputs.", "severity": "High", "owner": "Engineering", "status": "In Place", "escalation_level": "Immediate engineering review", "next_step": "Validate patient detail drawer and guardrail panels before each approved bundle."},
+    {"id": "CI-003", "date_opened": "2026-03-25", "source": "Operational workflow review", "category": "Workflow separation", "issue": "Workflow buttons could be interpreted as machine-issued clinical directives if labels drift from approved wording.", "severity": "High", "owner": "Product/Engineering", "status": "In Place", "escalation_level": "Product sign-off required", "next_step": "Keep ACK/ASSIGN/ESCALATE/RESOLVE framed as workflow logging only and review labels on each release."},
+]
+
+PILOT_ESCALATION_PROCESS = [
+    {"stage": "1. Record issue", "trigger": "Complaint, bug, wording drift, security concern, validation failure, or pilot feedback is identified.", "owner": "Reporter / Product", "target_time": "Same business day", "action": "Create or update an entry in the complaint / issue log with date, source, severity, owner, and next step."},
+    {"stage": "2. Triage severity", "trigger": "Issue is logged", "owner": "Founder/Product", "target_time": "Within 1 business day", "action": "Classify as low, moderate, high, or critical and decide whether release freeze, wording correction, or technical remediation is required."},
+    {"stage": "3. Escalate to owner", "trigger": "High or critical issue, or any issue affecting claims, access scope, security, or explainability", "owner": "Founder / Engineering", "target_time": "Within 1 business day", "action": "Assign owner, confirm remediation path, and document approval requirements before returning to pilot use."},
+    {"stage": "4. Resolve and verify", "trigger": "Fix or mitigation is implemented", "owner": "Engineering / Product", "target_time": "Before next release", "action": "Run validation checks, document evidence, update release notes if needed, and change status to closed only after verification."},
+]
+
+PILOT_CHANGE_APPROVAL_LOG = [
+    {"version": "stable-pilot-1.0.0", "date": "2026-03-25", "change_summary": "Locked stable pilot-safe positioning bundle with frozen intended-use language, explainability guardrails, and governance documents.", "approved_by": "Milton Munroe", "approval_basis": "Required to align UI, forms, pilot docs, and platform positioning to the HCP-facing support posture.", "status": "Approved"},
+    {"version": "stable-pilot-1.0.1", "date": "2026-03-26", "change_summary": "Expanded pilot governance package with complaint log, change approval log, cybersecurity summary, access policies, retention policy, pilot scope, training sheet, and dated validation evidence.", "approved_by": "Milton Munroe", "approval_basis": "Required to strengthen pilot operating discipline and hospital-facing review readiness without shifting claims into device territory.", "status": "Approved"},
+]
+
+PILOT_CYBERSECURITY_SUMMARY = [
+    {"domain": "Access control", "control": "Authenticated pilot access with role-based permissions and unit-scoped visibility", "summary": "User login, session access, and backend filtering limit access to approved roles and assigned units.", "status": "Implemented"},
+    {"domain": "Patching", "control": "Approved release and change logging", "summary": "Pilot updates are intended to be deployed only through approved bundles tracked in release notes and change approval logs.", "status": "Implemented"},
+    {"domain": "Vulnerability handling", "control": "Complaint / issue log and escalation process", "summary": "Security, reliability, or access issues are logged, triaged, escalated to owner, and verified before closure.", "status": "Implemented"},
+    {"domain": "Backup / recovery", "control": "Operational backup and recovery summary", "summary": "Pilot data artifacts, configuration, and operational files should be covered by controlled backup and recovery procedures before hospital deployment.", "status": "Pilot documentation"},
+    {"domain": "Incident handling", "control": "Documented incident response path", "summary": "Security or operational incidents are expected to follow documented triage, escalation, remediation, and verification steps.", "status": "Implemented"},
+]
+
+PILOT_USER_PROVISIONING_POLICY = [
+    {"step": "Provision request", "policy": "User access is provisioned only for approved pilot participants with a defined role and scope.", "owner": "Founder/Admin", "evidence": "Pilot access screen, role selection, assigned-unit control"},
+    {"step": "Role assignment", "policy": "Each user receives the minimum role and unit scope required for pilot evaluation.", "owner": "Founder/Admin", "evidence": "Session role and unit scoping reflected in access-context route"},
+    {"step": "Review and update", "policy": "Role, unit, and access scope should be reviewed whenever pilot responsibilities change.", "owner": "Founder/Admin", "evidence": "Pilot account updates and release-controlled access review"},
+    {"step": "Deprovision", "policy": "Pilot access should be disabled or removed when a pilot ends, a user leaves the pilot, or access is no longer required.", "owner": "Founder/Admin", "evidence": "Pilot account removal / session invalidation / access policy review"},
+]
+
+PILOT_DATA_RETENTION_POLICY = [
+    {"topic": "Retention", "policy": "Pilot request records, workflow artifacts, and governance documents should be retained only for the pilot review period and approved business / legal needs.", "owner": "Founder/Product", "note": "Hospital-specific retention schedules should be confirmed before deployment."},
+    {"topic": "Deletion", "policy": "Pilot data should be deleted or archived in accordance with the agreed pilot closeout process.", "owner": "Founder/Product", "note": "Deletion should be documented with date, owner, and scope."},
+    {"topic": "Return", "policy": "If hospital or partner data is supplied for pilot use, return / export / deletion terms should be documented in the pilot agreement.", "owner": "Founder/Product", "note": "Customer-specific handling should be confirmed in writing."},
+]
+
+PILOT_SCOPE_DOCUMENT = [
+    {"section": "Purpose", "summary": "Controlled pilot evaluation of an HCP-facing decision-support and workflow-support platform for monitored patient visibility, patient prioritization support, explainable review context, and command-center operational awareness."},
+    {"section": "Intended users", "summary": "Authorized health care professionals, approved hospital stakeholders, clinical operations teams, and approved pilot reviewers."},
+    {"section": "Pilot boundaries", "summary": "The platform does not replace clinician judgment and is not intended to diagnose, direct treatment, or independently trigger escalation."},
+    {"section": "Operational scope", "summary": "Role-based access, unit-scoped visibility, workflow logging, explainability panels, audit visibility, and governance documentation are included in the current pilot bundle."},
+]
+
+PILOT_TRAINING_USE_INSTRUCTIONS = [
+    {"step": "1. Access the pilot", "instruction": "Log in with an approved pilot account and confirm role and assigned unit scope before review.", "owner": "Founder/Admin"},
+    {"step": "2. Review the basis", "instruction": "Before any workflow action, review patient summary, contributing factors, confidence, limitations, freshness, and what the software does not know.", "owner": "Clinical reviewer"},
+    {"step": "3. Treat workflow buttons as operational only", "instruction": "ACK, Assign, Escalate, and Resolve record workflow handling and audit history only; they are not machine-issued clinical orders.", "owner": "Clinical reviewer"},
+    {"step": "4. Follow hospital policy", "instruction": "Any clinical action, escalation timing, or treatment decision remains governed by licensed clinician judgment and hospital policy.", "owner": "Clinical reviewer"},
+]
+
+PILOT_VALIDATION_EVIDENCE = [
+    {"date": "2026-03-25", "test_case": "Access scope respects login, role, and assigned unit", "evidence": "Verified through /login, /pilot-access, /api/access-context, unit filter behavior, and scoped command-center views.", "reviewer": "Founder/Engineering", "status": "Pass"},
+    {"date": "2026-03-25", "test_case": "Explainability guardrails are visible in the patient review workflow", "evidence": "Verified review basis, confidence, limitations, freshness, workflow-vs-recommendation separation, and unknowns display in patient detail and guardrail sections.", "reviewer": "Founder/Engineering", "status": "Pass"},
+    {"date": "2026-03-26", "test_case": "Pilot docs render current intended use, claims controls, risk register, issue handling, change log, and training materials", "evidence": "Verified /pilot-docs page renders current governance package and release-controlled documentation.", "reviewer": "Founder/Product", "status": "Pass"},
+]
+
 
 DEFAULT_THRESHOLDS: Dict[str, Dict[str, float]] = {
     "icu": {"spo2_low": 92, "hr_high": 120, "sbp_high": 160},
@@ -1911,6 +1990,17 @@ def create_app() -> Flask:
                 "risk_register": PILOT_RISK_REGISTER,
                 "vnv_lite": PILOT_VNV_LITE,
                 "release_notes": PILOT_RELEASE_NOTES,
+                "approved_claims": PILOT_APPROVED_CLAIMS,
+                "banned_claims": PILOT_BANNED_CLAIMS,
+                "complaint_issue_log": PILOT_COMPLAINT_ISSUE_LOG,
+                "escalation_process": PILOT_ESCALATION_PROCESS,
+                "change_approval_log": PILOT_CHANGE_APPROVAL_LOG,
+                "cybersecurity_summary": PILOT_CYBERSECURITY_SUMMARY,
+                "user_provisioning_policy": PILOT_USER_PROVISIONING_POLICY,
+                "data_retention_policy": PILOT_DATA_RETENTION_POLICY,
+                "pilot_scope_document": PILOT_SCOPE_DOCUMENT,
+                "training_use_instructions": PILOT_TRAINING_USE_INSTRUCTIONS,
+                "dated_validation_evidence": PILOT_VALIDATION_EVIDENCE,
             }
         )
 
@@ -1927,6 +2017,8 @@ def create_app() -> Flask:
                 "supported_outputs": PILOT_SUPPORTED_OUTPUTS,
                 "avoid_claims": PILOT_AVOID_CLAIMS,
                 "limitations": PILOT_LIMITATIONS_TEXT,
+                "approved_claims": PILOT_APPROVED_CLAIMS,
+                "banned_claims": PILOT_BANNED_CLAIMS,
             }
         )
 
@@ -1964,7 +2056,7 @@ def create_app() -> Flask:
           <meta name="viewport" content="width=device-width, initial-scale=1">
           <style>
             body{{margin:0;padding:24px;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#eef4ff;background:linear-gradient(180deg,#07101c,#0b1528)}}
-            .wrap{{max-width:1240px;margin:0 auto}}
+            .wrap{{max-width:1280px;margin:0 auto}}
             .card{{border:1px solid rgba(255,255,255,.08);border-radius:24px;background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.018));padding:24px;margin-bottom:18px;box-shadow:0 20px 60px rgba(0,0,0,.28)}}
             .btn{{display:inline-flex;align-items:center;justify-content:center;padding:12px 16px;border-radius:16px;font-weight:900;background:linear-gradient(135deg,#7aa2ff,#5bd4ff);color:#07101c;text-decoration:none}}
             .sub{{color:#9fb4d6;line-height:1.7}}
@@ -1981,7 +2073,7 @@ def create_app() -> Flask:
                   <div class="pill">Pilot Docs</div>
                   <div class="pill">Version {PILOT_VERSION}</div>
                   <h1 style="margin:12px 0 10px;font-size:42px;line-height:.95;letter-spacing:-.05em">Stable Pilot Positioning Bundle</h1>
-                  <div class="sub">Freeze one intended-use statement everywhere, keep outputs supportive rather than directive, and keep explainability, limitations, scoping, and audit visibility easy to review.</div>
+                  <div class="sub">Freeze one intended-use statement everywhere, keep outputs supportive rather than directive, and keep explainability, limitations, scoping, audit visibility, and operating controls easy to review.</div>
                 </div>
                 <div style="display:flex;gap:12px;flex-wrap:wrap">
                   <a class="btn" href="/command-center">Back to Command Center</a>
@@ -1997,41 +2089,39 @@ def create_app() -> Flask:
             </div>
 
             <div class="grid">
-              <div class="card">
-                <h2 style="margin:0 0 10px;font-size:26px">Support Language</h2>
-                <div class="sub">{_render_simple_list(PILOT_SUPPORT_LANGUAGE)}</div>
-              </div>
-              <div class="card">
-                <h2 style="margin:0 0 10px;font-size:26px">Visible Limitations</h2>
-                <div class="sub">{_render_simple_list(PILOT_LIMITATIONS_TEXT)}</div>
-              </div>
+              <div class="card"><h2 style="margin:0 0 10px;font-size:26px">Approved Support Language</h2><div class="sub">{_render_simple_list(PILOT_SUPPORT_LANGUAGE)}</div></div>
+              <div class="card"><h2 style="margin:0 0 10px;font-size:26px">Visible Limitations</h2><div class="sub">{_render_simple_list(PILOT_LIMITATIONS_TEXT)}</div></div>
             </div>
 
             <div class="grid">
-              <div class="card">
-                <h2 style="margin:0 0 10px;font-size:26px">Supported Inputs</h2>
-                <div class="sub">{_render_simple_list(PILOT_SUPPORTED_INPUTS)}</div>
-              </div>
-              <div class="card">
-                <h2 style="margin:0 0 10px;font-size:26px">Supported Outputs</h2>
-                <div class="sub">{_render_simple_list(PILOT_SUPPORTED_OUTPUTS)}</div>
-              </div>
+              <div class="card"><h2 style="margin:0 0 10px;font-size:26px">Supported Inputs</h2><div class="sub">{_render_simple_list(PILOT_SUPPORTED_INPUTS)}</div></div>
+              <div class="card"><h2 style="margin:0 0 10px;font-size:26px">Supported Outputs</h2><div class="sub">{_render_simple_list(PILOT_SUPPORTED_OUTPUTS)}</div></div>
             </div>
 
-            <div class="card">
-              <h2 style="margin:0 0 12px;font-size:28px">Risk Register</h2>
-              {_render_table(PILOT_RISK_REGISTER, ["id", "area", "risk", "mitigation", "owner", "status"])}
+            <div class="grid">
+              <div class="card"><h2 style="margin:0 0 10px;font-size:26px">Approved Claims</h2><div class="sub">{_render_simple_list(PILOT_APPROVED_CLAIMS)}</div></div>
+              <div class="card"><h2 style="margin:0 0 10px;font-size:26px">Banned Claims</h2><div class="sub">{_render_simple_list(PILOT_BANNED_CLAIMS)}</div></div>
             </div>
 
-            <div class="card">
-              <h2 style="margin:0 0 12px;font-size:28px">V&amp;V-Lite Sheet</h2>
-              {_render_table(PILOT_VNV_LITE, ["id", "check", "method", "evidence", "status"])}
+            <div class="card"><h2 style="margin:0 0 12px;font-size:28px">Risk Register</h2>{_render_table(PILOT_RISK_REGISTER, ["id", "area", "risk", "mitigation", "owner", "status"])}</div>
+            <div class="card"><h2 style="margin:0 0 12px;font-size:28px">Complaint / Issue Log</h2>{_render_table(PILOT_COMPLAINT_ISSUE_LOG, ["id", "date_opened", "source", "category", "issue", "severity", "owner", "status", "escalation_level", "next_step"])}</div>
+            <div class="card"><h2 style="margin:0 0 12px;font-size:28px">Issue Escalation Process</h2>{_render_table(PILOT_ESCALATION_PROCESS, ["stage", "trigger", "owner", "target_time", "action"])}</div>
+            <div class="card"><h2 style="margin:0 0 12px;font-size:28px">Change Approval Log</h2>{_render_table(PILOT_CHANGE_APPROVAL_LOG, ["version", "date", "change_summary", "approved_by", "approval_basis", "status"])}</div>
+            <div class="card"><h2 style="margin:0 0 12px;font-size:28px">Cybersecurity Summary</h2>{_render_table(PILOT_CYBERSECURITY_SUMMARY, ["domain", "control", "summary", "status"])}</div>
+
+            <div class="grid">
+              <div class="card"><h2 style="margin:0 0 12px;font-size:28px">User Provisioning / Deprovisioning Policy</h2>{_render_table(PILOT_USER_PROVISIONING_POLICY, ["step", "policy", "owner", "evidence"])}</div>
+              <div class="card"><h2 style="margin:0 0 12px;font-size:28px">Data Retention / Deletion / Return Policy</h2>{_render_table(PILOT_DATA_RETENTION_POLICY, ["topic", "policy", "owner", "note"])}</div>
             </div>
 
-            <div class="card">
-              <h2 style="margin:0 0 12px;font-size:28px">Release Notes</h2>
-              {_render_table(PILOT_RELEASE_NOTES, ["version", "date", "summary", "changes"])}
+            <div class="grid">
+              <div class="card"><h2 style="margin:0 0 12px;font-size:28px">Pilot Agreement / Scope Document</h2>{_render_table(PILOT_SCOPE_DOCUMENT, ["section", "summary"])}</div>
+              <div class="card"><h2 style="margin:0 0 12px;font-size:28px">Training / Use Instructions</h2>{_render_table(PILOT_TRAINING_USE_INSTRUCTIONS, ["step", "instruction", "owner"])}</div>
             </div>
+
+            <div class="card"><h2 style="margin:0 0 12px;font-size:28px">Dated Validation Evidence</h2>{_render_table(PILOT_VALIDATION_EVIDENCE, ["date", "test_case", "evidence", "reviewer", "status"])}</div>
+            <div class="card"><h2 style="margin:0 0 12px;font-size:28px">V&amp;V-Lite Sheet</h2>{_render_table(PILOT_VNV_LITE, ["id", "check", "method", "evidence", "status"])}</div>
+            <div class="card"><h2 style="margin:0 0 12px;font-size:28px">Release Notes</h2>{_render_table(PILOT_RELEASE_NOTES, ["version", "date", "summary", "changes"])}</div>
           </div>
         </body>
         </html>
