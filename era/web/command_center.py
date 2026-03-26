@@ -630,7 +630,7 @@ COMMAND_CENTER_HTML = r"""
             <div class="status-pill muted" id="lastUpdatedPill">Last Updated</div>
             <div class="status-pill info" id="autoRefreshPill">Auto Refresh On</div>
             <div class="status-pill muted" id="trendDataPill">Trend Sync Pending</div>
-            <div class="status-pill dark" id="pilotVersionPill">Pilot Version</div>
+            <div class="status-pill dark" id="pilotVersionPill">Locked Stable Build</div>
           </div>
         </div>
 
@@ -1034,7 +1034,7 @@ COMMAND_CENTER_HTML = r"""
         <div class="section-head">
           <div>
             <h2 class="section-title">Pilot Governance + Documentation</h2>
-            <div class="section-sub">One stable intended-use statement, narrow support claims, visible limitations, role/unit scoping, audit controls, and lightweight pilot governance documents kept in one place for hospital and stakeholder review.</div>
+            <div class="section-sub">One locked stable intended-use statement, narrow support claims, visible limitations, role/unit scoping, audit controls, and lightweight pilot governance documents kept in one place for hospital and stakeholder review.</div>
           </div>
           <div class="section-actions">
             <a class="btn secondary small" href="/pilot-docs">Open Pilot Docs</a>
@@ -1051,7 +1051,7 @@ COMMAND_CENTER_HTML = r"""
           </div>
           <div class="mini-card">
             <div class="mini-k">Governance Set</div>
-            <div class="mini-copy">Pilot Docs includes the regulatory-positioning summary, risk register, V&amp;V-lite sheet, release notes, version marker, and change-log guidance for keeping one stable pilot build.</div>
+            <div class="mini-copy">Pilot Docs includes the regulatory-positioning summary, risk register, V&amp;V-lite sheet, release notes, locked stable build marker, and change-control guidance for keeping one stable pilot build.</div>
           </div>
         </div>
       </div>
@@ -1665,7 +1665,7 @@ COMMAND_CENTER_HTML = r"""
         if (unitLockPill) {
           unitLockPill.textContent = canViewAllUnits ? "Hospital Scope" : "Unit Locked: " + unitLabel(accessAssignedUnit);
         }
-        if (pilotVersionPill) pilotVersionPill.textContent = "Version: " + safe(data.pilot_version, "pilot");
+        if (pilotVersionPill) pilotVersionPill.textContent = safe(data.pilot_build_state, "Locked Stable Pilot Build") + " · " + safe(data.pilot_version, "pilot");
         if (intendedUseCard && data.intended_use_statement) intendedUseCard.textContent = data.intended_use_statement;
       }catch(err){
         console.error("access context failed", err);
