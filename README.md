@@ -28,7 +28,7 @@ https://early-risk-alert-ai-1.onrender.com/executive-walkthrough
 ## Demo Walkthrough
 
 **Video Demo**  
-https://youtu.be/vg0uj4AVyN8
+https://youtu.be/MchdMiM7ciM
 
 ---
 
