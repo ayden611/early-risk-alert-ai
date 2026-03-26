@@ -115,7 +115,7 @@ LOGIN_HTML = """
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Early Risk Alert AI — Secure Pilot Login</title>
+  <title>Early Risk Alert AI — Secure Pilot Access</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     :root{
@@ -126,6 +126,7 @@ LOGIN_HTML = """
       --muted:#9fb4d6;
       --blue:#7aa2ff;
       --blue2:#5bd4ff;
+      --warn:#f4bd6a;
     }
     *{box-sizing:border-box}
     body{
@@ -137,7 +138,7 @@ LOGIN_HTML = """
         linear-gradient(180deg, #07101c, #0b1528);
     }
     .card{
-      width:min(560px,100%);
+      width:min(640px,100%);
       border:1px solid var(--line);border-radius:24px;
       background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.018));
       padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.34);
@@ -145,6 +146,16 @@ LOGIN_HTML = """
     .k{font-size:11px;font-weight:1000;letter-spacing:.16em;text-transform:uppercase;color:#9adfff;margin-bottom:10px}
     h1{margin:0 0 10px;font-size:40px;line-height:.95;letter-spacing:-.05em}
     p{margin:0 0 18px;color:var(--muted);line-height:1.6}
+    .callout{
+      margin:0 0 18px;padding:14px 16px;border-radius:16px;
+      background:rgba(91,212,255,.08);border:1px solid rgba(91,212,255,.16);color:#dce9ff;
+      line-height:1.6;
+    }
+    .disclaimer{
+      margin:16px 0 18px;padding:14px 16px;border-radius:16px;
+      background:rgba(244,189,106,.10);border:1px solid rgba(244,189,106,.22);color:#ffe7bf;
+      line-height:1.6;font-size:14px;
+    }
     label{display:block;font-size:13px;font-weight:900;margin-bottom:8px}
     input, select{
       width:100%;padding:14px 16px;border-radius:16px;border:1px solid var(--line);
@@ -161,20 +172,33 @@ LOGIN_HTML = """
       margin-bottom:14px;padding:12px 14px;border-radius:14px;
       background:rgba(255,102,125,.12);border:1px solid rgba(255,102,125,.24);color:#ffd8de;
     }
+    .footer-note{
+      margin-top:18px;color:#9fb4d6;font-size:13px;line-height:1.6;
+    }
   </style>
 </head>
 <body>
   <div class="card">
-    <div class="k">Secure pilot operating layer</div>
-    <h1>Early Risk Alert AI Login</h1>
-    <p>Assign a role, hospital brand, and unit scope. Admin sees all units. Pilot users can be restricted to a single unit.</p>
+    <div class="k">Controlled pilot environment</div>
+    <h1>Early Risk Alert AI Secure Pilot Access</h1>
+    <p>Access the Early Risk Alert AI command center for controlled pilot evaluation, role-based workflow review, and unit-scoped visibility.</p>
+
+    <div class="callout">
+      Early Risk Alert AI is an HCP-facing decision-support and workflow-support platform intended to assist authorized health care professionals in identifying patients who may warrant further clinical evaluation, support patient prioritization, and improve command-center operational awareness.
+    </div>
+
+    <div class="disclaimer">
+      The platform does not replace clinician judgment and is not intended to diagnose, direct treatment, or independently trigger escalation.
+    </div>
+
     __ERROR__
+
     <form method="post" action="/login">
       <label>Full Name</label>
       <input name="full_name" placeholder="Your full name" required>
 
-      <label>Email</label>
-      <input name="email" type="email" placeholder="you@example.com" required>
+      <label>Work Email</label>
+      <input name="email" type="email" placeholder="you@hospital.org" required>
 
       <label>Role</label>
       <select name="user_role" required>
@@ -205,7 +229,7 @@ LOGIN_HTML = """
         <option value="rpm">RPM / Home</option>
       </select>
 
-      <button type="submit">Enter Command Center</button>
+      <button type="submit">Enter Secure Pilot Access</button>
     </form>
 
     <div class="links">
@@ -213,6 +237,10 @@ LOGIN_HTML = """
       <a href="/hospital-demo">Hospital Demo</a>
       <a href="/investor-intake">Investor Access</a>
       <a href="/executive-walkthrough">Executive Walkthrough</a>
+    </div>
+
+    <div class="footer-note">
+      Controlled Pilot Evaluation | Secure Cloud Deployment | Hospital-Facing Workflow Support
     </div>
   </div>
 </body>
@@ -234,13 +262,23 @@ PILOT_ACCESS_HTML = """
       color:#eef4ff;background:linear-gradient(180deg,#07101c,#0b1528);
     }
     .card{
-      width:min(520px,100%);
+      width:min(560px,100%);
       border:1px solid rgba(255,255,255,.08);border-radius:24px;
       background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.018));
       padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.34);
     }
     h1{margin:0 0 10px;font-size:38px;line-height:.95;letter-spacing:-.05em}
     p{color:#9fb4d6;line-height:1.6}
+    .callout{
+      margin:0 0 18px;padding:14px 16px;border-radius:16px;
+      background:rgba(91,212,255,.08);border:1px solid rgba(91,212,255,.16);color:#dce9ff;
+      line-height:1.6;
+    }
+    .disclaimer{
+      margin:0 0 18px;padding:14px 16px;border-radius:16px;
+      background:rgba(244,189,106,.10);border:1px solid rgba(244,189,106,.22);color:#ffe7bf;
+      line-height:1.6;font-size:14px;
+    }
     input{
       width:100%;padding:14px 16px;border-radius:16px;border:1px solid rgba(255,255,255,.08);
       background:#0d1728;color:#eef4ff;font:inherit;margin-bottom:14px;
@@ -254,17 +292,34 @@ PILOT_ACCESS_HTML = """
       margin-bottom:14px;padding:12px 14px;border-radius:14px;
       background:rgba(255,102,125,.12);border:1px solid rgba(255,102,125,.24);color:#ffd8de;
     }
+    .footer-note{
+      margin-top:18px;color:#9fb4d6;font-size:13px;line-height:1.6;
+    }
   </style>
 </head>
 <body>
   <div class="card">
     <h1>Branded Pilot Access</h1>
-    <p>Enter your pilot access email to load your branded command center and assigned unit.</p>
+    <p>Enter your authorized pilot email to load your configured command-center experience, assigned unit, and pilot access scope.</p>
+
+    <div class="callout">
+      Early Risk Alert AI supports controlled pilot evaluation through an HCP-facing decision-support and workflow-support platform designed to assist authorized health care professionals with patient prioritization, monitored patient visibility, and command-center operational awareness.
+    </div>
+
+    <div class="disclaimer">
+      It does not replace clinician judgment and is not intended to diagnose, direct treatment, or independently trigger escalation.
+    </div>
+
     __ERROR__
+
     <form method="post" action="/pilot-access">
       <input name="pilot_email" type="email" placeholder="pilot@hospital.com" required>
       <button type="submit">Enter Pilot Account</button>
     </form>
+
+    <div class="footer-note">
+      Controlled Pilot Evaluation | Role-Based Access | Unit-Scoped Visibility
+    </div>
   </div>
 </body>
 </html>
@@ -287,6 +342,7 @@ FORM_HTML = """
       --muted:#9fb4d6;
       --blue:#7aa2ff;
       --blue2:#5bd4ff;
+      --warn:#f4bd6a;
     }
     *{box-sizing:border-box}
     body{
@@ -295,7 +351,7 @@ FORM_HTML = """
       color:var(--text);
       background:linear-gradient(180deg,#07101c,#0b1528);
     }
-    .wrap{max-width:860px;margin:0 auto}
+    .wrap{max-width:920px;margin:0 auto}
     .card{
       border:1px solid var(--line);border-radius:24px;
       background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.018));
@@ -303,15 +359,36 @@ FORM_HTML = """
     }
     .k{font-size:11px;font-weight:1000;letter-spacing:.16em;text-transform:uppercase;color:#9adfff;margin-bottom:10px}
     h1{margin:0 0 10px;font-size:44px;line-height:.95;letter-spacing:-.05em}
-    p{margin:0 0 20px;color:var(--muted);line-height:1.6}
+    p{margin:0 0 18px;color:var(--muted);line-height:1.6}
+    .callout{
+      margin:0 0 18px;padding:14px 16px;border-radius:16px;
+      background:rgba(91,212,255,.08);border:1px solid rgba(91,212,255,.16);color:#dce9ff;
+      line-height:1.6;
+    }
+    .disclaimer{
+      margin:0 0 20px;padding:14px 16px;border-radius:16px;
+      background:rgba(244,189,106,.10);border:1px solid rgba(244,189,106,.22);color:#ffe7bf;
+      line-height:1.6;font-size:14px;
+    }
     .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
     .field{margin-bottom:14px}
+    .full{grid-column:1 / -1}
     label{display:block;font-size:13px;font-weight:900;margin-bottom:8px}
     input, select, textarea{
       width:100%;padding:14px 16px;border-radius:16px;border:1px solid var(--line);
       background:#0d1728;color:var(--text);font:inherit;
     }
     textarea{min-height:120px;resize:vertical}
+    .check{
+      display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:16px;
+      border:1px solid var(--line);background:#0d1728;
+    }
+    .check input{
+      width:auto;margin:4px 0 0;
+    }
+    .check span{
+      color:#dce9ff;line-height:1.6;font-size:14px;
+    }
     button{
       padding:14px 18px;border:none;border-radius:16px;cursor:pointer;
       font:inherit;font-weight:1000;color:#07101c;
@@ -319,6 +396,9 @@ FORM_HTML = """
     }
     .links{display:flex;gap:14px;flex-wrap:wrap;margin-top:16px}
     a{color:#cfe7ff;text-decoration:none;font-weight:800}
+    .footer-note{
+      margin-top:18px;color:#9fb4d6;font-size:13px;line-height:1.6;
+    }
     @media (max-width:700px){.grid{grid-template-columns:1fr}}
   </style>
 </head>
@@ -328,15 +408,29 @@ FORM_HTML = """
       <div class="k">Early Risk Alert AI</div>
       <h1>__HEADING__</h1>
       <p>__COPY__</p>
+
+      <div class="callout">
+        Early Risk Alert AI is an HCP-facing decision-support and workflow-support platform intended to assist authorized health care professionals in identifying patients who may warrant further clinical evaluation, support patient prioritization, and improve command-center operational awareness.
+      </div>
+
+      <div class="disclaimer">
+        The platform is intended for controlled pilot evaluation and hospital-facing workflow support. It does not replace clinician judgment and is not intended to diagnose, direct treatment, or independently trigger escalation.
+      </div>
+
       <form method="post">
         <div class="grid">
           __FIELDS__
         </div>
         <button type="submit">__BUTTON__</button>
       </form>
+
       <div class="links">
         <a href="/command-center">Command Center</a>
         <a href="/admin/review">Admin Review</a>
+      </div>
+
+      <div class="footer-note">
+        Controlled Pilot Evaluation | Secure Cloud Deployment | Hospital-Facing Workflow Support
       </div>
     </div>
   </div>
@@ -366,6 +460,16 @@ THANK_YOU_HTML = """
     }
     h1{margin:0 0 10px;font-size:40px;line-height:.95;letter-spacing:-.05em}
     p{margin:0 0 18px;color:#9fb4d6;line-height:1.6}
+    .callout{
+      margin:0 0 18px;padding:14px 16px;border-radius:16px;
+      background:rgba(91,212,255,.08);border:1px solid rgba(91,212,255,.16);color:#dce9ff;
+      line-height:1.6;
+    }
+    .disclaimer{
+      margin:0 0 18px;padding:14px 16px;border-radius:16px;
+      background:rgba(244,189,106,.10);border:1px solid rgba(244,189,106,.22);color:#ffe7bf;
+      line-height:1.6;font-size:14px;
+    }
     .box{
       border:1px solid rgba(255,255,255,.08);border-radius:18px;background:rgba(255,255,255,.03);
       padding:16px;line-height:1.8;color:#dce9ff;margin:16px 0;
@@ -381,93 +485,21 @@ THANK_YOU_HTML = """
   <div class="card">
     <h1>Thank You</h1>
     <p>__MESSAGE__</p>
+
+    <div class="callout">
+      A member of the Early Risk Alert AI team will review your submission and follow up regarding pilot evaluation, platform demonstration, executive walkthrough, or investor access.
+    </div>
+
+    <div class="disclaimer">
+      Early Risk Alert AI is intended for controlled pilot evaluation and hospital-facing workflow support. It does not replace clinician judgment and is not intended to diagnose, direct treatment, or independently trigger escalation.
+    </div>
+
     <div class="box">__DETAILS__</div>
     <a href="/command-center">Return to Command Center</a>
   </div>
 </body>
 </html>
 """
-
-
-DEFAULT_THRESHOLDS: Dict[str, Dict[str, float]] = {
-    "icu": {"spo2_low": 92, "hr_high": 120, "sbp_high": 160},
-    "telemetry": {"spo2_low": 93, "hr_high": 110, "sbp_high": 150},
-    "stepdown": {"spo2_low": 93, "hr_high": 115, "sbp_high": 155},
-    "ward": {"spo2_low": 94, "hr_high": 110, "sbp_high": 150},
-    "rpm": {"spo2_low": 94, "hr_high": 105, "sbp_high": 145},
-    "all": {"spo2_low": 93, "hr_high": 112, "sbp_high": 152},
-}
-
-VALID_UNITS = {"all", "icu", "telemetry", "stepdown", "ward", "rpm"}
-
-ROLE_ACTIONS: Dict[str, set[str]] = {
-    "viewer": {"view"},
-    "operator": {"view", "ack", "assign"},
-    "physician": {"view", "ack", "assign", "escalate", "resolve"},
-    "admin": {"view", "ack", "assign", "escalate", "resolve", "admin"},
-}
-
-HOSPITAL_BRANDS = {
-    "early-risk-alert-ai": {
-        "hospital_name": "Early Risk Alert AI",
-        "brand_name": "Early Risk Alert AI",
-        "brand_tagline": "Clinical Command Center",
-        "brand_primary": "#7aa2ff",
-        "brand_secondary": "#5bd4ff",
-    },
-    "north-star-medical": {
-        "hospital_name": "North Star Medical Center",
-        "brand_name": "North Star Medical",
-        "brand_tagline": "ICU Pilot Command Center",
-        "brand_primary": "#5bd4ff",
-        "brand_secondary": "#8fdcff",
-    },
-    "summit-regional": {
-        "hospital_name": "Summit Regional Hospital",
-        "brand_name": "Summit Regional",
-        "brand_tagline": "Telemetry Pilot Center",
-        "brand_primary": "#f4bd6a",
-        "brand_secondary": "#ffdba5",
-    },
-    "blue-valley-health": {
-        "hospital_name": "Blue Valley Health",
-        "brand_name": "Blue Valley Health",
-        "brand_tagline": "Clinical Operations Pilot",
-        "brand_primary": "#3ad38f",
-        "brand_secondary": "#8ff3c1",
-    },
-}
-
-PILOT_ACCOUNTS = {
-    "icu@northstarpilot.com": {
-        "full_name": "North Star ICU Pilot",
-        "email": "icu@northstarpilot.com",
-        "user_role": "operator",
-        "assigned_unit": "icu",
-        "hospital_brand": "north-star-medical",
-    },
-    "telemetry@summitpilot.com": {
-        "full_name": "Summit Telemetry Pilot",
-        "email": "telemetry@summitpilot.com",
-        "user_role": "viewer",
-        "assigned_unit": "telemetry",
-        "hospital_brand": "summit-regional",
-    },
-    "ops@bluevalleypilot.com": {
-        "full_name": "Blue Valley Pilot User",
-        "email": "ops@bluevalleypilot.com",
-        "user_role": "operator",
-        "assigned_unit": "ward",
-        "hospital_brand": "blue-valley-health",
-    },
-    "admin@erapilot.com": {
-        "full_name": "ERA Pilot Admin",
-        "email": "admin@erapilot.com",
-        "user_role": "admin",
-        "assigned_unit": "all",
-        "hospital_brand": "early-risk-alert-ai",
-    },
-}
 
 
 def _utc_now_iso() -> str:
@@ -1540,27 +1572,84 @@ def create_app() -> Flask:
                 "submitted_at": _utc_now_iso(),
                 "status": "New",
                 "full_name": request.form.get("full_name", "").strip(),
+                "email": request.form.get("email", "").strip(),
+                "organization_type": request.form.get("organization_type", "").strip(),
                 "organization": request.form.get("organization", "").strip(),
                 "role": request.form.get("role", "").strip(),
-                "email": request.form.get("email", "").strip(),
+                "department_unit": request.form.get("department_unit", "").strip(),
+                "evaluation_interest": request.form.get("evaluation_interest", "").strip(),
                 "timeline": request.form.get("timeline", "").strip(),
-                "message": request.form.get("message", "").strip(),
+                "additional_notes": request.form.get("additional_notes", "").strip(),
+                "acknowledgment": request.form.get("acknowledgment", "").strip(),
                 "lead_score": 0,
             }
-            payload["lead_score"] = _lead_score(payload, "hospital")
+            scoring_payload = {
+                "timeline": payload["timeline"],
+                "organization": payload["organization"],
+                "role": payload["role"],
+                "message": f"{payload['evaluation_interest']} {payload['additional_notes']}".strip(),
+            }
+            payload["lead_score"] = _lead_score(scoring_payload, "hospital")
             _append_row(hospital_file, payload)
             return render_template_string(
                 THANK_YOU_HTML
-                .replace("__MESSAGE__", "Your hospital demo request has been received.")
-                .replace("__DETAILS__", _detail_html(payload, ["full_name", "organization", "role", "email", "timeline"]))
+                .replace("__MESSAGE__", "Your hospital demonstration request has been received.")
+                .replace(
+                    "__DETAILS__",
+                    _detail_html(
+                        payload,
+                        [
+                            "full_name",
+                            "email",
+                            "organization_type",
+                            "organization",
+                            "role",
+                            "department_unit",
+                            "evaluation_interest",
+                            "timeline",
+                        ],
+                    ),
+                )
             )
 
         fields = """
-        <div class="field"><label>Full Name</label><input name="full_name" required></div>
-        <div class="field"><label>Organization</label><input name="organization" required></div>
-        <div class="field"><label>Role</label><input name="role" required></div>
-        <div class="field"><label>Work Email</label><input type="email" name="email" required></div>
-        <div class="field"><label>Timeline</label>
+        <div class="field"><label>Work Email</label><input type="email" name="email" placeholder="Enter your work email" required></div>
+        <div class="field"><label>Organization Type</label>
+          <select name="organization_type" required>
+            <option value="Hospital">Hospital</option>
+            <option value="Health System">Health System</option>
+            <option value="Remote Patient Monitoring Program">Remote Patient Monitoring Program</option>
+            <option value="Care Network">Care Network</option>
+            <option value="Clinical Operations Team">Clinical Operations Team</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div class="field"><label>Organization Name</label><input name="organization" placeholder="Enter your hospital, health system, or organization name" required></div>
+        <div class="field"><label>Full Name</label><input name="full_name" placeholder="Enter your full name" required></div>
+        <div class="field"><label>Title / Role</label><input name="role" placeholder="Enter your title or role" required></div>
+        <div class="field"><label>Department / Unit</label>
+          <select name="department_unit" required>
+            <option value="ICU">ICU</option>
+            <option value="Telemetry">Telemetry</option>
+            <option value="Stepdown">Stepdown</option>
+            <option value="Med-Surg">Med-Surg</option>
+            <option value="Remote Monitoring">Remote Monitoring</option>
+            <option value="Operations / Command Center">Operations / Command Center</option>
+            <option value="Executive Leadership">Executive Leadership</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div class="field"><label>What are you interested in evaluating?</label>
+          <select name="evaluation_interest" required>
+            <option value="Patient prioritization support">Patient prioritization support</option>
+            <option value="Command-center operational awareness">Command-center operational awareness</option>
+            <option value="Explainable review-basis visibility">Explainable review-basis visibility</option>
+            <option value="Workflow-state and audit visibility">Workflow-state and audit visibility</option>
+            <option value="Controlled pilot evaluation">Controlled pilot evaluation</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div class="field"><label>Pilot Timeline</label>
           <select name="timeline" required>
             <option value="Immediate">Immediate</option>
             <option value="30-60 days">30-60 days</option>
@@ -1568,13 +1657,20 @@ def create_app() -> Flask:
             <option value="Exploratory">Exploratory</option>
           </select>
         </div>
-        <div class="field"><label>Message</label><textarea name="message"></textarea></div>
+        <div class="field full"><label>Additional Notes</label><textarea name="additional_notes" placeholder="Share your pilot goals, care setting, or workflow interests"></textarea></div>
+        <div class="field full">
+          <label>Acknowledgment</label>
+          <div class="check">
+            <input type="checkbox" name="acknowledgment" value="yes" required>
+            <span>I understand Early Risk Alert AI is intended for HCP-facing decision-support and workflow-support pilot evaluation. It does not replace clinician judgment and is not intended to diagnose, direct treatment, or independently trigger escalation.</span>
+          </div>
+        </div>
         """
-        page = FORM_HTML.replace("__TITLE__", "Request a Live Command Center Demo")
-        page = page.replace("__HEADING__", "Request a Live Command Center Demo")
+        page = FORM_HTML.replace("__TITLE__", "Request a Live Command Center Demonstration")
+        page = page.replace("__HEADING__", "Request a Live Command Center Demonstration")
         page = page.replace(
             "__COPY__",
-            "See how Early Risk Alert AI supports earlier visibility into potential deterioration, assists health care professionals in prioritizing monitored patients, and improves command-center operational awareness through an HCP-facing decision-support and workflow-support environment.",
+            "Schedule a guided demonstration of Early Risk Alert AI’s HCP-facing decision-support and workflow-support platform for monitored patient visibility, patient prioritization support, explainable review context, and command-center operational awareness.",
         )
         page = page.replace("__FIELDS__", fields)
         page = page.replace("__BUTTON__", "Request Demo Access")
@@ -1590,8 +1686,11 @@ def create_app() -> Flask:
                 "organization": request.form.get("organization", "").strip(),
                 "title": request.form.get("title", "").strip(),
                 "email": request.form.get("email", "").strip(),
+                "leadership_area": request.form.get("leadership_area", "").strip(),
+                "review_focus": request.form.get("review_focus", "").strip(),
                 "timeline": request.form.get("timeline", "").strip(),
                 "message": request.form.get("message", "").strip(),
+                "acknowledgment": request.form.get("acknowledgment", "").strip(),
                 "lead_score": 0,
             }
             payload["lead_score"] = _lead_score(payload, "executive")
@@ -1599,14 +1698,30 @@ def create_app() -> Flask:
             return render_template_string(
                 THANK_YOU_HTML
                 .replace("__MESSAGE__", "Your executive walkthrough request has been received.")
-                .replace("__DETAILS__", _detail_html(payload, ["full_name", "organization", "title", "email", "timeline"]))
+                .replace(
+                    "__DETAILS__",
+                    _detail_html(
+                        payload,
+                        ["full_name", "organization", "title", "email", "leadership_area", "review_focus", "timeline"],
+                    ),
+                )
             )
 
         fields = """
-        <div class="field"><label>Full Name</label><input name="full_name" required></div>
-        <div class="field"><label>Organization</label><input name="organization" required></div>
-        <div class="field"><label>Title</label><input name="title" required></div>
-        <div class="field"><label>Work Email</label><input type="email" name="email" required></div>
+        <div class="field"><label>Full Name</label><input name="full_name" placeholder="Enter your full name" required></div>
+        <div class="field"><label>Organization Name</label><input name="organization" placeholder="Enter your organization name" required></div>
+        <div class="field"><label>Title</label><input name="title" placeholder="Enter your title" required></div>
+        <div class="field"><label>Work Email</label><input type="email" name="email" placeholder="Enter your work email" required></div>
+        <div class="field"><label>Leadership Area</label>
+          <select name="leadership_area" required>
+            <option value="Clinical Leadership">Clinical Leadership</option>
+            <option value="Hospital Operations">Hospital Operations</option>
+            <option value="Digital Health">Digital Health</option>
+            <option value="Innovation">Innovation</option>
+            <option value="Executive Administration">Executive Administration</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
         <div class="field"><label>Timeline</label>
           <select name="timeline" required>
             <option value="Immediate">Immediate</option>
@@ -1615,13 +1730,30 @@ def create_app() -> Flask:
             <option value="Exploratory">Exploratory</option>
           </select>
         </div>
-        <div class="field"><label>Message</label><textarea name="message"></textarea></div>
+        <div class="field full"><label>What would you like reviewed?</label>
+          <select name="review_focus" required>
+            <option value="Pilot readiness">Pilot readiness</option>
+            <option value="Platform overview">Platform overview</option>
+            <option value="Operational workflow support">Operational workflow support</option>
+            <option value="Command-center model">Command-center model</option>
+            <option value="Security and pilot controls">Security and pilot controls</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div class="field full"><label>Additional Notes</label><textarea name="message" placeholder="Share any leadership, pilot, or operational review priorities"></textarea></div>
+        <div class="field full">
+          <label>Acknowledgment</label>
+          <div class="check">
+            <input type="checkbox" name="acknowledgment" value="yes" required>
+            <span>I understand Early Risk Alert AI is intended for controlled pilot evaluation and hospital-facing workflow support. It does not replace clinician judgment and is not intended to diagnose, direct treatment, or independently trigger escalation.</span>
+          </div>
+        </div>
         """
-        page = FORM_HTML.replace("__TITLE__", "Executive Walkthrough")
-        page = page.replace("__HEADING__", "Executive Walkthrough")
+        page = FORM_HTML.replace("__TITLE__", "Request an Executive Walkthrough")
+        page = page.replace("__HEADING__", "Request an Executive Walkthrough")
         page = page.replace(
             "__COPY__",
-            "Request a leadership-level review of the platform, intended-use positioning, pilot readiness, and command-center workflow-support use case.",
+            "Request a leadership-level walkthrough of Early Risk Alert AI’s hospital-facing platform, pilot readiness, operational workflow support, and command-center visibility model.",
         )
         page = page.replace("__FIELDS__", fields)
         page = page.replace("__BUTTON__", "Request Executive Walkthrough")
@@ -1639,7 +1771,9 @@ def create_app() -> Flask:
                 "email": request.form.get("email", "").strip(),
                 "stage": request.form.get("stage", "").strip(),
                 "timeline": request.form.get("timeline", "").strip(),
+                "interest_area": request.form.get("interest_area", "").strip(),
                 "message": request.form.get("message", "").strip(),
+                "acknowledgment": request.form.get("acknowledgment", "").strip(),
                 "lead_score": 0,
             }
             payload["lead_score"] = _lead_score(payload, "investor")
@@ -1647,14 +1781,17 @@ def create_app() -> Flask:
             return render_template_string(
                 THANK_YOU_HTML
                 .replace("__MESSAGE__", "Your investor access request has been received.")
-                .replace("__DETAILS__", _detail_html(payload, ["full_name", "organization", "role", "email", "stage", "timeline"]))
+                .replace(
+                    "__DETAILS__",
+                    _detail_html(payload, ["full_name", "organization", "role", "email", "stage", "timeline", "interest_area"]),
+                )
             )
 
         fields = """
-        <div class="field"><label>Full Name</label><input name="full_name" required></div>
-        <div class="field"><label>Organization</label><input name="organization" required></div>
-        <div class="field"><label>Role</label><input name="role" required></div>
-        <div class="field"><label>Work Email</label><input type="email" name="email" required></div>
+        <div class="field"><label>Full Name</label><input name="full_name" placeholder="Enter your full name" required></div>
+        <div class="field"><label>Organization</label><input name="organization" placeholder="Enter your organization" required></div>
+        <div class="field"><label>Role</label><input name="role" placeholder="Enter your role" required></div>
+        <div class="field"><label>Work Email</label><input type="email" name="email" placeholder="Enter your work email" required></div>
         <div class="field"><label>Investor Stage</label>
           <select name="stage" required>
             <option value="Angel">Angel</option>
@@ -1671,13 +1808,31 @@ def create_app() -> Flask:
             <option value="Exploratory">Exploratory</option>
           </select>
         </div>
-        <div class="field"><label>Message</label><textarea name="message"></textarea></div>
+        <div class="field full"><label>Areas of Interest</label>
+          <select name="interest_area" required>
+            <option value="Platform overview">Platform overview</option>
+            <option value="Hospital pilot model">Hospital pilot model</option>
+            <option value="Commercial model">Commercial model</option>
+            <option value="Market opportunity">Market opportunity</option>
+            <option value="Founder discussion">Founder discussion</option>
+            <option value="Partnership discussion">Partnership discussion</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div class="field full"><label>Message</label><textarea name="message" placeholder="Share your investor or partnership interests"></textarea></div>
+        <div class="field full">
+          <label>Acknowledgment</label>
+          <div class="check">
+            <input type="checkbox" name="acknowledgment" value="yes" required>
+            <span>I understand Early Risk Alert AI is positioned as an HCP-facing decision-support and workflow-support platform for controlled pilot evaluation and hospital-facing workflow support.</span>
+          </div>
+        </div>
         """
-        page = FORM_HTML.replace("__TITLE__", "Investor Access")
+        page = FORM_HTML.replace("__TITLE__", "Request Investor Access")
         page = page.replace("__HEADING__", "Request Investor Access")
         page = page.replace(
             "__COPY__",
-            "Request access to investor materials, platform overview, stable pilot version information, and positioning materials for Early Risk Alert AI.",
+            "Request investor materials, platform overview, and partnership discussion access for Early Risk Alert AI’s HCP-facing decision-support and workflow-support platform.",
         )
         page = page.replace("__FIELDS__", fields)
         page = page.replace("__BUTTON__", "Request Investor Access")
@@ -1834,11 +1989,10 @@ def create_app() -> Flask:
         executives = _read_json_list(exec_file)
         investors = _read_json_list(investor_file)
 
-        def _table(rows: List[Dict[str, Any]]) -> str:
+        def _table(rows: List[Dict[str, Any]], headers: List[str]) -> str:
             if not rows:
                 return "<p style='color:#9fb4d6;'>No submissions yet.</p>"
 
-            headers = ["submitted_at", "full_name", "organization", "role", "email", "timeline", "lead_score", "status"]
             out = ["<table style='width:100%;border-collapse:collapse'><thead><tr>"]
             for header in headers:
                 out.append(
@@ -1884,9 +2038,9 @@ def create_app() -> Flask:
               </div>
             </div>
 
-            <div class="card"><h2>Hospital Demo Requests</h2>{_table(hospitals)}</div>
-            <div class="card"><h2>Executive Walkthrough Requests</h2>{_table(executives)}</div>
-            <div class="card"><h2>Investor Access Requests</h2>{_table(investors)}</div>
+            <div class="card"><h2>Hospital Demo Requests</h2>{_table(hospitals, ["submitted_at", "full_name", "email", "organization_type", "organization", "role", "department_unit", "evaluation_interest", "timeline", "lead_score", "status"])}</div>
+            <div class="card"><h2>Executive Walkthrough Requests</h2>{_table(executives, ["submitted_at", "full_name", "organization", "title", "email", "leadership_area", "review_focus", "timeline", "lead_score", "status"])}</div>
+            <div class="card"><h2>Investor Access Requests</h2>{_table(investors, ["submitted_at", "full_name", "organization", "role", "email", "stage", "timeline", "interest_area", "lead_score", "status"])}</div>
           </div>
         </body>
         </html>
