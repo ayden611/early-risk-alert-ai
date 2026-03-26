@@ -1,7 +1,7 @@
 ```markdown
 # Early Risk Alert AI
 
-Early Risk Alert AI is an HCP-facing decision-support and workflow-support platform intended to assist authorized health care professionals in identifying patients who may warrant further clinical evaluation, support patient prioritization, and improve command-center operational awareness.
+Early Risk Alert AI is an HCP-facing decision-support and workflow-support platform designed to help authorized health care professionals identify patients who may warrant further clinical evaluation, support patient prioritization, and improve command-center operational awareness.
 
 The platform is intended for controlled pilot evaluation and hospital-facing workflow support. It does not replace clinician judgment and is not intended to diagnose, direct treatment, or independently trigger escalation.
 
@@ -20,10 +20,9 @@ https://youtu.be/vg0uj4AVyN8
 ## Founder
 
 Milton Munroe  
-Founder & CEO, Early Risk Alert AI
+Founder & CEO, Early Risk Alert AI  
 
-LinkedIn:  
-https://www.linkedin.com/in/milton-munroe-3687a53b9/
+LinkedIn: https://www.linkedin.com/in/milton-munroe-3687a53b9/
 
 ---
 
@@ -33,38 +32,50 @@ Early Risk Alert AI provides a hospital-facing command-center experience that co
 
 The platform is built to assist authorized health care professionals with:
 
-- patient prioritization support
-- further clinical evaluation support
-- command-center workflow awareness
-- monitored patient visibility and trend review
-- workflow action documentation through audit-aware controls
-
----
-
-## Intended Use
-
-Early Risk Alert AI is intended for use by authorized health care professionals and approved hospital personnel as a decision-support and workflow-support platform to assist in identifying patients who may warrant further clinical evaluation, support patient prioritization, and improve command-center operational awareness.
-
-The platform does not replace clinician judgment and is not intended to diagnose, direct treatment, or independently trigger escalation.
+- reviewing prioritized patient risk
+- supporting further clinical evaluation
+- improving command-center workflow awareness
+- strengthening monitored patient visibility
+- improving operational coordination across care environments
 
 ---
 
 ## Core Capabilities
 
-- Command-center patient visibility
-- Explainable review-basis panel
-- Confidence and limitations display
-- Data freshness indicators
-- Risk-support context for patient prioritization
-- Workflow-state tracking
-- Role-based access controls
-- Unit-restricted visibility
-- Audit-aware workflows
-- Pilot governance and documentation support
+- Real-time monitored patient visibility
+- Explainable risk-support context
+- Risk prioritization views for command-center workflows
+- Pilot-safe interface design for controlled evaluation
+- Workflow-support features for hospital-facing operational awareness
+- Unit-aware and role-aware visibility support
+- Confidence, freshness, and limitations context within the experience
+- Governance-aware positioning for pilot and evaluation settings
 
 ---
 
-## Security & Pilot Controls
+## Intended Use Positioning
+
+Early Risk Alert AI is intended to support authorized health care professionals by surfacing patient risk visibility, workflow prioritization support, and command-center operational awareness in hospital-facing environments.
+
+The platform is not intended to diagnose, prescribe treatment, replace clinician judgment, or independently initiate escalation pathways.
+
+---
+
+## Pilot-Safe Design Principles
+
+The current pilot version emphasizes:
+
+- supportive decision-support language
+- workflow-support framing rather than autonomous clinical action
+- explainability and visibility context
+- limitations-aware presentation
+- controlled evaluation readiness
+- governance-aware platform positioning
+- stable pilot build controls
+
+---
+
+## Platform Environment
 
 Early Risk Alert AI is designed with pilot-safe operational controls for healthcare environments, including authenticated access, role-based permissions, unit-restricted visibility, secure session handling, audit-aware workflows, and protected cloud configuration.
 
@@ -72,95 +83,43 @@ The platform is built for controlled pilot evaluation and clinical decision-supp
 
 ---
 
-## Technology Stack
+## Current Pilot Build Focus
 
-Early Risk Alert AI is built as a cloud-based clinical intelligence and command-center platform using a modern application stack.
+The current pilot version includes a locked stable build approach with emphasis on:
 
-### Backend
-- Python
-- Flask
-- REST API architecture
-- Session-based access control
-- Workflow and audit-aware application logic
-- Pilot governance and documentation endpoints
-
-### Frontend
-- HTML
-- CSS
-- JavaScript
-- Interactive command-center dashboard
-- Role-aware UI and pilot-safe workflow presentation
-
-### Data & Infrastructure
-- PostgreSQL / SQL-based persistence
-- Render cloud deployment
-- Secure environment-based configuration
-- HTTPS-enabled application delivery
-- Protected secret management through environment variables
-
-### Platform Capabilities
-- Monitored patient visibility
-- Risk-support context for patient prioritization
-- Explainable review-basis outputs
-- Confidence, limitations, and data-freshness visibility
-- Unit-restricted visibility controls
-- Audit-aware workflow action tracking
-- Pilot-safe system health and reliability indicators
+- one consistent intended-use statement across platform context
+- softened recommendation language to preserve supportive review context
+- workflow-versus-clinical separation
+- explainability visibility
+- confidence and limitations framing
+- freshness-aware context presentation
+- pilot governance and change-control support
 
 ---
 
-## Governance & Pilot Readiness
+## Governance and Documentation
 
-The platform includes pilot-governance support elements designed to strengthen hospital-facing readiness, including:
+The pilot build includes governance-oriented positioning and supporting controls such as:
 
-- one frozen intended-use statement carried throughout the pilot build
-- a locked stable pilot build marker
-- built-in risk register
-- V&V-lite documentation support
-- release notes and pilot version tracking
-- avoid-claims guidance for safer HCP-facing positioning
-- pilot change-control tracking
-- pilot documentation access through governance routes
-- separation of workflow status from supportive clinical recommendation
+- pilot documentation routes
+- platform positioning references
+- avoid-claims guardrails
+- change-control support
+- stable pilot build state visibility
 
-### Current Pilot Governance Markers
-- `PILOT_BUILD_STATE`: locked stable build
-- `PILOT_AVOID_CLAIMS`: enabled
-- `PILOT_CHANGE_CONTROL`: enabled
+These elements are intended to support controlled pilot review, evaluation planning, and responsible hospital-facing demonstrations.
 
 ---
 
-## Platform Positioning
+## Important Notice
 
-The platform maintains a conservative HCP-facing decision-support posture by:
-
-- keeping one stable intended-use statement across the system
-- presenting supportive review context rather than machine-directed care
-- making the basis for outputs reviewable by the authorized health care professional
-- making confidence, limitations, freshness, and unknowns visible
-- maintaining role- and unit-scoped access controls
-- preserving audit visibility and workflow traceability
-
----
-
-## Regulatory Positioning
-
-Early Risk Alert AI is currently positioned for hospital-facing pilot evaluation as an HCP-facing decision-support and workflow-support platform.
-
-The company does not claim FDA clearance or approval for the platform at this time unless and until such status is obtained. The company is maintaining a conservative regulatory posture and is prepared for further regulatory assessment as product scope and deployment evolve.
-
----
-
-## Deployment Positioning
-
-Early Risk Alert AI is structured for secure pilot deployment, hospital-facing workflow evaluation, and scalable enterprise expansion through controlled access, audit-aware workflows, and protected cloud infrastructure.
+Early Risk Alert AI is a pilot-stage hospital-facing platform for controlled evaluation. Any use in care environments should remain subject to hospital policy, authorized oversight, clinical review, compliance processes, and appropriate governance procedures.
 
 ---
 
 ## Contact
 
-For pilot discussions, hospital walkthroughs, or partnership inquiries:
-
+Early Risk Alert AI  
 info@earlyriskalertai.com  
 732-724-7267
 ```
