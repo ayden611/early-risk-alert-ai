@@ -32,7 +32,8 @@ FOUNDER_NAME = "Milton Munroe"
 FOUNDER_ROLE = "Founder & CEO, Early Risk Alert AI"
 
 
-PILOT_VERSION = os.getenv("PILOT_VERSION", "pilot-2026.03.25")
+PILOT_VERSION = os.getenv("PILOT_VERSION", "stable-pilot-1.0.0")
+PILOT_BUILD_STATE = "Locked Stable Pilot Build"
 INTENDED_USE_STATEMENT = (
     "Early Risk Alert AI is an HCP-facing decision-support and workflow-support software platform intended to assist authorized health care professionals in identifying patients who may warrant further clinical evaluation, supporting patient prioritization, and improving command-center operational awareness. It does not replace clinician judgment and is not intended to diagnose, direct treatment, or independently trigger escalation."
 )
@@ -57,6 +58,20 @@ PILOT_SUPPORTED_OUTPUTS = [
     "trend and freshness information",
     "workflow-support visibility",
     "supportive recommendation for further clinical evaluation",
+]
+PILOT_AVOID_CLAIMS = [
+    "detects deterioration autonomously",
+    "identifies who needs immediate escalation",
+    "predicts who will clinically crash",
+    "directs bedside intervention",
+    "determines which patients need escalation now",
+]
+PILOT_CHANGE_CONTROL = [
+    "Freeze one intended-use statement everywhere in the pilot build.",
+    "Keep claims narrow and supportive rather than directive.",
+    "Make review basis, confidence, limitations, freshness, and unknowns visible for each patient.",
+    "Maintain role scoping, unit scoping, and audit visibility across routes.",
+    "Record each approved pilot change in release notes before deployment.",
 ]
 PILOT_LIMITATIONS_TEXT = [
     "Output is decision support only and not a diagnosis.",
@@ -83,12 +98,13 @@ PILOT_RELEASE_NOTES = [
     {
         "version": PILOT_VERSION,
         "date": "2026-03-25",
-        "summary": "Pilot-safe positioning bundle",
+        "summary": "Locked stable pilot-safe positioning bundle",
         "changes": [
             "Frozen intended-use statement added across platform context and pilot documentation.",
             "Safer support-language and supportive-output framing tightened in command center copy and form routes.",
             "Risk register, V&V-lite sheet, release notes, and pilot docs route added.",
             "Role/unit scoping, workflow/audit separation, and explainability-first presentation retained.",
+            "Release locked as one stable pilot bundle for document alignment and controlled updates.",
         ],
     }
 ]
@@ -879,16 +895,16 @@ def create_app() -> Flask:
 
             if score >= 7:
                 severity = "critical"
-                action = "Suggested next review: urgent bedside reassessment and senior clinician review per clinician judgment and hospital protocol."
+                action = "Suggested review context: prioritize independent clinical reassessment and senior clinician review according to clinician judgment and hospital protocol."
             elif score >= 4:
                 severity = "high"
-                action = "Suggested next review: assign clinical follow-up and reassess promptly within the next monitoring interval."
+                action = "Suggested review context: prioritize clinical follow-up and reassess within the next monitoring interval according to local workflow and policy."
             elif score >= 2:
                 severity = "moderate"
-                action = "Suggested next review: continue monitored review and evaluate for additional clinical context."
+                action = "Suggested review context: continue monitored review and evaluate additional clinical context before deciding next steps."
             else:
                 severity = "stable"
-                action = "Suggested next review: continue routine monitored review."
+                action = "Suggested review context: continue routine monitored review within standard workflow."
 
             if not reasons:
                 reasons = ["Combined reviewed summary pattern within acceptable thresholds"]
@@ -1024,8 +1040,11 @@ def create_app() -> Flask:
                 "workflow_disclaimer": "Acknowledge, assign, escalate, and resolve controls record operational workflow state and user action logs only. They are not machine-issued medical orders, treatment directives, or mandatory escalation commands.",
                 "limitations_banner": "Incomplete or delayed data may affect outputs. Clinicians must independently review the patient, and hospital policy governs escalation.",
                 "pilot_version": PILOT_VERSION,
+                "pilot_build_state": PILOT_BUILD_STATE,
                 "supported_inputs": PILOT_SUPPORTED_INPUTS,
                 "supported_outputs": PILOT_SUPPORTED_OUTPUTS,
+                "avoid_claims": PILOT_AVOID_CLAIMS,
+                "change_control": PILOT_CHANGE_CONTROL,
                 "limitations": PILOT_LIMITATIONS_TEXT,
                 "data_freshness": {
                     "generated_at": generated_at,
@@ -1232,6 +1251,7 @@ def create_app() -> Flask:
                 "can_view_all_units": _current_role() == "admin" or _current_unit_access() == "all",
                 "pilot_mode": True,
                 "pilot_version": PILOT_VERSION,
+                "pilot_build_state": PILOT_BUILD_STATE,
                 "intended_use_statement": INTENDED_USE_STATEMENT,
                 "pilot_docs_url": "/pilot-docs",
                 **brand,
@@ -1669,14 +1689,33 @@ def create_app() -> Flask:
         return jsonify(
             {
                 "pilot_version": PILOT_VERSION,
+                "pilot_build_state": PILOT_BUILD_STATE,
                 "intended_use_statement": INTENDED_USE_STATEMENT,
                 "support_language": PILOT_SUPPORT_LANGUAGE,
                 "supported_inputs": PILOT_SUPPORTED_INPUTS,
                 "supported_outputs": PILOT_SUPPORTED_OUTPUTS,
+                "avoid_claims": PILOT_AVOID_CLAIMS,
+                "change_control": PILOT_CHANGE_CONTROL,
                 "limitations": PILOT_LIMITATIONS_TEXT,
                 "risk_register": PILOT_RISK_REGISTER,
                 "vnv_lite": PILOT_VNV_LITE,
                 "release_notes": PILOT_RELEASE_NOTES,
+            }
+        )
+
+    @app.get("/api/platform-positioning")
+    @_login_required
+    def platform_positioning():
+        return jsonify(
+            {
+                "pilot_version": PILOT_VERSION,
+                "pilot_build_state": PILOT_BUILD_STATE,
+                "intended_use_statement": INTENDED_USE_STATEMENT,
+                "support_language": PILOT_SUPPORT_LANGUAGE,
+                "supported_inputs": PILOT_SUPPORTED_INPUTS,
+                "supported_outputs": PILOT_SUPPORTED_OUTPUTS,
+                "avoid_claims": PILOT_AVOID_CLAIMS,
+                "limitations": PILOT_LIMITATIONS_TEXT,
             }
         )
 
@@ -1743,6 +1782,7 @@ def create_app() -> Flask:
             <div class="card">
               <h2 style="margin:0 0 10px;font-size:30px">Frozen Intended Use</h2>
               <div class="sub" style="font-size:18px;color:#eef4ff">{INTENDED_USE_STATEMENT}</div>
+              <div style="margin-top:12px;display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:999px;background:rgba(181,140,255,.14);border:1px solid rgba(181,140,255,.28);font-weight:900;color:#f0e5ff">{PILOT_BUILD_STATE} · {PILOT_VERSION}</div>
             </div>
 
             <div class="grid">
@@ -1855,6 +1895,6 @@ def create_app() -> Flask:
 
     @app.get("/healthz")
     def healthz():
-        return jsonify({"ok": True, "service": "early-risk-alert-ai", "time": _utc_now_iso(), "version": PILOT_VERSION})
+        return jsonify({"ok": True, "service": "early-risk-alert-ai", "time": _utc_now_iso(), "version": PILOT_VERSION, "build_state": PILOT_BUILD_STATE})
 
     return app
