@@ -32,6 +32,68 @@ FOUNDER_NAME = "Milton Munroe"
 FOUNDER_ROLE = "Founder & CEO, Early Risk Alert AI"
 
 
+PILOT_VERSION = os.getenv("PILOT_VERSION", "pilot-2026.03.25")
+INTENDED_USE_STATEMENT = (
+    "Early Risk Alert AI is an HCP-facing decision-support and workflow-support software platform intended to assist authorized health care professionals in identifying patients who may warrant further clinical evaluation, supporting patient prioritization, and improving command-center operational awareness. It does not replace clinician judgment and is not intended to diagnose, direct treatment, or independently trigger escalation."
+)
+PILOT_SUPPORT_LANGUAGE = [
+    "supports earlier visibility into potential deterioration",
+    "assists health care professionals in prioritizing monitored patients",
+    "provides explainable risk-support context",
+    "supports command-center workflow awareness",
+    "helps identify patients who may warrant further review",
+]
+PILOT_SUPPORTED_INPUTS = [
+    "structured patient medical information",
+    "trended vital-sign summaries",
+    "monitored patient context",
+    "workflow state and review context",
+    "approved medical information available to the HCP",
+]
+PILOT_SUPPORTED_OUTPUTS = [
+    "patient prioritization support",
+    "risk-support context",
+    "explainable contributing factors",
+    "trend and freshness information",
+    "workflow-support visibility",
+    "supportive recommendation for further clinical evaluation",
+]
+PILOT_LIMITATIONS_TEXT = [
+    "Output is decision support only and not a diagnosis.",
+    "Incomplete or delayed data may affect outputs.",
+    "Clinicians must independently review the patient and current clinical context.",
+    "Hospital policy governs escalation, response timing, and treatment decisions.",
+    "The platform is not intended to diagnose, direct treatment, or independently trigger escalation.",
+]
+PILOT_RISK_REGISTER = [
+    {"id": "R-001", "area": "Claims", "risk": "Autonomous or directive claims could shift the platform toward a higher-risk regulatory posture.", "mitigation": "Freeze one intended-use statement and review UI, sales copy, and decks before each release.", "owner": "Founder/Product", "status": "Open"},
+    {"id": "R-002", "area": "Explainability", "risk": "Users may over-rely on outputs if the basis, confidence, limitations, and unknowns are not visible.", "mitigation": "Keep review basis, freshness, confidence, limitations, and unknowns visible in the patient detail workflow.", "owner": "Engineering", "status": "In Place"},
+    {"id": "R-003", "area": "Workflow Separation", "risk": "Operational buttons could be misread as machine-issued clinical directives.", "mitigation": "Keep acknowledge/assign/escalate/resolve framed as workflow state and user action logging only.", "owner": "Product", "status": "In Place"},
+    {"id": "R-004", "area": "Scope Control", "risk": "Improper access scope could expose records outside the intended role or unit context.", "mitigation": "Maintain role restrictions, unit restrictions, and filtered workflow/audit visibility across routes.", "owner": "Engineering", "status": "In Place"},
+    {"id": "R-005", "area": "Change Control", "risk": "Pilot drift could occur if live edits are made without a stable version marker and release notes.", "mitigation": "Keep one stable pilot version, maintain release notes, and update a simple change log for each approved bundle.", "owner": "Founder/Engineering", "status": "Open"},
+]
+PILOT_VNV_LITE = [
+    {"id": "VV-001", "check": "Access context respects login, role, and unit scope.", "method": "Route check across /login, /pilot-access, /api/access-context, and filtered views.", "evidence": "Implemented in current pilot bundle.", "status": "Pass"},
+    {"id": "VV-002", "check": "Workflow actions remain operational and auditable rather than directive.", "method": "Exercise ack/assign/escalate/resolve and confirm workflow/audit separation in API and UI.", "evidence": "Workflow and audit routes updated in current pilot bundle.", "status": "Pass"},
+    {"id": "VV-003", "check": "Explainability fields are visible for patient review.", "method": "Open patient drawer and verify review basis, confidence, limitations, freshness, what changed, and unknowns.", "evidence": "Visible in patient detail drawer.", "status": "Pass"},
+    {"id": "VV-004", "check": "Threshold and trend routes return scoped data without breaking the command center.", "method": "Call /api/thresholds and /api/trends/<patient_id> under pilot roles.", "evidence": "Routes available in current pilot bundle.", "status": "Pass"},
+    {"id": "VV-005", "check": "Pilot governance artifacts are visible from the app.", "method": "Open /pilot-docs and verify intended use, risk register, V&V-lite, and release notes render.", "evidence": "Added in current pilot bundle.", "status": "Pass"},
+]
+PILOT_RELEASE_NOTES = [
+    {
+        "version": PILOT_VERSION,
+        "date": "2026-03-25",
+        "summary": "Pilot-safe positioning bundle",
+        "changes": [
+            "Frozen intended-use statement added across platform context and pilot documentation.",
+            "Safer support-language and supportive-output framing tightened in command center copy and form routes.",
+            "Risk register, V&V-lite sheet, release notes, and pilot docs route added.",
+            "Role/unit scoping, workflow/audit separation, and explainability-first presentation retained.",
+        ],
+    }
+]
+
+
 LOGIN_HTML = """
 <!doctype html>
 <html lang="en">
@@ -614,7 +676,7 @@ def create_app() -> Flask:
             basis.append("Top contributing factors reviewed: " + "; ".join(reasons))
         else:
             basis.append("No trigger-level threshold breach detected in the current summary window.")
-        basis.append("This output assists further clinical evaluation, prioritization, and command-center awareness. It does not replace clinician judgment and is not intended to diagnose, direct treatment, or independently trigger escalation.")
+        basis.append(INTENDED_USE_STATEMENT)
         return basis
 
     def _build_current_review_inputs(hr: int, sbp: int, dbp: int, spo2: int, thresholds: Dict[str, float], generated_at: str) -> List[str]:
@@ -885,7 +947,7 @@ def create_app() -> Flask:
                         "what_software_does_not_know": unknowns,
                         "confidence": confidence,
                         "limitations": limitations,
-                        "decision_support_disclaimer": "HCP-facing decision-support and workflow-support display only. This output assists further clinical evaluation, prioritization, and command-center awareness. It does not replace clinician judgment and is not intended to diagnose, direct treatment, or independently trigger escalation.",
+                        "decision_support_disclaimer": INTENDED_USE_STATEMENT,
                     },
                 }
             )
@@ -957,9 +1019,14 @@ def create_app() -> Flask:
                     "does not replace clinician judgment",
                     "not intended to diagnose, direct treatment, or independently trigger escalation",
                 ],
-                "decision_support_disclaimer": "HCP-facing decision-support and workflow-support platform. The output assists further clinical evaluation, prioritization, and command-center awareness. It does not replace clinician judgment and is not intended to diagnose, direct treatment, or independently trigger escalation. Review the basis, confidence, limitations, data freshness, and hospital policy before acting.",
-                "workflow_disclaimer": "Acknowledge, assign, escalate, and resolve controls record operational workflow state and user action logs only. They are not machine-issued medical orders.",
+                "intended_use_statement": INTENDED_USE_STATEMENT,
+                "decision_support_disclaimer": INTENDED_USE_STATEMENT + " Review the basis, confidence, limitations, data freshness, what changed, what the software does not know, and hospital policy before acting.",
+                "workflow_disclaimer": "Acknowledge, assign, escalate, and resolve controls record operational workflow state and user action logs only. They are not machine-issued medical orders, treatment directives, or mandatory escalation commands.",
                 "limitations_banner": "Incomplete or delayed data may affect outputs. Clinicians must independently review the patient, and hospital policy governs escalation.",
+                "pilot_version": PILOT_VERSION,
+                "supported_inputs": PILOT_SUPPORTED_INPUTS,
+                "supported_outputs": PILOT_SUPPORTED_OUTPUTS,
+                "limitations": PILOT_LIMITATIONS_TEXT,
                 "data_freshness": {
                     "generated_at": generated_at,
                     "age_seconds": 0,
@@ -1164,6 +1231,9 @@ def create_app() -> Flask:
                 "assigned_unit": _current_unit_access(),
                 "can_view_all_units": _current_role() == "admin" or _current_unit_access() == "all",
                 "pilot_mode": True,
+                "pilot_version": PILOT_VERSION,
+                "intended_use_statement": INTENDED_USE_STATEMENT,
+                "pilot_docs_url": "/pilot-docs",
                 **brand,
             }
         )
@@ -1484,7 +1554,7 @@ def create_app() -> Flask:
         page = page.replace("__HEADING__", "Request a Live Command Center Demo")
         page = page.replace(
             "__COPY__",
-            "See how Early Risk Alert AI identifies deterioration early, prioritizes risk, and enables faster clinical intervention through a real-time command center.",
+            "See how Early Risk Alert AI supports earlier visibility into potential deterioration, assists health care professionals in prioritizing monitored patients, and improves command-center operational awareness through an HCP-facing decision-support and workflow-support environment.",
         )
         page = page.replace("__FIELDS__", fields)
         page = page.replace("__BUTTON__", "Request Demo Access")
@@ -1531,7 +1601,7 @@ def create_app() -> Flask:
         page = page.replace("__HEADING__", "Executive Walkthrough")
         page = page.replace(
             "__COPY__",
-            "Request a leadership-level review of the platform, pilot readiness, and clinical operations use case.",
+            "Request a leadership-level review of the platform, intended-use positioning, pilot readiness, and command-center workflow-support use case.",
         )
         page = page.replace("__FIELDS__", fields)
         page = page.replace("__BUTTON__", "Request Executive Walkthrough")
@@ -1587,11 +1657,135 @@ def create_app() -> Flask:
         page = page.replace("__HEADING__", "Request Investor Access")
         page = page.replace(
             "__COPY__",
-            "Request access to investor materials, platform overview, and pilot opportunities for Early Risk Alert AI.",
+            "Request access to investor materials, platform overview, stable pilot version information, and positioning materials for Early Risk Alert AI.",
         )
         page = page.replace("__FIELDS__", fields)
         page = page.replace("__BUTTON__", "Request Investor Access")
         return render_template_string(page)
+
+    @app.get("/api/pilot-governance")
+    @_login_required
+    def pilot_governance():
+        return jsonify(
+            {
+                "pilot_version": PILOT_VERSION,
+                "intended_use_statement": INTENDED_USE_STATEMENT,
+                "support_language": PILOT_SUPPORT_LANGUAGE,
+                "supported_inputs": PILOT_SUPPORTED_INPUTS,
+                "supported_outputs": PILOT_SUPPORTED_OUTPUTS,
+                "limitations": PILOT_LIMITATIONS_TEXT,
+                "risk_register": PILOT_RISK_REGISTER,
+                "vnv_lite": PILOT_VNV_LITE,
+                "release_notes": PILOT_RELEASE_NOTES,
+            }
+        )
+
+    @app.get("/pilot-docs")
+    @_login_required
+    def pilot_docs():
+        def _render_simple_list(items: List[str]) -> str:
+            return "".join(
+                f"<div style='padding:10px 12px;border:1px solid rgba(255,255,255,.08);border-radius:14px;background:rgba(255,255,255,.03);margin-bottom:10px;color:#dce9ff'>{item}</div>"
+                for item in items
+            )
+
+        def _render_table(rows: List[Dict[str, Any]], headers: List[str]) -> str:
+            out = ["<table style='width:100%;border-collapse:collapse'>", "<thead><tr>"]
+            for header in headers:
+                out.append(f"<th style='padding:12px;text-align:left;color:#9adfff;border-bottom:1px solid rgba(255,255,255,.08)'>{header.replace('_', ' ').title()}</th>")
+            out.append("</tr></thead><tbody>")
+            for row in rows:
+                out.append("<tr>")
+                for header in headers:
+                    value = row.get(header, "")
+                    if isinstance(value, list):
+                        value = "<br>".join(f"• {item}" for item in value)
+                    out.append(f"<td style='padding:12px;vertical-align:top;border-bottom:1px solid rgba(255,255,255,.08);color:#dce9ff'>{value}</td>")
+                out.append("</tr>")
+            out.append("</tbody></table>")
+            return "".join(out)
+
+        html = f"""
+        <!doctype html>
+        <html lang="en">
+        <head>
+          <meta charset="utf-8">
+          <title>Pilot Docs — Early Risk Alert AI</title>
+          <meta name="viewport" content="width=device-width, initial-scale=1">
+          <style>
+            body{{margin:0;padding:24px;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#eef4ff;background:linear-gradient(180deg,#07101c,#0b1528)}}
+            .wrap{{max-width:1240px;margin:0 auto}}
+            .card{{border:1px solid rgba(255,255,255,.08);border-radius:24px;background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.018));padding:24px;margin-bottom:18px;box-shadow:0 20px 60px rgba(0,0,0,.28)}}
+            .btn{{display:inline-flex;align-items:center;justify-content:center;padding:12px 16px;border-radius:16px;font-weight:900;background:linear-gradient(135deg,#7aa2ff,#5bd4ff);color:#07101c;text-decoration:none}}
+            .sub{{color:#9fb4d6;line-height:1.7}}
+            .grid{{display:grid;grid-template-columns:1fr 1fr;gap:16px}}
+            .pill{{display:inline-flex;align-items:center;padding:10px 14px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);font-size:12px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;margin-right:8px;margin-bottom:8px}}
+            @media (max-width:840px){{.grid{{grid-template-columns:1fr}}}}
+          </style>
+        </head>
+        <body>
+          <div class="wrap">
+            <div class="card">
+              <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center">
+                <div>
+                  <div class="pill">Pilot Docs</div>
+                  <div class="pill">Version {PILOT_VERSION}</div>
+                  <h1 style="margin:12px 0 10px;font-size:42px;line-height:.95;letter-spacing:-.05em">Stable Pilot Positioning Bundle</h1>
+                  <div class="sub">Freeze one intended-use statement everywhere, keep outputs supportive rather than directive, and keep explainability, limitations, scoping, and audit visibility easy to review.</div>
+                </div>
+                <div style="display:flex;gap:12px;flex-wrap:wrap">
+                  <a class="btn" href="/command-center">Back to Command Center</a>
+                  <a class="btn" href="/pilot-docs">Open Pilot Docs</a>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <h2 style="margin:0 0 10px;font-size:30px">Frozen Intended Use</h2>
+              <div class="sub" style="font-size:18px;color:#eef4ff">{INTENDED_USE_STATEMENT}</div>
+            </div>
+
+            <div class="grid">
+              <div class="card">
+                <h2 style="margin:0 0 10px;font-size:26px">Support Language</h2>
+                <div class="sub">{_render_simple_list(PILOT_SUPPORT_LANGUAGE)}</div>
+              </div>
+              <div class="card">
+                <h2 style="margin:0 0 10px;font-size:26px">Visible Limitations</h2>
+                <div class="sub">{_render_simple_list(PILOT_LIMITATIONS_TEXT)}</div>
+              </div>
+            </div>
+
+            <div class="grid">
+              <div class="card">
+                <h2 style="margin:0 0 10px;font-size:26px">Supported Inputs</h2>
+                <div class="sub">{_render_simple_list(PILOT_SUPPORTED_INPUTS)}</div>
+              </div>
+              <div class="card">
+                <h2 style="margin:0 0 10px;font-size:26px">Supported Outputs</h2>
+                <div class="sub">{_render_simple_list(PILOT_SUPPORTED_OUTPUTS)}</div>
+              </div>
+            </div>
+
+            <div class="card">
+              <h2 style="margin:0 0 12px;font-size:28px">Risk Register</h2>
+              {_render_table(PILOT_RISK_REGISTER, ["id", "area", "risk", "mitigation", "owner", "status"])}
+            </div>
+
+            <div class="card">
+              <h2 style="margin:0 0 12px;font-size:28px">V&amp;V-Lite Sheet</h2>
+              {_render_table(PILOT_VNV_LITE, ["id", "check", "method", "evidence", "status"])}
+            </div>
+
+            <div class="card">
+              <h2 style="margin:0 0 12px;font-size:28px">Release Notes</h2>
+              {_render_table(PILOT_RELEASE_NOTES, ["version", "date", "summary", "changes"])}
+            </div>
+          </div>
+        </body>
+        </html>
+        """
+        return render_template_string(html)
 
     @app.get("/admin/review")
     @_admin_required
@@ -1661,6 +1855,6 @@ def create_app() -> Flask:
 
     @app.get("/healthz")
     def healthz():
-        return jsonify({"ok": True, "service": "early-risk-alert-ai", "time": _utc_now_iso()})
+        return jsonify({"ok": True, "service": "early-risk-alert-ai", "time": _utc_now_iso(), "version": PILOT_VERSION})
 
     return app
