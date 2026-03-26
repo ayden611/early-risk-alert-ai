@@ -32,7 +32,7 @@ FOUNDER_NAME = "Milton Munroe"
 FOUNDER_ROLE = "Founder & CEO, Early Risk Alert AI"
 
 
-PILOT_VERSION = os.getenv("PILOT_VERSION", "stable-pilot-1.0.0")
+PILOT_VERSION = os.getenv("PILOT_VERSION", "stable-pilot-1.0.2")
 PILOT_BUILD_STATE = "Locked Stable Pilot Build"
 INTENDED_USE_STATEMENT = (
     "Early Risk Alert AI is an HCP-facing decision-support and workflow-support software platform intended to assist authorized health care professionals in identifying patients who may warrant further clinical evaluation, supporting patient prioritization, and improving command-center operational awareness. It does not replace clinician judgment and is not intended to diagnose, direct treatment, or independently trigger escalation."
@@ -96,26 +96,48 @@ PILOT_VNV_LITE = [
 ]
 PILOT_RELEASE_NOTES = [
     {
-        "version": PILOT_VERSION,
+        "version": "stable-pilot-1.0.0",
         "date": "2026-03-25",
-        "summary": "Locked stable pilot-safe positioning bundle",
+        "summary": "Locked stable pilot-safe positioning bundle.",
         "changes": [
             "Frozen intended-use statement added across platform context and pilot documentation.",
             "Safer support-language and supportive-output framing tightened in command center copy and form routes.",
             "Risk register, V&V-lite sheet, release notes, and pilot docs route added.",
-            "Role/unit scoping, workflow/audit separation, and explainability-first presentation retained.",
-            "Release locked as one stable pilot bundle for document alignment and controlled updates.",
+            "Role/unit scoping, workflow/audit separation, and explainability-first presentation retained."
         ],
-    }
+    },
+    {
+        "version": "stable-pilot-1.0.1",
+        "date": "2026-03-26",
+        "summary": "Expanded pilot governance package and hospital-review readiness materials.",
+        "changes": [
+            "Complaint / issue log, change approvals, cybersecurity summary, access policies, retention policy, pilot scope, training sheet, and dated validation evidence added.",
+            "Approved and banned claims lists added to the governance set.",
+            "Pilot docs and platform-positioning routes expanded for governance visibility."
+        ],
+    },
+    {
+        "version": "stable-pilot-1.0.2",
+        "date": "2026-03-26",
+        "summary": "Strengthened controlled pilot governance, document control, and supporting process detail.",
+        "changes": [
+            "Expanded complaint handling with investigation, corrective action, and closure tracking fields.",
+            "Expanded change approval evidence with approver, date, reason, what changed, and impact assessment.",
+            "Added document-control index and claims-control sheet.",
+            "Expanded cybersecurity, access, data handling, training, and validation evidence details.",
+            "Softened remaining review-language labels to keep the pilot posture supportive rather than directive."
+        ],
+    },
 ]
 
 PILOT_APPROVED_CLAIMS = [
-    "supports earlier visibility into potential deterioration",
     "assists authorized health care professionals in identifying patients who may warrant further clinical evaluation",
     "supports patient prioritization across monitored patients",
     "provides explainable risk-support context",
     "supports command-center workflow awareness and operational visibility",
     "supports monitored patient visibility and reviewable trend context",
+    "supports further clinical evaluation through reviewable contributing factors, confidence, limitations, and data freshness",
+    "supports controlled hospital pilot evaluation and workflow-aware review by authorized users",
 ]
 
 PILOT_BANNED_CLAIMS = [
@@ -127,45 +149,312 @@ PILOT_BANNED_CLAIMS = [
     "replaces clinician judgment",
     "provides a diagnosis",
     "triggers escalation independently",
+    "forces immediate escalation decisions",
+    "acts as the primary clinical decision-maker",
+]
+
+PILOT_CLAIMS_CONTROL_SHEET = [
+    {
+        "claim": "Assists authorized health care professionals in identifying patients who may warrant further clinical evaluation",
+        "status": "Approved",
+        "category": "Intended use / supportive output",
+        "owner": "Founder/Product",
+        "last_reviewed": "2026-03-26",
+        "rationale": "Keeps the HCP as decision-maker and frames output as supportive review context."
+    },
+    {
+        "claim": "Supports patient prioritization across monitored patients",
+        "status": "Approved",
+        "category": "Workflow-support / prioritization",
+        "owner": "Founder/Product",
+        "last_reviewed": "2026-03-26",
+        "rationale": "Positions the platform as prioritization support rather than autonomous action."
+    },
+    {
+        "claim": "Provides explainable risk-support context",
+        "status": "Approved",
+        "category": "Explainability / transparency",
+        "owner": "Founder/Product",
+        "last_reviewed": "2026-03-26",
+        "rationale": "Supports independent HCP review of the basis for outputs."
+    },
+    {
+        "claim": "Supports command-center workflow awareness and operational visibility",
+        "status": "Approved",
+        "category": "Operational awareness",
+        "owner": "Founder/Product",
+        "last_reviewed": "2026-03-26",
+        "rationale": "Frames the system as workflow-support rather than diagnosis or treatment direction."
+    },
+    {
+        "claim": "Detects deterioration autonomously",
+        "status": "Banned",
+        "category": "Automation / device-risk",
+        "owner": "Founder/Product",
+        "last_reviewed": "2026-03-26",
+        "rationale": "Would overstate autonomy and weaken the HCP-facing support posture."
+    },
+    {
+        "claim": "Identifies who needs immediate escalation",
+        "status": "Banned",
+        "category": "Time-critical directive",
+        "owner": "Founder/Product",
+        "last_reviewed": "2026-03-26",
+        "rationale": "Sounds like independent clinical direction and should not be used in pilot materials."
+    },
+    {
+        "claim": "Predicts who will clinically crash",
+        "status": "Banned",
+        "category": "Outcome prediction",
+        "owner": "Founder/Product",
+        "last_reviewed": "2026-03-26",
+        "rationale": "Creates a stronger device-side impression than the intended supportive pilot posture."
+    },
+    {
+        "claim": "Directs bedside intervention",
+        "status": "Banned",
+        "category": "Treatment direction",
+        "owner": "Founder/Product",
+        "last_reviewed": "2026-03-26",
+        "rationale": "Would position the platform as giving treatment instructions rather than review support."
+    },
 ]
 
 PILOT_COMPLAINT_ISSUE_LOG = [
-    {"id": "CI-001", "date_opened": "2026-03-25", "source": "Internal pilot review", "category": "Claims / Messaging", "issue": "Legacy predictive or directive language could remain in customer-facing materials after UI updates.", "severity": "Moderate", "owner": "Founder/Product", "status": "Open", "escalation_level": "Review before external release", "next_step": "Review website, video, deck, and templates against the frozen intended-use statement."},
-    {"id": "CI-002", "date_opened": "2026-03-25", "source": "Platform validation review", "category": "Explainability", "issue": "If review basis, limitations, freshness, or unknowns fail to render, users could over-rely on summary outputs.", "severity": "High", "owner": "Engineering", "status": "In Place", "escalation_level": "Immediate engineering review", "next_step": "Validate patient detail drawer and guardrail panels before each approved bundle."},
-    {"id": "CI-003", "date_opened": "2026-03-25", "source": "Operational workflow review", "category": "Workflow separation", "issue": "Workflow buttons could be interpreted as machine-issued clinical directives if labels drift from approved wording.", "severity": "High", "owner": "Product/Engineering", "status": "In Place", "escalation_level": "Product sign-off required", "next_step": "Keep ACK/ASSIGN/ESCALATE/RESOLVE framed as workflow logging only and review labels on each release."},
+    {
+        "id": "CI-001",
+        "date_opened": "2026-03-25",
+        "source": "Internal pilot review",
+        "category": "Claims / Messaging",
+        "issue": "Legacy predictive or directive language could remain in customer-facing materials after UI updates.",
+        "severity": "Moderate",
+        "owner": "Founder/Product",
+        "investigation_summary": "Reviewed platform screens, website copy, forms, and demo script against the frozen intended-use statement and claims controls.",
+        "corrective_action": "Replace non-approved language, re-check command-center wording, and require pre-release wording review.",
+        "status": "Open",
+        "escalation_level": "Review before external release",
+        "next_step": "Review website, video, deck, and templates against the frozen intended-use statement.",
+        "closure_date": ""
+    },
+    {
+        "id": "CI-002",
+        "date_opened": "2026-03-25",
+        "source": "Platform validation review",
+        "category": "Explainability",
+        "issue": "If review basis, limitations, freshness, or unknowns fail to render, users could over-rely on summary outputs.",
+        "severity": "High",
+        "owner": "Engineering",
+        "investigation_summary": "Confirmed that the patient detail workflow must surface review basis, confidence, limitations, freshness, and unknowns on each reviewed patient.",
+        "corrective_action": "Validate patient detail drawer and guardrail panels before each approved bundle and log failures as release blockers.",
+        "status": "Monitoring",
+        "escalation_level": "Immediate engineering review",
+        "next_step": "Verify visibility checks during each release validation cycle.",
+        "closure_date": ""
+    },
+    {
+        "id": "CI-003",
+        "date_opened": "2026-03-25",
+        "source": "Operational workflow review",
+        "category": "Workflow separation",
+        "issue": "Workflow buttons could be interpreted as machine-issued clinical directives if labels drift from approved wording.",
+        "severity": "High",
+        "owner": "Product/Engineering",
+        "investigation_summary": "Reviewed workflow labels, audit entries, and recommendation text to confirm operational handling remains separate from supportive clinical review context.",
+        "corrective_action": "Keep ACK, Assign, Escalate, and Resolve framed as workflow logging only and require wording review on each release.",
+        "status": "Implemented",
+        "escalation_level": "Product sign-off required",
+        "next_step": "Audit workflow labels and patient-detail copy before external pilot demonstrations.",
+        "closure_date": "2026-03-26"
+    },
+    {
+        "id": "CI-004",
+        "date_opened": "2026-03-26",
+        "source": "Hospital readiness review",
+        "category": "Documentation control",
+        "issue": "Governance artifacts may drift across versions without a single document-control index.",
+        "severity": "Moderate",
+        "owner": "Founder/Admin",
+        "investigation_summary": "Identified need for a master index covering governance documents, owners, versions, and pilot applicability.",
+        "corrective_action": "Create and maintain a document-control index in pilot docs and governance routes.",
+        "status": "Implemented",
+        "escalation_level": "Change approval required",
+        "next_step": "Review index entries whenever pilot documents or approved claims are updated.",
+        "closure_date": "2026-03-26"
+    },
 ]
 
 PILOT_ESCALATION_PROCESS = [
-    {"stage": "1. Record issue", "trigger": "Complaint, bug, wording drift, security concern, validation failure, or pilot feedback is identified.", "owner": "Reporter / Product", "target_time": "Same business day", "action": "Create or update an entry in the complaint / issue log with date, source, severity, owner, and next step."},
-    {"stage": "2. Triage severity", "trigger": "Issue is logged", "owner": "Founder/Product", "target_time": "Within 1 business day", "action": "Classify as low, moderate, high, or critical and decide whether release freeze, wording correction, or technical remediation is required."},
-    {"stage": "3. Escalate to owner", "trigger": "High or critical issue, or any issue affecting claims, access scope, security, or explainability", "owner": "Founder / Engineering", "target_time": "Within 1 business day", "action": "Assign owner, confirm remediation path, and document approval requirements before returning to pilot use."},
-    {"stage": "4. Resolve and verify", "trigger": "Fix or mitigation is implemented", "owner": "Engineering / Product", "target_time": "Before next release", "action": "Run validation checks, document evidence, update release notes if needed, and change status to closed only after verification."},
+    {"stage": "1. Record issue", "trigger": "A complaint, defect, security concern, claims drift, or validation failure is identified.", "owner": "Issue reporter / admin", "target_time": "Same business day", "action": "Create or update a complaint / issue log entry with date opened, source, severity, and owner."},
+    {"stage": "2. Triage severity", "trigger": "Issue is logged and scoped.", "owner": "Founder/Product", "target_time": "Within 1 business day", "action": "Assign severity, determine if the issue affects claims, access, data handling, workflow separation, or hospital pilot operation."},
+    {"stage": "3. Investigate", "trigger": "Issue has an assigned owner and severity.", "owner": "Assigned owner", "target_time": "Within 2 business days for moderate/high issues", "action": "Document investigation summary, root cause, impacted routes/screens/docs, and expected corrective action."},
+    {"stage": "4. Escalate if required", "trigger": "High-severity issue, security incident, pilot outage, or claims/control drift affecting hospital-facing use.", "owner": "Founder/Product", "target_time": "Immediate for high severity", "action": "Pause affected pilot use if needed, notify required stakeholders, and require change approval before release restoration."},
+    {"stage": "5. Correct and verify", "trigger": "Corrective action is implemented.", "owner": "Engineering / Product", "target_time": "Before next approved release", "action": "Validate the fix, capture evidence, update release notes/change approval, and record pass/fail verification."},
+    {"stage": "6. Close", "trigger": "Evidence supports resolution and no open blockers remain.", "owner": "Founder/Admin", "target_time": "After verification", "action": "Record closure date, summarize outcome, and retain issue history in the pilot governance set."},
 ]
 
 PILOT_CHANGE_APPROVAL_LOG = [
-    {"version": "stable-pilot-1.0.0", "date": "2026-03-25", "change_summary": "Locked stable pilot-safe positioning bundle with frozen intended-use language, explainability guardrails, and governance documents.", "approved_by": "Milton Munroe", "approval_basis": "Required to align UI, forms, pilot docs, and platform positioning to the HCP-facing support posture.", "status": "Approved"},
-    {"version": "stable-pilot-1.0.1", "date": "2026-03-26", "change_summary": "Expanded pilot governance package with complaint log, change approval log, cybersecurity summary, access policies, retention policy, pilot scope, training sheet, and dated validation evidence.", "approved_by": "Milton Munroe", "approval_basis": "Required to strengthen pilot operating discipline and hospital-facing review readiness without shifting claims into device territory.", "status": "Approved"},
+    {
+        "version": "stable-pilot-1.0.0",
+        "approval_date": "2026-03-25",
+        "approver_name": "Milton Munroe",
+        "reason_for_approval": "Required to align UI, forms, pilot docs, and platform positioning to the HCP-facing support posture.",
+        "what_changed": "Frozen intended-use language, explainability guardrails, workflow separation, and governance docs baseline.",
+        "impact_assessment": "Reduced risk of overstatement and improved consistency across pilot materials.",
+        "status": "Approved"
+    },
+    {
+        "version": "stable-pilot-1.0.1",
+        "approval_date": "2026-03-26",
+        "approver_name": "Milton Munroe",
+        "reason_for_approval": "Required to strengthen pilot operating discipline and hospital-facing review readiness without shifting claims into device territory.",
+        "what_changed": "Expanded complaint log, change approval log, cybersecurity summary, access policies, retention policy, pilot scope, training sheet, and dated validation evidence.",
+        "impact_assessment": "Improved hospital-review credibility and governance coverage around the stable pilot build.",
+        "status": "Approved"
+    },
+    {
+        "version": "stable-pilot-1.0.2",
+        "approval_date": "2026-03-26",
+        "approver_name": "Milton Munroe",
+        "reason_for_approval": "Required to formalize complaint handling process detail, document control, validation backing packet, and claims-control discipline.",
+        "what_changed": "Added document-control index, expanded complaint handling fields, expanded cybersecurity/access/data policies, strengthened validation evidence fields, and softened remaining directive wording.",
+        "impact_assessment": "Further reduced claims drift risk, improved traceability, and strengthened the credibility of the HCP-facing pilot posture for hospital review.",
+        "status": "Approved"
+    },
 ]
 
 PILOT_CYBERSECURITY_SUMMARY = [
-    {"domain": "Access control", "control": "Authenticated pilot access with role-based permissions and unit-scoped visibility", "summary": "User login, session access, and backend filtering limit access to approved roles and assigned units.", "status": "Implemented"},
-    {"domain": "Patching", "control": "Approved release and change logging", "summary": "Pilot updates are intended to be deployed only through approved bundles tracked in release notes and change approval logs.", "status": "Implemented"},
-    {"domain": "Vulnerability handling", "control": "Complaint / issue log and escalation process", "summary": "Security, reliability, or access issues are logged, triaged, escalated to owner, and verified before closure.", "status": "Implemented"},
-    {"domain": "Backup / recovery", "control": "Operational backup and recovery summary", "summary": "Pilot data artifacts, configuration, and operational files should be covered by controlled backup and recovery procedures before hospital deployment.", "status": "Pilot documentation"},
-    {"domain": "Incident handling", "control": "Documented incident response path", "summary": "Security or operational incidents are expected to follow documented triage, escalation, remediation, and verification steps.", "status": "Implemented"},
+    {
+        "domain": "Access control",
+        "control": "Authenticated pilot access with role-based permissions and unit-scoped visibility",
+        "summary": "User login, session access, and backend filtering limit access to approved roles and assigned units.",
+        "evidence": "Pilot access screens, access-context route, unit filtering, and role-aware workflow routes.",
+        "status": "Implemented"
+    },
+    {
+        "domain": "Password policy",
+        "control": "Protected admin credentials and controlled pilot account management",
+        "summary": "Administrative access should use configured credentials, limited approved emails, and controlled account provisioning.",
+        "evidence": "Admin login validation and pilot-account governance review.",
+        "status": "Pilot control"
+    },
+    {
+        "domain": "Patching approach",
+        "control": "Approved release and change logging",
+        "summary": "Pilot updates are intended to be deployed only through approved bundles tracked in release notes and change approval logs.",
+        "evidence": "Release notes, change approval log, stable build marker.",
+        "status": "Implemented"
+    },
+    {
+        "domain": "Vulnerability handling",
+        "control": "Complaint / issue log and escalation process",
+        "summary": "Security, reliability, or access issues are logged, triaged, escalated to owner, and verified before closure.",
+        "evidence": "Complaint / issue log, escalation process, and corrective-action workflow.",
+        "status": "Implemented"
+    },
+    {
+        "domain": "Backup / restore",
+        "control": "Operational backup and recovery summary",
+        "summary": "Pilot data artifacts, configuration, and operational files should be covered by controlled backup and restore procedures before hospital deployment.",
+        "evidence": "Backup/recovery requirement recorded in the cybersecurity summary and pilot closeout planning.",
+        "status": "Pilot documentation"
+    },
+    {
+        "domain": "Incident handling",
+        "control": "Documented incident response path",
+        "summary": "Security or operational incidents are expected to follow documented triage, escalation, remediation, verification, and closure steps.",
+        "evidence": "Escalation process and complaint / issue handling fields.",
+        "status": "Implemented"
+    },
+    {
+        "domain": "Pilot pause / breach response",
+        "control": "Controlled pilot hold and stakeholder notification",
+        "summary": "If a hospital pilot is paused for security, reliability, or governance reasons, affected users should be notified, access reviewed, and restoration approved before pilot resumption.",
+        "evidence": "Escalation process stage for pause/restore decision-making.",
+        "status": "Pilot documentation"
+    },
 ]
 
 PILOT_USER_PROVISIONING_POLICY = [
-    {"step": "Provision request", "policy": "User access is provisioned only for approved pilot participants with a defined role and scope.", "owner": "Founder/Admin", "evidence": "Pilot access screen, role selection, assigned-unit control"},
-    {"step": "Role assignment", "policy": "Each user receives the minimum role and unit scope required for pilot evaluation.", "owner": "Founder/Admin", "evidence": "Session role and unit scoping reflected in access-context route"},
-    {"step": "Review and update", "policy": "Role, unit, and access scope should be reviewed whenever pilot responsibilities change.", "owner": "Founder/Admin", "evidence": "Pilot account updates and release-controlled access review"},
-    {"step": "Deprovision", "policy": "Pilot access should be disabled or removed when a pilot ends, a user leaves the pilot, or access is no longer required.", "owner": "Founder/Admin", "evidence": "Pilot account removal / session invalidation / access policy review"},
+    {
+        "step": "Provision request",
+        "policy": "User access is provisioned only for approved pilot participants with a defined role and scope.",
+        "owner": "Founder/Admin",
+        "sla": "Before pilot access is granted",
+        "evidence": "Pilot access screen, role selection, assigned-unit control"
+    },
+    {
+        "step": "Role assignment",
+        "policy": "Each user receives the minimum role and unit scope required for pilot evaluation.",
+        "owner": "Founder/Admin",
+        "sla": "At account creation",
+        "evidence": "Session role and unit scoping reflected in access-context route"
+    },
+    {
+        "step": "Unit-scope review",
+        "policy": "Assigned unit scope should be reviewed whenever pilot responsibilities change or when broader scope is requested.",
+        "owner": "Founder/Admin",
+        "sla": "Within 1 business day of scope request",
+        "evidence": "Pilot account review and updated access assignment"
+    },
+    {
+        "step": "Provisioning owner",
+        "policy": "Only the designated admin / founder or approved pilot administrator may create or modify pilot accounts.",
+        "owner": "Founder/Admin",
+        "sla": "Per documented approval path",
+        "evidence": "Controlled pilot-account list and login governance"
+    },
+    {
+        "step": "Deprovision",
+        "policy": "Pilot access should be disabled or removed when a pilot ends, a user leaves the pilot, or access is no longer required.",
+        "owner": "Founder/Admin",
+        "sla": "Same business day when feasible; no later than next business day",
+        "evidence": "Pilot account removal / session invalidation / access policy review"
+    },
+    {
+        "step": "Pilot closeout",
+        "policy": "At pilot end, users should be reviewed, accounts disabled or archived, and remaining access documented as part of pilot closeout.",
+        "owner": "Founder/Admin",
+        "sla": "At pilot closeout",
+        "evidence": "Pilot closeout checklist and account review record"
+    },
 ]
 
 PILOT_DATA_RETENTION_POLICY = [
-    {"topic": "Retention", "policy": "Pilot request records, workflow artifacts, and governance documents should be retained only for the pilot review period and approved business / legal needs.", "owner": "Founder/Product", "note": "Hospital-specific retention schedules should be confirmed before deployment."},
-    {"topic": "Deletion", "policy": "Pilot data should be deleted or archived in accordance with the agreed pilot closeout process.", "owner": "Founder/Product", "note": "Deletion should be documented with date, owner, and scope."},
-    {"topic": "Return", "policy": "If hospital or partner data is supplied for pilot use, return / export / deletion terms should be documented in the pilot agreement.", "owner": "Founder/Product", "note": "Customer-specific handling should be confirmed in writing."},
+    {
+        "topic": "Pilot data stored",
+        "policy": "Pilot request records, workflow artifacts, audit logs, threshold settings, trend histories, and governance documents may be stored for pilot operation and review.",
+        "owner": "Founder/Product",
+        "note": "Hospital-specific storage and handling expectations should be confirmed before deployment.",
+        "pilot_applicability": "All controlled pilots"
+    },
+    {
+        "topic": "Retention period",
+        "policy": "Pilot data should be retained only for the approved pilot review period and business, legal, or contractual needs agreed for the pilot.",
+        "owner": "Founder/Product",
+        "note": "Hospital-specific retention schedules should be confirmed in writing.",
+        "pilot_applicability": "All controlled pilots"
+    },
+    {
+        "topic": "Return / export",
+        "policy": "If hospital or partner data is supplied for pilot use, return / export terms should be documented in the pilot agreement, including format and timing expectations.",
+        "owner": "Founder/Product",
+        "note": "Customer-specific handling should be confirmed in writing.",
+        "pilot_applicability": "Pilots using customer-supplied data"
+    },
+    {
+        "topic": "Deletion",
+        "policy": "Pilot data should be deleted or archived in accordance with the agreed pilot closeout process and documented by date, owner, and scope.",
+        "owner": "Founder/Product",
+        "note": "Deletion or archive status should be recorded in pilot closeout materials.",
+        "pilot_applicability": "All controlled pilots"
+    },
+    {
+        "topic": "Pilot closeout",
+        "policy": "At pilot closeout, the team should document what data is retained, exported, returned, archived, or deleted and who approved the outcome.",
+        "owner": "Founder/Product",
+        "note": "Closeout summary should align with the pilot agreement and any hospital requirements.",
+        "pilot_applicability": "All controlled pilots"
+    },
 ]
 
 PILOT_SCOPE_DOCUMENT = [
@@ -173,21 +462,79 @@ PILOT_SCOPE_DOCUMENT = [
     {"section": "Intended users", "summary": "Authorized health care professionals, approved hospital stakeholders, clinical operations teams, and approved pilot reviewers."},
     {"section": "Pilot boundaries", "summary": "The platform does not replace clinician judgment and is not intended to diagnose, direct treatment, or independently trigger escalation."},
     {"section": "Operational scope", "summary": "Role-based access, unit-scoped visibility, workflow logging, explainability panels, audit visibility, and governance documentation are included in the current pilot bundle."},
+    {"section": "Pilot review materials", "summary": "The pilot bundle includes claims controls, complaint handling, change approvals, cybersecurity summary, data handling policy, training sheet, validation evidence, and document-control index."},
+    {"section": "Hospital responsibilities", "summary": "Hospitals retain oversight of clinical decision-making, local policy, and any site-specific access, data, and operational requirements."},
 ]
 
 PILOT_TRAINING_USE_INSTRUCTIONS = [
-    {"step": "1. Access the pilot", "instruction": "Log in with an approved pilot account and confirm role and assigned unit scope before review.", "owner": "Founder/Admin"},
-    {"step": "2. Review the basis", "instruction": "Before any workflow action, review patient summary, contributing factors, confidence, limitations, freshness, and what the software does not know.", "owner": "Clinical reviewer"},
-    {"step": "3. Treat workflow buttons as operational only", "instruction": "ACK, Assign, Escalate, and Resolve record workflow handling and audit history only; they are not machine-issued clinical orders.", "owner": "Clinical reviewer"},
-    {"step": "4. Follow hospital policy", "instruction": "Any clinical action, escalation timing, or treatment decision remains governed by licensed clinician judgment and hospital policy.", "owner": "Clinical reviewer"},
+    {"step": "1. Intended users", "instruction": "Use is limited to authorized health care professionals, approved hospital stakeholders, clinical operations teams, and approved pilot reviewers.", "owner": "Founder/Admin"},
+    {"step": "2. Access the pilot", "instruction": "Log in with an approved pilot account and confirm role and assigned unit scope before review.", "owner": "Founder/Admin"},
+    {"step": "3. Understand the command center", "instruction": "Patient lists and command-center panels support monitored patient visibility, review priority, trend review, workflow status, and audit visibility across the visible scope.", "owner": "Pilot trainer"},
+    {"step": "4. Review the basis", "instruction": "Before any workflow action, review patient summary, contributing factors, confidence, limitations, freshness, what changed, and what the software does not know.", "owner": "Clinical reviewer"},
+    {"step": "5. Interpret workflow controls correctly", "instruction": "ACK, Assign, Escalate, and Resolve record workflow handling and audit history only; they are not machine-issued clinical orders.", "owner": "Clinical reviewer"},
+    {"step": "6. What not to use the platform for", "instruction": "Do not use the platform as a diagnosis engine, treatment director, or independent escalation trigger.", "owner": "Clinical reviewer"},
+    {"step": "7. Follow hospital policy", "instruction": "Any clinical action, escalation timing, or treatment decision remains governed by licensed clinician judgment and hospital policy.", "owner": "Clinical reviewer"},
+    {"step": "8. Escalate product issues", "instruction": "Report reliability, access, claims, or governance concerns through the complaint / issue handling process so they can be triaged and documented.", "owner": "All pilot users"},
 ]
 
 PILOT_VALIDATION_EVIDENCE = [
-    {"date": "2026-03-25", "test_case": "Access scope respects login, role, and assigned unit", "evidence": "Verified through /login, /pilot-access, /api/access-context, unit filter behavior, and scoped command-center views.", "reviewer": "Founder/Engineering", "status": "Pass"},
-    {"date": "2026-03-25", "test_case": "Explainability guardrails are visible in the patient review workflow", "evidence": "Verified review basis, confidence, limitations, freshness, workflow-vs-recommendation separation, and unknowns display in patient detail and guardrail sections.", "reviewer": "Founder/Engineering", "status": "Pass"},
-    {"date": "2026-03-26", "test_case": "Pilot docs render current intended use, claims controls, risk register, issue handling, change log, and training materials", "evidence": "Verified /pilot-docs page renders current governance package and release-controlled documentation.", "reviewer": "Founder/Product", "status": "Pass"},
+    {
+        "date_tested": "2026-03-25",
+        "tested_by": "Founder/Engineering",
+        "test_case_id": "VAL-001",
+        "test_case": "Access scope respects login, role, and assigned unit",
+        "expected_result": "Authorized users see only approved role and unit scope in access context and command-center views.",
+        "actual_result": "Verified through /login, /pilot-access, /api/access-context, unit filter behavior, and scoped command-center views.",
+        "screenshot_evidence": "Secure pilot access screen and role/unit-scoped command-center screenshots.",
+        "status": "Pass"
+    },
+    {
+        "date_tested": "2026-03-25",
+        "tested_by": "Founder/Engineering",
+        "test_case_id": "VAL-002",
+        "test_case": "Explainability guardrails are visible in the patient review workflow",
+        "expected_result": "Patient detail workflow shows review basis, contributing factors, confidence, limitations, freshness, what changed, and unknowns.",
+        "actual_result": "Verified review basis, confidence, limitations, freshness, workflow-vs-recommendation separation, and unknowns display in patient detail and guardrail sections.",
+        "screenshot_evidence": "Patient drawer screenshots showing review basis and guardrail panels.",
+        "status": "Pass"
+    },
+    {
+        "date_tested": "2026-03-26",
+        "tested_by": "Founder/Product",
+        "test_case_id": "VAL-003",
+        "test_case": "Pilot docs render current governance package",
+        "expected_result": "Pilot docs should display intended use, claims controls, risk register, issue handling, change approvals, access/data policies, training materials, and release-controlled documentation.",
+        "actual_result": "Verified /pilot-docs page renders current governance package and release-controlled documentation.",
+        "screenshot_evidence": "Pilot docs screenshots showing governance tables and document sections.",
+        "status": "Pass"
+    },
+    {
+        "date_tested": "2026-03-26",
+        "tested_by": "Founder/Product",
+        "test_case_id": "VAL-004",
+        "test_case": "Claims-control and wording cleanup reflected in command center",
+        "expected_result": "Supportive wording should use review-oriented language and avoid autonomous or directive phrasing.",
+        "actual_result": "Verified near-term review, review-priority summary, workflow tracking status, and supportive review visibility language in the command center bundle.",
+        "screenshot_evidence": "Command-center screenshots showing updated labels and governance summary cards.",
+        "status": "Pass"
+    },
 ]
 
+PILOT_DOCUMENT_CONTROL_INDEX = [
+    {"document_name": "Frozen Intended-Use Statement", "version": "1.0", "owner": "Founder/Product", "last_updated": "2026-03-26", "status": "Approved", "pilot_applicability": "All controlled pilots"},
+    {"document_name": "Approved Support Language", "version": "1.0", "owner": "Founder/Product", "last_updated": "2026-03-26", "status": "Approved", "pilot_applicability": "All controlled pilots"},
+    {"document_name": "Claims Control Sheet", "version": "1.0", "owner": "Founder/Product", "last_updated": "2026-03-26", "status": "Approved", "pilot_applicability": "All controlled pilots"},
+    {"document_name": "Complaint / Issue Log", "version": "1.0", "owner": "Founder/Admin", "last_updated": "2026-03-26", "status": "Active", "pilot_applicability": "All controlled pilots"},
+    {"document_name": "Issue Escalation Process", "version": "1.0", "owner": "Founder/Admin", "last_updated": "2026-03-26", "status": "Approved", "pilot_applicability": "All controlled pilots"},
+    {"document_name": "Change Approval Log", "version": "1.0", "owner": "Founder/Admin", "last_updated": "2026-03-26", "status": "Active", "pilot_applicability": "All controlled pilots"},
+    {"document_name": "Cybersecurity Summary", "version": "1.0", "owner": "Founder/Admin", "last_updated": "2026-03-26", "status": "Approved", "pilot_applicability": "All controlled pilots"},
+    {"document_name": "User Provisioning / Deprovisioning Policy", "version": "1.0", "owner": "Founder/Admin", "last_updated": "2026-03-26", "status": "Approved", "pilot_applicability": "All controlled pilots"},
+    {"document_name": "Data Retention / Deletion / Return Policy", "version": "1.0", "owner": "Founder/Product", "last_updated": "2026-03-26", "status": "Approved", "pilot_applicability": "All controlled pilots"},
+    {"document_name": "Pilot Agreement / Scope Document", "version": "1.0", "owner": "Founder/Product", "last_updated": "2026-03-26", "status": "Approved", "pilot_applicability": "All controlled pilots"},
+    {"document_name": "Training / Use Instructions", "version": "1.0", "owner": "Founder/Admin", "last_updated": "2026-03-26", "status": "Approved", "pilot_applicability": "All pilot users"},
+    {"document_name": "Dated Validation Evidence", "version": "1.0", "owner": "Founder/Engineering", "last_updated": "2026-03-26", "status": "Active", "pilot_applicability": "All controlled pilots"},
+    {"document_name": "Release Notes", "version": "1.0", "owner": "Founder/Product", "last_updated": "2026-03-26", "status": "Active", "pilot_applicability": "All controlled pilots"},
+]
 
 DEFAULT_THRESHOLDS: Dict[str, Dict[str, float]] = {
     "icu": {"spo2_low": 92, "hr_high": 120, "sbp_high": 160},
@@ -1992,6 +2339,8 @@ def create_app() -> Flask:
                 "release_notes": PILOT_RELEASE_NOTES,
                 "approved_claims": PILOT_APPROVED_CLAIMS,
                 "banned_claims": PILOT_BANNED_CLAIMS,
+                "claims_control_sheet": PILOT_CLAIMS_CONTROL_SHEET,
+                "document_control_index": PILOT_DOCUMENT_CONTROL_INDEX,
                 "complaint_issue_log": PILOT_COMPLAINT_ISSUE_LOG,
                 "escalation_process": PILOT_ESCALATION_PROCESS,
                 "change_approval_log": PILOT_CHANGE_APPROVAL_LOG,
@@ -2001,6 +2350,7 @@ def create_app() -> Flask:
                 "pilot_scope_document": PILOT_SCOPE_DOCUMENT,
                 "training_use_instructions": PILOT_TRAINING_USE_INSTRUCTIONS,
                 "dated_validation_evidence": PILOT_VALIDATION_EVIDENCE,
+                "document_control_index": PILOT_DOCUMENT_CONTROL_INDEX,
             }
         )
 
@@ -2019,6 +2369,8 @@ def create_app() -> Flask:
                 "limitations": PILOT_LIMITATIONS_TEXT,
                 "approved_claims": PILOT_APPROVED_CLAIMS,
                 "banned_claims": PILOT_BANNED_CLAIMS,
+                "claims_control_sheet": PILOT_CLAIMS_CONTROL_SHEET,
+                "document_control_index": PILOT_DOCUMENT_CONTROL_INDEX,
             }
         )
 
@@ -2103,15 +2455,17 @@ def create_app() -> Flask:
               <div class="card"><h2 style="margin:0 0 10px;font-size:26px">Banned Claims</h2><div class="sub">{_render_simple_list(PILOT_BANNED_CLAIMS)}</div></div>
             </div>
 
+            <div class="card"><h2 style="margin:0 0 12px;font-size:28px">Claims Control Sheet</h2>{_render_table(PILOT_CLAIMS_CONTROL_SHEET, ["claim", "status", "category", "owner", "last_reviewed", "rationale"])}</div>
+            <div class="card"><h2 style="margin:0 0 12px;font-size:28px">Document Control Index</h2>{_render_table(PILOT_DOCUMENT_CONTROL_INDEX, ["document_name", "version", "owner", "last_updated", "status", "pilot_applicability"])}</div>
             <div class="card"><h2 style="margin:0 0 12px;font-size:28px">Risk Register</h2>{_render_table(PILOT_RISK_REGISTER, ["id", "area", "risk", "mitigation", "owner", "status"])}</div>
-            <div class="card"><h2 style="margin:0 0 12px;font-size:28px">Complaint / Issue Log</h2>{_render_table(PILOT_COMPLAINT_ISSUE_LOG, ["id", "date_opened", "source", "category", "issue", "severity", "owner", "status", "escalation_level", "next_step"])}</div>
+            <div class="card"><h2 style="margin:0 0 12px;font-size:28px">Complaint / Issue Log</h2>{_render_table(PILOT_COMPLAINT_ISSUE_LOG, ["id", "date_opened", "source", "category", "issue", "severity", "owner", "investigation_summary", "corrective_action", "status", "escalation_level", "next_step", "closure_date"])}</div>
             <div class="card"><h2 style="margin:0 0 12px;font-size:28px">Issue Escalation Process</h2>{_render_table(PILOT_ESCALATION_PROCESS, ["stage", "trigger", "owner", "target_time", "action"])}</div>
-            <div class="card"><h2 style="margin:0 0 12px;font-size:28px">Change Approval Log</h2>{_render_table(PILOT_CHANGE_APPROVAL_LOG, ["version", "date", "change_summary", "approved_by", "approval_basis", "status"])}</div>
-            <div class="card"><h2 style="margin:0 0 12px;font-size:28px">Cybersecurity Summary</h2>{_render_table(PILOT_CYBERSECURITY_SUMMARY, ["domain", "control", "summary", "status"])}</div>
+            <div class="card"><h2 style="margin:0 0 12px;font-size:28px">Change Approval Log</h2>{_render_table(PILOT_CHANGE_APPROVAL_LOG, ["version", "approval_date", "approver_name", "reason_for_approval", "what_changed", "impact_assessment", "status"])}</div>
+            <div class="card"><h2 style="margin:0 0 12px;font-size:28px">Cybersecurity Summary</h2>{_render_table(PILOT_CYBERSECURITY_SUMMARY, ["domain", "control", "summary", "evidence", "status"])}</div>
 
             <div class="grid">
-              <div class="card"><h2 style="margin:0 0 12px;font-size:28px">User Provisioning / Deprovisioning Policy</h2>{_render_table(PILOT_USER_PROVISIONING_POLICY, ["step", "policy", "owner", "evidence"])}</div>
-              <div class="card"><h2 style="margin:0 0 12px;font-size:28px">Data Retention / Deletion / Return Policy</h2>{_render_table(PILOT_DATA_RETENTION_POLICY, ["topic", "policy", "owner", "note"])}</div>
+              <div class="card"><h2 style="margin:0 0 12px;font-size:28px">User Provisioning / Deprovisioning Policy</h2>{_render_table(PILOT_USER_PROVISIONING_POLICY, ["step", "policy", "owner", "sla", "evidence"])}</div>
+              <div class="card"><h2 style="margin:0 0 12px;font-size:28px">Data Retention / Deletion / Return Policy</h2>{_render_table(PILOT_DATA_RETENTION_POLICY, ["topic", "policy", "owner", "note", "pilot_applicability"])}</div>
             </div>
 
             <div class="grid">
@@ -2119,7 +2473,7 @@ def create_app() -> Flask:
               <div class="card"><h2 style="margin:0 0 12px;font-size:28px">Training / Use Instructions</h2>{_render_table(PILOT_TRAINING_USE_INSTRUCTIONS, ["step", "instruction", "owner"])}</div>
             </div>
 
-            <div class="card"><h2 style="margin:0 0 12px;font-size:28px">Dated Validation Evidence</h2>{_render_table(PILOT_VALIDATION_EVIDENCE, ["date", "test_case", "evidence", "reviewer", "status"])}</div>
+            <div class="card"><h2 style="margin:0 0 12px;font-size:28px">Dated Validation Evidence</h2>{_render_table(PILOT_VALIDATION_EVIDENCE, ["date_tested", "tested_by", "test_case_id", "test_case", "expected_result", "actual_result", "screenshot_evidence", "status"])}</div>
             <div class="card"><h2 style="margin:0 0 12px;font-size:28px">V&amp;V-Lite Sheet</h2>{_render_table(PILOT_VNV_LITE, ["id", "check", "method", "evidence", "status"])}</div>
             <div class="card"><h2 style="margin:0 0 12px;font-size:28px">Release Notes</h2>{_render_table(PILOT_RELEASE_NOTES, ["version", "date", "summary", "changes"])}</div>
           </div>
