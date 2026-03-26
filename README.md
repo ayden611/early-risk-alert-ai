@@ -2,7 +2,7 @@
 
 Early Risk Alert AI is an HCP-facing decision-support and workflow-support software platform intended to assist authorized health care professionals in identifying patients who may warrant further clinical evaluation, supporting patient prioritization, and improving command-center operational awareness.
 
-The platform does not replace clinician judgment and is not intended to diagnose, direct treatment, or independently trigger escalation.
+The platform is intended for controlled pilot evaluation and hospital-facing workflow support. It does not replace clinician judgment and is not intended to diagnose, direct treatment, or independently trigger escalation.
 
 ---
 
@@ -17,11 +17,11 @@ https://early-risk-alert-ai-1.onrender.com/pilot-docs
 **Request a Live Command Center Demonstration**  
 https://early-risk-alert-ai-1.onrender.com/hospital-demo
 
-**Request Investor Access**  
-https://early-risk-alert-ai-1.onrender.com/investor-intake
-
 **Request an Executive Walkthrough**  
 https://early-risk-alert-ai-1.onrender.com/executive-walkthrough
+
+**Request Investor Access**  
+https://early-risk-alert-ai-1.onrender.com/investor-intake
 
 ---
 
@@ -71,8 +71,9 @@ The platform does not replace clinician judgment and is not intended to diagnose
 - explainable review-basis panel
 - confidence and limitations display
 - data-freshness indicators
-- supportive review context
-- workflow-state tracking
+- supportive review visibility
+- review priority summary
+- workflow tracking status
 - audit trail visibility
 - role-based access controls
 - unit-restricted visibility
@@ -86,13 +87,13 @@ The platform does not replace clinician judgment and is not intended to diagnose
 
 The platform is structured to keep reviewability visible to the authorized health care professional by presenting:
 
-- review basis
-- explainable contributing factors
+- explainable review basis
+- contributing factors
 - confidence and visible limitations
 - data freshness
 - what changed
 - what the software does not know
-- workflow-state visibility separate from supportive clinical recommendation
+- workflow-state visibility separate from supportive clinical review context
 
 Operational workflow controls are recorded separately from supportive review context so that workflow handling is not presented as a machine-issued clinical directive.
 
@@ -219,8 +220,115 @@ The stable pilot bundle includes in-platform documentation and governance suppor
 - data retention / deletion / return policy
 - pilot agreement / pilot scope document
 - training / use instructions for pilot users
+- validation evidence packet
+- document control index
 - approved claims list
 - banned claims list
+
+---
+
+## Complaint / Issue Handling
+
+The pilot bundle includes a structured complaint and issue handling process designed to support hospital-facing review and controlled pilot operations.
+
+Tracked elements include:
+
+- date opened
+- source of complaint or issue
+- severity
+- owner
+- investigation summary
+- corrective action
+- escalation path
+- closure date
+
+---
+
+## Change Approval & Release Control
+
+The pilot bundle includes structured change approval and release control documentation designed to support disciplined pilot governance.
+
+Tracked elements include:
+
+- approver name
+- approval date
+- reason for approval
+- what changed
+- impact assessment
+- release status
+- linked version and notes
+
+---
+
+## Cybersecurity Summary
+
+The pilot bundle includes a cybersecurity summary covering:
+
+- access control
+- password handling expectations
+- backup and restore posture
+- patching approach
+- vulnerability handling process
+- incident response contact path
+- pilot pause / breach response expectations
+- secure configuration controls
+
+---
+
+## User Provisioning & Deprovisioning
+
+The pilot bundle includes a formal user provisioning and deprovisioning policy covering:
+
+- who can create users
+- who can remove users
+- how unit scoping is assigned
+- how access is reviewed
+- how quickly access is revoked
+- what happens when a pilot ends
+
+---
+
+## Data Governance Summary
+
+The pilot bundle includes data-governance support for:
+
+- what pilot data is stored
+- retention expectations
+- deletion and return handling
+- pilot closeout considerations
+- controlled pilot data use posture
+- hospital-facing operational review support
+
+---
+
+## Pilot Scope & Training
+
+The pilot bundle includes:
+
+- pilot agreement / scope document
+- pilot user instructions sheet
+- intended user description
+- section-by-section command center guidance
+- workflow control interpretation guidance
+- escalation and support instructions
+- clear reminder that the HCP must independently review the patient and the displayed basis for outputs
+
+---
+
+## Validation & Evidence
+
+The stable pilot bundle includes dated validation evidence and controlled release tracking intended to support disciplined pilot operation.
+
+Validation materials include:
+
+- date tested
+- tester name
+- test case ID
+- expected result
+- actual result
+- pass / fail status
+- screenshot evidence reference
+- release linkage where applicable
 
 ---
 
@@ -253,43 +361,20 @@ Examples of current claims to avoid include:
 
 ---
 
-## Validation & Change Control
+## Claims Control
 
-The stable pilot bundle includes dated validation evidence and controlled release tracking intended to support disciplined pilot operation, including:
+The stable pilot bundle includes disciplined claims control through:
 
-- access context validation across login, role, and unit scope
-- workflow-action separation checks
-- explainability and review-basis visibility checks
-- threshold and trend route checks
-- pilot-doc visibility checks
-- release notes documenting approved bundle changes
-- change approval tracking with approver and approval basis
-
----
-
-## Cybersecurity & Access Summary
-
-The platform includes a pilot-level cybersecurity and access posture focused on:
-
-- authenticated access and role-based control
-- scoped visibility by role and unit
-- secure configuration management
-- backup and recovery awareness
-- vulnerability and incident handling summary
-- user provisioning and deprovisioning policy
-- workflow and audit visibility under controlled pilot operation
-
----
-
-## Data Governance Summary
-
-The pilot bundle includes data-governance support for:
-
-- data retention expectations
-- deletion and return handling
-- pilot closeout considerations
-- controlled pilot data use posture
-- hospital-facing operational review support
+- one place for approved claims
+- one place for banned / avoid claims
+- frozen intended-use language
+- supportive review language across the product
+- avoidance of machine-directed or urgency-directive phrasing
+- review-focused naming such as:
+  - Near-Term Review Context
+  - Review Priority Summary
+  - Supportive Review Visibility
+  - Workflow Tracking Status
 
 ---
 
