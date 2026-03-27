@@ -1,4 +1,4 @@
-COMMAND_CENTER_HTML = r"""
+COMMAND_CENTER_HTML = r""" 
 <!doctype html>
 <html lang="en">
 <head>
