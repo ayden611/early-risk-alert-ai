@@ -27,7 +27,18 @@ def create_app() -> Flask:
         INFO_EMAIL=os.getenv("INFO_EMAIL", "info@earlyriskalertai.com"),
     )
 
-    from .commandcenter import web_bp
+    web_bp = None
+    try:
+        from .commandcenter import web_bp as imported_web_bp
+        web_bp = imported_web_bp
+    except Exception:
+        try:
+            from .web.routes import web_bp as imported_web_bp
+            web_bp = imported_web_bp
+        except Exception as exc:
+            raise ModuleNotFoundError(
+                "Could not import web_bp. Put commandcenter.py inside era/ or restore era/web/routes.py."
+            ) from exc
 
     app.register_blueprint(web_bp)
 
