@@ -1055,6 +1055,46 @@ COMMAND_CENTER_HTML = r"""
             <div class="mini-k">Governance Set</div>
             <div class="mini-copy">Pilot Docs includes the regulatory-positioning summary, risk register, V&amp;V-lite sheet, release notes, locked stable build marker, and change-control guidance for keeping one stable pilot build.</div>
           </div>
+          <div class="mini-card">
+            <div class="mini-k">Supported Inputs</div>
+            <div class="mini-copy">structured patient medical information · trended vital-sign summaries · monitored patient context · workflow state and review context · approved medical information available to the HCP</div>
+          </div>
+          <div class="mini-card">
+            <div class="mini-k">Approved Claims</div>
+            <div class="mini-copy">assists authorized health care professionals in identifying patients who may warrant further clinical evaluation · supports patient prioritization across monitored patients · provides explainable risk-support context · supports command-center workflow awareness and operational visibility</div>
+          </div>
+          <div class="mini-card">
+            <div class="mini-k">Banned Claims</div>
+            <div class="mini-copy">detects deterioration autonomously · identifies who needs immediate escalation · predicts who will clinically crash · directs bedside intervention</div>
+          </div>
+          <div class="mini-card">
+            <div class="mini-k">Claims Control</div>
+            <div class="mini-copy">Approved: Assists authorized health care professionals in identifying patients who may warrant further clinical evaluation · Approved: Supports patient prioritization across monitored patients · Approved: Provides explainable risk-support context</div>
+          </div>
+          <div class="mini-card">
+            <div class="mini-k">Change Control</div>
+            <div class="mini-copy">Freeze one intended-use statement everywhere in the pilot build. Keep claims narrow and supportive rather than directive. Make review basis, confidence, limitations, freshness, and unknowns visible for each patient.</div>
+          </div>
+          <div class="mini-card">
+            <div class="mini-k">Document Control Index</div>
+            <div class="mini-copy">Frozen Intended-Use Statement (1.0) · Approved Support Language (1.0) · Claims Control Sheet (1.0) · Complaint / Issue Log (1.0)</div>
+          </div>
+          <div class="mini-card">
+            <div class="mini-k">Cybersecurity Summary</div>
+            <div class="mini-copy">Access control · Password policy · Patching approach · Vulnerability handling · Backup / restore · Incident handling</div>
+          </div>
+          <div class="mini-card">
+            <div class="mini-k">Access + Data Handling</div>
+            <div class="mini-copy">6 access-policy steps · 5 data-handling topics</div>
+          </div>
+          <div class="mini-card">
+            <div class="mini-k">Validation Packet</div>
+            <div class="mini-copy">VAL-001 Pass · VAL-002 Pass · VAL-003 Pass</div>
+          </div>
+          <div class="mini-card">
+            <div class="mini-k">Issue + Change Logs</div>
+            <div class="mini-copy">4 issue log entries · 3 approved release entries</div>
+          </div>
         </div>
       </div>
     </section>
