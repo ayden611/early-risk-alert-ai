@@ -21,7 +21,7 @@ from flask import (
     request,
     send_from_directory,
     session,
-    url_fora
+    url_for,
 )
 
 from era.web.command_center import COMMAND_CENTER_HTML
@@ -1005,13 +1005,13 @@ def create_app() -> Flask:
     DECK_FILE_CANDIDATES = {
         "main": [
             "Early_Risk_Alert_AI_Pitch_Deck.pdf",
-            "Early_Risk_Alert_AI_Pilot_Deck.pdf",
+            "Early_Risk_Alert_AI_Pitch_Deck.pdf",
             "Early_Risk_Alert_AI_Hospital_Pilot_Deck.pdf",
         ],
         "hospital": [
             "Early_Risk_Alert_AI_Pitch_Deck.pdf",
             "Early_Risk_Alert_AI_Hospital_Pilot_Deck.pdf",
-            "Early_Risk_Alert_AI_Pilot_Deck.pdf",
+            "Early_Risk_Alert_AI_Pitch_Deck.pdf",
         ],
         "investor": [
             "Early_Risk_Alert_AI_Investor_Deck.pdf",
@@ -1020,11 +1020,11 @@ def create_app() -> Flask:
         "executive": [
             "Early_Risk_Alert_AI_Pitch_Deck.pdf",
             "Early_Risk_Alert_AI_Hospital_Pilot_Deck.pdf",
-            "Early_Risk_Alert_AI_Pilot_Deck.pdf",
+            "Early_Risk_Alert_AI_Pitch_Deck.pdf",
         ],
         "legacy": [
             "Early_Risk_Alert_AI_Pitch_Deck.pdf",
-            "Early_Risk_Alert_AI_Pilot_Deck.pdf",
+            "Early_Risk_Alert_AI_Pitch_Deck.pdf",
             "Early_Risk_Alert_AI_Hospital_Pilot_Deck.pdf",
         ],
     }
