@@ -14,6 +14,9 @@ https://early-risk-alert-ai-1.onrender.com/command-center
 **Stable Pilot Docs**  
 https://early-risk-alert-ai-1.onrender.com/pilot-docs
 
+**Public Pitch Deck**  
+https://early-risk-alert-ai-1.onrender.com/deck
+
 **Request a Live Command Center Demonstration**  
 https://early-risk-alert-ai-1.onrender.com/hospital-demo
 
