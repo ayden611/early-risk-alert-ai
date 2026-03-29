@@ -33,6 +33,10 @@ FOUNDER_NAME = "Milton Munroe"
 FOUNDER_ROLE = "Founder & CEO, Early Risk Alert AI"
 
 
+PILOT_SUCCESS_GUIDE_FILENAME = "Early_Risk_Alert_AI_Pilot_Success_Criteria_and_Workflow_Integration_Guide.docx"
+MODEL_CARD_FILENAME = "Early_Risk_Alert_AI_Model_Card.docx"
+
+
 PILOT_VERSION = os.getenv("PILOT_VERSION", "stable-pilot-1.0.2")
 PILOT_BUILD_STATE = "Locked Stable Pilot Build"
 INTENDED_USE_STATEMENT = (
@@ -535,6 +539,8 @@ PILOT_DOCUMENT_CONTROL_INDEX = [
     {"document_name": "Training / Use Instructions", "version": "1.0", "owner": "Founder/Admin", "last_updated": "2026-03-26", "status": "Approved", "pilot_applicability": "All pilot users"},
     {"document_name": "Dated Validation Evidence", "version": "1.0", "owner": "Founder/Engineering", "last_updated": "2026-03-26", "status": "Active", "pilot_applicability": "All controlled pilots"},
     {"document_name": "Release Notes", "version": "1.0", "owner": "Founder/Product", "last_updated": "2026-03-26", "status": "Active", "pilot_applicability": "All controlled pilots"},
+    {"document_name": "Pilot Success Criteria + Workflow Integration Guide", "version": "1.0", "owner": "Founder/Product", "last_updated": "2026-03-29", "status": "Approved", "pilot_applicability": "All controlled pilots"},
+    {"document_name": "Model Card", "version": "1.0", "owner": "Founder/Product", "last_updated": "2026-03-29", "status": "Approved", "pilot_applicability": "All controlled pilots"},
 ]
 
 DEFAULT_THRESHOLDS: Dict[str, Dict[str, float]] = {
@@ -1768,6 +1774,14 @@ def create_app() -> Flask:
     def executive_deck():
         return _serve_deck("executive")
 
+    @app.get("/pilot-success-guide")
+    def pilot_success_guide():
+        return _serve_static_doc(PILOT_SUCCESS_GUIDE_FILENAME)
+
+    @app.get("/model-card")
+    def model_card():
+        return _serve_static_doc(MODEL_CARD_FILENAME)
+
     @app.get("/legacy-deck")
     def legacy_deck():
         return _serve_deck("legacy")
@@ -1862,6 +1876,8 @@ def create_app() -> Flask:
                 "pilot_build_state": PILOT_BUILD_STATE,
                 "intended_use_statement": INTENDED_USE_STATEMENT,
                 "pilot_docs_url": "/pilot-docs",
+                "pilot_success_guide_url": "/pilot-success-guide",
+                "model_card_url": "/model-card",
                 "deck_url": "/deck",
                 "hospital_deck_url": "/hospital-deck",
                 "investor_deck_url": "/investor-deck",
@@ -2528,6 +2544,8 @@ def create_app() -> Flask:
                 <div style="display:flex;gap:12px;flex-wrap:wrap">
                   <a class="btn" href="/command-center">Back to Command Center</a>
                   <a class="btn" href="/pilot-docs">Open Pilot Docs</a>
+                  <a class="btn" href="/pilot-success-guide">Pilot Success Guide</a>
+                  <a class="btn" href="/model-card">Model Card</a>
                   <a class="btn" href="/deck" target="_blank" rel="noopener">Open Pitch Deck</a>
                   <a class="btn" href="/investor-deck" target="_blank" rel="noopener">Investor Deck</a>
                 </div>
