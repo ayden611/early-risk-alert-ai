@@ -1040,6 +1040,8 @@ COMMAND_CENTER_HTML = r"""
           </div>
           <div class="section-actions">
             <a class="btn secondary small" href="/pilot-docs">Open Pilot Docs</a>
+            <a class="btn secondary small" href="/pilot-success-guide">Download Pilot Evaluation Guide</a>
+            <a class="btn secondary small" href="/model-card">Download Model Card</a>
           </div>
         </div>
         <div class="audience-grid">
@@ -1053,7 +1055,15 @@ COMMAND_CENTER_HTML = r"""
           </div>
           <div class="mini-card">
             <div class="mini-k">Governance Set</div>
-            <div class="mini-copy">Pilot Docs includes the regulatory-positioning summary, risk register, V&amp;V-lite sheet, release notes, locked stable build marker, and change-control guidance for keeping one stable pilot build.</div>
+            <div class="mini-copy">Pilot Docs includes the regulatory-positioning summary, risk register, V&amp;V-lite sheet, release notes, locked stable build marker, change-control guidance, the Pilot Success Criteria Sheet, the Workflow Integration Guide, and a separate Model Card for keeping one stable pilot build.</div>
+          </div>
+          <div class="mini-card">
+            <div class="mini-k">Pilot Success Criteria</div>
+            <div class="mini-copy">90-day scoped pilot evaluation with a recommended Phase 1 retrospective validation path first, then an optional Phase 2 small prospective pilot. Success is measured through clinician engagement, operational awareness, workflow efficiency, full audit completeness, and governance compliance.</div>
+          </div>
+          <div class="mini-card">
+            <div class="mini-k">Workflow Integration Guide</div>
+            <div class="mini-copy">Defines daily command-center workflow fit across shift huddles, routine monitoring, and escalation review. Reinforces supportive review context only, independent HCP review, workflow-state separation, explainability, data freshness visibility, and pilot training support.</div>
           </div>
           <div class="mini-card">
             <div class="mini-k">Supported Inputs</div>
@@ -1077,7 +1087,7 @@ COMMAND_CENTER_HTML = r"""
           </div>
           <div class="mini-card">
             <div class="mini-k">Document Control Index</div>
-            <div class="mini-copy">Frozen Intended-Use Statement (1.0) · Approved Support Language (1.0) · Claims Control Sheet (1.0) · Complaint / Issue Log (1.0)</div>
+            <div class="mini-copy">Frozen Intended-Use Statement (1.0) · Approved Support Language (1.0) · Claims Control Sheet (1.0) · Complaint / Issue Log (1.0) · Pilot Success Criteria Sheet (1.0) · Workflow Integration Guide (1.0) · Model Card (1.0)</div>
           </div>
           <div class="mini-card">
             <div class="mini-k">Cybersecurity Summary</div>
