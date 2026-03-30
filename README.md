@@ -17,6 +17,12 @@ https://early-risk-alert-ai-1.onrender.com/pilot-docs
 **Public Pitch Deck**  
 https://early-risk-alert-ai-1.onrender.com/deck
 
+**Pilot Success Criteria & Workflow Integration Guide**  
+https://early-risk-alert-ai-1.onrender.com/pilot-success-guide
+
+**Model Card**  
+https://early-risk-alert-ai-1.onrender.com/model-card
+
 **Request a Live Command Center Demonstration**  
 https://early-risk-alert-ai-1.onrender.com/hospital-demo
 
@@ -83,6 +89,8 @@ The platform does not replace clinician judgment and is not intended to diagnose
 - configurable threshold controls
 - trend and timeline visibility
 - pilot governance and documentation support
+- downloadable pilot evaluation guide
+- downloadable model card
 
 ---
 
@@ -200,6 +208,8 @@ The platform includes pilot-governance support elements designed to strengthen h
 - pilot change-control tracking
 - pilot documentation access through governance routes
 - separation of workflow status from supportive review context
+- downloadable pilot success criteria and workflow integration guide
+- downloadable model card
 
 ### Current Pilot Governance Markers
 - `PILOT_BUILD_STATE`: locked stable build
@@ -227,6 +237,60 @@ The stable pilot bundle includes in-platform documentation and governance suppor
 - document control index
 - approved claims list
 - banned claims list
+- pilot success criteria sheet
+- workflow integration guide
+- model card
+
+---
+
+## Downloadable Document Bundle
+
+The current static document bundle includes the following files:
+
+- `Early_Risk_Alert_AI_Pitch_Deck.pdf`
+- `Early_Risk_Alert_AI_Pilot_Success_Criteria_and_Workflow_Integration_Guide.docx`
+- `Early_Risk_Alert_AI_Model_Card.docx`
+
+These documents are intended to support hospital-facing pilot review, executive walkthroughs, innovation-office review, governance review, and investor / partner discussions.
+
+---
+
+## Pilot Evaluation Guide
+
+The combined Pilot Success Criteria and Workflow Integration Guide supports hospital-facing review of:
+
+- pilot objective
+- retrospective validation phase
+- tightly scoped prospective pilot phase
+- primary success metrics
+- safety and compliance metrics
+- governance and technical metrics
+- success thresholds
+- exit criteria
+- workflow integration principles
+- day-to-day pilot use expectations
+- training and operational review support
+
+The recommended first step remains retrospective validation on de-identified historical data as the most conservative hospital entry point.
+
+---
+
+## Model Card
+
+The model card is included as a separate downloadable governance artifact and is intended to summarize:
+
+- intended use
+- supported users
+- supported inputs
+- supported outputs
+- visible limitations
+- review basis
+- human oversight requirements
+- workflow-support framing
+- governance boundaries
+- approved claims posture
+
+The model card is designed to reinforce the platform's HCP-facing decision-support and workflow-support positioning in a controlled pilot environment.
 
 ---
 
@@ -315,6 +379,9 @@ The pilot bundle includes:
 - workflow control interpretation guidance
 - escalation and support instructions
 - clear reminder that the HCP must independently review the patient and the displayed basis for outputs
+- pilot success criteria sheet
+- workflow integration guide
+- model card
 
 ---
 
@@ -405,7 +472,7 @@ The company does not claim FDA clearance or approval for the platform at this ti
 
 ## Deployment Positioning
 
-Early Risk Alert AI is structured for secure pilot deployment, hospital-facing workflow evaluation, and scalable enterprise expansion through controlled access, audit-aware workflows, governance visibility, and protected cloud infrastructure.
+Early Risk Alert AI is structured for secure pilot deployment, hospital-facing workflow evaluation, and scalable enterprise expansion through controlled access, audit-aware workflows, governance visibility, protected cloud infrastructure, downloadable pilot evaluation support, and a separate model card for review readiness.
 
 ---
 
