@@ -33,15 +33,15 @@ FOUNDER_NAME = "Milton Munroe"
 FOUNDER_ROLE = "Founder & CEO, Early Risk Alert AI"
 
 
-PILOT_VERSION = os.getenv("PILOT_VERSION", "stable-pilot-1.0.2")
+PILOT_VERSION = os.getenv("PILOT_VERSION", "stable-pilot-1.0.3")
 PILOT_BUILD_STATE = "Locked Stable Pilot Build"
 INTENDED_USE_STATEMENT = (
     "Early Risk Alert AI is an HCP-facing decision-support and workflow-support software platform intended to assist authorized health care professionals in identifying patients who may warrant further clinical evaluation, supporting patient prioritization, and improving command-center operational awareness. It does not replace clinician judgment and is not intended to diagnose, direct treatment, or independently trigger escalation."
 )
 PILOT_SUPPORT_LANGUAGE = [
-    "supports earlier visibility into potential deterioration",
+    "supports monitored patient visibility and supportive review prioritization",
     "assists health care professionals in prioritizing monitored patients",
-    "provides explainable risk-support context",
+    "provides explainable review-support context",
     "supports command-center workflow awareness",
     "helps identify patients who may warrant further review",
 ]
@@ -54,11 +54,11 @@ PILOT_SUPPORTED_INPUTS = [
 ]
 PILOT_SUPPORTED_OUTPUTS = [
     "patient prioritization support",
-    "risk-support context",
+    "review-support context",
     "explainable contributing factors",
     "trend and freshness information",
     "workflow-support visibility",
-    "supportive recommendation for further clinical evaluation",
+    "supportive workflow note for further clinical evaluation",
 ]
 PILOT_AVOID_CLAIMS = [
     "detects deterioration autonomously",
@@ -127,6 +127,17 @@ PILOT_RELEASE_NOTES = [
             "Added document-control index and claims-control sheet.",
             "Expanded cybersecurity, access, data handling, training, and validation evidence details.",
             "Softened remaining review-language labels to keep the pilot posture supportive rather than directive."
+        ],
+    },
+    {
+        "version": "stable-pilot-1.0.3",
+        "date": "2026-03-31",
+        "summary": "Softened remaining predictive UI labels and expanded documented security / insurance-readiness controls.",
+        "changes": [
+            "Renamed remaining predictive command-center labels to review-oriented language.",
+            "Replaced forecast percentages and exact time windows with review-attention levels and monitored-trend language.",
+            "Added advisory structure with Technical Infrastructure & Security Advisor support.",
+            "Added documented MFA, endpoint security, immutable backup, incident response, business continuity, patching, tabletop, and security training controls for pilot review."
         ],
     },
 ]
@@ -336,7 +347,7 @@ PILOT_CYBERSECURITY_SUMMARY = [
         "control": "Protected admin credentials and controlled pilot account management",
         "summary": "Administrative access should use configured credentials, limited approved emails, and controlled account provisioning.",
         "evidence": "Admin login validation and pilot-account governance review.",
-        "status": "Pilot control"
+        "status": "Structured control"
     },
     {
         "domain": "Patching approach",
@@ -355,9 +366,9 @@ PILOT_CYBERSECURITY_SUMMARY = [
     {
         "domain": "Backup / restore",
         "control": "Operational backup and recovery summary",
-        "summary": "Pilot data artifacts, configuration, and operational files should be covered by controlled backup and restore procedures before hospital deployment.",
-        "evidence": "Backup/recovery requirement recorded in the cybersecurity summary and pilot closeout planning.",
-        "status": "Pilot documentation"
+        "summary": "Pilot data artifacts, configuration, and operational files are covered by documented backup, restore, and immutability requirements before hospital deployment.",
+        "evidence": "Backup / restore standard, closeout documentation, and restore-test tracking requirements.",
+        "status": "Documented and available"
     },
     {
         "domain": "Incident handling",
@@ -371,7 +382,7 @@ PILOT_CYBERSECURITY_SUMMARY = [
         "control": "Controlled pilot hold and stakeholder notification",
         "summary": "If a hospital pilot is paused for security, reliability, or governance reasons, affected users should be notified, access reviewed, and restoration approved before pilot resumption.",
         "evidence": "Escalation process stage for pause/restore decision-making.",
-        "status": "Pilot documentation"
+        "status": "Documented and available"
     },
 ]
 
@@ -463,7 +474,7 @@ PILOT_SCOPE_DOCUMENT = [
     {"section": "Intended users", "summary": "Authorized health care professionals, approved hospital stakeholders, clinical operations teams, and approved pilot reviewers."},
     {"section": "Pilot boundaries", "summary": "The platform does not replace clinician judgment and is not intended to diagnose, direct treatment, or independently trigger escalation."},
     {"section": "Operational scope", "summary": "Role-based access, unit-scoped visibility, workflow logging, explainability panels, audit visibility, and governance documentation are included in the current pilot bundle."},
-    {"section": "Pilot review materials", "summary": "The pilot bundle includes claims controls, complaint handling, change approvals, cybersecurity summary, data handling policy, training sheet, validation evidence, and document-control index."},
+    {"section": "Pilot review materials", "summary": "The pilot bundle includes claims controls, complaint handling, change approvals, cybersecurity summary, MFA and access-control requirements, backup / restore requirements, incident-response and business-continuity materials, data handling policy, training sheet, validation evidence, and document-control index."},
     {"section": "Hospital responsibilities", "summary": "Hospitals retain oversight of clinical decision-making, local policy, and any site-specific access, data, and operational requirements."},
 ]
 
@@ -476,6 +487,140 @@ PILOT_TRAINING_USE_INSTRUCTIONS = [
     {"step": "6. What not to use the platform for", "instruction": "Do not use the platform as a diagnosis engine, treatment director, or independent escalation trigger.", "owner": "Clinical reviewer"},
     {"step": "7. Follow hospital policy", "instruction": "Any clinical action, escalation timing, or treatment decision remains governed by licensed clinician judgment and hospital policy.", "owner": "Clinical reviewer"},
     {"step": "8. Escalate product issues", "instruction": "Report reliability, access, claims, or governance concerns through the complaint / issue handling process so they can be triaged and documented.", "owner": "All pilot users"},
+    {"step": "9. Follow security operating requirements", "instruction": "Administrative and support personnel should follow documented access-control, MFA, endpoint-security, patching, backup / restore, incident-response, and training requirements for the pilot environment.", "owner": "Founder/Admin"},
+]
+
+PILOT_ADVISORY_STRUCTURE = [
+    {
+        "name": "Milton Munroe",
+        "title": "Founder & CEO, Early Risk Alert AI",
+        "scope": "Product leadership, pilot operations coordination, release control, hospital-facing pilot management, and governance ownership.",
+        "status": "In place"
+    },
+    {
+        "name": "Uche Anosike",
+        "title": "Technical Infrastructure & Security Advisor",
+        "scope": "Infrastructure architecture, platform security posture, environment configuration, backup / recovery planning, patch-management review, and deployment-readiness guidance for controlled pilot environments.",
+        "status": "In place"
+    },
+]
+
+PILOT_SECURITY_PROGRAM_DOCUMENTS = [
+    {
+        "document_name": "Access Control & MFA Standard",
+        "version": "1.0",
+        "owner": "Founder/Admin",
+        "last_updated": "2026-03-31",
+        "status": "Approved",
+        "pilot_applicability": "Administrative access and pilot deployment review"
+    },
+    {
+        "document_name": "Endpoint Security & EDR Requirement Summary",
+        "version": "1.0",
+        "owner": "Founder/Admin",
+        "last_updated": "2026-03-31",
+        "status": "Approved",
+        "pilot_applicability": "Administrative and support endpoints"
+    },
+    {
+        "document_name": "Backup, Restore & Immutability Standard",
+        "version": "1.0",
+        "owner": "Founder/Admin",
+        "last_updated": "2026-03-31",
+        "status": "Approved",
+        "pilot_applicability": "Controlled pilot data protection and closeout"
+    },
+    {
+        "document_name": "Incident Response Plan",
+        "version": "1.0",
+        "owner": "Founder/Admin",
+        "last_updated": "2026-03-31",
+        "status": "Approved",
+        "pilot_applicability": "All controlled pilots"
+    },
+    {
+        "document_name": "Business Continuity & Disaster Recovery Plan",
+        "version": "1.0",
+        "owner": "Founder/Admin",
+        "last_updated": "2026-03-31",
+        "status": "Approved",
+        "pilot_applicability": "All controlled pilots"
+    },
+    {
+        "document_name": "Patch Management Standard",
+        "version": "1.0",
+        "owner": "Founder/Admin",
+        "last_updated": "2026-03-31",
+        "status": "Approved",
+        "pilot_applicability": "All controlled pilots"
+    },
+    {
+        "document_name": "Security Awareness & Phishing Training Standard",
+        "version": "1.0",
+        "owner": "Founder/Admin",
+        "last_updated": "2026-03-31",
+        "status": "Approved",
+        "pilot_applicability": "Administrative and support personnel"
+    },
+    {
+        "document_name": "Tabletop Exercise Record Template",
+        "version": "1.0",
+        "owner": "Founder/Admin",
+        "last_updated": "2026-03-31",
+        "status": "Approved",
+        "pilot_applicability": "Incident response and business continuity review"
+    },
+]
+
+PILOT_INSURANCE_READINESS_CONTROLS = [
+    {
+        "control": "Phishing-Resistant MFA",
+        "requirement": "Multi-factor authentication is required for administrative accounts, remote access, and administrative consoles. Phishing-resistant methods are the preferred configuration where applicable before hospital deployment.",
+        "documentation": "Documented in access-control and deployment requirements.",
+        "status": "Documented requirement"
+    },
+    {
+        "control": "Endpoint Detection & Response (EDR)",
+        "requirement": "Administrative and support endpoints used to manage the pilot environment are expected to use continuously monitored endpoint security tooling with isolation capability before hospital deployment.",
+        "documentation": "Documented in endpoint-security requirement summary.",
+        "status": "Documented requirement"
+    },
+    {
+        "control": "Immutable Backups",
+        "requirement": "Automated off-site or separate-cloud backups with immutability expectations and restore-test tracking are structured for pilot deployment where applicable.",
+        "documentation": "Formalized in backup / restore policy and closeout documentation.",
+        "status": "Structured and documented"
+    },
+    {
+        "control": "Documented Incident Response Plan",
+        "requirement": "A written incident response path with triage, escalation, remediation, verification, notification, and closure steps is documented and available for pilot review.",
+        "documentation": "Documented and available.",
+        "status": "In place"
+    },
+    {
+        "control": "Business Continuity & Disaster Recovery",
+        "requirement": "Recovery objectives, service continuity expectations, pause / restore controls, and backup / restore responsibilities are documented for pilot operations.",
+        "documentation": "Documented and available.",
+        "status": "Documented and available"
+    },
+    {
+        "control": "Patch Management",
+        "requirement": "A formal process for identifying, prioritizing, and remediating critical vulnerabilities within a defined window is structured and documented for pilot environments.",
+        "documentation": "Structured in patch management standard.",
+        "status": "Structured and documented"
+    },
+    {
+        "control": "Employee Security Awareness Training",
+        "requirement": "Cybersecurity awareness training and phishing-awareness requirements for administrative and support personnel are documented for the pilot operating environment.",
+        "documentation": "Documented in training requirement summary.",
+        "status": "Documented requirement"
+    },
+    {
+        "control": "Tabletop Exercise Readiness",
+        "requirement": "Incident-response tabletop exercise procedures and recording templates are documented for pilot security review and evidence tracking.",
+        "documentation": "Documented and available.",
+        "status": "Documented and available"
+    },
 ]
 
 PILOT_VALIDATION_EVIDENCE = [
@@ -2480,6 +2625,9 @@ def create_app() -> Flask:
                 "escalation_process": PILOT_ESCALATION_PROCESS,
                 "change_approval_log": PILOT_CHANGE_APPROVAL_LOG,
                 "cybersecurity_summary": PILOT_CYBERSECURITY_SUMMARY,
+                "advisory_structure": PILOT_ADVISORY_STRUCTURE,
+                "security_program_documents": PILOT_SECURITY_PROGRAM_DOCUMENTS,
+                "insurance_readiness_controls": PILOT_INSURANCE_READINESS_CONTROLS,
                 "user_provisioning_policy": PILOT_USER_PROVISIONING_POLICY,
                 "data_retention_policy": PILOT_DATA_RETENTION_POLICY,
                 "pilot_scope_document": PILOT_SCOPE_DOCUMENT,
@@ -2506,6 +2654,9 @@ def create_app() -> Flask:
                 "banned_claims": PILOT_BANNED_CLAIMS,
                 "claims_control_sheet": PILOT_CLAIMS_CONTROL_SHEET,
                 "document_control_index": PILOT_DOCUMENT_CONTROL_INDEX,
+                "advisory_structure": PILOT_ADVISORY_STRUCTURE,
+                "security_program_documents": PILOT_SECURITY_PROGRAM_DOCUMENTS,
+                "insurance_readiness_controls": PILOT_INSURANCE_READINESS_CONTROLS,
             }
         )
 
@@ -2566,6 +2717,8 @@ def create_app() -> Flask:
                   <a class="btn" href="/command-center">Back to Command Center</a>
                   <a class="btn" href="/pilot-docs">Open Pilot Docs</a>
                   <a class="btn" href="/deck" target="_blank" rel="noopener">Open Pitch Deck</a>
+                  <a class="btn" href="/pilot-success-guide">Pilot Success Guide</a>
+                  <a class="btn" href="/model-card">Model Card</a>
                   <a class="btn" href="/investor-deck" target="_blank" rel="noopener">Investor Deck</a>
                 </div>
               </div>
@@ -2599,6 +2752,13 @@ def create_app() -> Flask:
             <div class="card"><h2 style="margin:0 0 12px;font-size:28px">Issue Escalation Process</h2>{_render_table(PILOT_ESCALATION_PROCESS, ["stage", "trigger", "owner", "target_time", "action"])}</div>
             <div class="card"><h2 style="margin:0 0 12px;font-size:28px">Change Approval Log</h2>{_render_table(PILOT_CHANGE_APPROVAL_LOG, ["version", "approval_date", "approver_name", "reason_for_approval", "what_changed", "impact_assessment", "status"])}</div>
             <div class="card"><h2 style="margin:0 0 12px;font-size:28px">Cybersecurity Summary</h2>{_render_table(PILOT_CYBERSECURITY_SUMMARY, ["domain", "control", "summary", "evidence", "status"])}</div>
+
+            <div class="grid">
+              <div class="card"><h2 style="margin:0 0 12px;font-size:28px">Advisory & Support Structure</h2>{_render_table(PILOT_ADVISORY_STRUCTURE, ["name", "title", "scope", "status"])}</div>
+              <div class="card"><h2 style="margin:0 0 12px;font-size:28px">Insurance-Readiness Controls</h2>{_render_table(PILOT_INSURANCE_READINESS_CONTROLS, ["control", "requirement", "documentation", "status"])}</div>
+            </div>
+
+            <div class="card"><h2 style="margin:0 0 12px;font-size:28px">Security Program Documents</h2>{_render_table(PILOT_SECURITY_PROGRAM_DOCUMENTS, ["document_name", "version", "owner", "last_updated", "status", "pilot_applicability"])}</div>
 
             <div class="grid">
               <div class="card"><h2 style="margin:0 0 12px;font-size:28px">User Provisioning / Deprovisioning Policy</h2>{_render_table(PILOT_USER_PROVISIONING_POLICY, ["step", "policy", "owner", "sla", "evidence"])}</div>
