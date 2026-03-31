@@ -558,12 +558,10 @@ COMMAND_CENTER_HTML = r"""
       </div>
       <div class="nav-links">
         <a href="/command-center">Command Center</a>
-        <a href="/deck">Pitch Deck</a>
         <a href="/hospital-demo">Hospital Demo</a>
         <a href="/investor-intake">Investor Access</a>
         <a href="/executive-walkthrough">Executive Walkthrough</a>
         <a href="/admin/review">Admin Review</a>
-        <a href="/pilot-docs">Pilot Docs</a>
         <a href="/logout">Logout</a>
       </div>
     </div>
@@ -574,11 +572,11 @@ COMMAND_CENTER_HTML = r"""
       <div class="pilot-banner-grid">
         <div>
           <div class="pilot-kicker">Pilot mode / evaluation environment</div>
-          <h2 class="pilot-title">HCP-facing decision-support and workflow-support command center for prioritized clinical review</h2>
+          <h2 class="pilot-title">Controlled demonstration environment for workflow evaluation, security review, and stakeholder readiness</h2>
           <p class="pilot-copy">
-            This platform is presented as an HCP-facing decision-support and workflow-support environment.
-            It assists further clinical evaluation, prioritization, and command-center awareness, and does not replace clinician judgment.
-            It is not intended to diagnose, direct treatment, or independently trigger escalation.
+            This platform is presented in a controlled pilot environment for demonstration, workflow evaluation, and stakeholder review.
+            It does not replace clinical judgment, hospital protocols, or emergency response systems.
+            All insights, alerts, forecasts, and thresholds support — not replace — licensed clinical decision-making.
           </p>
         </div>
 
@@ -592,8 +590,7 @@ COMMAND_CENTER_HTML = r"""
           <div class="meta-pills">
             <div class="status-pill live-dot" id="liveSystemPill">Live System</div>
             <div class="status-pill muted" id="lastUpdatedPillTop">Last Updated --</div>
-            <div class="status-pill muted" id="dataFreshnessPill">Data Freshness --</div>
-            <div class="status-pill info" id="topRiskPill">Top Risk Patient --</div>
+            <div class="status-pill info" id="topRiskPill">Top Review-Priority Patient --</div>
           </div>
 
           <div class="meta-pills">
@@ -610,17 +607,14 @@ COMMAND_CENTER_HTML = r"""
           <div class="hero-kicker">Pilot operating layer</div>
           <h1 id="heroTitle">HCP-facing clinical command center</h1>
           <p id="heroCopy">
-            Early Risk Alert AI is an HCP-facing decision-support and workflow-support platform that assists further clinical evaluation,
-            supports prioritization and command-center awareness, and keeps operational workflow handling separate from clinician judgment.
+            Early Risk Alert AI supports monitored patient visibility, patient prioritization, explainable review context,
+            and structured workflow handling for further clinical evaluation and command-center awareness.
           </p>
 
           <div class="hero-actions">
             <a class="btn primary" href="/hospital-demo">Request Live Demo</a>
-            <a class="btn secondary" href="/deck">Open Pitch Deck</a>
             <a class="btn secondary" href="/investor-intake">Investor Access</a>
             <a class="btn secondary" href="/admin/review">Open Admin Review</a>
-            <a class="btn secondary" href="/pilot-docs">Pilot Docs</a>
-            <button class="btn secondary" type="button" onclick="manualRefresh()">Refresh Now</button>
           </div>
 
           <div class="hero-pills" style="margin-top:18px;">
@@ -630,9 +624,6 @@ COMMAND_CENTER_HTML = r"""
             <div class="status-pill info" id="unitAccessPill">Unit Access</div>
             <div class="status-pill live" id="feedHealthPill">Feed Live</div>
             <div class="status-pill muted" id="lastUpdatedPill">Last Updated</div>
-            <div class="status-pill info" id="autoRefreshPill">Auto Refresh On</div>
-            <div class="status-pill muted" id="trendDataPill">Trend Sync Pending</div>
-            <div class="status-pill dark" id="pilotVersionPill">Locked Stable Build</div>
           </div>
         </div>
 
@@ -641,7 +632,7 @@ COMMAND_CENTER_HTML = r"""
           <p>
             Hospital pilot users can be restricted to a single unit such as ICU, telemetry, stepdown, ward, or RPM.
             Admin users retain full hospital-wide visibility across all units and all pilot accounts.
-            Role restrictions, unit restrictions, trend views, audit visibility, and thresholds are wired to backend routes and reflect your current access scope.
+            Trend views, audit visibility, and thresholds are wired to backend routes and reflect your current access scope.
           </p>
 
           <div class="toolbar" style="margin-top:18px;">
@@ -659,7 +650,6 @@ COMMAND_CENTER_HTML = r"""
 
           <div class="wall-tools" style="margin-top:14px;">
             <button class="btn wall-btn" id="wallModeBtn" type="button" onclick="toggleWallMode()">Enable Wall Mode</button>
-            <button class="btn secondary" id="autoRefreshBtn" type="button" onclick="toggleAutoRefresh()">Pause Auto Refresh</button>
             <div class="status-pill wall" id="wallModePill">Wall Mode Off</div>
             <div class="status-pill critical" id="systemBannerPill">Restricted</div>
           </div>
@@ -672,7 +662,7 @@ COMMAND_CENTER_HTML = r"""
         <div class="section-head">
           <div>
             <h2 class="section-title">Hospital Command Wall</h2>
-            <div class="section-sub">HCP-facing command-center visibility built from structured patient summaries, explainable review basis, operational workflow handling, persistent audit visibility, and role- / unit-based access control.</div>
+            <div class="section-sub">Structured patient summaries, review-priority visibility, explainable review basis, workflow handling, trend history, threshold controls, persistent audit visibility, and unit-based access control.</div>
           </div>
           <div class="mini-pills">
             <div class="status-pill live" id="wallStatus">Live</div>
@@ -687,12 +677,12 @@ COMMAND_CENTER_HTML = r"""
             <div class="hint">Active alert count within your current access scope.</div>
           </div>
           <div class="stat-card">
-            <div class="k">Critical Alerts</div>
+            <div class="k">Priority Alerts</div>
             <div class="v" id="critical-alerts">0</div>
-            <div class="hint">Highest urgency patients needing prompt HCP review within the current access scope.</div>
+            <div class="hint">Highest-priority review items within the current access scope.</div>
           </div>
           <div class="stat-card">
-            <div class="k">Avg Risk Score</div>
+            <div class="k">Avg Review Score</div>
             <div class="v" id="avg-risk">0%</div>
             <div class="hint">Average risk across visible patients.</div>
           </div>
@@ -713,21 +703,21 @@ COMMAND_CENTER_HTML = r"""
             </div>
 
             <div class="intel-card">
-              <h3>Top Risk Queue</h3>
+              <h3>Top Review-Priority Queue</h3>
               <div class="queue-list" id="top-risk-list"></div>
             </div>
 
             <div class="intel-card">
-              <h3>AI Clinical Reasoning</h3>
+              <h3>Explainable Review Basis</h3>
               <div class="why-now" id="ai-reasoning-panel">
                 <div class="why-line">Waiting for patient intelligence stream...</div>
               </div>
             </div>
 
             <div class="intel-card">
-              <h3>AI Insight</h3>
+              <h3>Review Insight</h3>
               <div class="insight-list" id="ai-insight-panel">
-                <div class="info-line">Waiting for active deterioration insight...</div>
+                <div class="info-line">Waiting for active review insight...</div>
               </div>
             </div>
 
@@ -758,7 +748,7 @@ COMMAND_CENTER_HTML = r"""
             </div>
 
             <div class="intel-card">
-              <h3>System Reliability</h3>
+              <h3>System Health</h3>
               <div class="queue-list" id="system-health-list"></div>
             </div>
 
@@ -833,7 +823,7 @@ COMMAND_CENTER_HTML = r"""
           <div class="module-card">
             <div class="module-head">
               <div>
-                <div class="module-title">Risk Prediction Timeline</div>
+                <div class="module-title">Review Trend Timeline</div>
                 <div class="module-sub">Near-term risk progression from stored trend history</div>
               </div>
               <div class="status-pill info">AI</div>
@@ -855,7 +845,7 @@ COMMAND_CENTER_HTML = r"""
           <div class="module-card">
             <div class="module-head">
               <div>
-                <div class="module-title">Deterioration Forecast</div>
+                <div class="module-title">Review Priority Outlook</div>
                 <div class="module-sub">Supportive forecast, not clinical instruction</div>
               </div>
               <div class="status-pill critical">Priority</div>
@@ -866,8 +856,8 @@ COMMAND_CENTER_HTML = r"""
           <div class="module-card">
             <div class="module-head">
               <div>
-                <div class="module-title">Review Alert Clusters</div>
-                <div class="module-sub">Grouped review drivers across visible patients</div>
+                <div class="module-title">Review Pattern Clusters</div>
+                <div class="module-sub">Grouped signal drivers across visible patients</div>
               </div>
               <div class="status-pill watch">Grouped</div>
             </div>
@@ -925,24 +915,24 @@ COMMAND_CENTER_HTML = r"""
         </div>
         <div class="roi-grid">
           <div class="mini-card">
-            <div class="mini-k">Earlier Visibility</div>
+            <div class="mini-k">Early Intervention</div>
             <div class="mini-v">Supports</div>
-            <div class="mini-copy">Supports earlier prioritization by surfacing visible changes in structured patient summaries before traditional workflow lag.</div>
+            <div class="mini-copy">Supports earlier review visibility by surfacing monitored trend changes within operational workflows.</div>
           </div>
           <div class="mini-card">
-            <div class="mini-k">Escalation Risk</div>
+            <div class="mini-k">Review Priority</div>
             <div class="mini-v">Potential</div>
-            <div class="mini-copy">Potential reduction in escalation risk through earlier prioritization and clearer operational visibility.</div>
+            <div class="mini-copy">Supports clearer prioritization and operational visibility for hospital review workflows.</div>
           </div>
           <div class="mini-card">
             <div class="mini-k">Monitoring Visibility</div>
             <div class="mini-v">Improved</div>
-            <div class="mini-copy">Improves monitoring visibility across units, pilot users, and high-risk patients in one command layer.</div>
+            <div class="mini-copy">Improves monitoring visibility across units, pilot users, and higher-priority patients in one command layer.</div>
           </div>
           <div class="mini-card">
             <div class="mini-k">Workflow Readiness</div>
             <div class="mini-v">Faster</div>
-            <div class="mini-copy">Supports faster operational acknowledgment, assignment, escalation, and resolution tracking.</div>
+            <div class="mini-copy">Supports faster acknowledgment, assignment, escalation, and resolution tracking.</div>
           </div>
         </div>
       </div>
@@ -981,8 +971,8 @@ COMMAND_CENTER_HTML = r"""
       <div class="section-card">
         <div class="section-head">
           <div>
-            <h2 class="section-title">Early Detection Scenario</h2>
-            <div class="section-sub">Demonstrates the product story: supportive AI reasoning, earlier visibility, and structured workflow action.</div>
+            <h2 class="section-title">Clinical Review Scenario</h2>
+            <div class="section-sub">Demonstrates the product story: explainable review basis, supportive visibility, and structured workflow action.</div>
           </div>
         </div>
         <div class="scenario-grid" id="scenario-grid"></div>
@@ -1000,116 +990,26 @@ COMMAND_CENTER_HTML = r"""
         <div class="how-grid">
           <div class="mini-card">
             <div class="mini-k">1. Ingest</div>
-            <div class="mini-copy">Structured patient summaries and operational workflow states are organized into a command-center review workflow.</div>
+            <div class="mini-copy">Patient vitals and monitoring signals are organized into a structured command workflow.</div>
           </div>
           <div class="mini-card">
-            <div class="mini-k">2. Detect</div>
-            <div class="mini-copy">Review logic highlights rising risk, change drift, and deterioration patterns needing attention.</div>
+            <div class="mini-k">2. Surface</div>
+            <div class="mini-copy">Platform logic surfaces rising review priority, signal drift, and monitored patterns needing attention.</div>
           </div>
           <div class="mini-card">
             <div class="mini-k">3. Prioritize</div>
-            <div class="mini-copy">High-risk patients rise to the top with explainable reasons, trend summaries, and recommended next steps.</div>
+            <div class="mini-copy">Higher-priority patients rise to the top with explainable reasons, trend summaries, and suggested workflow notes.</div>
           </div>
           <div class="mini-card">
             <div class="mini-k">4. Coordinate</div>
-            <div class="mini-copy">Care teams can log operational acknowledge, assign, escalate, and resolve states and review the audit trail in one place.</div>
+            <div class="mini-copy">Care teams can acknowledge, assign, escalate, resolve, and review the audit trail in one place.</div>
           </div>
         </div>
       </div>
     </section>
 
-    <section class="section business-sections">
-      <div class="section-card">
-        <div class="section-head">
-          <div>
-            <h2 class="section-title">Decision-Support Guardrails</h2>
-            <div class="section-sub">Visible review basis, confidence, data freshness, limitations, and a clear separation between workflow state and supportive clinical recommendation.</div>
-          </div>
-        </div>
-        <div class="audience-grid" id="decision-support-guardrails"></div>
-      </div>
-    </section>
-
-
-    <section class="section business-sections">
-      <div class="section-card">
-        <div class="section-head">
-          <div>
-            <h2 class="section-title">Pilot Governance + Documentation</h2>
-            <div class="section-sub">One locked stable intended-use statement, narrow support claims, visible limitations, role/unit scoping, audit controls, and lightweight pilot governance documents kept in one place for hospital and stakeholder review.</div>
-          </div>
-          <div class="section-actions">
-            <a class="btn secondary small" href="/pilot-docs">Open Pilot Docs</a>
-            <a class="btn secondary small" href="/pilot-success-guide">Download Pilot Evaluation Guide</a>
-            <a class="btn secondary small" href="/model-card">Download Model Card</a>
-          </div>
-        </div>
-        <div class="audience-grid">
-          <div class="mini-card">
-            <div class="mini-k">Frozen Intended Use</div>
-            <div class="mini-copy" id="intendedUseCard">Early Risk Alert AI is an HCP-facing decision-support and workflow-support software platform intended to assist authorized health care professionals in identifying patients who may warrant further clinical evaluation, supporting patient prioritization, and improving command-center operational awareness. It does not replace clinician judgment and is not intended to diagnose, direct treatment, or independently trigger escalation.</div>
-          </div>
-          <div class="mini-card">
-            <div class="mini-k">Pilot Controls</div>
-            <div class="mini-copy">Outputs are framed as patient prioritization support, explainable review basis, confidence, limitations, freshness, and workflow-support visibility. Workflow controls record operational handling and user action logs only.</div>
-          </div>
-          <div class="mini-card">
-            <div class="mini-k">Governance Set</div>
-            <div class="mini-copy">Pilot Docs includes the regulatory-positioning summary, risk register, V&amp;V-lite sheet, release notes, locked stable build marker, change-control guidance, the Pilot Success Criteria Sheet, the Workflow Integration Guide, and a separate Model Card for keeping one stable pilot build.</div>
-          </div>
-          <div class="mini-card">
-            <div class="mini-k">Pilot Success Criteria</div>
-            <div class="mini-copy">90-day scoped pilot evaluation with a recommended Phase 1 retrospective validation path first, then an optional Phase 2 small prospective pilot. Success is measured through clinician engagement, operational awareness, workflow efficiency, full audit completeness, and governance compliance.</div>
-          </div>
-          <div class="mini-card">
-            <div class="mini-k">Workflow Integration Guide</div>
-            <div class="mini-copy">Defines daily command-center workflow fit across shift huddles, routine monitoring, and escalation review. Reinforces supportive review context only, independent HCP review, workflow-state separation, explainability, data freshness visibility, and pilot training support.</div>
-          </div>
-          <div class="mini-card">
-            <div class="mini-k">Supported Inputs</div>
-            <div class="mini-copy">structured patient medical information · trended vital-sign summaries · monitored patient context · workflow state and review context · approved medical information available to the HCP</div>
-          </div>
-          <div class="mini-card">
-            <div class="mini-k">Approved Claims</div>
-            <div class="mini-copy">assists authorized health care professionals in identifying patients who may warrant further clinical evaluation · supports patient prioritization across monitored patients · provides explainable risk-support context · supports command-center workflow awareness and operational visibility</div>
-          </div>
-          <div class="mini-card">
-            <div class="mini-k">Banned Claims</div>
-            <div class="mini-copy">detects deterioration autonomously · identifies who needs immediate escalation · predicts who will clinically crash · directs bedside intervention</div>
-          </div>
-          <div class="mini-card">
-            <div class="mini-k">Claims Control</div>
-            <div class="mini-copy">Approved: Assists authorized health care professionals in identifying patients who may warrant further clinical evaluation · Approved: Supports patient prioritization across monitored patients · Approved: Provides explainable risk-support context</div>
-          </div>
-          <div class="mini-card">
-            <div class="mini-k">Change Control</div>
-            <div class="mini-copy">Freeze one intended-use statement everywhere in the pilot build. Keep claims narrow and supportive rather than directive. Make review basis, confidence, limitations, freshness, and unknowns visible for each patient.</div>
-          </div>
-          <div class="mini-card">
-            <div class="mini-k">Document Control Index</div>
-            <div class="mini-copy">Frozen Intended-Use Statement (1.0) · Approved Support Language (1.0) · Claims Control Sheet (1.0) · Complaint / Issue Log (1.0) · Pilot Success Criteria Sheet (1.0) · Workflow Integration Guide (1.0) · Model Card (1.0)</div>
-          </div>
-          <div class="mini-card">
-            <div class="mini-k">Cybersecurity Summary</div>
-            <div class="mini-copy">Access control · Password policy · Patching approach · Vulnerability handling · Backup / restore · Incident handling</div>
-          </div>
-          <div class="mini-card">
-            <div class="mini-k">Access + Data Handling</div>
-            <div class="mini-copy">6 access-policy steps · 5 data-handling topics</div>
-          </div>
-          <div class="mini-card">
-            <div class="mini-k">Validation Packet</div>
-            <div class="mini-copy">VAL-001 Pass · VAL-002 Pass · VAL-003 Pass</div>
-          </div>
-          <div class="mini-card">
-            <div class="mini-k">Issue + Change Logs</div>
-            <div class="mini-copy">4 issue log entries · 3 approved release entries</div>
-          </div>
-        </div>
-      </div>
-    </section>
     <div class="footer">
-      Early Risk Alert AI · HCP-Facing Decision-Support and Workflow-Support · Assists Further Clinical Evaluation · Supports Prioritization and Command-Center Awareness · Does Not Replace Clinician Judgment · Not Intended to Diagnose, Direct Treatment, or Independently Trigger Escalation
+      Early Risk Alert AI · Clinical Command Center · Unit-Based Pilot Access · Hospital Branded Accounts · Explainable Alert Workflow · Persistent Audit Visibility · Pilot / Evaluation Environment
     </div>
   </div>
 
@@ -1143,65 +1043,24 @@ COMMAND_CENTER_HTML = r"""
         <div class="drawer-v" id="drawerBp">--</div>
       </div>
       <div class="drawer-block">
-        <div class="drawer-k">Risk Score</div>
+        <div class="drawer-k">Review Score</div>
         <div class="drawer-v" id="drawerRisk">--</div>
       </div>
     </div>
 
     <div class="drawer-block">
-      <div class="drawer-k">Suggested Next Review (Supportive / HCP-Facing)</div>
+      <div class="drawer-k">Recommended Action</div>
       <div class="drawer-v" id="drawerAction">--</div>
-      <div class="note-box" style="margin-top:10px;">This recommendation is HCP-facing decision support only. It assists further clinical evaluation and does not replace clinician judgment or independently trigger escalation.</div>
     </div>
 
     <div class="drawer-block">
-      <div class="drawer-k">Review Basis / Explainability</div>
+      <div class="drawer-k">Explainable Reasoning</div>
       <div class="drawer-v" id="drawerExplainability">--</div>
-      <div class="timeline-panel" id="drawerReviewBasis" style="margin-top:12px;"></div>
-    </div>
-
-    <div class="drawer-grid">
-      <div class="drawer-block">
-        <div class="drawer-k">Current Reviewed Inputs</div>
-        <div class="timeline-panel" id="drawerCurrentInputs"></div>
-      </div>
-      <div class="drawer-block">
-        <div class="drawer-k">Top Contributing Factors</div>
-        <div class="timeline-panel" id="drawerTopFactors"></div>
-      </div>
-    </div>
-
-    <div class="drawer-grid">
-      <div class="drawer-block">
-        <div class="drawer-k">Recommendation Confidence</div>
-        <div class="drawer-v" id="drawerConfidence">--</div>
-      </div>
-      <div class="drawer-block">
-        <div class="drawer-k">Data Freshness</div>
-        <div class="drawer-v" id="drawerFreshness">--</div>
-      </div>
-    </div>
-
-    <div class="drawer-grid">
-      <div class="drawer-block">
-        <div class="drawer-k">What Changed</div>
-        <div class="timeline-panel" id="drawerWhatChanged"></div>
-      </div>
-      <div class="drawer-block">
-        <div class="drawer-k">What the Software Does Not Know</div>
-        <div class="timeline-panel" id="drawerUnknowns"></div>
-      </div>
     </div>
 
     <div class="drawer-block">
-      <div class="drawer-k">Known Limitations</div>
-      <div class="timeline-panel" id="drawerLimitations"></div>
-    </div>
-
-    <div class="drawer-block">
-      <div class="drawer-k">Workflow Status (Operational)</div>
+      <div class="drawer-k">Workflow Status</div>
       <div class="drawer-v" id="drawerWorkflow">No workflow action saved yet.</div>
-      <div class="note-box" style="margin-top:10px;">Operational workflow state and user action logging only — not a machine-issued medical order.</div>
     </div>
 
     <div class="drawer-block">
@@ -1250,16 +1109,11 @@ COMMAND_CENTER_HTML = r"""
     let pilotModeEnabled = true;
     let lastSystemHealth = {};
     let lastUpdatedAt = null;
-    let latestSnapshotMeta = {};
     let wallModeEnabled = false;
     let thresholdStore = {};
     let trendCache = {};
     let trendsEndpointAvailable = false;
     let thresholdsEndpointAvailable = false;
-    let autoRefreshEnabled = true;
-    let refreshIntervalMs = 5000;
-    let refreshTimer = null;
-    let refreshInFlight = false;
 
     const DEFAULT_THRESHOLDS = {
       icu: {spo2_low:92, hr_high:120, sbp_high:160},
@@ -1274,15 +1128,15 @@ COMMAND_CENTER_HTML = r"""
       terms: {
         title: "Terms",
         body: `
-          This pilot environment is presented for HCP-facing product demonstration, workflow evaluation, and stakeholder review.
-          Features, visualizations, and supportive outputs shown here represent a controlled command-center experience that assists further clinical evaluation and prioritization.
-          Use of this environment does not establish a clinical system of record, emergency response capability, or replacement for clinician judgment or hospital protocol.
+          This pilot environment is presented for product demonstration, workflow evaluation, and stakeholder review.
+          Features, visualizations, and supportive recommendations shown here represent a controlled command-center experience.
+          Use of this environment does not establish a clinical system of record, emergency response capability, or replacement for hospital protocols.
         `
       },
       privacy: {
         title: "Privacy",
         body: `
-          This pilot interface demonstrates how structured patient medical information, trended vital sign summaries, and workflow-support actions may be organized in a secure clinical operations environment.
+          This pilot interface demonstrates how monitored patient data, risk signals, and workflow actions may be organized in a secure clinical operations environment.
           Displayed content in this environment is part of a controlled demonstration workflow and should be handled as evaluation material.
           Production privacy, security, and deployment requirements should be validated independently within hospital and regulatory standards.
         `
@@ -1290,11 +1144,9 @@ COMMAND_CENTER_HTML = r"""
       disclaimer: {
         title: "Pilot Disclaimer",
         body: `
-          This platform is presented as an HCP-facing decision-support and workflow-support environment for demonstration, workflow evaluation, and stakeholder review.
-          It assists further clinical evaluation, prioritization, and command-center awareness and does not replace clinician judgment.
-          It is not intended to diagnose, direct treatment, or independently trigger escalation.
-          Before any clinical action, users should review the displayed basis, current inputs, what changed, confidence, limitations, what the software does not know, and data freshness.
-          Licensed clinicians remain responsible for independent assessment, order entry, escalation decisions, and adherence to hospital policy.
+          This platform is presented in a controlled pilot environment for demonstration, workflow evaluation, and stakeholder review.
+          It is not intended to replace clinical judgment, hospital protocols, or emergency response systems.
+          All insights, alerts, and predictions are designed to support — not replace — clinical decision-making.
         `
       }
     };
@@ -1330,34 +1182,6 @@ COMMAND_CENTER_HTML = r"""
 
     function formatPercent(value){
       return Math.round(clamp(Number(value) || 0, 0, 100)) + "%";
-    }
-
-    function secondsFreshText(seconds){
-      const s = Math.max(0, Math.round(Number(seconds) || 0));
-      if (s < 60) return s + "s old";
-      const minutes = Math.floor(s / 60);
-      const rem = s % 60;
-      return minutes + "m " + rem + "s old";
-    }
-
-    function freshnessFromTimestamp(value){
-      if (!value) return {seconds:null, text:"Unknown", pill:"muted"};
-      const seconds = Math.max(0, Math.round((Date.now() - new Date(value).getTime()) / 1000));
-      const pill = seconds <= 10 ? "live" : seconds <= 30 ? "watch" : "critical";
-      return {seconds, text: secondsFreshText(seconds), pill};
-    }
-
-    function renderTimelineRows(lines){
-      const items = (lines || []).filter(Boolean);
-      if (!items.length){
-        return `<div class="timeline-item"><div class="timeline-time">Review</div><div class="timeline-copy">No structured review basis available.</div></div>`;
-      }
-      return items.map((line, idx) => `
-        <div class="timeline-item">
-          <div class="timeline-time">${idx === 0 ? 'Basis' : 'Review'}</div>
-          <div class="timeline-copy">${safe(line)}</div>
-        </div>
-      `).join("");
     }
 
     function unitLabel(unit){
@@ -1422,7 +1246,7 @@ COMMAND_CENTER_HTML = r"""
       return points.map((p, i) => (i === 0 ? "M" : "L") + p[0] + "," + p[1]).join(" ");
     }
 
-    function trendLinePoints(mode){
+    function waveformPoints(mode){
       if (mode === "critical") {
         return [[0,72],[30,72],[46,72],[58,70],[72,72],[86,72],[98,50],[106,100],[116,24],[126,108],[136,72],[162,72],[186,72],[204,70],[220,72],[236,72],[250,54],[258,96],[268,22],[278,106],[290,72],[318,72],[336,72],[352,70],[368,72],[382,72],[398,46],[406,104],[416,20],[428,110],[440,72],[466,72],[486,72],[504,70],[520,72],[536,72],[550,52],[558,98],[568,24],[578,106],[592,72],[620,72]];
       }
@@ -1444,34 +1268,8 @@ COMMAND_CENTER_HTML = r"""
       if (hr && hr >= safeNumber(t.hr_high, 110)) reasons.push("heart rate elevated");
       else if (hr && hr >= safeNumber(t.hr_high, 110) - 5) reasons.push("heart rate rising");
       if (sbp && sbp >= safeNumber(t.sbp_high, 150)) reasons.push("blood pressure elevated");
-      if (!reasons.length) reasons.push("combined reviewed summary pattern indicates monitored risk");
+      if (!reasons.length) reasons.push("combined signal pattern indicates monitored risk");
       return reasons.join(", ") + ".";
-    }
-
-    function fallbackCurrentInputs(patient){
-      const t = thresholdsForUnit(patient.unit || currentUnitFilter);
-      return [
-        `Heart rate ${safe(patient.heart_rate)} bpm compared with review threshold > ${safeNumber(t.hr_high, 110)}`,
-        `Blood pressure ${safe(patient.bp_systolic)}/${safe(patient.bp_diastolic)} mmHg compared with review threshold SBP > ${safeNumber(t.sbp_high, 150)}`,
-        `SpO₂ ${safe(patient.spo2)}% compared with review threshold < ${safeNumber(t.spo2_low, 93)}`,
-        `Review timestamp ${lastUpdatedAt ? formatDateTime(lastUpdatedAt) : "pending"}`
-      ];
-    }
-
-    function fallbackWhatChanged(patient){
-      return [
-        `${safe(patient.name)} remains in a ${safe(patient.status)} review state within the current summary window.`,
-        `Risk display is ${patientRiskPercent(patient)}% based on the current structured summary.`,
-        `Open the trend history below to compare recent review points.`
-      ];
-    }
-
-    function fallbackUnknowns(){
-      return [
-        "This software does not know bedside examination findings, active symptoms, or undocumented workflow context.",
-        "This software does not know the full chart, medications, labs, imaging, or staffing constraints unless provided elsewhere.",
-        "Hospital policy and clinician judgment still govern escalation and treatment."
-      ];
     }
 
     function normalizePatient(raw){
@@ -1479,36 +1277,23 @@ COMMAND_CENTER_HTML = r"""
       const vitals = raw.vitals || {};
       const risk = raw.risk || {};
       const room = raw.room || raw.bed || "Unit";
-      const confidence = risk.confidence || {};
-      const freshness = raw.data_freshness || risk.data_freshness || {};
       return {
         patient_id: raw.patient_id || "p---",
         name: raw.patient_name || raw.name || "Patient",
         bed: room,
         unit: roomToUnit(room),
         program: raw.program || "Clinical Monitoring",
-        title: risk.alert_message || raw.title || "Clinical Review Monitor",
+        title: risk.alert_message || raw.title || "Review Monitor",
         heart_rate: raw.heart_rate ?? vitals.heart_rate ?? "--",
         spo2: raw.spo2 ?? vitals.spo2 ?? "--",
         bp_systolic: raw.bp_systolic ?? vitals.systolic_bp ?? "--",
         bp_diastolic: raw.bp_diastolic ?? vitals.diastolic_bp ?? "--",
         risk_score: raw.risk_score ?? risk.risk_score ?? "--",
         status: raw.status || risk.severity || "Stable",
-        story: raw.story || risk.recommended_action || "HCP-facing decision-support active.",
-        alert_message: risk.alert_message || "Current review summary stable",
-        recommended_action: risk.clinical_recommendation || risk.recommended_action || "Suggested next review: continue routine monitored review.",
-        reasons: risk.reasons || [],
-        top_contributing_factors: risk.top_contributing_factors || risk.reasons || [],
-        review_basis: risk.review_basis || [],
-        current_review_inputs: risk.current_review_inputs || [],
-        what_changed: risk.what_changed || [],
-        what_software_does_not_know: risk.what_software_does_not_know || [],
-        limitations: risk.limitations || [],
-        confidence_score: confidence.score ?? null,
-        confidence_label: confidence.label || "review",
-        confidence_narrative: confidence.narrative || "Independent clinical review required.",
-        data_freshness: freshness,
-        decision_support_disclaimer: risk.decision_support_disclaimer || "HCP-facing decision-support display only."
+        story: raw.story || risk.recommended_action || "Supportive review monitoring active.",
+        alert_message: risk.alert_message || "Vitals stable",
+        recommended_action: risk.recommended_action || "Continue routine monitoring.",
+        reasons: risk.reasons || []
       };
     }
 
@@ -1695,8 +1480,6 @@ COMMAND_CENTER_HTML = r"""
         const pilotModePill = document.getElementById("pilotModePill");
         const systemBannerPill = document.getElementById("systemBannerPill");
         const unitLockPill = document.getElementById("unitLockPill");
-        const pilotVersionPill = document.getElementById("pilotVersionPill");
-        const intendedUseCard = document.getElementById("intendedUseCard");
 
         if (unitFilter) {
           if (!canViewAllUnits) {
@@ -1717,8 +1500,6 @@ COMMAND_CENTER_HTML = r"""
         if (unitLockPill) {
           unitLockPill.textContent = canViewAllUnits ? "Hospital Scope" : "Unit Locked: " + unitLabel(accessAssignedUnit);
         }
-        if (pilotVersionPill) pilotVersionPill.textContent = safe(data.pilot_build_state, "Locked Stable Pilot Build") + " · " + safe(data.pilot_version, "pilot");
-        if (intendedUseCard && data.intended_use_statement) intendedUseCard.textContent = data.intended_use_statement;
       }catch(err){
         console.error("access context failed", err);
       }
@@ -1761,7 +1542,6 @@ COMMAND_CENTER_HTML = r"""
       }catch(err){
         thresholdsEndpointAvailable = false;
       }
-      updateRuntimePills();
     }
 
     async function saveThresholds(){
@@ -1816,7 +1596,6 @@ COMMAND_CENTER_HTML = r"""
         activePatients = (payload.patients || []).map(normalizePatient).filter(Boolean);
         activeAlerts = (payload.alerts || []).map(normalizeAlert).filter(Boolean);
         lastUpdatedAt = payload.generated_at || new Date().toISOString();
-        latestSnapshotMeta = payload.meta || {};
         rerenderAll();
         primeTrendCache();
       }catch(err){
@@ -1836,7 +1615,6 @@ COMMAND_CENTER_HTML = r"""
         trendsEndpointAvailable = false;
         if (!trendCache[patientId]) trendCache[patientId] = [];
       }
-      updateRuntimePills();
       return trendCache[patientId] || [];
     }
 
@@ -1853,7 +1631,6 @@ COMMAND_CENTER_HTML = r"""
         const drawerOpen = document.getElementById("patientDrawer").classList.contains("open");
         if (drawerOpen) openPatientDrawer(current);
       }
-      updateRuntimePills();
     }
 
     function getPatientTrendSeries(patient, metric){
@@ -1879,7 +1656,7 @@ COMMAND_CENTER_HTML = r"""
       return records.map(r => `
         <div class="timeline-item">
           <div class="timeline-time">${formatTime(r.time)}</div>
-          <div class="timeline-copy">HR ${safeNumber(r.hr)} · SpO₂ ${safeNumber(r.spo2)} · Risk ${clamp(Math.round((safeNumber(r.risk) / 9) * 100), 0, 99)}%</div>
+          <div class="timeline-copy">HR ${safeNumber(r.hr)} · SpO₂ ${safeNumber(r.spo2)} · Review score ${clamp(Math.round((safeNumber(r.risk) / 9) * 100), 0, 99)}%</div>
         </div>
       `).join("");
     }
@@ -1954,25 +1731,7 @@ COMMAND_CENTER_HTML = r"""
       document.getElementById("drawerRisk").textContent = patientRiskPercent(patient) + "% (" + (typeof patient.risk_score === "number" ? patient.risk_score.toFixed(1) : safe(patient.risk_score)) + ")";
       document.getElementById("drawerAction").textContent = safe(patient.recommended_action);
       document.getElementById("drawerExplainability").textContent = explainabilityForPatient(patient);
-      document.getElementById("drawerReviewBasis").innerHTML = renderTimelineRows(patient.review_basis && patient.review_basis.length ? patient.review_basis : [explainabilityForPatient(patient)]);
-      document.getElementById("drawerCurrentInputs").innerHTML = renderTimelineRows(
-        patient.current_review_inputs && patient.current_review_inputs.length ? patient.current_review_inputs : fallbackCurrentInputs(patient)
-      );
-      document.getElementById("drawerTopFactors").innerHTML = renderTimelineRows(
-        patient.top_contributing_factors && patient.top_contributing_factors.length ? patient.top_contributing_factors : patient.reasons && patient.reasons.length ? patient.reasons : [explainabilityForPatient(patient)]
-      );
-      const confidenceText = patient.confidence_score ? `${patient.confidence_score}% · ${safe(patient.confidence_label)} support` : safe(patient.confidence_label, "review");
-      document.getElementById("drawerConfidence").textContent = confidenceText + " · " + safe(patient.confidence_narrative);
-      const patientFreshness = freshnessFromTimestamp(patient.data_freshness && patient.data_freshness.generated_at ? patient.data_freshness.generated_at : lastUpdatedAt);
-      document.getElementById("drawerFreshness").textContent = `${patientFreshness.text} · ${safe(patient.data_freshness && patient.data_freshness.source_mode, 'snapshot')} · refresh target ${safe(patient.data_freshness && patient.data_freshness.refresh_interval_seconds, 5)}s`;
-      document.getElementById("drawerWhatChanged").innerHTML = renderTimelineRows(
-        patient.what_changed && patient.what_changed.length ? patient.what_changed : fallbackWhatChanged(patient)
-      );
-      document.getElementById("drawerUnknowns").innerHTML = renderTimelineRows(
-        patient.what_software_does_not_know && patient.what_software_does_not_know.length ? patient.what_software_does_not_know : fallbackUnknowns()
-      );
-      document.getElementById("drawerLimitations").innerHTML = renderTimelineRows(patient.limitations && patient.limitations.length ? patient.limitations : [patient.decision_support_disclaimer]);
-      document.getElementById("drawerWorkflow").textContent = workflowText(patientId) || "No workflow action saved yet. Operational workflow is tracked separately from the supportive clinical recommendation above.";
+      document.getElementById("drawerWorkflow").textContent = workflowText(patientId);
 
       const hrSeries = getPatientTrendSeries(patient, "hr");
       document.getElementById("drawerTrendSparkline").innerHTML = sparklineSvg(hrSeries, statusClass(patient.status), true);
@@ -1982,12 +1741,12 @@ COMMAND_CENTER_HTML = r"""
       const timelineHtml = records.length ? records.map(r => `
         <div class="timeline-item">
           <div class="timeline-time">${formatTime(r.time)}</div>
-          <div class="timeline-copy">SpO₂ ${safeNumber(r.spo2)} · HR ${safeNumber(r.hr)} · Risk ${clamp(Math.round((safeNumber(r.risk) / 9) * 100), 0, 99)}%</div>
+          <div class="timeline-copy">SpO₂ ${safeNumber(r.spo2)} · HR ${safeNumber(r.hr)} · Review score ${clamp(Math.round((safeNumber(r.risk) / 9) * 100), 0, 99)}%</div>
         </div>
       `).join("") : `
         <div class="timeline-item">
           <div class="timeline-time">Now</div>
-          <div class="timeline-copy">${safe(patient.name)} is currently ${safe(patient.status)} with projected risk display ${patientRiskPercent(patient)}%.</div>
+          <div class="timeline-copy">${safe(patient.name)} is currently ${safe(patient.status)} with displayed review score ${patientRiskPercent(patient)}%.</div>
         </div>
         <div class="timeline-item">
           <div class="timeline-time">Trend</div>
@@ -2009,54 +1768,6 @@ COMMAND_CENTER_HTML = r"""
     function closePatientDrawer(){
       document.getElementById("patientDrawer").classList.remove("open");
       document.getElementById("drawerOverlay").classList.remove("show");
-    }
-
-
-    function updateRuntimePills(){
-      const autoRefreshPill = document.getElementById("autoRefreshPill");
-      const autoRefreshBtn = document.getElementById("autoRefreshBtn");
-      const trendDataPill = document.getElementById("trendDataPill");
-
-      if (autoRefreshPill){
-        autoRefreshPill.className = autoRefreshEnabled ? "status-pill info" : "status-pill dark";
-        autoRefreshPill.textContent = autoRefreshEnabled ? "Auto Refresh On" : "Auto Refresh Paused";
-      }
-
-      if (autoRefreshBtn){
-        autoRefreshBtn.textContent = autoRefreshEnabled ? "Pause Auto Refresh" : "Resume Auto Refresh";
-      }
-
-      if (trendDataPill){
-        const live = trendsEndpointAvailable && thresholdsEndpointAvailable;
-        trendDataPill.className = live ? "status-pill live" : "status-pill muted";
-        trendDataPill.textContent = live ? "Trend + Threshold Sync Live" : "Snapshot Fallback Active";
-      }
-    }
-
-    async function refreshCycle(force=false){
-      if (refreshInFlight) return;
-      if (!autoRefreshEnabled && !force) return;
-
-      refreshInFlight = true;
-      try{
-        await loadWorkflowState();
-        await loadPersistentAudit();
-        await loadThresholds();
-        await loadSystemHealth();
-        await refreshSnapshot();
-      }finally{
-        refreshInFlight = false;
-        updateRuntimePills();
-      }
-    }
-
-    function manualRefresh(){
-      refreshCycle(true);
-    }
-
-    function toggleAutoRefresh(){
-      autoRefreshEnabled = !autoRefreshEnabled;
-      updateRuntimePills();
     }
 
     function openPolicyModal(kind){
@@ -2091,10 +1802,10 @@ COMMAND_CENTER_HTML = r"""
       const resolveDisabled = (accessRole !== "admin" && accessRole !== "physician") ? "disabled" : "";
 
       return `
-        <button class="btn ${record.ack ? 'live-btn' : 'secondary'} small" onclick="ackPatient('${pid}')" ${ackDisabled}>${record.ack ? 'ACK Logged' : 'Log ACK'}</button>
-        <button class="btn ${record.assigned ? 'warn-btn' : 'secondary'} small" onclick="assignPatient('${pid}')" ${assignDisabled}>${record.assigned ? 'Assignment Logged' : 'Log Assign'}</button>
-        <button class="btn ${record.escalated ? 'critical-btn' : 'secondary'} small" onclick="escalatePatient('${pid}')" ${escalateDisabled}>${record.escalated ? 'Escalation Logged' : 'Log Escalate'}</button>
-        <button class="btn ${record.resolved ? 'live-btn' : 'secondary'} small" onclick="resolvePatient('${pid}')" ${resolveDisabled}>${record.resolved ? 'Resolution Logged' : 'Log Resolve'}</button>
+        <button class="btn ${record.ack ? 'live-btn' : 'secondary'} small" onclick="ackPatient('${pid}')" ${ackDisabled}>${record.ack ? 'ACK Saved' : 'ACK'}</button>
+        <button class="btn ${record.assigned ? 'warn-btn' : 'secondary'} small" onclick="assignPatient('${pid}')" ${assignDisabled}>${record.assigned ? 'Assigned' : 'Assign'}</button>
+        <button class="btn ${record.escalated ? 'critical-btn' : 'secondary'} small" onclick="escalatePatient('${pid}')" ${escalateDisabled}>${record.escalated ? 'Escalated' : 'Escalate'}</button>
+        <button class="btn ${record.resolved ? 'live-btn' : 'secondary'} small" onclick="resolvePatient('${pid}')" ${resolveDisabled}>${record.resolved ? 'Resolved' : 'Resolve'}</button>
         <button class="btn secondary small" onclick="openPatientDrawer('${pid}')">Details</button>
       `;
     }
@@ -2102,7 +1813,7 @@ COMMAND_CENTER_HTML = r"""
     function renderMonitor(patient){
       const status = String(patient.status || "").toLowerCase();
       const ecg = ecgClass(status);
-      const path = buildPath(trendLinePoints(status === "critical" ? "critical" : (status === "high" || status === "moderate") ? "high" : "stable"));
+      const path = buildPath(waveformPoints(status === "critical" ? "critical" : (status === "high" || status === "moderate") ? "high" : "stable"));
       const riskText = patientRiskPercent(patient) + "%";
       const pid = safe(patient.patient_id);
       const record = getWorkflowRecord(pid);
@@ -2136,7 +1847,6 @@ COMMAND_CENTER_HTML = r"""
           </div>
 
           <div class="monitor-actions">
-            <div class="note-box" style="margin-bottom:10px;">Operational workflow controls only — logs handling state and user action history. Does not diagnose, direct treatment, or independently trigger escalation.</div>
             ${renderActionButtons(record, pid)}
           </div>
         </div>
@@ -2182,7 +1892,7 @@ COMMAND_CENTER_HTML = r"""
 
       document.getElementById("top-risk-list").innerHTML = source.map(p => `
         <div class="queue-item">
-          <div class="queue-copy">${safe(p.name)} · ${safe(p.patient_id)} · Risk ${patientRiskPercent(p)}%</div>
+          <div class="queue-copy">${safe(p.name)} · ${safe(p.patient_id)} · Review score ${patientRiskPercent(p)}%</div>
           <div class="status-pill ${statusClass(p.status)}">${pulseLabel(p.status)}</div>
         </div>
       `).join("") || `<div class="queue-item"><div class="queue-copy">No risk queue visible.</div><div class="status-pill muted">Scope</div></div>`;
@@ -2198,8 +1908,8 @@ COMMAND_CENTER_HTML = r"""
       }
 
       panel.innerHTML = `
-        <div class="why-line">Highest-risk patient: ${safe(top.name)} (${safe(top.patient_id)})</div>
-        <div class="why-line">Current severity: ${safe(top.status)} · Risk ${patientRiskPercent(top)}%</div>
+        <div class="why-line">Highest review-priority patient: ${safe(top.name)} (${safe(top.patient_id)})</div>
+        <div class="why-line">Current review priority: ${safe(top.status)} · Review score ${patientRiskPercent(top)}%</div>
         <div class="why-line">${safe(top.story)}</div>
         <div class="why-line">Explainable reason: ${explainabilityForPatient(top)}</div>
       `;
@@ -2210,18 +1920,18 @@ COMMAND_CENTER_HTML = r"""
       const panel = document.getElementById("ai-insight-panel");
 
       if (!top){
-        panel.innerHTML = `<div class="info-line">Waiting for active deterioration insight...</div>`;
+        panel.innerHTML = `<div class="info-line">Waiting for active review insight...</div>`;
         return;
       }
 
       const spo2 = safeNumber(top.spo2, 96);
       const hr = safeNumber(top.heart_rate, 82);
-      const forecastWindow = safeNumber(top.risk_score) >= 7 ? "next 60 minutes" : "next monitoring interval";
+      const reviewAttentionLevel = safeNumber(top.risk_score) >= 7 ? "elevated" : "active";
 
       panel.innerHTML = `
-        <div class="info-line"><strong>AI Insight:</strong> Oxygen saturation is ${spo2 < 94 ? "trending downward" : "being closely monitored"} with ${hr >= 110 ? "rising heart rate pressure" : "emerging physiologic drift"}.</div>
-        <div class="info-line">Supportive review attention is increasing within the ${forecastWindow} based on current review history and workflow state.</div>
-        <div class="info-line">Recommended response: ${safe(top.recommended_action)}</div>
+        <div class="info-line"><strong>Review Insight:</strong> Oxygen saturation is ${spo2 < 94 ? "trending downward" : "being closely monitored"} with ${hr >= 110 ? "rising heart rate pressure" : "emerging physiologic drift"}.</div>
+        <div class="info-line">Supports near-term review prioritization based on current monitored trend and workflow state.</div>
+        <div class="info-line">Suggested workflow note: Current review attention is ${reviewAttentionLevel}. ${safe(top.recommended_action)}</div>
       `;
     }
 
@@ -2245,7 +1955,7 @@ COMMAND_CENTER_HTML = r"""
         <div class="queue-item"><div class="queue-copy">Assigned Unit</div><div class="status-pill watch">${unitLabel(accessAssignedUnit)}</div></div>
         <div class="queue-item"><div class="queue-copy">System Status</div><div class="status-pill ${healthy ? 'live' : 'critical'}">${healthy ? 'Connected' : safe(status, 'unknown')}</div></div>
         <div class="queue-item"><div class="queue-copy">Patients in Feed</div><div class="status-pill muted">${safe(lastSystemHealth.patient_count, activePatients.length)}</div></div>
-        <div class="queue-item"><div class="queue-copy">Critical Alerts</div><div class="status-pill critical">${safe(lastSystemHealth.critical_alerts, 0)}</div></div>
+        <div class="queue-item"><div class="queue-copy">Priority Alerts</div><div class="status-pill critical">${safe(lastSystemHealth.critical_alerts, 0)}</div></div>
       `;
     }
 
@@ -2259,7 +1969,7 @@ COMMAND_CENTER_HTML = r"""
         <div class="queue-item">
           <div>
             <div class="queue-copy">Pilot Protection</div>
-            <div class="alert-sub">Decision-support display only · clinician review required</div>
+            <div class="alert-sub">Decision support only · not a medical device</div>
           </div>
           <div class="status-pill critical">Protected</div>
         </div>
@@ -2306,7 +2016,7 @@ COMMAND_CENTER_HTML = r"""
         panel.innerHTML = records.map(r => `
           <div class="timeline-item">
             <div class="timeline-time">${formatTime(r.time)}</div>
-            <div class="timeline-copy">SpO₂ ${safeNumber(r.spo2)} · HR ${safeNumber(r.hr)} · Risk ${clamp(Math.round((safeNumber(r.risk) / 9) * 100), 0, 99)}%</div>
+            <div class="timeline-copy">SpO₂ ${safeNumber(r.spo2)} · HR ${safeNumber(r.hr)} · Review score ${clamp(Math.round((safeNumber(r.risk) / 9) * 100), 0, 99)}%</div>
           </div>
         `).join("") + `
           <div class="timeline-item">
@@ -2320,15 +2030,15 @@ COMMAND_CENTER_HTML = r"""
       panel.innerHTML = `
         <div class="timeline-item">
           <div class="timeline-time">Now</div>
-          <div class="timeline-copy">${safe(top.name)} flagged with ${safe(top.status)} severity. Risk display ${patientRiskPercent(top)}%.</div>
+          <div class="timeline-copy">${safe(top.name)} is currently in ${safe(top.status)} review priority with review score ${patientRiskPercent(top)}%.</div>
         </div>
         <div class="timeline-item">
           <div class="timeline-time">-15 Min</div>
-          <div class="timeline-copy">Trend drift detected across reviewed oxygen saturation and heart rate summaries.</div>
+          <div class="timeline-copy">Trend drift detected across oxygen saturation and heart rate signals.</div>
         </div>
         <div class="timeline-item">
           <div class="timeline-time">-30 Min</div>
-          <div class="timeline-copy">HCP-facing decision-support logic elevated deterioration attention before standard threshold-only workflow.</div>
+          <div class="timeline-copy">Supportive review logic elevated review attention before standard threshold-only workflow.</div>
         </div>
         <div class="timeline-item">
           <div class="timeline-time">Action</div>
@@ -2344,7 +2054,7 @@ COMMAND_CENTER_HTML = r"""
           <div class="audit-item">
             <div>
               <div class="audit-copy">System initialized</div>
-              <div class="audit-sub">Awaiting user workflow actions in current role / unit scope</div>
+              <div class="audit-sub">Awaiting user actions</div>
             </div>
             <div class="status-pill info">Log</div>
           </div>
@@ -2356,7 +2066,7 @@ COMMAND_CENTER_HTML = r"""
         <div class="audit-item">
           <div>
             <div class="audit-copy">${safe(entry.action)} · ${safe(entry.patient_id)}</div>
-            <div class="audit-sub">${safe(entry.user || 'user')} · ${safe(entry.role)} · ${safe(entry.unit || 'scope')} · ${safe(entry.note)} · ${formatDateTime(entry.time)}</div>
+            <div class="audit-sub">${safe(entry.role)} · ${safe(entry.note)} · ${formatDateTime(entry.time)}</div>
           </div>
           <div class="status-pill info">Log</div>
         </div>
@@ -2369,16 +2079,11 @@ COMMAND_CENTER_HTML = r"""
       const last = auditLog[0];
       const acks = auditLog.filter(a => String(a.action).toLowerCase().includes("ack")).length;
       const escalations = auditLog.filter(a => String(a.action).toLowerCase().includes("escalate")).length;
-      const visibleUnit = accessAssignedUnit === "all" ? "All Units" : unitLabel(accessAssignedUnit);
 
       target.innerHTML = `
         <div class="queue-item">
           <div class="queue-copy">Visible audit entries</div>
           <div class="status-pill info">${total}</div>
-        </div>
-        <div class="queue-item">
-          <div class="queue-copy">Current audit scope</div>
-          <div class="status-pill muted">${safe(accessRole)} · ${safe(visibleUnit)}</div>
         </div>
         <div class="queue-item">
           <div class="queue-copy">Acknowledgments</div>
@@ -2393,7 +2098,7 @@ COMMAND_CENTER_HTML = r"""
             <div class="queue-copy">Most recent activity</div>
             <div class="alert-sub">${last ? safe(last.action) + " · " + formatDateTime(last.time) : "No activity yet"}</div>
           </div>
-          <div class="status-pill muted">${last ? safe(last.user || last.role) : "Idle"}</div>
+          <div class="status-pill muted">${last ? safe(last.role) : "Idle"}</div>
         </div>
       `;
     }
@@ -2423,7 +2128,7 @@ COMMAND_CENTER_HTML = r"""
           </div>
         </div>
         <div class="mini-copy" style="margin-top:12px;">
-          ${top ? `Top risk patient: ${safe(top.bed)} (${patientRiskPercent(top)}%).` : `No top risk patient in current scope.`}
+          ${top ? `Top review-priority patient: ${safe(top.bed)} (${patientRiskPercent(top)}% review score).` : `No top review-priority patient in current scope.`}
         </div>
       `;
     }
@@ -2524,7 +2229,7 @@ COMMAND_CENTER_HTML = r"""
           ${history.length ? history.map(r => `
             <div class="timeline-item">
               <div class="timeline-time">${formatTime(r.time)}</div>
-              <div class="timeline-copy">Risk ${clamp(Math.round((safeNumber(r.risk) / 9) * 100), 0, 99)}% · HR ${safeNumber(r.hr)} · SpO₂ ${safeNumber(r.spo2)}</div>
+              <div class="timeline-copy">Review score ${clamp(Math.round((safeNumber(r.risk) / 9) * 100), 0, 99)}% · HR ${safeNumber(r.hr)} · SpO₂ ${safeNumber(r.spo2)}</div>
             </div>
           `).join("") : `
             <div class="timeline-item">
@@ -2533,11 +2238,11 @@ COMMAND_CENTER_HTML = r"""
             </div>
             <div class="timeline-item">
               <div class="timeline-time">-15</div>
-              <div class="timeline-copy">Supportive review logic detected visible change drift and elevated attention level.</div>
+              <div class="timeline-copy">Supportive AI logic detected visible signal drift and elevated attention level.</div>
             </div>
             <div class="timeline-item">
               <div class="timeline-time">Now</div>
-              <div class="timeline-copy">Current displayed risk for ${safe(top.patient_id)} is ${patientRiskPercent(top)}%.</div>
+              <div class="timeline-copy">Current displayed review score for ${safe(top.patient_id)} is ${patientRiskPercent(top)}%.</div>
             </div>
           `}
         </div>
@@ -2568,7 +2273,7 @@ COMMAND_CENTER_HTML = r"""
       const top = getTopRiskPatient();
       const target = document.getElementById("forecast-module");
       if (!top){
-        target.innerHTML = `<div class="mini-copy">No deterioration forecast available in current scope.</div>`;
+        target.innerHTML = `<div class="mini-copy">No review priority outlook available in current scope.</div>`;
         return;
       }
 
@@ -2577,6 +2282,7 @@ COMMAND_CENTER_HTML = r"""
       const prev = trend[Math.max(trend.length - 2, 0)] || latest;
       const slope = latest - prev;
       const forecastPct = clamp(latest + Math.max(slope, 4), 0, 99);
+      const reviewAttentionLevel = forecastPct >= 85 ? "High" : forecastPct >= 65 ? "Elevated" : "Moderate";
 
       target.innerHTML = `
         <div class="forecast-grid">
@@ -2586,9 +2292,9 @@ COMMAND_CENTER_HTML = r"""
             <div class="mini-copy">${safe(top.bed)} · ${safe(top.status)}</div>
           </div>
           <div class="mini-card">
-            <div class="mini-k">Forecast Attention</div>
-            <div class="mini-v">${forecastPct}%</div>
-            <div class="mini-copy">Supportive deterioration attention within next 60 minutes.</div>
+            <div class="mini-k">Review Attention Level</div>
+            <div class="mini-v">${reviewAttentionLevel}</div>
+            <div class="mini-copy">Increased review attention supported by current monitored trend.</div>
           </div>
         </div>
       `;
@@ -2711,7 +2417,7 @@ COMMAND_CENTER_HTML = r"""
         <div class="mini-card">
           <div class="mini-k">Top Risk Highlight</div>
           <div class="mini-v">${top ? safe(top.bed) : "--"}</div>
-          <div class="mini-copy">${top ? `Risk ${patientRiskPercent(top)}% for ${safe(top.patient_id)}.` : `No high-risk patient in view.`}</div>
+          <div class="mini-copy">${top ? `Review score ${patientRiskPercent(top)}% for ${safe(top.patient_id)}.` : `No higher-priority patient in view.`}</div>
         </div>
         <div class="mini-card">
           <div class="mini-k">Alerts in Scope</div>
@@ -2726,7 +2432,7 @@ COMMAND_CENTER_HTML = r"""
       const target = document.getElementById("scenario-grid");
       if (!top){
         target.innerHTML = `
-          <div class="mini-card"><div class="mini-k">Change Summary</div><div class="mini-copy">No monitored change currently visible.</div></div>
+          <div class="mini-card"><div class="mini-k">Signal Change</div><div class="mini-copy">No monitored signal currently visible.</div></div>
           <div class="mini-card"><div class="mini-k">AI Detection</div><div class="mini-copy">AI detection panel waits for active patient risk.</div></div>
           <div class="mini-card"><div class="mini-k">Workflow Action</div><div class="mini-copy">Workflow action becomes available when patient risk is visible.</div></div>
         `;
@@ -2735,16 +2441,16 @@ COMMAND_CENTER_HTML = r"""
 
       target.innerHTML = `
         <div class="mini-card">
-          <div class="mini-k">Change Summary</div>
-          <div class="mini-copy">${safe(top.name)} shows visible change across reviewed oxygen saturation, heart rate, or blood pressure summaries.</div>
+          <div class="mini-k">Signal Change</div>
+          <div class="mini-copy">${safe(top.name)} shows visible monitoring drift across oxygen saturation, heart rate, or blood pressure signals.</div>
         </div>
         <div class="mini-card">
           <div class="mini-k">AI Detection</div>
-          <div class="mini-copy">Supportive review logic elevates deterioration attention and places the patient in the top risk view.</div>
+          <div class="mini-copy">Supportive AI logic elevates deterioration attention and places the patient in the top risk view.</div>
         </div>
         <div class="mini-card">
           <div class="mini-k">Workflow Action</div>
-          <div class="mini-copy">Care team can log acknowledge, assign, escalate, or resolve workflow states from a single command workflow.</div>
+          <div class="mini-copy">Care team can acknowledge, assign, escalate, or resolve from a single command workflow.</div>
         </div>
       `;
     }
@@ -2770,16 +2476,9 @@ COMMAND_CENTER_HTML = r"""
       if (lastUpdatedPillTop) lastUpdatedPillTop.textContent = timeText;
 
       const top = getTopRiskPatient();
-      const topRiskText = top ? `Top Risk: ${safe(top.bed)} (${patientRiskPercent(top)}%)` : "Top Risk Patient --";
+      const topRiskText = top ? `Top Review Priority: ${safe(top.bed)} (${patientRiskPercent(top)}% review score)` : "Top Review-Priority Patient --";
       const topRiskPill = document.getElementById("topRiskPill");
       if (topRiskPill) topRiskPill.textContent = topRiskText;
-
-      const freshnessPill = document.getElementById("dataFreshnessPill");
-      const freshness = freshnessFromTimestamp((latestSnapshotMeta.data_freshness && latestSnapshotMeta.data_freshness.generated_at) || lastUpdatedAt);
-      if (freshnessPill){
-        freshnessPill.className = `status-pill ${freshness.pill}`;
-        freshnessPill.textContent = `Data Freshness ${freshness.text}`;
-      }
 
       const healthy = ["ok", "connected"].includes(String(lastSystemHealth.status || "").toLowerCase());
       const liveSystemPill = document.getElementById("liveSystemPill");
@@ -2796,44 +2495,6 @@ COMMAND_CENTER_HTML = r"""
       }
     }
 
-    function renderDecisionSupportGuardrails(){
-      const target = document.getElementById("decision-support-guardrails");
-      if (!target) return;
-      const top = getTopRiskPatient();
-      const freshness = freshnessFromTimestamp((latestSnapshotMeta.data_freshness && latestSnapshotMeta.data_freshness.generated_at) || lastUpdatedAt);
-      const basisText = top && top.review_basis && top.review_basis.length ? top.review_basis[0] : (top ? explainabilityForPatient(top) : "No active patient basis available.");
-      const confidenceText = top ? `${safe(top.confidence_label, 'review')}${top.confidence_score ? ` · ${top.confidence_score}%` : ''}` : "Awaiting patient review";
-      const limitationText = top && top.limitations && top.limitations.length ? top.limitations[0] : (latestSnapshotMeta.decision_support_disclaimer || "Independent clinical review remains required.");
-      const unknownText = top && top.what_software_does_not_know && top.what_software_does_not_know.length ? top.what_software_does_not_know[0] : "Open a patient record to review what the software does not know.";
-      target.innerHTML = `
-        <div class="mini-card">
-          <div class="mini-k">Review Basis</div>
-          <div class="mini-v">Visible</div>
-          <div class="mini-copy">${safe(basisText)}</div>
-        </div>
-        <div class="mini-card">
-          <div class="mini-k">Confidence + Limits</div>
-          <div class="mini-v">${safe(confidenceText)}</div>
-          <div class="mini-copy">${top ? safe(top.confidence_narrative) : 'Open a patient record to review supporting detail.'}</div>
-        </div>
-        <div class="mini-card">
-          <div class="mini-k">Data Freshness</div>
-          <div class="mini-v">${safe(freshness.text)}</div>
-          <div class="mini-copy">Source: ${safe(latestSnapshotMeta.data_freshness && latestSnapshotMeta.data_freshness.source_mode, 'snapshot')} · refresh target ${safe(latestSnapshotMeta.data_freshness && latestSnapshotMeta.data_freshness.refresh_interval_seconds, 5)}s.</div>
-        </div>
-        <div class="mini-card">
-          <div class="mini-k">Workflow vs Recommendation</div>
-          <div class="mini-v">Separated</div>
-          <div class="mini-copy">Operational workflow state is tracked separately from supportive clinical recommendation text. ${safe(limitationText)}</div>
-        </div>
-        <div class="mini-card">
-          <div class="mini-k">What the Software Does Not Know</div>
-          <div class="mini-v">Visible</div>
-          <div class="mini-copy">${safe(unknownText)}</div>
-        </div>
-      `;
-    }
-
     function renderModules(){
       renderReportingDashboardModule();
       renderThresholdsModule();
@@ -2846,7 +2507,6 @@ COMMAND_CENTER_HTML = r"""
       renderWorkflowReadinessModule();
       renderOperationsWallSummary();
       renderScenarioGrid();
-      renderDecisionSupportGuardrails();
     }
 
     function rerenderAll(){
@@ -2872,7 +2532,6 @@ COMMAND_CENTER_HTML = r"""
       await loadPersistentAudit();
       await loadSystemHealth();
       await refreshSnapshot();
-      updateRuntimePills();
 
       const unitFilter = document.getElementById("unitFilter");
       if (unitFilter){
@@ -2888,9 +2547,13 @@ COMMAND_CENTER_HTML = r"""
         });
       }
 
-      refreshTimer = setInterval(() => {
-        refreshCycle(false);
-      }, refreshIntervalMs);
+      setInterval(async () => {
+        await loadWorkflowState();
+        await loadPersistentAudit();
+        await loadThresholds();
+        await loadSystemHealth();
+        await refreshSnapshot();
+      }, 5000);
     }
 
     boot();
