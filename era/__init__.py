@@ -33,7 +33,7 @@ FOUNDER_NAME = "Milton Munroe"
 FOUNDER_ROLE = "Founder & CEO, Early Risk Alert AI"
 
 
-PILOT_VERSION = os.getenv("PILOT_VERSION", "stable-pilot-1.0.4a")
+PILOT_VERSION = os.getenv("PILOT_VERSION", "stable-pilot-1.0.4b")
 PILOT_BUILD_STATE = "Locked Stable Pilot Build"
 INTENDED_USE_STATEMENT = (
     "Early Risk Alert AI is an HCP-facing decision-support and workflow-support software platform intended to assist authorized health care professionals in identifying patients who may warrant further clinical evaluation, supporting patient prioritization, and improving command-center operational awareness. It does not replace clinician judgment and is not intended to diagnose, direct treatment, or independently trigger escalation."
@@ -159,6 +159,16 @@ PILOT_RELEASE_NOTES = [
             "Restored missing loadPilotReadiness client function so the command-center wall can boot and populate live data again.",
             "Kept existing governance, pilot-docs, workflow, trends, thresholds, and audit routes intact.",
             "Re-surfaced governance/readiness context in the side panel without removing existing pilot documentation."
+        ],
+    },
+    {
+        "version": "stable-pilot-1.0.4b",
+        "date": "2026-04-01",
+        "summary": "Governance restoration hotfix for full pilot-docs visibility and legacy path redirects.",
+        "changes": [
+            "Restored explicit full-governance packet access from the command center and pilot-docs entry points.",
+            "Added legacy redirects for command-center nested doc/deck paths so cached or older links land on the correct route.",
+            "Kept the internal command wall, workflow modules, and readiness layer active while restoring the full governance packet experience."
         ],
     },
 ]
@@ -2292,6 +2302,26 @@ def create_app() -> Flask:
     def command_center():
         return Response(COMMAND_CENTER_HTML, mimetype="text/html; charset=utf-8")
 
+    @app.get("/command-center/deck")
+    def legacy_command_center_deck():
+        return redirect("/deck")
+
+    @app.get("/command-center/pilot-docs")
+    def legacy_command_center_pilot_docs():
+        return redirect("/pilot-docs")
+
+    @app.get("/pilot-governance")
+    def pilot_governance_alias():
+        return redirect("/pilot-docs")
+
+    @app.get("/governance")
+    def governance_alias():
+        return redirect("/pilot-docs")
+
+    @app.get("/governance-packet")
+    def governance_packet_alias():
+        return redirect("/pilot-docs")
+
     @app.get("/api/access-context")
     @_login_required
     def access_context():
@@ -3004,12 +3034,12 @@ def create_app() -> Flask:
                 <div>
                   <div class="pill">Pilot Docs</div>
                   <div class="pill">Version {PILOT_VERSION}</div>
-                  <h1 style="margin:12px 0 10px;font-size:42px;line-height:.95;letter-spacing:-.05em">Stable Pilot Positioning Bundle</h1>
-                  <div class="sub">Freeze one intended-use statement everywhere, keep outputs supportive rather than directive, and keep explainability, limitations, scoping, audit visibility, and operating controls easy to review.</div>
+                  <h1 style="margin:12px 0 10px;font-size:42px;line-height:.95;letter-spacing:-.05em">Stable Pilot Positioning + Full Governance Packet</h1>
+                  <div class="sub">Full governance packet restored: intended use, claims control, risk register, complaint log, change approvals, cybersecurity summary, validation evidence, site packet placeholders, and release-controlled pilot documentation in one place.</div>
                 </div>
                 <div style="display:flex;gap:12px;flex-wrap:wrap">
                   <a class="btn" href="/command-center">Back to Command Center</a>
-                  <a class="btn" href="/pilot-docs">Open Pilot Docs</a>
+                  <a class="btn" href="/pilot-docs">Open Full Governance Packet</a>
                   <a class="btn" href="/deck" target="_blank" rel="noopener">Open Pitch Deck</a>
                   <a class="btn" href="/pilot-success-guide">Pilot Success Guide</a>
                   <a class="btn" href="/model-card">Model Card</a>
