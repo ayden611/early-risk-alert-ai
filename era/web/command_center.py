@@ -562,6 +562,7 @@ COMMAND_CENTER_HTML = r"""
         <a href="/investor-intake">Investor Access</a>
         <a href="/executive-walkthrough">Executive Walkthrough</a>
         <a href="/admin/review">Admin Review</a>
+        <a href="/pilot-docs">Pilot Docs</a>
         <a href="/logout">Logout</a>
       </div>
     </div>
@@ -576,7 +577,7 @@ COMMAND_CENTER_HTML = r"""
           <p class="pilot-copy">
             This platform is presented in a controlled pilot environment for demonstration, workflow evaluation, and stakeholder review.
             It does not replace clinical judgment, hospital protocols, or emergency response systems.
-            All insights, alerts, forecasts, and thresholds support — not replace — licensed clinical decision-making.
+            All insights, alerts, monitored trends, and thresholds support — not replace — licensed clinical decision-making.
           </p>
         </div>
 
@@ -615,6 +616,7 @@ COMMAND_CENTER_HTML = r"""
             <a class="btn primary" href="/hospital-demo">Request Live Demo</a>
             <a class="btn secondary" href="/investor-intake">Investor Access</a>
             <a class="btn secondary" href="/admin/review">Open Admin Review</a>
+            <a class="btn secondary" href="/pilot-docs">Pilot Docs</a>
           </div>
 
           <div class="hero-pills" style="margin-top:18px;">
@@ -758,6 +760,11 @@ COMMAND_CENTER_HTML = r"""
             </div>
 
             <div class="intel-card">
+              <h3>Readiness Evidence + Owners</h3>
+              <div class="queue-list" id="readiness-evidence-list"></div>
+            </div>
+
+            <div class="intel-card">
               <h3>Patient Timeline</h3>
               <div class="timeline-panel" id="patient-timeline"></div>
             </div>
@@ -884,6 +891,28 @@ COMMAND_CENTER_HTML = r"""
               <div class="status-pill live">Ready</div>
             </div>
             <div class="module-body" id="workflow-readiness-module"></div>
+          </div>
+
+          <div class="module-card">
+            <div class="module-head">
+              <div>
+                <div class="module-title">Route + Document Status</div>
+                <div class="module-sub">Checks core paths and pilot packet docs used in this bundle</div>
+              </div>
+              <div class="status-pill info">Stable</div>
+            </div>
+            <div class="module-body" id="route-status-module"></div>
+          </div>
+
+          <div class="module-card">
+            <div class="module-head">
+              <div>
+                <div class="module-title">Site-Specific Pilot Packet</div>
+                <div class="module-sub">Hospital packet placeholders, responsibilities, support path, and closeout items</div>
+              </div>
+              <div class="status-pill watch">Packet</div>
+            </div>
+            <div class="module-body" id="pilot-packet-module"></div>
           </div>
         </div>
       </div>
@@ -1049,7 +1078,7 @@ COMMAND_CENTER_HTML = r"""
     </div>
 
     <div class="drawer-block">
-      <div class="drawer-k">Recommended Action</div>
+      <div class="drawer-k">Supportive Review Note</div>
       <div class="drawer-v" id="drawerAction">--</div>
     </div>
 
@@ -1114,6 +1143,7 @@ COMMAND_CENTER_HTML = r"""
     let trendCache = {};
     let trendsEndpointAvailable = false;
     let thresholdsEndpointAvailable = false;
+    let pilotReadiness = {};
 
     const DEFAULT_THRESHOLDS = {
       icu: {spo2_low:92, hr_high:120, sbp_high:160},
@@ -1129,7 +1159,7 @@ COMMAND_CENTER_HTML = r"""
         title: "Terms",
         body: `
           This pilot environment is presented for product demonstration, workflow evaluation, and stakeholder review.
-          Features, visualizations, and supportive recommendations shown here represent a controlled command-center experience.
+          Features, visualizations, and supportive review notes shown here represent a controlled command-center experience.
           Use of this environment does not establish a clinical system of record, emergency response capability, or replacement for hospital protocols.
         `
       },
@@ -1146,7 +1176,7 @@ COMMAND_CENTER_HTML = r"""
         body: `
           This platform is presented in a controlled pilot environment for demonstration, workflow evaluation, and stakeholder review.
           It is not intended to replace clinical judgment, hospital protocols, or emergency response systems.
-          All insights, alerts, and predictions are designed to support — not replace — clinical decision-making.
+          All insights, alerts, and review signals are designed to support — not replace — clinical decision-making.
         `
       }
     };
@@ -1196,8 +1226,8 @@ COMMAND_CENTER_HTML = r"""
 
     function statusClass(status){
       const s = String(status || "").toLowerCase();
-      if (s === "critical" || s === "escalated" || s === "degraded") return "critical";
-      if (s === "high" || s === "moderate" || s === "acknowledged" || s === "assigned") return "watch";
+      if (s.includes("critical") || s.includes("degraded") || s.includes("missing") || s.includes("failed")) return "critical";
+      if (s.includes("pending") || s.includes("review") || s.includes("watch") || s.includes("moderate") || s.includes("acknowledged") || s.includes("assigned") || s.includes("documented") || s.includes("structured")) return "watch";
       return "live";
     }
 
@@ -1964,6 +1994,10 @@ COMMAND_CENTER_HTML = r"""
       const unitState = canViewAllUnits ? "Hospital Scope" : "Locked to " + unitLabel(accessAssignedUnit);
       const thresholdMode = thresholdsEndpointAvailable ? (accessRole === "admin" ? "Admin Editable" : "Read Only") : "Fallback Mode";
       const trendMode = trendsEndpointAvailable ? "Stored History" : "Snapshot Fallback";
+      const routeStatus = pilotReadiness.route_status || {};
+      const mfaRows = pilotReadiness.mfa_access_log || [];
+      const mfaRow = mfaRows[0] || {};
+      const docsSummary = routeStatus.docs_checked ? `${safeNumber(routeStatus.docs_available, 0)}/${safeNumber(routeStatus.docs_checked, 0)} docs visible` : "Doc review pending";
 
       list.innerHTML = `
         <div class="queue-item">
@@ -1993,6 +2027,135 @@ COMMAND_CENTER_HTML = r"""
             <div class="alert-sub">${trendMode}</div>
           </div>
           <div class="status-pill ${trendsEndpointAvailable ? 'live' : 'muted'}">${trendsEndpointAvailable ? 'History' : 'Snapshot'}</div>
+        </div>
+        <div class="queue-item">
+          <div>
+            <div class="queue-copy">Admin Access Baseline</div>
+            <div class="alert-sub">${safe(mfaRow.evidence || mfaRow.implementation, 'Login and session review tracked in readiness logs.')}</div>
+          </div>
+          <div class="status-pill ${statusClass(mfaRow.status)}">${safe(mfaRow.status, 'Review')}</div>
+        </div>
+        <div class="queue-item">
+          <div>
+            <div class="queue-copy">Docs + Packet Status</div>
+            <div class="alert-sub">${docsSummary}</div>
+          </div>
+          <div class="status-pill ${routeStatus.missing_routes && routeStatus.missing_routes.length ? 'critical' : 'live'}">${routeStatus.missing_routes && routeStatus.missing_routes.length ? 'Attention' : 'Ready'}</div>
+        </div>
+      `;
+    }
+
+    function renderReadinessEvidence(){
+      const list = document.getElementById("readiness-evidence-list");
+      if (!list) return;
+
+      const routeStatus = pilotReadiness.route_status || {};
+      const owners = pilotReadiness.support_owners || [];
+      const backup = (pilotReadiness.backup_restore_log || [])[0] || {};
+      const patch = (pilotReadiness.patch_log || [])[0] || {};
+      const accessReview = (pilotReadiness.access_review_log || [])[0] || {};
+      const tabletop = (pilotReadiness.tabletop_log || [])[0] || {};
+      const training = (pilotReadiness.training_ack_log || [])[0] || {};
+      const mfa = (pilotReadiness.mfa_access_log || [])[0] || {};
+      const ownerNames = owners.slice(0, 3).map(item => safe(item.owner || item.name)).join(" · ");
+      const routeCopy = routeStatus.routes_checked
+        ? `${safeNumber(routeStatus.routes_available, 0)}/${safeNumber(routeStatus.routes_checked, 0)} core routes present`
+        : "Route audit pending";
+
+      list.innerHTML = `
+        <div class="queue-item">
+          <div>
+            <div class="queue-copy">Route Stability</div>
+            <div class="alert-sub">${routeCopy}</div>
+          </div>
+          <div class="status-pill ${routeStatus.missing_routes && routeStatus.missing_routes.length ? 'critical' : 'live'}">${routeStatus.missing_routes && routeStatus.missing_routes.length ? 'Review' : 'Pass'}</div>
+        </div>
+        <div class="queue-item">
+          <div>
+            <div class="queue-copy">MFA + Access Evidence</div>
+            <div class="alert-sub">${safe(mfa.status, 'Pending review')} · ${safe(mfa.last_reviewed || mfa.last_verified, 'date needed')}</div>
+          </div>
+          <div class="status-pill ${statusClass(mfa.status)}">${safe(mfa.status, 'Review')}</div>
+        </div>
+        <div class="queue-item">
+          <div>
+            <div class="queue-copy">Backup / Restore</div>
+            <div class="alert-sub">${safe(backup.last_tested || backup.last_reviewed, 'test date needed')} · ${safe(backup.notes, 'Record restore evidence before pilot.')}</div>
+          </div>
+          <div class="status-pill ${statusClass(backup.status)}">${safe(backup.status, 'Pending')}</div>
+        </div>
+        <div class="queue-item">
+          <div>
+            <div class="queue-copy">Patch + Access Review</div>
+            <div class="alert-sub">${safe(patch.last_patched || patch.last_reviewed, 'patch date needed')} · Access review ${safe(accessReview.last_reviewed, 'pending')}</div>
+          </div>
+          <div class="status-pill ${statusClass(patch.status || accessReview.status)}">${safe(patch.status || accessReview.status, 'Review')}</div>
+        </div>
+        <div class="queue-item">
+          <div>
+            <div class="queue-copy">Tabletop + Training</div>
+            <div class="alert-sub">Tabletop ${safe(tabletop.exercise_date, 'pending')} · Training ${safe(training.ack_date, 'pending')}</div>
+          </div>
+          <div class="status-pill ${statusClass(tabletop.status || training.status)}">${safe(tabletop.status || training.status, 'Pending')}</div>
+        </div>
+        <div class="queue-item">
+          <div>
+            <div class="queue-copy">Named Owners</div>
+            <div class="alert-sub">${ownerNames || 'Add site sponsor and clinical reviewer before pilot start.'}</div>
+          </div>
+          <div class="status-pill info">${owners.length || 0}</div>
+        </div>
+      `;
+    }
+
+    function renderRouteStatusModule(){
+      const target = document.getElementById("route-status-module");
+      if (!target) return;
+      const routeStatus = pilotReadiness.route_status || {};
+      const docs = routeStatus.documents || {};
+      const docEntries = Object.entries(docs);
+      const missing = routeStatus.missing_routes || [];
+
+      target.innerHTML = `
+        <div class="bars">
+          <div class="bar-row">
+            <div class="bar-label">Routes</div>
+            <div class="bar-track"><div class="bar-fill ${missing.length ? 'critical' : ''}" style="width:${routeStatus.routes_checked ? Math.round((safeNumber(routeStatus.routes_available, 0) / safeNumber(routeStatus.routes_checked, 1)) * 100) : 0}%"></div></div>
+            <div class="bar-value">${safeNumber(routeStatus.routes_available, 0)}/${safeNumber(routeStatus.routes_checked, 0)}</div>
+          </div>
+          <div class="bar-row">
+            <div class="bar-label">Docs</div>
+            <div class="bar-track"><div class="bar-fill ${routeStatus.docs_available < routeStatus.docs_checked ? 'warn' : ''}" style="width:${routeStatus.docs_checked ? Math.round((safeNumber(routeStatus.docs_available, 0) / safeNumber(routeStatus.docs_checked, 1)) * 100) : 0}%"></div></div>
+            <div class="bar-value">${safeNumber(routeStatus.docs_available, 0)}/${safeNumber(routeStatus.docs_checked, 0)}</div>
+          </div>
+        </div>
+        <div class="queue-list" style="margin-top:12px;">
+          ${missing.length ? `<div class="queue-item"><div class="queue-copy">Missing route references</div><div class="status-pill critical">${missing.length}</div></div>` : `<div class="queue-item"><div class="queue-copy">Core command-center routes present</div><div class="status-pill live">Pass</div></div>`}
+          ${docEntries.map(([name, ok]) => `<div class="queue-item"><div class="queue-copy">${name.replaceAll('_', ' ')}</div><div class="status-pill ${ok ? 'live' : 'critical'}">${ok ? 'Ready' : 'Missing'}</div></div>`).join('')}
+        </div>
+      `;
+    }
+
+    function renderPilotPacketModule(){
+      const target = document.getElementById("pilot-packet-module");
+      if (!target) return;
+      const packet = pilotReadiness.site_packet_template || [];
+      if (!packet.length){
+        target.innerHTML = `<div class="mini-copy">Site packet template will appear when pilot-readiness data is available.</div>`;
+        return;
+      }
+
+      target.innerHTML = `
+        <div class="queue-list">
+          ${packet.slice(0, 6).map(item => `
+            <div class="queue-item">
+              <div>
+                <div class="queue-copy">${safe(item.section)}</div>
+                <div class="alert-sub">${safe(item.summary)}</div>
+              </div>
+              <div class="status-pill ${statusClass(item.status)}">${safe(item.status, 'Fill')}</div>
+            </div>
+          `).join('')}
         </div>
       `;
     }
@@ -2433,7 +2596,7 @@ COMMAND_CENTER_HTML = r"""
       if (!top){
         target.innerHTML = `
           <div class="mini-card"><div class="mini-k">Signal Change</div><div class="mini-copy">No monitored signal currently visible.</div></div>
-          <div class="mini-card"><div class="mini-k">AI Detection</div><div class="mini-copy">AI detection panel waits for active patient risk.</div></div>
+          <div class="mini-card"><div class="mini-k">AI Review Logic</div><div class="mini-copy">AI detection panel waits for active patient risk.</div></div>
           <div class="mini-card"><div class="mini-k">Workflow Action</div><div class="mini-copy">Workflow action becomes available when patient risk is visible.</div></div>
         `;
         return;
@@ -2445,8 +2608,8 @@ COMMAND_CENTER_HTML = r"""
           <div class="mini-copy">${safe(top.name)} shows visible monitoring drift across oxygen saturation, heart rate, or blood pressure signals.</div>
         </div>
         <div class="mini-card">
-          <div class="mini-k">AI Detection</div>
-          <div class="mini-copy">Supportive AI logic elevates deterioration attention and places the patient in the top risk view.</div>
+          <div class="mini-k">AI Review Logic</div>
+          <div class="mini-copy">Supportive AI review logic elevates review attention and places the patient in the top risk view.</div>
         </div>
         <div class="mini-card">
           <div class="mini-k">Workflow Action</div>
@@ -2505,6 +2668,8 @@ COMMAND_CENTER_HTML = r"""
       renderClustersModule();
       renderHeatmapModule();
       renderWorkflowReadinessModule();
+      renderRouteStatusModule();
+      renderPilotPacketModule();
       renderOperationsWallSummary();
       renderScenarioGrid();
     }
@@ -2518,6 +2683,7 @@ COMMAND_CENTER_HTML = r"""
       renderWorkflow();
       renderSystemHealth();
       renderSecurityControls();
+      renderReadinessEvidence();
       renderPatientTimeline();
       renderAuditLog();
       renderAuditSummary();
@@ -2531,6 +2697,7 @@ COMMAND_CENTER_HTML = r"""
       await loadWorkflowState();
       await loadPersistentAudit();
       await loadSystemHealth();
+      await loadPilotReadiness();
       await refreshSnapshot();
 
       const unitFilter = document.getElementById("unitFilter");
@@ -2552,6 +2719,7 @@ COMMAND_CENTER_HTML = r"""
         await loadPersistentAudit();
         await loadThresholds();
         await loadSystemHealth();
+        await loadPilotReadiness();
         await refreshSnapshot();
       }, 5000);
     }
