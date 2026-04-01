@@ -5,7 +5,7 @@ import os
 import random
 import secrets
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from functools import wraps
 from pathlib import Path
 from typing import Any, Dict, List
@@ -33,7 +33,7 @@ FOUNDER_NAME = "Milton Munroe"
 FOUNDER_ROLE = "Founder & CEO, Early Risk Alert AI"
 
 
-PILOT_VERSION = os.getenv("PILOT_VERSION", "stable-pilot-1.0.3")
+PILOT_VERSION = os.getenv("PILOT_VERSION", "stable-pilot-1.0.4")
 PILOT_BUILD_STATE = "Locked Stable Pilot Build"
 INTENDED_USE_STATEMENT = (
     "Early Risk Alert AI is an HCP-facing decision-support and workflow-support software platform intended to assist authorized health care professionals in identifying patients who may warrant further clinical evaluation, supporting patient prioritization, and improving command-center operational awareness. It does not replace clinician judgment and is not intended to diagnose, direct treatment, or independently trigger escalation."
@@ -138,6 +138,17 @@ PILOT_RELEASE_NOTES = [
             "Replaced forecast percentages and exact time windows with review-attention levels and monitored-trend language.",
             "Added advisory structure with Technical Infrastructure & Security Advisor support.",
             "Added documented MFA, endpoint security, immutable backup, incident response, business continuity, patching, tabletop, and security training controls for pilot review."
+        ],
+    },
+    {
+        "version": "stable-pilot-1.0.4",
+        "date": "2026-04-01",
+        "summary": "Stability-first polish bundle with readiness evidence, route checks, and site-packet structure.",
+        "changes": [
+            "Added route and document status visibility for core command-center stability checks.",
+            "Added operational readiness evidence logs for MFA, backup/restore, patching, access reviews, tabletop exercises, and training acknowledgments.",
+            "Added named support owners, technical infrastructure coverage, and site-specific pilot packet placeholders.",
+            "Added command-center UI visibility for pilot docs, readiness evidence, and site-packet structure without changing core workflow behavior."
         ],
     },
 ]
@@ -620,6 +631,196 @@ PILOT_INSURANCE_READINESS_CONTROLS = [
         "requirement": "Incident-response tabletop exercise procedures and recording templates are documented for pilot security review and evidence tracking.",
         "documentation": "Documented and available.",
         "status": "Documented and available"
+    },
+]
+
+PILOT_SUPPORT_OWNERS = [
+    {
+        "area": "Product & Pilot Operations",
+        "owner": "Milton Munroe",
+        "title": FOUNDER_ROLE,
+        "coverage": "Release control, pilot operations coordination, stakeholder communication, and governance ownership.",
+        "status": "In place"
+    },
+    {
+        "area": "Technical Infrastructure & Security",
+        "owner": "Uche Anosike",
+        "title": "Technical Infrastructure & Security Advisor",
+        "coverage": "Infrastructure review, environment hardening guidance, deployment security, backup / recovery planning, and patch-management review.",
+        "status": "In place"
+    },
+    {
+        "area": "Clinical Review",
+        "owner": "Clinical advisor / site champion placeholder",
+        "title": "Clinical Review Lead",
+        "coverage": "Clinical workflow review, hospital-facing feedback, and pilot-use oversight at the site level.",
+        "status": "Site-specific placeholder"
+    },
+    {
+        "area": "Hospital Sponsor",
+        "owner": "Executive sponsor placeholder",
+        "title": "Hospital Sponsor",
+        "coverage": "Executive support, pilot escalation awareness, and closeout sign-off for the participating site.",
+        "status": "Site-specific placeholder"
+    },
+]
+
+PILOT_MFA_ACCESS_EVIDENCE_LOG = [
+    {
+        "control": "Admin application access",
+        "implementation": "Allowed-admin email validation and password or hash verification before an admin session is created.",
+        "owner": "Founder/Admin",
+        "last_reviewed": "2026-04-01",
+        "evidence": "Implemented in the Flask admin login path and session creation flow.",
+        "status": "Implemented in app"
+    },
+    {
+        "control": "Session protection baseline",
+        "implementation": "HTTPOnly session cookie, SameSite=Lax, secure-cookie environment toggle, and no-store headers.",
+        "owner": "Engineering",
+        "last_reviewed": "2026-04-01",
+        "evidence": "Configured in application settings and response headers.",
+        "status": "Implemented in app"
+    },
+    {
+        "control": "Administrative MFA confirmation",
+        "implementation": "External MFA for admin email, remote access, and administrative consoles.",
+        "owner": "Founder/Admin",
+        "last_reviewed": "",
+        "evidence": "Deployment confirmation required before hospital pilot start.",
+        "status": "Pending external verification"
+    },
+    {
+        "control": "Front-door / WAF review",
+        "implementation": "Deployment-layer traffic protection and access review for the public front door.",
+        "owner": "Technical Infrastructure & Security Advisor",
+        "last_reviewed": "",
+        "evidence": "Confirm hosting or edge-layer configuration before hospital deployment.",
+        "status": "Pending deployment review"
+    },
+]
+
+PILOT_BACKUP_RESTORE_LOG = [
+    {
+        "system": "Pilot data files and governance artifacts",
+        "owner": "Technical Infrastructure & Security Advisor",
+        "backup_scope": "Workflow records, thresholds, trends, pilot request logs, and governance packet artifacts.",
+        "last_tested": "",
+        "evidence": "Record the first restore test date and storage location before hospital pilot start.",
+        "notes": "Immutable or separate-environment backup evidence still needs operational confirmation.",
+        "status": "Pending external verification"
+    },
+    {
+        "system": "Application bundle / release artifact",
+        "owner": "Founder/Admin",
+        "backup_scope": "Current stable pilot bundle and release-controlled source snapshot.",
+        "last_tested": "2026-04-01",
+        "evidence": "Current bundle version and release notes preserved in pilot governance materials.",
+        "notes": "Application release control is in place; off-platform backup evidence should still be recorded.",
+        "status": "Structured and documented"
+    },
+]
+
+PILOT_PATCH_LOG = [
+    {
+        "component": "Stable pilot application bundle",
+        "owner": "Founder/Admin",
+        "cadence": "Approved bundle updates with critical fixes prioritized inside a 30-day window.",
+        "last_patched": "2026-04-01",
+        "evidence": "stable-pilot-1.0.4 release note and change-controlled bundle update.",
+        "status": "Current bundle updated"
+    },
+    {
+        "component": "Administrative and support endpoints",
+        "owner": "Technical Infrastructure & Security Advisor",
+        "cadence": "Monthly review and critical out-of-band remediation as needed.",
+        "last_patched": "",
+        "evidence": "Endpoint patch evidence must be recorded outside the application before hospital pilot start.",
+        "status": "Pending external verification"
+    },
+]
+
+PILOT_ACCESS_REVIEW_LOG = [
+    {
+        "scope": "Application roles and unit scoping baseline",
+        "owner": "Founder/Admin",
+        "last_reviewed": "2026-04-01",
+        "evidence": "Role, unit, workflow, and audit scoping reviewed against current routes and session context.",
+        "status": "Pass"
+    },
+    {
+        "scope": "Site-specific user list and revocation plan",
+        "owner": "Founder/Admin",
+        "last_reviewed": "",
+        "evidence": "Complete before site activation and again at pilot closeout.",
+        "status": "Pending site setup"
+    },
+]
+
+PILOT_TABLETOP_LOG = [
+    {
+        "exercise_name": "Security incident and pilot pause tabletop",
+        "owner": "Founder/Admin",
+        "exercise_date": "",
+        "scenario": "Credential compromise, pilot pause decision, stakeholder notification, and restore approval path.",
+        "evidence": "Run and record before hospital pilot start.",
+        "status": "Pending"
+    }
+]
+
+PILOT_TRAINING_ACK_LOG = [
+    {
+        "audience": "Founder/Admin baseline review",
+        "owner": "Founder/Admin",
+        "ack_date": "2026-04-01",
+        "evidence": "Current pilot operating, claims-control, and access-review packet updated with this bundle.",
+        "status": "Updated"
+    },
+    {
+        "audience": "Site-specific pilot users",
+        "owner": "Clinical Review Lead / Site Champion",
+        "ack_date": "",
+        "evidence": "Collect signed or documented acknowledgment before site go-live.",
+        "status": "Pending site setup"
+    },
+]
+
+PILOT_SITE_PACKET_TEMPLATE = [
+    {
+        "section": "Hospital / Site Identification",
+        "summary": "Hospital name, primary unit, pilot start target, sponsor, clinical champion, technical contact, and success-review cadence.",
+        "owner": "Founder/Admin + Site Sponsor",
+        "status": "Fill before pilot start"
+    },
+    {
+        "section": "Telemetry / ICU Packet",
+        "summary": "Identify whether the pilot is telemetry, ICU, stepdown, ward, or RPM, and define the included monitoring scope and workflow users.",
+        "owner": "Clinical Review Lead",
+        "status": "Fill before pilot start"
+    },
+    {
+        "section": "Hospital / Vendor Responsibilities",
+        "summary": "Document who manages clinical review, user provisioning, access revocation, deployment coordination, support contacts, and change approval.",
+        "owner": "Founder/Admin + Site Sponsor",
+        "status": "Fill before pilot start"
+    },
+    {
+        "section": "Success Metrics",
+        "summary": "Define the site’s pilot success measures such as workflow adoption, review timeliness, explainability usefulness, and operational acceptance.",
+        "owner": "Site Sponsor / Clinical Review Lead",
+        "status": "Fill before pilot start"
+    },
+    {
+        "section": "Support / Escalation Plan",
+        "summary": "Record technical support owner, clinical review owner, escalation path, incident contact route, and expected response windows.",
+        "owner": "Founder/Admin + Technical Infrastructure & Security Advisor",
+        "status": "Fill before pilot start"
+    },
+    {
+        "section": "Pilot Closeout",
+        "summary": "Document closeout review, user deprovisioning, data return or deletion, retained artifacts, and sign-off responsibilities.",
+        "owner": "Founder/Admin + Site Sponsor",
+        "status": "Fill at pilot closeout"
     },
 ]
 
@@ -1136,6 +1337,9 @@ def create_app() -> Flask:
     app.config["SESSION_COOKIE_HTTPONLY"] = True
     app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
     app.config["SESSION_COOKIE_SECURE"] = os.getenv("SESSION_COOKIE_SECURE", "0") == "1"
+    app.config["SESSION_COOKIE_NAME"] = os.getenv("SESSION_COOKIE_NAME", "eraa_session")
+    app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(hours=int(os.getenv("SESSION_LIFETIME_HOURS", "12")))
+    app.config["SESSION_REFRESH_EACH_REQUEST"] = True
 
     runtime_state = {
         "last_update": datetime.now(timezone.utc),
@@ -1238,6 +1442,55 @@ def create_app() -> Flask:
                 response.headers["Expires"] = "0"
                 return response
         raise FileNotFoundError(f"Missing static document: {filename}")
+
+    def _route_status_snapshot() -> Dict[str, Any]:
+        route_set = {rule.rule for rule in app.url_map.iter_rules()}
+        tracked_routes = [
+            "/",
+            "/login",
+            "/pilot-access",
+            "/logout",
+            "/command-center",
+            "/pilot-docs",
+            "/admin/review",
+            "/hospital-demo",
+            "/executive-walkthrough",
+            "/investor-intake",
+            "/api/access-context",
+            "/api/workflow",
+            "/api/audit",
+            "/api/thresholds",
+            "/api/system-health",
+            "/api/v1/live-snapshot",
+            "/healthz",
+        ]
+        missing_routes = [route for route in tracked_routes if route not in route_set]
+
+        def _deck_exists(kind: str) -> bool:
+            root, filename = _resolve_deck_file(kind)
+            return (root / filename).exists()
+
+        def _doc_exists(kind: str) -> bool:
+            filename = DOC_FILE_NAMES[kind]
+            return any((root / filename).exists() for root in _deck_search_roots())
+
+        documents = {
+            "pitch_deck": _deck_exists("main"),
+            "hospital_deck": _deck_exists("hospital"),
+            "investor_deck": _deck_exists("investor"),
+            "pilot_success_guide": _doc_exists("pilot_success_guide"),
+            "model_card": _doc_exists("model_card"),
+        }
+
+        return {
+            "checked_at": _utc_now_iso(),
+            "routes_checked": len(tracked_routes),
+            "routes_available": len(tracked_routes) - len(missing_routes),
+            "missing_routes": missing_routes,
+            "docs_checked": len(documents),
+            "docs_available": sum(1 for ok in documents.values() if ok),
+            "documents": documents,
+        }
 
     hospital_file = data_dir / "hospital_demo_requests.json"
     exec_file = data_dir / "executive_walkthrough_requests.json"
@@ -1910,6 +2163,7 @@ def create_app() -> Flask:
         response.headers["Cache-Control"] = "no-store"
         response.headers["Pragma"] = "no-cache"
         response.headers["X-XSS-Protection"] = "1; mode=block"
+        response.headers["Content-Security-Policy"] = "default-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; font-src 'self' data: https:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
         return response
 
     @app.get("/")
@@ -2626,8 +2880,17 @@ def create_app() -> Flask:
                 "change_approval_log": PILOT_CHANGE_APPROVAL_LOG,
                 "cybersecurity_summary": PILOT_CYBERSECURITY_SUMMARY,
                 "advisory_structure": PILOT_ADVISORY_STRUCTURE,
+                "support_owners": PILOT_SUPPORT_OWNERS,
                 "security_program_documents": PILOT_SECURITY_PROGRAM_DOCUMENTS,
                 "insurance_readiness_controls": PILOT_INSURANCE_READINESS_CONTROLS,
+                "mfa_access_log": PILOT_MFA_ACCESS_EVIDENCE_LOG,
+                "backup_restore_log": PILOT_BACKUP_RESTORE_LOG,
+                "patch_log": PILOT_PATCH_LOG,
+                "access_review_log": PILOT_ACCESS_REVIEW_LOG,
+                "tabletop_log": PILOT_TABLETOP_LOG,
+                "training_ack_log": PILOT_TRAINING_ACK_LOG,
+                "site_packet_template": PILOT_SITE_PACKET_TEMPLATE,
+                "route_status": _route_status_snapshot(),
                 "user_provisioning_policy": PILOT_USER_PROVISIONING_POLICY,
                 "data_retention_policy": PILOT_DATA_RETENTION_POLICY,
                 "pilot_scope_document": PILOT_SCOPE_DOCUMENT,
@@ -2655,8 +2918,29 @@ def create_app() -> Flask:
                 "claims_control_sheet": PILOT_CLAIMS_CONTROL_SHEET,
                 "document_control_index": PILOT_DOCUMENT_CONTROL_INDEX,
                 "advisory_structure": PILOT_ADVISORY_STRUCTURE,
+                "support_owners": PILOT_SUPPORT_OWNERS,
                 "security_program_documents": PILOT_SECURITY_PROGRAM_DOCUMENTS,
                 "insurance_readiness_controls": PILOT_INSURANCE_READINESS_CONTROLS,
+                "route_status": _route_status_snapshot(),
+            }
+        )
+
+    @app.get("/api/pilot-readiness")
+    @_login_required
+    def pilot_readiness():
+        return jsonify(
+            {
+                "pilot_version": PILOT_VERSION,
+                "pilot_build_state": PILOT_BUILD_STATE,
+                "route_status": _route_status_snapshot(),
+                "support_owners": PILOT_SUPPORT_OWNERS,
+                "mfa_access_log": PILOT_MFA_ACCESS_EVIDENCE_LOG,
+                "backup_restore_log": PILOT_BACKUP_RESTORE_LOG,
+                "patch_log": PILOT_PATCH_LOG,
+                "access_review_log": PILOT_ACCESS_REVIEW_LOG,
+                "tabletop_log": PILOT_TABLETOP_LOG,
+                "training_ack_log": PILOT_TRAINING_ACK_LOG,
+                "site_packet_template": PILOT_SITE_PACKET_TEMPLATE,
             }
         )
 
@@ -2758,7 +3042,22 @@ def create_app() -> Flask:
               <div class="card"><h2 style="margin:0 0 12px;font-size:28px">Insurance-Readiness Controls</h2>{_render_table(PILOT_INSURANCE_READINESS_CONTROLS, ["control", "requirement", "documentation", "status"])}</div>
             </div>
 
+            <div class="card"><h2 style="margin:0 0 12px;font-size:28px">Named Support Owners</h2>{_render_table(PILOT_SUPPORT_OWNERS, ["area", "owner", "title", "coverage", "status"])}</div>
+            <div class="grid">
+              <div class="card"><h2 style="margin:0 0 12px;font-size:28px">MFA / Access Evidence Log</h2>{_render_table(PILOT_MFA_ACCESS_EVIDENCE_LOG, ["control", "implementation", "owner", "last_reviewed", "evidence", "status"])}</div>
+              <div class="card"><h2 style="margin:0 0 12px;font-size:28px">Backup / Restore Log</h2>{_render_table(PILOT_BACKUP_RESTORE_LOG, ["system", "owner", "backup_scope", "last_tested", "evidence", "notes", "status"])}</div>
+            </div>
+            <div class="grid">
+              <div class="card"><h2 style="margin:0 0 12px;font-size:28px">Patch Log</h2>{_render_table(PILOT_PATCH_LOG, ["component", "owner", "cadence", "last_patched", "evidence", "status"])}</div>
+              <div class="card"><h2 style="margin:0 0 12px;font-size:28px">Access Review Log</h2>{_render_table(PILOT_ACCESS_REVIEW_LOG, ["scope", "owner", "last_reviewed", "evidence", "status"])}</div>
+            </div>
+            <div class="grid">
+              <div class="card"><h2 style="margin:0 0 12px;font-size:28px">Tabletop Exercise Log</h2>{_render_table(PILOT_TABLETOP_LOG, ["exercise_name", "owner", "exercise_date", "scenario", "evidence", "status"])}</div>
+              <div class="card"><h2 style="margin:0 0 12px;font-size:28px">Training Acknowledgment Log</h2>{_render_table(PILOT_TRAINING_ACK_LOG, ["audience", "owner", "ack_date", "evidence", "status"])}</div>
+            </div>
+
             <div class="card"><h2 style="margin:0 0 12px;font-size:28px">Security Program Documents</h2>{_render_table(PILOT_SECURITY_PROGRAM_DOCUMENTS, ["document_name", "version", "owner", "last_updated", "status", "pilot_applicability"])}</div>
+            <div class="card"><h2 style="margin:0 0 12px;font-size:28px">Route + Document Status Snapshot</h2>{_render_table([_route_status_snapshot()], ["checked_at", "routes_checked", "routes_available", "missing_routes", "docs_checked", "docs_available", "documents"])}</div>
 
             <div class="grid">
               <div class="card"><h2 style="margin:0 0 12px;font-size:28px">User Provisioning / Deprovisioning Policy</h2>{_render_table(PILOT_USER_PROVISIONING_POLICY, ["step", "policy", "owner", "sla", "evidence"])}</div>
@@ -2769,6 +3068,7 @@ def create_app() -> Flask:
               <div class="card"><h2 style="margin:0 0 12px;font-size:28px">Pilot Agreement / Scope Document</h2>{_render_table(PILOT_SCOPE_DOCUMENT, ["section", "summary"])}</div>
               <div class="card"><h2 style="margin:0 0 12px;font-size:28px">Training / Use Instructions</h2>{_render_table(PILOT_TRAINING_USE_INSTRUCTIONS, ["step", "instruction", "owner"])}</div>
             </div>
+            <div class="card"><h2 style="margin:0 0 12px;font-size:28px">Site-Specific Pilot Packet Template</h2>{_render_table(PILOT_SITE_PACKET_TEMPLATE, ["section", "summary", "owner", "status"])}</div>
 
             <div class="card"><h2 style="margin:0 0 12px;font-size:28px">Dated Validation Evidence</h2>{_render_table(PILOT_VALIDATION_EVIDENCE, ["date_tested", "tested_by", "test_case_id", "test_case", "expected_result", "actual_result", "screenshot_evidence", "status"])}</div>
             <div class="card"><h2 style="margin:0 0 12px;font-size:28px">V&amp;V-Lite Sheet</h2>{_render_table(PILOT_VNV_LITE, ["id", "check", "method", "evidence", "status"])}</div>
