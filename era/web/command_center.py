@@ -2082,6 +2082,13 @@ COMMAND_CENTER_HTML = r"""
       list.innerHTML = `
         <div class="queue-item">
           <div>
+            <div class="queue-copy">Full Governance Packet</div>
+            <div class="alert-sub">Pilot docs, claims control, change control, validation packet, cybersecurity summary, and site packet placeholders.</div>
+          </div>
+          <a class="btn secondary small" href="/pilot-docs" target="_blank" rel="noopener">Open</a>
+        </div>
+        <div class="queue-item">
+          <div>
             <div class="queue-copy">Governance Build State</div>
             <div class="alert-sub">${safe(pilotReadiness.pilot_version, '--')} · ${buildState}</div>
           </div>
