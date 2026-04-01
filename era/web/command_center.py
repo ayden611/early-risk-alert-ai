@@ -760,7 +760,7 @@ COMMAND_CENTER_HTML = r"""
             </div>
 
             <div class="intel-card">
-              <h3>Readiness Evidence + Owners</h3>
+              <h3>Governance + Readiness</h3>
               <div class="queue-list" id="readiness-evidence-list"></div>
             </div>
 
@@ -1619,6 +1619,20 @@ COMMAND_CENTER_HTML = r"""
       }
     }
 
+    async function loadPilotReadiness(){
+      try{
+        const res = await fetch("/api/pilot-readiness", {cache:"no-store"});
+        if (!res.ok) throw new Error("pilot readiness route unavailable");
+        pilotReadiness = await res.json();
+      }catch(err){
+        console.error("pilot readiness failed", err);
+        pilotReadiness = {};
+      }
+      renderReadinessEvidence();
+      renderRouteStatusModule();
+      renderPilotPacketModule();
+    }
+
     async function refreshSnapshot(){
       try{
         const res = await fetch("/api/v1/live-snapshot?refresh=" + Date.now(), {cache:"no-store"});
@@ -2061,8 +2075,25 @@ COMMAND_CENTER_HTML = r"""
       const routeCopy = routeStatus.routes_checked
         ? `${safeNumber(routeStatus.routes_available, 0)}/${safeNumber(routeStatus.routes_checked, 0)} core routes present`
         : "Route audit pending";
+      const latestRelease = ((pilotReadiness.release_notes || [])[0] || {}).version || ((pilotReadiness.release_notes || []).slice(-1)[0] || {}).version || "--";
+      const validationCount = (pilotReadiness.dated_validation_evidence || []).length;
+      const buildState = safe(pilotReadiness.pilot_build_state, "Locked Stable Pilot Build");
 
       list.innerHTML = `
+        <div class="queue-item">
+          <div>
+            <div class="queue-copy">Governance Build State</div>
+            <div class="alert-sub">${safe(pilotReadiness.pilot_version, '--')} · ${buildState}</div>
+          </div>
+          <div class="status-pill info">Locked</div>
+        </div>
+        <div class="queue-item">
+          <div>
+            <div class="queue-copy">Intended-Use Governance</div>
+            <div class="alert-sub">HCP-facing review support posture retained across pilot materials.</div>
+          </div>
+          <div class="status-pill live">Active</div>
+        </div>
         <div class="queue-item">
           <div>
             <div class="queue-copy">Route Stability</div>
@@ -2100,6 +2131,13 @@ COMMAND_CENTER_HTML = r"""
         </div>
         <div class="queue-item">
           <div>
+            <div class="queue-copy">Release + Validation</div>
+            <div class="alert-sub">Latest release ${latestRelease} · Validation records ${validationCount}</div>
+          </div>
+          <div class="status-pill info">Tracked</div>
+        </div>
+        <div class="queue-item">
+          <div>
             <div class="queue-copy">Named Owners</div>
             <div class="alert-sub">${ownerNames || 'Add site sponsor and clinical reviewer before pilot start.'}</div>
           </div>
@@ -2108,7 +2146,7 @@ COMMAND_CENTER_HTML = r"""
       `;
     }
 
-    function renderRouteStatusModule(){
+function renderRouteStatusModule(){
       const target = document.getElementById("route-status-module");
       if (!target) return;
       const routeStatus = pilotReadiness.route_status || {};
