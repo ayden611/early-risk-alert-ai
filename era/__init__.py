@@ -33,7 +33,7 @@ FOUNDER_NAME = "Milton Munroe"
 FOUNDER_ROLE = "Founder & CEO, Early Risk Alert AI"
 
 
-PILOT_VERSION = os.getenv("PILOT_VERSION", "stable-pilot-1.0.4")
+PILOT_VERSION = os.getenv("PILOT_VERSION", "stable-pilot-1.0.4a")
 PILOT_BUILD_STATE = "Locked Stable Pilot Build"
 INTENDED_USE_STATEMENT = (
     "Early Risk Alert AI is an HCP-facing decision-support and workflow-support software platform intended to assist authorized health care professionals in identifying patients who may warrant further clinical evaluation, supporting patient prioritization, and improving command-center operational awareness. It does not replace clinician judgment and is not intended to diagnose, direct treatment, or independently trigger escalation."
@@ -149,6 +149,16 @@ PILOT_RELEASE_NOTES = [
             "Added operational readiness evidence logs for MFA, backup/restore, patching, access reviews, tabletop exercises, and training acknowledgments.",
             "Added named support owners, technical infrastructure coverage, and site-specific pilot packet placeholders.",
             "Added command-center UI visibility for pilot docs, readiness evidence, and site-packet structure without changing core workflow behavior."
+        ],
+    },
+    {
+        "version": "stable-pilot-1.0.4a",
+        "date": "2026-04-01",
+        "summary": "Hotfix restoring command-wall boot sequence and governance visibility.",
+        "changes": [
+            "Restored missing loadPilotReadiness client function so the command-center wall can boot and populate live data again.",
+            "Kept existing governance, pilot-docs, workflow, trends, thresholds, and audit routes intact.",
+            "Re-surfaced governance/readiness context in the side panel without removing existing pilot documentation."
         ],
     },
 ]
