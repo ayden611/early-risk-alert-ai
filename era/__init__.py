@@ -4583,10 +4583,14 @@ def create_app() -> Flask:
     # -----------------------------------------------------------------------
 
     def _load_retro_upload_html():
-        import json as _json
-        from pathlib import Path as _Path
-        template_path = _Path(__file__).parent / "web" / "retro_upload.html"
-        if template_path.exists():
+        """Load retro upload page from separate file - fixes truncation on Render."""
+        try:
+            from pathlib import Path
+            import json
+            template_path = Path(__file__).parent / "web" / "retro_upload.html"
+            if not template_path.exists():
+                print(f"[WARNING] retro_upload.html missing at {template_path}")
+                return "<h1>Retro Upload Template Missing - Please contact support</h1>"
             raw = template_path.read_text(encoding="utf-8")
             try:
                 from era import CSV_SCHEMA_DESCRIPTION, CSV_SCHEMA_REQUIRED
@@ -4595,14 +4599,18 @@ def create_app() -> Flask:
                 CSV_SCHEMA_REQUIRED = []
             raw = raw.replace(
                 '""" + json.dumps({k: v for k, v in CSV_SCHEMA_DESCRIPTION.items()}) + """',
-                _json.dumps({k: v for k, v in CSV_SCHEMA_DESCRIPTION.items()})
-            ).replace(
+                json.dumps(dict(CSV_SCHEMA_DESCRIPTION))
+            )
+            raw = raw.replace(
                 '""" + json.dumps(CSV_SCHEMA_REQUIRED) + """',
-                _json.dumps(CSV_SCHEMA_REQUIRED)
+                json.dumps(CSV_SCHEMA_REQUIRED)
             )
             return raw
-        print("[WARNING] retro_upload.html not found")
-        return "<h1>Retro Upload Template Missing</h1>"
+        except Exception as e:
+            print(f"[RETRO LOADER ERROR] {type(e).__name__}: {e}")
+            import traceback
+            traceback.print_exc()
+            return "<h1>Retro Upload Page Failed to Load. Please refresh or contact support.</h1>"
 
     RETRO_UPLOAD_HTML = _load_retro_upload_html()
 
@@ -4642,25 +4650,25 @@ def create_app() -> Flask:
     @app.post("/api/retro/upload")
     @_login_required
     def retro_upload_api():
-        """Simple multipart upload — keeps async analysis intact."""
+        """Guaranteed stable upload for live hospital CSV/.gz + MIMIC output"""
         if "file" not in request.files:
-            return jsonify({"ok": False, "error": "No file uploaded."}), 400
+            return jsonify({"ok": False, "error": "No file received"}), 400
         f = request.files["file"]
-        if not f or not f.filename:
-            return jsonify({"ok": False, "error": "Invalid file."}), 400
+        if not f.filename:
+            return jsonify({"ok": False, "error": "Invalid file"}), 400
         filename = f.filename.lower()
         if not (filename.endswith(".csv") or filename.endswith(".gz")):
-            return jsonify({"ok": False, "error": "Only .csv or .csv.gz files are allowed."}), 400
+            return jsonify({"ok": False, "error": "Only .csv or .gz files allowed"}), 400
         try:
             raw = f.read()
             if len(raw) > 100 * 1024 * 1024:
-                return jsonify({"ok": False, "error": "File too large (max 100 MB)."}), 400
+                return jsonify({"ok": False, "error": "File too large (max 100 MB)"}), 400
             if filename.endswith(".gz"):
-                import gzip as _gzip
-                raw = _gzip.decompress(raw)
+                import gzip
+                raw = gzip.decompress(raw)
             return _process_retro_upload(raw, f.filename)
         except Exception as e:
-            print(f"[RETRO UPLOAD ERROR] {type(e).__name__}: {e}")
+            print(f"[RETRO UPLOAD CRITICAL ERROR] {type(e).__name__}: {e}")
             return jsonify({"ok": False, "error": f"Upload failed: {str(e)}"}), 500
 
     @app.post("/api/retro/upload-chunk")
