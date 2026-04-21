@@ -3164,6 +3164,14 @@ def _process_retro_upload(raw: bytes, filename: str):
       Analysis runs in a background thread to avoid Render timeout.
       Client polls /api/retro/analyze/<id> every 5s for results.
     """
+    # Decompress .gz files transparently
+    if filename.lower().endswith(".gz"):
+        try:
+            import gzip as _gz
+            raw = _gz.decompress(raw)
+            filename = filename[:-3]  # strip .gz so downstream sees .csv
+        except Exception as e:
+            return jsonify({"ok": False, "error": f"Could not decompress .gz file: {e}"}), 422
     result = _parse_csv_upload(raw, filename)
     if not result["ok"]:
         return jsonify(result), 422
@@ -4653,10 +4661,10 @@ def create_app() -> Flask:
   <div class="card">
     <h2>Upload CSV File</h2>
     <div class="upload-zone" id="dropZone">
-      <input type="file" id="csvFile" accept=".csv" onchange="handleFileSelect(this)">
+      <input type="file" id="csvFile" accept=".csv,.gz" onchange="handleFileSelect(this)">
       <div class="upload-icon" onclick="document.getElementById('csvFile').click()" style="cursor:pointer">&#x1F4C4;</div>
       <div class="upload-label" onclick="document.getElementById('csvFile').click()" style="cursor:pointer">Click to select — or drag and drop anywhere on this page</div>
-      <div class="upload-sub">Maximum file size: 50 MB &nbsp;·&nbsp; CSV format required</div>
+      <div class="upload-sub">Maximum file size: 50 MB &nbsp;·&nbsp; CSV or CSV.GZ format supported</div>
     </div>
     <div id="fileInfo" style="margin-bottom:12px;font-size:14px;color:#9adfff;display:none"></div>
     <div class="progress" id="progressBar"><div class="progress-fill" id="progressFill"></div></div>
@@ -4737,8 +4745,8 @@ def create_app() -> Flask:
     _highlightZone(false);
     const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
     if (f) {
-      if (!f.name.toLowerCase().endsWith('.csv')) {
-        setStatus('Please select a CSV file (.csv extension required)', 'err');
+      if (!f.name.toLowerCase().endsWith('.csv') && !f.name.toLowerCase().endsWith('.gz')) {
+        setStatus('Please select a CSV or CSV.GZ file', 'err');
         return;
       }
       setFile(f);
@@ -4918,7 +4926,7 @@ def create_app() -> Flask:
       // Poll for results — server handles internal retry for race conditions
       // Checks every 6 seconds, up to 90 seconds total (15 attempts)
       let analysis = null;
-      const maxAttempts = 15;
+      const maxAttempts = 36;
       for (let attempt = 0; attempt < maxAttempts; attempt++) {
         // Small datasets: analyze immediately. Large: wait 6s between polls.
         if (attempt > 0 || isLarge) {
@@ -4944,7 +4952,7 @@ def create_app() -> Flask:
           const pct = Math.min(95, 70 + attempt * 2);
           fill.style.width = pct + '%';
           const elapsed = (attempt + 1) * 6;
-          setStatus(`Streaming analysis in progress... (${elapsed}s)`, '');
+          setStatus(`Streaming analysis in progress... (${elapsed}s elapsed — large datasets can take up to 3 minutes)`, '');
           continue;
         }
         if (!r2.ok) {
@@ -4958,7 +4966,9 @@ def create_app() -> Flask:
       }
 
       if (!analysis) {
-        setStatus('Analysis is taking longer than expected for this large dataset. Check the Previous Uploads table and click Analyze when ready.', '');
+        setStatus('', '');
+        document.getElementById('uploadStatus').innerHTML =
+          'Analysis is still running on the server. <button class="btn secondary" style="padding:6px 14px;font-size:13px;margin-left:8px" onclick="retryPoll(\'' + data.upload_id + '\')">Check for Results</button>';
         loadUploadHistory();
         document.getElementById('uploadBtn').disabled = false;
         prog.style.display = 'none';
@@ -5127,6 +5137,28 @@ def create_app() -> Flask:
     navigator.clipboard.writeText(text)
       .then(() => alert("Results copied to clipboard. Paste into your email."))
       .catch(() => { const ta = document.createElement("textarea"); ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand("copy"); document.body.removeChild(ta); alert("Results copied to clipboard."); });
+  }
+
+  async function retryPoll(uploadId) {
+    setStatus('Checking for results...', '');
+    try {
+      for (let att = 0; att < 20; att++) {
+        const pr = await fetch('/api/retro/analyze/' + uploadId);
+        const pj = await pr.json();
+        if (pj.pending || pj.status === 'running') {
+          setStatus(`Still running... (${(att+1)*6}s elapsed)`, '');
+          await new Promise(r => setTimeout(r, 6000));
+          continue;
+        }
+        if (!pj.ok) { setStatus('Error: ' + (pj.error || 'Analysis failed'), 'err'); return; }
+        renderResults({upload_id: uploadId, row_count: pj.summary?.total_rows || 0,
+                       patient_count: pj.summary?.total_patients || 0}, pj);
+        setStatus('Analysis complete.', 'ok');
+        loadUploadHistory();
+        return;
+      }
+      setStatus('Still running — try again in 30 seconds.', '');
+    } catch(e) { setStatus('Network error: ' + e.message, 'err'); }
   }
 
   async function loadUploadHistory() {
@@ -5405,8 +5437,8 @@ def create_app() -> Flask:
             content  = payload.get("content", "")
             if not content:
                 return jsonify({"ok": False, "error": "No CSV content received."}), 400
-            if not filename.lower().endswith(".csv"):
-                return jsonify({"ok": False, "error": "File must be a CSV (.csv extension required)."}), 400
+            if not filename.lower().endswith(".csv") and not filename.lower().endswith(".gz"):
+                return jsonify({"ok": False, "error": "File must be a CSV or CSV.GZ file."}), 400
             raw = content.encode("utf-8")
             if len(raw) > 100 * 1024 * 1024:
                 return jsonify({"ok": False, "error": "Content exceeds 100 MB limit."}), 400
