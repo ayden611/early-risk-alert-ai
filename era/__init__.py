@@ -4661,10 +4661,10 @@ def create_app() -> Flask:
   <div class="card">
     <h2>Upload CSV File</h2>
     <div class="upload-zone" id="dropZone">
-      <input type="file" id="csvFile" accept=".csv,.gz" onchange="handleFileSelect(this)">
+      <input type="file" id="csvFile" accept=".csv,text/csv,application/gzip,application/x-gzip,.gz" onchange="handleFileSelect(this)">
       <div class="upload-icon" onclick="document.getElementById('csvFile').click()" style="cursor:pointer">&#x1F4C4;</div>
       <div class="upload-label" onclick="document.getElementById('csvFile').click()" style="cursor:pointer">Click to select — or drag and drop anywhere on this page</div>
-      <div class="upload-sub">Maximum file size: 50 MB &nbsp;·&nbsp; CSV or CSV.GZ format supported</div>
+      <div class="upload-sub">Maximum file size: 50 MB &nbsp;·&nbsp; CSV and CSV.GZ supported</div>
     </div>
     <div id="fileInfo" style="margin-bottom:12px;font-size:14px;color:#9adfff;display:none"></div>
     <div class="progress" id="progressBar"><div class="progress-fill" id="progressFill"></div></div>
@@ -4745,7 +4745,8 @@ def create_app() -> Flask:
     _highlightZone(false);
     const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
     if (f) {
-      if (!f.name.toLowerCase().endsWith('.csv') && !f.name.toLowerCase().endsWith('.gz')) {
+      const fn = f.name.toLowerCase();
+      if (!fn.endsWith('.csv') && !fn.endsWith('.gz')) {
         setStatus('Please select a CSV or CSV.GZ file', 'err');
         return;
       }
