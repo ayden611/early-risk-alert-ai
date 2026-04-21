@@ -1,1148 +1,542 @@
 from __future__ import annotations
 
 import csv
-import html
 import io
 import json
 import os
 import random
 import smtplib
-from datetime import datetime, timezone
+import sqlite3
+import threading
+import time
+import urllib.parse
+import urllib.request
+from datetime import datetime, timedelta, timezone
 from email.mime.text import MIMEText
+from functools import wraps
 from pathlib import Path
-from typing import Any
+from typing import Any, Dict, List
 
-from flask import Flask, Response, jsonify, redirect, render_template_string, request, send_file
+from werkzeug.security import check_password_hash
+
+from flask import (
+    Flask,
+    Response,
+    jsonify,
+    redirect,
+    render_template_string,
+    request,
+    send_file,
+    send_from_directory,
+    session,
+    url_for,
+)
+
+from era.web.command_center import COMMAND_CENTER_HTML
 
 
 INFO_EMAIL = "info@earlyriskalertai.com"
-FOUNDER_EMAIL = "milton.munroe@earlyriskalertai.com"
 BUSINESS_PHONE = "732-724-7267"
 FOUNDER_NAME = "Milton Munroe"
-FOUNDER_ROLE = "Founder & AI Systems Engineer"
-YOUTUBE_EMBED_URL = "https://www.youtube.com/embed/z4SbeYwwm7k"
-PROD_BASE_URL = "https://early-risk-alert-ai-1.onrender.com"
+FOUNDER_ROLE = "Founder & CEO, Early Risk Alert AI"
+
+PILOT_VERSION = os.getenv("PILOT_VERSION", "stable-pilot-1.0.6")
+PILOT_BUILD_STATE = "Locked Stable Pilot Build"
+INTENDED_USE_STATEMENT = (
+    "Early Risk Alert AI is an HCP-facing decision-support and workflow-support software platform intended to assist authorized health care professionals in identifying patients who may warrant further clinical evaluation, supporting patient prioritization, and improving command-center operational awareness. It does not replace clinician judgment and is not intended to diagnose, direct treatment, or independently trigger escalation."
+)
+PILOT_SUPPORT_LANGUAGE = [
+    "supports monitored patient visibility and supportive review prioritization",
+    "assists health care professionals in prioritizing monitored patients",
+    "provides explainable review-support context",
+    "supports command-center workflow awareness",
+    "helps identify patients who may warrant further review",
+]
+PILOT_SUPPORTED_INPUTS = [
+    "structured patient medical information",
+    "trended vital-sign summaries",
+    "monitored patient context",
+    "workflow state and review context",
+    "approved medical information available to the HCP",
+    "respiratory rate (RR) as monitored context",
+    "temperature as monitored context",
+    "CSV-based retrospective validation pipeline (FHIR R4 and HL7 integration on roadmap)",
+]
+PILOT_SUPPORTED_OUTPUTS = [
+    "patient prioritization support",
+    "review-support context",
+    "explainable contributing factors",
+    "trend and freshness information",
+    "workflow-support visibility",
+    "supportive workflow note for further clinical evaluation",
+]
+PILOT_AVOID_CLAIMS = [
+    "detects deterioration autonomously",
+    "identifies who needs immediate escalation",
+    "predicts who will clinically crash",
+    "directs bedside intervention",
+    "determines which patients need escalation now",
+    "replaces clinician judgment",
+    "issues machine-led treatment direction",
+    "independently triggers escalation",
+]
+PILOT_RELEASE_NOTES = [
+    {
+        "version": "stable-pilot-1.0.6",
+        "date": "2026-04-07",
+        "summary": "Full persistence layer, notifications, /status, /deck, admin CRM, delta explainability, CSV retro validation pipeline. First validation: 81.9% alert reduction, 5.1% FPR vs 28.5% threshold FPR on 500-patient synthetic dataset.",
+        "changes": [
+            "Added SQLite persistence for workflow records and audit log — state survives restarts and deploys.",
+            "Added flat-file trend history persistence per patient per day — trend data survives restarts.",
+            "Added flat-file threshold persistence — unit threshold edits survive restarts.",
+            "Added alert notification system: email via SMTP/SendGrid and SMS via Twilio when patients cross critical threshold.",
+            "Notification cooldown per patient (configurable via ALERT_COOLDOWN_MINUTES env var, default 15 min).",
+            "Added /status public uptime page showing system health without login.",
+            "Added /deck inline pitch deck HTML page — no PDF dependency, always resolves.",
+            "Upgraded admin review page with notes field, follow-up date, and inline email compose per lead.",
+            "Upgraded explainability to show delta from last observation (HR was X, now Y — rising/falling trend).",
+            "Defined all 18 previously missing governance variables.",
+            "Fixed broken api_system_health_legacy alias.",
+            "Added /api/v2/patients clean REST endpoint.",
+            "SESSION_COOKIE_SECURE enforcement via environment variable.",
+        ],
+    },
+    {
+        "version": "stable-pilot-1.0.5a",
+        "date": "2026-04-06",
+        "summary": "RR and temperature monitored-context bundle with restored pilot docs, intake pages, and model card access.",
+        "changes": [
+            "Added Respiratory Rate (RR) and Temperature as monitored context fields in live patient payloads.",
+            "Added RR and Temperature trend history support for the drawer and trend endpoints.",
+            "Kept RR and Temperature framed as monitored context, trend/support inputs, and explainable review basis only.",
+            "Added Andrene Louison (RN) in the advisory and clinical support sections.",
+            "Restored richer pilot-docs sections, polished intake pages, and model card / pilot success guide route access.",
+        ],
+    },
+]
+PILOT_ADVISORY_STRUCTURE = [
+    {
+        "name": "Milton Munroe",
+        "title": FOUNDER_ROLE,
+        "scope": "Product leadership, pilot operations coordination, release control, hospital-facing pilot management, and governance ownership.",
+        "status": "In place",
+    },
+    {
+        "name": "Uche Anosike",
+        "title": "Technical Infrastructure & Security Advisor",
+        "scope": "Infrastructure architecture, platform security posture, environment configuration, backup / recovery planning, patch-management review, and deployment-readiness guidance for controlled pilot environments.",
+        "status": "In place",
+    },
+    {
+        "name": "Andrene Louison",
+        "title": "Clinical Advisor (RN)",
+        "scope": "Clinical workflow review, monitored-context guidance, respiratory-rate and temperature review input, and hospital-facing clinical advisory support.",
+        "status": "In place",
+    },
+]
+PILOT_SUPPORT_OWNERS = [
+    {
+        "area": "Product & Pilot Operations",
+        "owner": "Milton Munroe",
+        "title": FOUNDER_ROLE,
+        "coverage": "Release control, pilot operations coordination, stakeholder communication, and governance ownership.",
+        "status": "In place",
+    },
+    {
+        "area": "Technical Infrastructure & Security",
+        "owner": "Uche Anosike",
+        "title": "Technical Infrastructure & Security Advisor",
+        "coverage": "Infrastructure review, environment hardening guidance, deployment security, backup / recovery planning, and patch-management review.",
+        "status": "In place",
+    },
+    {
+        "area": "Clinical Review",
+        "owner": "Andrene Louison",
+        "title": "Clinical Advisor (RN)",
+        "coverage": "Clinical workflow review, monitored-context guidance, respiratory-rate and temperature review input, and hospital-facing clinical advisory support.",
+        "status": "In place",
+    },
+]
+
+PILOT_LIMITATIONS_TEXT = [
+    "Output is decision support only and not a diagnosis.",
+    "Incomplete or delayed data may affect outputs.",
+    "Clinicians must independently review the patient and current clinical context.",
+    "Hospital policy governs escalation, response timing, and treatment decisions.",
+    "The platform is not intended to diagnose, direct treatment, or independently trigger escalation.",
+]
+
+PILOT_APPROVED_CLAIMS = [
+    "assists authorized health care professionals in identifying patients who may warrant further clinical evaluation",
+    "supports patient prioritization across monitored patients",
+    "provides explainable risk-support context",
+    "supports command-center workflow awareness and operational visibility",
+]
+
+PILOT_BANNED_CLAIMS = [
+    "detects deterioration autonomously",
+    "identifies who needs immediate escalation",
+    "predicts who will clinically crash",
+    "directs bedside intervention",
+]
+
+PILOT_CHANGE_CONTROL = [
+    "Freeze one intended-use statement everywhere in the pilot build.",
+    "Keep claims narrow and supportive rather than directive.",
+    "Make review basis, confidence, limitations, freshness, and unknowns visible for each patient.",
+    "Maintain role scoping, unit scoping, and audit visibility across routes.",
+    "Record each approved pilot change in release notes before deployment.",
+]
+
+PILOT_RISK_REGISTER = [
+    {"id": "R-001", "area": "Claims", "risk": "Autonomous or directive claims could shift the platform toward a higher-risk regulatory posture.", "mitigation": "Freeze one intended-use statement and review UI, sales copy, and decks before each release.", "owner": "Founder/Product", "status": "Open"},
+    {"id": "R-002", "area": "Explainability", "risk": "Users may over-rely on outputs if the basis, confidence, limitations, and unknowns are not visible.", "mitigation": "Keep review basis, freshness, confidence, limitations, and unknowns visible in the patient detail workflow.", "owner": "Engineering", "status": "In Place"},
+    {"id": "R-003", "area": "Workflow Separation", "risk": "Operational buttons could be misread as machine-issued clinical directives.", "mitigation": "Keep acknowledge/assign/escalate/resolve framed as workflow state and user action logging only.", "owner": "Product", "status": "In Place"},
+    {"id": "R-004", "area": "Scope Control", "risk": "Improper access scope could expose records outside the intended role or unit context.", "mitigation": "Maintain role restrictions, unit restrictions, and filtered workflow/audit visibility across routes.", "owner": "Engineering", "status": "In Place"},
+    {"id": "R-005", "area": "Change Control", "risk": "Pilot drift could occur if live edits are made without a stable version marker and release notes.", "mitigation": "Keep one stable pilot version, maintain release notes, and update a simple change log for each approved bundle.", "owner": "Founder/Engineering", "status": "Open"},
+]
+
+PILOT_VNV_LITE = [
+    {"id": "VV-001", "check": "Access context respects login, role, and unit scope.", "method": "Route check across /login, /pilot-access, /api/access-context, and filtered views.", "evidence": "Implemented in current pilot bundle.", "status": "Pass"},
+    {"id": "VV-002", "check": "Workflow actions remain operational and auditable rather than directive.", "method": "Exercise ack/assign/escalate/resolve and confirm workflow/audit separation in API and UI.", "evidence": "Workflow and audit routes updated in current pilot bundle.", "status": "Pass"},
+    {"id": "VV-003", "check": "Explainability fields are visible for patient review.", "method": "Open patient drawer and verify review basis, confidence, limitations, freshness, what changed, and unknowns.", "evidence": "Visible in patient detail drawer.", "status": "Pass"},
+    {"id": "VV-004", "check": "Threshold and trend routes return scoped data without breaking the command center.", "method": "Call /api/thresholds and /api/trends/<patient_id> under pilot roles.", "evidence": "Routes available in current pilot bundle.", "status": "Pass"},
+    {"id": "VV-005", "check": "Pilot governance artifacts are visible from the app.", "method": "Open /pilot-docs and verify intended use, risk register, V&V-lite, and release notes render.", "evidence": "Added in current pilot bundle.", "status": "Pass"},
+    {"id": "VV-006", "check": "All governance variables resolve without NameError.", "method": "Call /api/pilot-governance and confirm 200 with full payload.", "evidence": "All 18 previously missing variables now defined in stable-pilot-1.0.6.", "status": "Pass"},
+]
+
+PILOT_CLAIMS_CONTROL_SHEET = [
+    {"claim": "Assists authorized health care professionals in identifying patients who may warrant further clinical evaluation", "status": "Approved", "category": "Intended use / supportive output"},
+    {"claim": "Supports patient prioritization across monitored patients", "status": "Approved", "category": "Workflow-support / prioritization"},
+    {"claim": "Provides explainable risk-support context", "status": "Approved", "category": "Explainability / transparency"},
+    {"claim": "Detects deterioration autonomously", "status": "Banned", "category": "Automation / device-risk"},
+    {"claim": "Identifies who needs immediate escalation", "status": "Banned", "category": "Urgency-directive / device-risk"},
+    {"claim": "Replaces clinician judgment", "status": "Banned", "category": "Autonomy / liability risk"},
+]
+
+PILOT_DOCUMENT_CONTROL_INDEX = [
+    {"document_name": "Frozen Intended-Use Statement", "version": "1.0"},
+    {"document_name": "Approved Support Language", "version": "1.0"},
+    {"document_name": "Claims Control Sheet", "version": "1.1"},
+    {"document_name": "Complaint / Issue Log", "version": "1.0"},
+    {"document_name": "Issue Escalation Process", "version": "1.0"},
+    {"document_name": "Change Approval Log", "version": "1.0"},
+    {"document_name": "Cybersecurity Summary", "version": "1.0"},
+    {"document_name": "User Provisioning / Deprovisioning Policy", "version": "1.0"},
+    {"document_name": "Data Retention / Deletion / Return Policy", "version": "1.0"},
+    {"document_name": "Pilot Agreement / Pilot Scope Document", "version": "1.0"},
+    {"document_name": "Training / Use Instructions", "version": "1.0"},
+    {"document_name": "Validation Evidence Packet", "version": "1.0"},
+    {"document_name": "Model Card", "version": "1.0"},
+    {"document_name": "Pilot Success Criteria & Workflow Integration Guide", "version": "1.0"},
+]
+
+PILOT_VALIDATION_EVIDENCE = [
+    {"date_tested": "2026-03-25", "tested_by": "Founder/Engineering", "test_case_id": "VAL-001", "expected_result": "Login flow routes to command center", "actual_result": "Pass", "status": "Pass"},
+    {"date_tested": "2026-03-25", "tested_by": "Founder/Engineering", "test_case_id": "VAL-002", "expected_result": "Unit scope restricts patient visibility", "actual_result": "Pass", "status": "Pass"},
+    {"date_tested": "2026-03-26", "tested_by": "Founder/Product", "test_case_id": "VAL-003", "expected_result": "Explainability fields visible in drawer", "actual_result": "Pass", "status": "Pass"},
+    {"date_tested": "2026-03-26", "tested_by": "Founder/Product", "test_case_id": "VAL-004", "expected_result": "Workflow actions log to audit trail", "actual_result": "Pass", "status": "Pass"},
+    {"date_tested": "2026-04-06", "tested_by": "Founder/Product", "test_case_id": "VAL-005", "expected_result": "RR and Temp visible as monitored context", "actual_result": "Pass", "status": "Pass"},
+    {"date_tested": "2026-04-07", "tested_by": "Founder/Engineering", "test_case_id": "VAL-006", "expected_result": "/api/pilot-governance returns 200 with full payload", "actual_result": "Pass", "status": "Pass"},
+    {"date_tested": "2026-04-09", "tested_by": "Founder/Product", "test_case_id": "VAL-013", "expected_result": "Retro upload page renders with schema table and upload zone", "actual_result": "Pass", "status": "Pass"},
+    {"date_tested": "2026-04-09", "tested_by": "Founder/Product", "test_case_id": "VAL-014", "expected_result": "CSV upload parses 500-patient synthetic dataset correctly", "actual_result": "Pass — 12,873 rows, 145 events parsed", "status": "Pass"},
+    {"date_tested": "2026-04-09", "tested_by": "Founder/Product", "test_case_id": "VAL-015", "expected_result": "Retrospective analysis computes sensitivity FPR and alert reduction vs threshold", "actual_result": "Pass — ERA 23.4% sens, 5.1% FPR, 81.9% alert reduction vs 28.5% threshold FPR", "status": "Pass"},
+    {"date_tested": "2026-04-09", "tested_by": "Founder/Product", "test_case_id": "VAL-016", "expected_result": "Patient summary table renders top 20 by peak risk with event flags", "actual_result": "Pass", "status": "Pass"},
+]
+
+# ---------------------------------------------------------------------------
+# GOVERNANCE DOCUMENTS — previously missing, now fully defined
+# ---------------------------------------------------------------------------
+
+PILOT_COMPLAINT_ISSUE_LOG = [
+    {
+        "id": "ISSUE-TEMPLATE",
+        "date_opened": "",
+        "source": "Hospital / Pilot User / Internal",
+        "severity": "Low / Medium / High",
+        "owner": "Founder/Product",
+        "investigation_summary": "Describe the complaint or issue here.",
+        "corrective_action": "Describe corrective action taken.",
+        "escalation_path": "info@earlyriskalertai.com → Clinical Advisor → Technical Advisor",
+        "closure_date": "",
+        "status": "Template — populate before pilot activation",
+    }
+]
+
+PILOT_ESCALATION_PROCESS = [
+    {
+        "step": 1,
+        "action": "Pilot user logs issue in complaint / issue log.",
+        "owner": "Pilot User / Hospital Site Sponsor",
+        "timeline": "Same business day",
+    },
+    {
+        "step": 2,
+        "action": "Founder/Product reviews severity and assigns corrective action owner.",
+        "owner": "Milton Munroe",
+        "timeline": "Within 1 business day",
+    },
+    {
+        "step": 3,
+        "action": "Technical Advisor reviews infrastructure or security issues.",
+        "owner": "Uche Anosike",
+        "timeline": "Within 2 business days for non-critical",
+    },
+    {
+        "step": 4,
+        "action": "Clinical Advisor reviews clinical workflow or monitored-context issues.",
+        "owner": "Andrene Louison (RN)",
+        "timeline": "Within 2 business days",
+    },
+    {
+        "step": 5,
+        "action": "Resolution documented in complaint log with closure date and corrective action summary.",
+        "owner": "Founder/Product",
+        "timeline": "Before pilot resumes if safety-critical",
+    },
+]
+
+PILOT_CHANGE_APPROVAL_LOG = [
+    {
+        "version": "stable-pilot-1.0.6",
+        "approver": "Milton Munroe",
+        "approval_date": "2026-04-07",
+        "reason": "Full persistence layer, notifications, /status page, /deck page, admin CRM upgrades, delta explainability, and governance completeness pass.",
+        "what_changed": "SQLite workflow/audit persistence. Flat-file trend and threshold persistence. Email/SMS alert notifications with cooldown. /status public page. /deck inline page. Admin notes, follow-up date, email compose. Delta explainability. 18 governance variables defined. API alias fixed.",
+        "impact_assessment": "Low-to-medium risk. Persistence is additive — no changes to patient risk scoring or clinical output framing. Notifications are opt-in via env vars. All workflow framing unchanged.",
+        "release_status": "Released",
+        "linked_notes": "stable-pilot-1.0.6 release notes",
+    },
+    {
+        "version": "stable-pilot-1.0.5a",
+        "approver": "Milton Munroe",
+        "approval_date": "2026-04-06",
+        "reason": "RR and temperature monitored-context expansion with advisory structure update.",
+        "what_changed": "RR and Temp added as monitored context. Andrene Louison (RN) added to advisory structure. Pilot docs restored.",
+        "impact_assessment": "Low risk — RR and Temp framed as monitored context only, not diagnostic triggers.",
+        "release_status": "Released",
+        "linked_notes": "stable-pilot-1.0.5a release notes",
+    },
+]
+
+PILOT_CYBERSECURITY_SUMMARY = {
+    "access_control": "Session-based authentication with role and unit scoping. Admin password hashed via Werkzeug. SESSION_COOKIE_HTTPONLY and SESSION_COOKIE_SAMESITE=Lax enforced. SESSION_COOKIE_SECURE enabled in production via environment variable.",
+    "password_handling": "Admin passwords are stored as environment variables. Plain-text fallback is supported only for development. Production deployments should use ADMIN_PASSWORD_HASH (Werkzeug hash).",
+    "backup_restore_posture": "Application state is in-memory for the pilot. Lead pipeline data is persisted in JSONL files under ERA_DATA_DIR. Restore evidence should be documented before pilot activation.",
+    "patching_approach": "Dependencies are managed via pip. Regular patching of Flask, Werkzeug, and supporting libraries is expected before pilot activation and on a quarterly basis.",
+    "vulnerability_handling": "Vulnerabilities discovered during the pilot should be reported to info@earlyriskalertai.com and reviewed by the Technical Infrastructure & Security Advisor (Uche Anosike) within 2 business days.",
+    "incident_response_contact": "info@earlyriskalertai.com — Milton Munroe (Founder/Product) or Uche Anosike (Technical Infrastructure & Security Advisor).",
+    "pilot_pause_breach_response": "If a suspected breach or data exposure is identified, the pilot should be paused, the hospital site sponsor notified, and the Technical Advisor engaged to review infrastructure posture before resuming.",
+    "secure_configuration": "SECRET_KEY, ADMIN_PASSWORD_HASH, ADMIN_PASSWORD, and ALLOWED_ADMIN_EMAILS are managed via environment variables. No secrets are hardcoded in the production bundle.",
+}
+
+PILOT_SECURITY_PROGRAM_DOCUMENTS = [
+    {"document": "Cybersecurity Summary", "status": "In place", "last_reviewed": "2026-04-07"},
+    {"document": "MFA / Admin Access Evidence Log", "status": "Documented", "last_reviewed": "2026-04-07"},
+    {"document": "Backup / Restore Evidence Log", "status": "Documented", "last_reviewed": "2026-04-07"},
+    {"document": "Patch Log", "status": "Documented", "last_reviewed": "2026-04-07"},
+    {"document": "Access Review Log", "status": "Pass", "last_reviewed": "2026-04-07"},
+    {"document": "Incident Response Contact Path", "status": "In place", "last_reviewed": "2026-04-07"},
+]
+
+PILOT_INSURANCE_READINESS_CONTROLS = [
+    {"control": "Intended-use statement frozen and consistent across all materials", "status": "In place"},
+    {"control": "Claims control sheet with approved and banned claims", "status": "In place"},
+    {"control": "Output framed as decision support only — not diagnostic", "status": "In place"},
+    {"control": "Clinician oversight required — platform does not act autonomously", "status": "In place"},
+    {"control": "Audit trail for all workflow actions", "status": "In place"},
+    {"control": "Role-based access control with unit scoping", "status": "In place"},
+    {"control": "Cybersecurity summary documented", "status": "In place"},
+    {"control": "Complaint and issue handling process documented", "status": "In place"},
+    {"control": "Validation evidence packet with test records", "status": "In place"},
+]
+
+PILOT_MFA_ACCESS_EVIDENCE_LOG = [
+    {
+        "status": "Documented",
+        "last_reviewed": "2026-04-07",
+        "evidence": "Administrative access review and pilot baseline recorded. Admin email restriction via ALLOWED_ADMIN_EMAILS env var. Password hash enforcement via ADMIN_PASSWORD_HASH. SESSION_COOKIE_SECURE enforced in production.",
+        "implementation": "Admin password is validated against ADMIN_PASSWORD_HASH (Werkzeug). SESSION_COOKIE_HTTPONLY=True, SAMESITE=Lax, SECURE enabled via env var in production.",
+        "notes": "MFA at the application layer is not currently implemented. Hospital VPN or SSO integration should be considered for full production deployment.",
+    }
+]
+
+PILOT_BACKUP_RESTORE_LOG = [
+    {
+        "status": "Documented",
+        "last_tested": "2026-04-07",
+        "notes": "Application state is in-memory. Lead pipeline JSONL files are the primary persistent data artifact. Render cloud deployment supports automatic restart. Manual backup of JSONL files from ERA_DATA_DIR is recommended before pilot activation. Restore evidence should continue to be tracked before pilot goes live.",
+        "restore_path": "Copy ERA_DATA_DIR JSONL files to backup storage. Re-deploy application and restore JSONL files to ERA_DATA_DIR on the target instance.",
+    }
+]
+
+PILOT_PATCH_LOG = [
+    {
+        "status": "Documented",
+        "last_patched": "2026-04-07",
+        "notes": "Flask, Werkzeug, and supporting Python dependencies should be reviewed for CVEs before pilot activation. Render deployment handles OS-level patching. Application-level dependency patching is managed manually.",
+        "next_review": "Quarterly or before each major pilot phase",
+    }
+]
+
+PILOT_ACCESS_REVIEW_LOG = [
+    {
+        "status": "Pass",
+        "last_reviewed": "2026-04-07",
+        "notes": "PILOT_ACCOUNTS dictionary reviewed. Role and unit assignments verified. ALLOWED_ADMIN_EMAILS env var controls admin access. Pilot account deprovisioning is manual — remove from PILOT_ACCOUNTS and redeploy.",
+    }
+]
+
+PILOT_TABLETOP_LOG = [
+    {
+        "status": "Pending",
+        "exercise_date": "",
+        "notes": "Tabletop exercise for incident response and pilot pause scenario should be completed before pilot activation. Scenario should cover: suspected breach, patient data exposure, platform unavailability, and clinical escalation path if platform goes offline.",
+        "participants": "Milton Munroe, Uche Anosike, Hospital Site Sponsor (to be named)",
+    }
+]
+
+PILOT_TRAINING_ACK_LOG = [
+    {
+        "status": "Updated",
+        "ack_date": "2026-04-07",
+        "notes": "Training materials updated in stable-pilot-1.0.6. Pilot user instructions updated to reflect RR and Temperature as monitored context. New pilot users must review training materials before accessing the command center. Training acknowledgment records should be collected before pilot activation.",
+        "training_materials": "/pilot-docs training section, Pilot Success Guide (/pilot-success-guide), Model Card (/model-card)",
+    }
+]
+
+PILOT_SITE_PACKET_TEMPLATE = [
+    {"section": "Hospital / Site Name", "summary": "Enter the hospital or health system name for this pilot site.", "status": "Fill before pilot"},
+    {"section": "Site Sponsor / Clinical Champion", "summary": "Name and title of the hospital-side pilot sponsor.", "status": "Fill before pilot"},
+    {"section": "Pilot Scope", "summary": "Units, patient population, and access scope for this site.", "status": "Fill before pilot"},
+    {"section": "Pilot Start Date", "summary": "Agreed pilot start date and expected duration.", "status": "Fill before pilot"},
+    {"section": "Named Pilot Users", "summary": "List of authorized pilot users with roles and unit assignments.", "status": "Fill before pilot"},
+    {"section": "IT / Security Contact", "summary": "Hospital IT or security contact for deployment review.", "status": "Fill before pilot"},
+    {"section": "Data Governance Agreement", "summary": "Confirm hospital data governance and pilot data handling agreement is signed.", "status": "Fill before pilot"},
+    {"section": "Training Completion", "summary": "Confirm all pilot users have reviewed training materials.", "status": "Fill before pilot"},
+    {"section": "Escalation Path", "summary": "Hospital-side escalation contact for clinical and operational issues.", "status": "Fill before pilot"},
+    {"section": "Pilot Closeout Date", "summary": "Agreed closeout date and data deletion / return timeline.", "status": "Fill before pilot"},
+]
+
+PILOT_USER_PROVISIONING_POLICY = {
+    "who_can_create_users": "Founder/Product (Milton Munroe) is the only authorized account provisioner during the controlled pilot phase.",
+    "who_can_remove_users": "Founder/Product removes users by removing them from PILOT_ACCOUNTS and redeploying the application.",
+    "unit_scoping": "Each user is assigned an assigned_unit at provisioning. Admin users retain all-unit visibility. Non-admin users are restricted to their assigned unit.",
+    "access_review_frequency": "Access is reviewed before each new pilot phase and at least quarterly.",
+    "access_revocation_timeline": "Access should be revoked within 1 business day of a pilot user leaving the organization or the pilot ending.",
+    "pilot_end_deprovisioning": "All pilot accounts are removed from PILOT_ACCOUNTS at pilot closeout. JSONL data is archived or deleted per the data retention policy.",
+}
+
+PILOT_DATA_RETENTION_POLICY = {
+    "what_is_stored": "Lead pipeline submissions (hospital demo, executive walkthrough, investor intake) are stored as JSONL files in ERA_DATA_DIR. In-memory patient simulation data is not persisted between restarts.",
+    "retention_period": "Lead pipeline data is retained for the duration of the pilot and commercial development phase. Hospital pilot data should follow the hospital's data governance agreement.",
+    "deletion_and_return": "At pilot closeout, lead pipeline JSONL files can be exported via /admin/export.csv, then deleted from the deployment environment. Patient simulation data is cleared on restart.",
+    "pilot_closeout": "At closeout, delete JSONL files from ERA_DATA_DIR, revoke all pilot user accounts, and confirm with the hospital site sponsor that no hospital data remains in the system.",
+    "controlled_pilot_posture": "No real patient data is stored in the current pilot simulation environment. All patient data displayed is simulated for demonstration purposes.",
+}
+
+PILOT_SCOPE_DOCUMENT = {
+    "pilot_objective": "Controlled evaluation of Early Risk Alert AI's HCP-facing decision-support and workflow-support platform in a hospital or health system environment.",
+    "recommended_first_step": "Retrospective validation on de-identified historical data as the most conservative hospital entry point.",
+    "prospective_pilot_scope": "Tightly scoped prospective pilot with named users, defined units, and a clear start and end date.",
+    "success_metrics": "See /pilot-success-guide for primary success metrics, safety and compliance metrics, governance metrics, and success thresholds.",
+    "exit_criteria": "Pilot exits when success thresholds are met, the agreed pilot duration ends, or a safety or compliance issue requires pause or closeout.",
+    "governance_requirements": "Named site sponsor, trained pilot users, signed data governance agreement, completed tabletop exercise, and documented access review before activation.",
+    "platform_scope": "The platform is scoped to HCP-facing decision-support and workflow-support only. It is not a medical device, does not diagnose, does not direct treatment, and does not independently trigger escalation.",
+}
+
+PILOT_TRAINING_USE_INSTRUCTIONS = [
+    {
+        "section": "Intended Use",
+        "instruction": "Early Risk Alert AI is intended to assist authorized health care professionals in identifying patients who may warrant further clinical evaluation, supporting patient prioritization, and improving command-center operational awareness. It does not replace clinician judgment.",
+    },
+    {
+        "section": "Command Center Navigation",
+        "instruction": "The command center displays monitored patients sorted by review priority. Each patient card shows vitals, review score, and workflow status. Click Details or the ECG wave to open the patient drawer.",
+    },
+    {
+        "section": "Patient Drawer",
+        "instruction": "The patient drawer shows vitals, explainable review basis, workflow status, trend history, and supportive review notes. Values are displayed as monitored context for authorized HCP review — not as autonomous determinations.",
+    },
+    {
+        "section": "Workflow Actions",
+        "instruction": "ACK, Assign, Escalate, and Resolve are workflow state controls, not clinical directives. Each action is logged to the audit trail. Hospital policy governs escalation timing, response, and treatment decisions.",
+    },
+    {
+        "section": "Respiratory Rate and Temperature",
+        "instruction": "RR and Temperature are displayed as monitored context for authorized HCP review. Reference ranges (RR 12–20, Temp 97.6–100.4°F) are shown for context only. The platform does not make autonomous determinations based on these values.",
+    },
+    {
+        "section": "Threshold Controls",
+        "instruction": "Admin users can configure SpO₂, HR, and SBP thresholds by unit. Select a single unit from the Unit Filter to enable threshold editing. Threshold changes take effect immediately for the current session.",
+    },
+    {
+        "section": "Unit Scoping",
+        "instruction": "Non-admin users are restricted to their assigned unit. Admin users have full hospital-wide visibility. If you believe your access scope is incorrect, contact the pilot administrator.",
+    },
+    {
+        "section": "Escalation and Support",
+        "instruction": "For product or platform issues during the pilot, contact info@earlyriskalertai.com. For clinical escalation, follow your hospital's escalation protocol — the platform does not replace emergency response systems.",
+    },
+]
 
 
-MAIN_HTML = r"""
+PILOT_ACCOUNTS = {
+    "admin@erapilot.com": {"full_name": "ERA Pilot Admin", "email": "admin@erapilot.com", "user_role": "admin", "assigned_unit": "all"},
+    "pilot@earlyriskalertai.com": {"full_name": "Early Risk Alert AI Pilot User", "email": "pilot@earlyriskalertai.com", "user_role": "operator", "assigned_unit": "all"},
+}
+
+DEFAULT_THRESHOLDS: Dict[str, Dict[str, float]] = {
+    "icu": {"spo2_low": 92, "hr_high": 120, "sbp_high": 160},
+    "telemetry": {"spo2_low": 93, "hr_high": 110, "sbp_high": 150},
+    "stepdown": {"spo2_low": 93, "hr_high": 115, "sbp_high": 155},
+    "ward": {"spo2_low": 94, "hr_high": 110, "sbp_high": 150},
+    "rpm": {"spo2_low": 94, "hr_high": 105, "sbp_high": 145},
+    "all": {"spo2_low": 93, "hr_high": 112, "sbp_high": 152},
+}
+VALID_UNITS = {"all", "icu", "telemetry", "stepdown", "ward", "rpm"}
+ROLE_ACTIONS: Dict[str, set[str]] = {
+    "viewer": {"view"},
+    "operator": {"view", "ack", "assign"},
+    "physician": {"view", "ack", "assign", "escalate", "resolve"},
+    "admin": {"view", "ack", "assign", "escalate", "resolve", "admin"},
+}
+
+LOGIN_HTML = """
 <!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <title>Early Risk Alert AI</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <style>
-    :root{
-      --bg:#07101c;
-      --bg2:#0c1425;
-      --panel:#101a2d;
-      --panel2:#13203a;
-      --line:rgba(255,255,255,.08);
-      --line2:rgba(255,255,255,.05);
-      --text:#eef4ff;
-      --muted:#a8bddc;
-      --blue:#7aa2ff;
-      --blue2:#5bd4ff;
-      --green:#38d39f;
-      --amber:#f4bd6a;
-      --red:#ff667d;
-      --shadow:0 20px 60px rgba(0,0,0,.30);
-      --radius:24px;
-      --max:1360px;
-    }
-
-    *{box-sizing:border-box}
-    html{scroll-behavior:smooth}
-    body{
-      margin:0;
-      font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-      color:var(--text);
-      background:
-        radial-gradient(circle at top left, rgba(122,162,255,.16), transparent 22%),
-        radial-gradient(circle at 82% 12%, rgba(91,212,255,.10), transparent 20%),
-        linear-gradient(180deg, var(--bg), var(--bg2));
-      overflow-x:hidden;
-    }
-    a{text-decoration:none;color:inherit}
-    img{max-width:100%;display:block}
-    .shell{max-width:var(--max);margin:0 auto;padding:22px 16px 56px}
-    .nav{
-      position:sticky;top:0;z-index:1000;
-      background:rgba(7,16,28,.82);
-      backdrop-filter:blur(14px);
-      border-bottom:1px solid var(--line);
-    }
-    .nav-inner{
-      max-width:var(--max);
-      margin:0 auto;
-      padding:14px 16px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:18px;
-      flex-wrap:wrap;
-    }
-    .brand-kicker{
-      font-size:11px;font-weight:900;letter-spacing:.16em;text-transform:uppercase;color:#8cd7ef;
-    }
-    .brand-title{
-      font-size:clamp(26px,3vw,40px);font-weight:1000;line-height:.95;letter-spacing:-.05em;
-    }
-    .brand-sub{
-      font-size:14px;color:var(--muted);font-weight:800;
-    }
-    .nav-links{
-      display:flex;align-items:center;gap:16px;flex-wrap:wrap;
-    }
-    .nav-links a{font-size:14px;font-weight:900}
-    .btn{
-      display:inline-flex;align-items:center;justify-content:center;gap:8px;
-      padding:13px 18px;border-radius:16px;font-size:14px;font-weight:900;cursor:pointer;
-      border:1px solid transparent;
-      transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease, opacity .18s ease;
-    }
-    .btn:hover{transform:translateY(-2px)}
-    .btn.primary{
-      background:linear-gradient(135deg,var(--blue),var(--blue2));
-      color:#07101c;box-shadow:0 12px 30px rgba(91,212,255,.22);
-    }
-    .btn.secondary{
-      background:rgba(255,255,255,.04);
-      color:var(--text);border-color:var(--line);
-    }
-    .hero{
-      position:relative;overflow:hidden;border:1px solid var(--line);border-radius:32px;
-      box-shadow:var(--shadow);
-      background:
-        linear-gradient(180deg, rgba(10,18,31,.26), rgba(7,16,28,.78)),
-        url('/static/images/ai-command-center.jpg') center/cover no-repeat;
-      min-height:720px;
-    }
-    .hero::before{
-      content:"";position:absolute;inset:0;
-      background:
-        radial-gradient(circle at 50% 10%, rgba(91,212,255,.24), transparent 18%),
-        linear-gradient(110deg, transparent 35%, rgba(255,255,255,.06) 50%, transparent 65%);
-      animation:heroSweep 9s linear infinite;
-      pointer-events:none;
-    }
-    @keyframes heroSweep{
-      0%{transform:translateX(-40px)}
-      50%{transform:translateX(40px)}
-      100%{transform:translateX(-40px)}
-    }
-    .hero-inner{
-      position:relative;z-index:2;min-height:720px;display:flex;align-items:flex-end;padding:36px;
-    }
-    .hero-grid{
-      width:100%;display:grid;grid-template-columns:1.08fr .92fr;gap:18px;align-items:end;
-    }
-    .glass{
-      border:1px solid var(--line);
-      background:
-        linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.018)),
-        linear-gradient(180deg, rgba(12,22,38,.76), rgba(9,16,30,.88));
-      border-radius:28px;box-shadow:0 16px 42px rgba(0,0,0,.24);backdrop-filter:blur(14px);
-    }
-    .hero-copy{padding:28px}
-    .hero-kicker{
-      font-size:11px;font-weight:900;letter-spacing:.16em;text-transform:uppercase;color:#8fd7ff;margin-bottom:10px;
-    }
-    .hero-copy h1{
-      margin:0 0 14px;font-size:clamp(40px,6vw,82px);line-height:.92;letter-spacing:-.06em;font-weight:1000;max-width:760px;text-wrap:balance;
-    }
-    .hero-copy p{
-      margin:0;color:#d0ddf0;font-size:18px;line-height:1.68;max-width:760px;
-    }
-    .hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:22px}
-    .hero-mini-grid{margin-top:20px;display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
-    .hero-mini{
-      border:1px solid var(--line2);border-radius:18px;padding:14px;background:rgba(255,255,255,.03);
-    }
-    .hero-mini .k{
-      font-size:11px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:#8fd7ff;margin-bottom:8px;
-    }
-    .hero-mini .v{font-size:16px;font-weight:1000;line-height:1.1}
-    .demo-card{overflow:hidden}
-    .demo-stage{
-      position:relative;aspect-ratio:16/9;min-height:360px;
-      background:
-        linear-gradient(180deg, rgba(0,0,0,.12), rgba(0,0,0,.40)),
-        url('/static/images/ai-command-center.jpg') center/cover no-repeat;
-    }
-    .demo-badge{
-      position:absolute;top:18px;left:18px;z-index:3;padding:9px 13px;border-radius:999px;
-      background:rgba(7,16,28,.62);border:1px solid var(--line);color:#eaf3ff;
-      font-size:11px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;backdrop-filter:blur(12px);
-    }
-    .demo-play{
-      position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:3;
-    }
-    .demo-play-btn{
-      width:96px;height:96px;border-radius:50%;border:1px solid rgba(255,255,255,.18);
-      background:rgba(7,16,28,.58);backdrop-filter:blur(12px);
-      box-shadow:0 20px 50px rgba(0,0,0,.32), 0 0 34px rgba(91,212,255,.18);
-      display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;
-    }
-    .demo-play-btn::before{
-      content:"";position:absolute;inset:-14px;border-radius:50%;
-      border:1px solid rgba(91,212,255,.20);animation:ring 2.8s ease-out infinite;
-    }
-    @keyframes ring{
-      0%{transform:scale(.7);opacity:1}
-      100%{transform:scale(1.35);opacity:0}
-    }
-    .demo-play-btn svg{width:34px;height:34px;margin-left:5px;fill:#eef4ff}
-    .demo-caption{
-      position:absolute;left:0;right:0;bottom:0;z-index:2;padding:22px;
-      background:linear-gradient(180deg, transparent, rgba(7,16,28,.82));
-    }
-    .demo-caption h3{
-      margin:0 0 8px;font-size:30px;line-height:1;font-weight:1000;letter-spacing:-.04em;
-    }
-    .demo-caption p{margin:0;color:#d4e2f3;font-size:15px;line-height:1.6}
-    .demo-bottom{padding:18px;border-top:1px solid var(--line)}
-    .demo-note{color:#bdd0eb;font-size:14px;line-height:1.55;margin-bottom:14px}
-    .demo-btns{display:flex;gap:10px;flex-wrap:wrap}
-    .route-grid{
-      margin-top:18px;
-      display:grid;
-      grid-template-columns:repeat(3,1fr);
-      gap:14px;
-    }
-    .route-card{
-      border:1px solid var(--line);
-      border-radius:24px;
-      background:
-        linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.018)),
-        linear-gradient(180deg, rgba(12,22,38,.76), rgba(9,16,30,.88));
-      box-shadow:0 16px 42px rgba(0,0,0,.24);
-      padding:20px;
-    }
-    .route-label{
-      font-size:11px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:#8fd7ff;
-    }
-    .route-card h3{
-      margin:10px 0 10px;font-size:30px;line-height:1;font-weight:1000;letter-spacing:-.04em;
-    }
-    .route-card p{
-      margin:0;color:#d0ddf0;font-size:15px;line-height:1.64;
-    }
-    .route-card .route-actions{
-      margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;
-    }
-    .section{
-      margin-top:22px;
-      border:1px solid var(--line);
-      border-radius:28px;
-      background:
-        linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.018)),
-        linear-gradient(180deg, rgba(12,22,38,.76), rgba(9,16,30,.88));
-      box-shadow:0 16px 42px rgba(0,0,0,.24);
-      padding:26px;
-    }
-    .section-kicker{
-      font-size:11px;font-weight:900;letter-spacing:.16em;text-transform:uppercase;color:#8fd7ff;margin-bottom:10px;
-    }
-    .section h2{
-      margin:0 0 10px;font-size:clamp(34px,5vw,58px);line-height:.95;letter-spacing:-.05em;font-weight:1000;
-    }
-    .section p{
-      margin:0;color:#d0ddf0;font-size:16px;line-height:1.7;max-width:980px;
-    }
-    .list{
-      margin-top:18px;display:grid;grid-template-columns:repeat(3,1fr);gap:14px;
-    }
-    .mini{
-      border:1px solid var(--line2);border-radius:18px;padding:16px;background:rgba(255,255,255,.03);
-    }
-    .mini .k{
-      font-size:11px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:#8fd7ff;margin-bottom:10px;
-    }
-    .mini .v{
-      display:block;font-size:20px;font-weight:1000;line-height:1.1;letter-spacing:-.03em;
-    }
-    .mini p{
-      margin:10px 0 0;color:#c7d8ef;font-size:14px;line-height:1.6;
-    }
-
-    .ticker-wrap{
-      margin-top:18px;
-      margin-bottom:18px;
-      border:1px solid rgba(255,255,255,.08);
-      border-radius:18px;
-      overflow:hidden;
-      background:
-        linear-gradient(90deg, rgba(91,212,255,.08), rgba(122,162,255,.04), rgba(255,255,255,.02)),
-        rgba(8,16,29,.92);
-      box-shadow:0 12px 28px rgba(0,0,0,.18);
-    }
-    .ticker-head{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      padding:12px 16px;
-      border-bottom:1px solid rgba(255,255,255,.06);
-    }
-    .ticker-title{
-      font-size:11px;
-      font-weight:1000;
-      letter-spacing:.16em;
-      text-transform:uppercase;
-      color:#9fdcff;
-    }
-    .ticker-live{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      font-size:11px;
-      font-weight:900;
-      letter-spacing:.12em;
-      text-transform:uppercase;
-      color:#dff7ff;
-    }
-    .ticker-live::before{
-      content:"";
-      width:8px;
-      height:8px;
-      border-radius:999px;
-      background:#38d39f;
-      box-shadow:0 0 0 0 rgba(56,211,159,.55);
-      animation:livePulse 1.8s infinite;
-    }
-    @keyframes livePulse{
-      0%{box-shadow:0 0 0 0 rgba(56,211,159,.55)}
-      70%{box-shadow:0 0 0 12px rgba(56,211,159,0)}
-      100%{box-shadow:0 0 0 0 rgba(56,211,159,0)}
-    }
-    .ticker-track{
-      position:relative;
-      overflow:hidden;
-      white-space:nowrap;
-      padding:14px 0;
-    }
-    .ticker-move{
-      display:inline-flex;
-      gap:14px;
-      padding-left:100%;
-      animation:tickerMove 24s linear infinite;
-    }
-    @keyframes tickerMove{
-      from{transform:translateX(0)}
-      to{transform:translateX(-100%)}
-    }
-    .ticker-pill{
-      display:inline-flex;
-      align-items:center;
-      gap:10px;
-      padding:10px 14px;
-      border-radius:999px;
-      border:1px solid rgba(255,255,255,.08);
-      background:rgba(255,255,255,.04);
-      color:#edf4ff;
-      font-size:13px;
-      font-weight:900;
-    }
-    .ticker-pill .dot{
-      width:9px;
-      height:9px;
-      border-radius:999px;
-      display:inline-block;
-    }
-    .ticker-pill .dot.critical{background:#ff667d;box-shadow:0 0 10px rgba(255,102,125,.45)}
-    .ticker-pill .dot.high{background:#f4bd6a;box-shadow:0 0 10px rgba(244,189,106,.35)}
-    .ticker-pill .dot.stable{background:#38d39f;box-shadow:0 0 10px rgba(56,211,159,.35)}
-
-    .icu-wall{
-      display:grid;
-      grid-template-columns:1.15fr .85fr;
-      gap:16px;
-      margin-top:18px;
-      margin-bottom:18px;
-    }
-    .icu-main{
-      display:grid;
-      gap:14px;
-    }
-    .icu-monitor{
-      border:1px solid rgba(255,255,255,.10);
-      border-radius:22px;
-      padding:16px;
-      background:
-        radial-gradient(circle at top right, rgba(91,212,255,.08), transparent 28%),
-        linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015)),
-        #08101d;
-      box-shadow:
-        inset 0 0 0 1px rgba(255,255,255,.02),
-        0 12px 30px rgba(0,0,0,.22),
-        0 0 50px rgba(91,212,255,.05);
-    }
-    .critical-monitor{border-color:rgba(255,107,107,.26)}
-    .watch-monitor{border-color:rgba(247,190,104,.24)}
-    .icu-head{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      margin-bottom:12px;
-    }
-    .icu-kicker{
-      font-size:11px;
-      font-weight:900;
-      letter-spacing:.14em;
-      text-transform:uppercase;
-      color:#9eb4d6;
-    }
-    .icu-title{
-      margin-top:6px;
-      font-size:22px;
-      font-weight:1000;
-      line-height:1;
-      color:#eef4ff;
-    }
-    .icu-state{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      min-width:92px;
-      padding:8px 10px;
-      border-radius:999px;
-      font-size:12px;
-      font-weight:900;
-      letter-spacing:.05em;
-      text-transform:uppercase;
-    }
-    .icu-state.critical{
-      color:#ffd8d8;
-      background:rgba(255,107,107,.16);
-      border:1px solid rgba(255,107,107,.26);
-    }
-    .icu-state.warning{
-      color:#ffe7bf;
-      background:rgba(247,190,104,.16);
-      border:1px solid rgba(247,190,104,.24);
-    }
-    .icu-state.stable{
-      color:#dfffea;
-      background:rgba(91,211,141,.14);
-      border:1px solid rgba(91,211,141,.24);
-    }
-    .icu-screen{
-      position:relative;
-      height:240px;
-      border-radius:18px;
-      overflow:hidden;
-      border:1px solid rgba(255,255,255,.06);
-      background:#050b14;
-    }
-    .screen-grid{
-      position:absolute;
-      inset:0;
-      background:
-        linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px),
-        linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.01));
-      background-size:22px 22px, 22px 22px, auto;
-      pointer-events:none;
-    }
-    .ecg-svg{
-      position:absolute;
-      inset:0;
-      width:100%;
-      height:100%;
-    }
-    .ecg-path{
-      fill:none;
-      stroke-width:4;
-      stroke-linecap:round;
-      stroke-linejoin:round;
-      stroke-dasharray:18 8;
-      animation:ecgMove 1.8s linear infinite;
-      filter:drop-shadow(0 0 10px currentColor);
-    }
-    .critical-path{
-      stroke:#ff6b6b;
-      color:#ff6b6b;
-    }
-    .warning-path{
-      stroke:#f7be68;
-      color:#f7be68;
-    }
-    @keyframes ecgMove{
-      from{stroke-dashoffset:0}
-      to{stroke-dashoffset:-52}
-    }
-    .screen-readouts{
-      position:absolute;
-      left:14px;
-      right:14px;
-      bottom:14px;
-      display:grid;
-      grid-template-columns:repeat(4,minmax(0,1fr));
-      gap:10px;
-    }
-    .readout{
-      border:1px solid rgba(255,255,255,.08);
-      border-radius:14px;
-      padding:12px 10px;
-      background:rgba(255,255,255,.03);
-      backdrop-filter:blur(4px);
-    }
-    .r-k{
-      display:block;
-      font-size:11px;
-      letter-spacing:.10em;
-      text-transform:uppercase;
-      color:#9eb4d6;
-      font-weight:900;
-    }
-    .r-v{
-      display:block;
-      margin-top:8px;
-      font-size:22px;
-      line-height:1;
-      font-weight:1000;
-      color:#eef4ff;
-    }
-    .icu-side-rail{
-      display:grid;
-      gap:12px;
-    }
-    .rail-card{
-      border:1px solid rgba(255,255,255,.08);
-      border-radius:18px;
-      padding:18px;
-      background:
-        linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02)),
-        linear-gradient(180deg, rgba(12,22,38,.76), rgba(9,16,30,.88));
-    }
-    .rail-k{
-      font-size:12px;
-      letter-spacing:.14em;
-      text-transform:uppercase;
-      color:#9eb4d6;
-      font-weight:900;
-    }
-    .rail-v{
-      font-size:34px;
-      font-weight:1000;
-      line-height:1;
-      margin-top:10px;
-      color:#ecf4ff;
-    }
-    .rail-sub{
-      margin-top:8px;
-      font-size:13px;
-      color:#c6d7ef;
-      line-height:1.5;
-    }
-
-    .proof-strip{
-      display:grid;
-      grid-template-columns:repeat(4,minmax(0,1fr));
-      gap:12px;
-      margin-top:18px;
-    }
-    .proof-card{
-      border:1px solid rgba(255,255,255,.08);
-      border-radius:18px;
-      padding:16px;
-      background:
-        linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015)),
-        rgba(8,16,29,.82);
-      box-shadow:0 12px 28px rgba(0,0,0,.16);
-    }
-    .proof-k{
-      font-size:11px;
-      font-weight:900;
-      letter-spacing:.14em;
-      text-transform:uppercase;
-      color:#9fdcff;
-    }
-    .proof-v{
-      margin-top:10px;
-      font-size:28px;
-      line-height:1;
-      font-weight:1000;
-      color:#eef4ff;
-    }
-    .proof-sub{
-      margin-top:8px;
-      color:#c6d7ef;
-      font-size:13px;
-      line-height:1.5;
-    }
-
-    .status-legend{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      margin-top:16px;
-    }
-    .status-chip{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      padding:10px 14px;
-      border-radius:999px;
-      font-size:12px;
-      font-weight:900;
-      letter-spacing:.06em;
-      text-transform:uppercase;
-      border:1px solid rgba(255,255,255,.08);
-      background:rgba(255,255,255,.03);
-      color:#eef4ff;
-    }
-    .status-chip .s-dot{
-      width:9px;
-      height:9px;
-      border-radius:999px;
-    }
-    .status-chip.new .s-dot{background:#7aa2ff;box-shadow:0 0 10px rgba(122,162,255,.45)}
-    .status-chip.contacted .s-dot{background:#f4bd6a;box-shadow:0 0 10px rgba(244,189,106,.35)}
-    .status-chip.closed .s-dot{background:#38d39f;box-shadow:0 0 10px rgba(56,211,159,.35)}
-
-    .stream-list{
-      display:grid;
-      gap:10px;
-      margin-top:18px;
-    }
-    .stream-item{
-      border:1px solid rgba(255,255,255,.08);
-      border-radius:16px;
-      padding:14px 16px;
-      background:rgba(255,255,255,.03);
-    }
-    .stream-item .name{
-      font-size:15px;
-      font-weight:1000;
-      display:flex;
-      align-items:center;
-      gap:10px;
-      color:#eef4ff;
-    }
-    .stream-item .meta{
-      margin-top:6px;
-      font-size:13px;
-      color:#bdd0ea;
-      line-height:1.5;
-    }
-    .alert-dot{
-      width:9px;
-      height:9px;
-      border-radius:999px;
-      background:#7aa2ff;
-      display:inline-block;
-      box-shadow:0 0 8px rgba(122,162,255,.45);
-    }
-    .alert-dot.warn{
-      background:#f4bd6a;
-      box-shadow:0 0 8px rgba(244,189,106,.35);
-    }
-    .alert-dot.danger{
-      background:#ff667d;
-      box-shadow:0 0 8px rgba(255,102,125,.45);
-    }
-
-    .footer{
-      margin-top:22px;
-      padding:18px 0 8px;
-      color:#9fb4d6;
-      font-size:14px;
-      line-height:1.6;
-    }
-
-    @media (max-width:1100px){
-      .hero-grid{grid-template-columns:1fr}
-      .hero-mini-grid{grid-template-columns:repeat(2,1fr)}
-      .route-grid{grid-template-columns:1fr}
-      .list{grid-template-columns:1fr}
-      .icu-wall{grid-template-columns:1fr}
-      .proof-strip{grid-template-columns:repeat(2,minmax(0,1fr))}
-    }
-
-    @media (max-width:760px){
-      .nav-inner{padding:12px 14px}
-      .nav-links{gap:12px}
-      .hero{min-height:auto}
-      .hero-inner{min-height:auto;padding:16px}
-      .hero-copy{padding:18px}
-      .hero-copy h1{font-size:clamp(34px,11vw,54px)}
-      .hero-copy p{font-size:16px}
-      .hero-actions,.demo-btns,.route-card .route-actions{flex-direction:column}
-      .btn{width:100%}
-      .demo-stage{min-height:250px}
-      .hero-mini-grid{grid-template-columns:1fr}
-      .section{padding:18px}
-      .screen-readouts{grid-template-columns:repeat(2,minmax(0,1fr))}
-      .proof-strip{grid-template-columns:1fr}
-    }
-  </style>
-</head>
-<body>
-  <div class="nav">
-    <div class="nav-inner">
-      <div>
-        <div class="brand-kicker">AI-powered predictive clinical intelligence</div>
-        <div class="brand-title">Early Risk Alert AI</div>
-        <div class="brand-sub">Hospitals · Clinics · Investors · Patients</div>
-      </div>
-
-      <div class="nav-links">
-        <a href="#overview">Overview</a>
-        <a href="#hospital-story">Hospital Story</a>
-        <a href="#product-walkthrough">Live Platform</a>
-        <a href="#commercial-path">Investor Story</a>
-        <a href="#dashboard">Command Center</a>
-        <a href="/admin/review">Admin Review</a>
-      </div>
-    </div>
-  </div>
-
-  <div class="shell">
-    <section class="hero" id="overview">
-      <div class="hero-inner">
-        <div class="hero-grid">
-          <div class="glass hero-copy">
-            <div class="hero-kicker">Single-domain production experience</div>
-            <h1>Predictive clinical intelligence built for hospitals, investors, insurers, and patients.</h1>
-            <p>
-              Early Risk Alert AI is a professional predictive clinical intelligence platform with live command-center visuals,
-              alert intelligence, investor pipeline tracking, and enterprise-style operating visibility from one branded experience.
-            </p>
-
-            <div class="hero-actions">
-              <a class="btn primary" href="https://youtu.be/z4SbeYwwm7k" target="_blank" rel="noopener noreferrer">Play Demo</a>
-              <a class="btn secondary" href="#hospital-story">Hospital Story</a>
-              <a class="btn secondary" href="#commercial-path">Investor Story</a>
-              <a class="btn secondary" href="#dashboard">Command Center</a>
-            </div>
-
-            <div class="hero-mini-grid">
-              <div class="hero-mini">
-                <div class="k">Clinical Visibility</div>
-                <div class="v">Hospital command-center intelligence</div>
-              </div>
-              <div class="hero-mini">
-                <div class="k">Alerting</div>
-                <div class="v">Severity, confidence, escalation flow</div>
-              </div>
-              <div class="hero-mini">
-                <div class="k">Commercial</div>
-                <div class="v">Investor and partnership pipeline</div>
-              </div>
-              <div class="hero-mini">
-                <div class="k">Operations</div>
-                <div class="v">Live admin review and request flow</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="glass demo-card" id="demo">
-            <div class="demo-stage">
-              <div class="demo-badge">Platform Demo</div>
-              <div class="demo-play">
-                <a class="demo-play-btn" href="https://youtu.be/z4SbeYwwm7k" target="_blank" rel="noopener noreferrer" aria-label="Watch demo video">
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M8 5v14l11-7z"></path>
-                  </svg>
-                </a>
-              </div>
-              <div class="demo-caption">
-                <h3>Early Risk Alert AI Master Demo</h3>
-                <p>Open the platform story, command center, admin review, and commercial path from one clean production experience.</p>
-              </div>
-            </div>
-
-            <div class="demo-bottom">
-              <div class="demo-note">
-                This demo opening gives hospitals and investors a polished, high-trust first impression and directs them into the strongest platform views.
-              </div>
-              <div class="demo-btns">
-                <a class="btn primary" href="https://youtu.be/z4SbeYwwm7k" target="_blank" rel="noopener noreferrer">Play Demo</a>
-                <a class="btn secondary" href="#dashboard">Live Command Center</a>
-                <a class="btn secondary" href="/admin/review">Admin Review</a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <div class="route-grid">
-      <div class="route-card" id="hospital-story">
-        <div class="route-label">Hospital Story</div>
-        <h3>Clinical Buyer Path</h3>
-        <p>Show live risk visibility, telemetry-style monitoring, prioritization logic, and operational value for hospitals and care teams.</p>
-        <div class="route-actions">
-          <a class="btn secondary" href="#dashboard">Open Command Center</a>
-          <a class="btn secondary" href="/hospital-demo">Request Hospital Demo</a>
-        </div>
-      </div>
-
-      <div class="route-card" id="product-walkthrough">
-        <div class="route-label">Live Platform</div>
-        <h3>Product Walkthrough</h3>
-        <p>Present ICU-style monitoring, alert flow, patient-level focus, and live admin visibility from one command wall.</p>
-        <div class="route-actions">
-          <a class="btn secondary" href="#dashboard">View Live Platform</a>
-          <a class="btn secondary" href="/executive-walkthrough">Executive Walkthrough</a>
-        </div>
-      </div>
-
-      <div class="route-card" id="commercial-path">
-        <div class="route-label">Investor Story</div>
-        <h3>Commercial Path</h3>
-        <p>Guide investors through traction, product visuals, pipeline activity, operating readiness, and enterprise SaaS positioning.</p>
-        <div class="route-actions">
-          <a class="btn secondary" href="/investor-intake">Investor Intake</a>
-          <a class="btn secondary" href="/admin/review">View Pipeline</a>
-        </div>
-      </div>
-    </div>
-
-    <section class="section" id="dashboard">
-      <div class="section-kicker">Live Clinical Command Center</div>
-      <h2>Hospital-grade visual monitoring with real command-center presence.</h2>
-      <p>
-        Live alerts, patient status signals, animated ICU telemetry visuals, and operating metrics update automatically so hospitals,
-        investors, and insurers understand the platform in seconds.
-      </p>
-
-      <div class="ticker-wrap">
-        <div class="ticker-head">
-          <div class="ticker-title">Live Clinical Activity Ticker</div>
-          <div class="ticker-live">Live Stream</div>
-        </div>
-        <div class="ticker-track">
-          <div class="ticker-move" id="cc-ticker">
-            <div class="ticker-pill"><span class="dot critical"></span> Critical risk escalation detected</div>
-            <div class="ticker-pill"><span class="dot high"></span> Care team routing updated</div>
-            <div class="ticker-pill"><span class="dot stable"></span> Stable patient trend confirmed</div>
-            <div class="ticker-pill"><span class="dot critical"></span> ICU watchlist refreshed</div>
-            <div class="ticker-pill"><span class="dot high"></span> Executive dashboard synced</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="icu-wall">
-        <div class="icu-main">
-          <div class="icu-monitor critical-monitor">
-            <div class="icu-head">
-              <div>
-                <div class="icu-kicker">ICU Bed A</div>
-                <div class="icu-title">Critical Patient Monitor</div>
-              </div>
-              <div class="icu-state critical" id="monitor-a-status">Critical</div>
-            </div>
-
-            <div class="icu-screen">
-              <div class="screen-grid"></div>
-              <svg class="ecg-svg" viewBox="0 0 1200 220" preserveAspectRatio="none" aria-hidden="true">
-                <path
-                  id="ecg-a"
-                  class="ecg-path critical-path"
-                  d="M0 130
-                     L40 130 L70 130 L90 130
-                     L110 130 L130 130 L150 130
-                     L170 130 L190 130
-                     L210 130 L225 110 L240 145 L255 60 L270 185 L285 128
-                     L300 130 L340 130 L380 130
-                     L420 130 L435 112 L450 145 L465 65 L480 185 L495 128
-                     L510 130 L550 130 L590 130
-                     L630 130 L645 112 L660 145 L675 58 L690 190 L705 128
-                     L720 130 L760 130 L800 130
-                     L840 130 L855 114 L870 142 L885 63 L900 186 L915 128
-                     L930 130 L970 130 L1010 130
-                     L1050 130 L1065 112 L1080 144 L1095 60 L1110 184 L1125 128
-                     L1140 130 L1200 130" />
-              </svg>
-
-              <div class="screen-readouts">
-                <div class="readout">
-                  <span class="r-k">HR</span>
-                  <span class="r-v" id="monitor-a-hr">128</span>
-                </div>
-                <div class="readout">
-                  <span class="r-k">SpO₂</span>
-                  <span class="r-v" id="monitor-a-spo2">89</span>
-                </div>
-                <div class="readout">
-                  <span class="r-k">BP</span>
-                  <span class="r-v" id="monitor-a-bp">164/98</span>
-                </div>
-                <div class="readout">
-                  <span class="r-k">Risk</span>
-                  <span class="r-v" id="monitor-a-risk">9.1</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="icu-monitor watch-monitor">
-            <div class="icu-head">
-              <div>
-                <div class="icu-kicker">ICU Bed B</div>
-                <div class="icu-title">Escalation Watch Monitor</div>
-              </div>
-              <div class="icu-state warning" id="monitor-b-status">High</div>
-            </div>
-
-            <div class="icu-screen">
-              <div class="screen-grid"></div>
-              <svg class="ecg-svg" viewBox="0 0 1200 220" preserveAspectRatio="none" aria-hidden="true">
-                <path
-                  id="ecg-b"
-                  class="ecg-path warning-path"
-                  d="M0 132
-                     L50 132 L90 132 L130 132 L170 132
-                     L210 132 L225 120 L240 140 L255 92 L270 165 L285 132
-                     L300 132 L350 132 L400 132
-                     L450 132 L465 118 L480 140 L495 96 L510 162 L525 132
-                     L540 132 L590 132 L640 132
-                     L690 132 L705 120 L720 138 L735 98 L750 162 L765 132
-                     L780 132 L830 132 L880 132
-                     L930 132 L945 120 L960 140 L975 95 L990 164 L1005 132
-                     L1020 132 L1080 132 L1140 132 L1200 132" />
-              </svg>
-
-              <div class="screen-readouts">
-                <div class="readout">
-                  <span class="r-k">HR</span>
-                  <span class="r-v" id="monitor-b-hr">112</span>
-                </div>
-                <div class="readout">
-                  <span class="r-k">SpO₂</span>
-                  <span class="r-v" id="monitor-b-spo2">93</span>
-                </div>
-                <div class="readout">
-                  <span class="r-k">BP</span>
-                  <span class="r-v" id="monitor-b-bp">148/90</span>
-                </div>
-                <div class="readout">
-                  <span class="r-k">Risk</span>
-                  <span class="r-v" id="monitor-b-risk">8.2</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="icu-side-rail">
-          <div class="rail-card">
-            <div class="rail-k">Open Alerts</div>
-            <div class="rail-v" id="cc-open-alerts">0</div>
-            <div class="rail-sub">Live platform alerts across the command center.</div>
-          </div>
-
-          <div class="rail-card">
-            <div class="rail-k">Critical Alerts</div>
-            <div class="rail-v" id="cc-critical-alerts">0</div>
-            <div class="rail-sub">Highest urgency cases requiring immediate response.</div>
-          </div>
-
-          <div class="rail-card">
-            <div class="rail-k">Avg Risk Score</div>
-            <div class="rail-v" id="cc-avg-risk">0.0</div>
-            <div class="rail-sub">Average risk severity from the intelligence layer.</div>
-          </div>
-
-          <div class="rail-card">
-            <div class="rail-k">Patients With Alerts</div>
-            <div class="rail-v" id="cc-patients-alerts">0</div>
-            <div class="rail-sub">Patients currently surfaced by AI monitoring.</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="proof-strip">
-        <div class="proof-card">
-          <div class="proof-k">Hospital Story</div>
-          <div class="proof-v">Operational</div>
-          <div class="proof-sub">Shows a real command-center environment for hospitals and RPM teams.</div>
-        </div>
-        <div class="proof-card">
-          <div class="proof-k">Investor Story</div>
-          <div class="proof-v">Visual</div>
-          <div class="proof-sub">Communicates product value in seconds with immediate platform credibility.</div>
-        </div>
-        <div class="proof-card">
-          <div class="proof-k">Insurer Story</div>
-          <div class="proof-v">Predictive</div>
-          <div class="proof-sub">Supports scalable monitoring, escalation, and lower-cost intervention.</div>
-        </div>
-        <div class="proof-card">
-          <div class="proof-k">Patient Story</div>
-          <div class="proof-v">Protective</div>
-          <div class="proof-sub">Feels proactive, responsive, and clinically reassuring.</div>
-        </div>
-      </div>
-
-      <div class="stream-list" id="cc-alert-stream">
-        <div class="stream-item">
-          <div class="name">Waiting for live stream data</div>
-          <div class="meta">The command center updates automatically from the platform APIs.</div>
-        </div>
-      </div>
-    </section>
-
-    <section class="section">
-      <div class="section-kicker">Lead Pipeline Visibility</div>
-      <h2>Request flow and commercial momentum from one operating layer.</h2>
-      <p>
-        Live lead visibility, admin review, investor pipeline analytics, and status tracking turn the platform from a demo into a polished operating system.
-      </p>
-
-      <div class="list">
-        <div class="mini">
-          <div class="k">Hospital Demo Requests</div>
-          <span class="v" id="mini-hospital-count">0</span>
-          <p>Clinical buyer interest flowing through hospital demo intake.</p>
-        </div>
-        <div class="mini">
-          <div class="k">Executive Walkthroughs</div>
-          <span class="v" id="mini-exec-count">0</span>
-          <p>Leadership-facing product reviews, pilots, and strategic evaluations.</p>
-        </div>
-        <div class="mini">
-          <div class="k">Investor Intake</div>
-          <span class="v" id="mini-investor-count">0</span>
-          <p>Commercial conversations, follow-up interest, and financing pipeline flow.</p>
-        </div>
-      </div>
-
-      <div class="status-legend">
-        <div class="status-chip new"><span class="s-dot"></span>New</div>
-        <div class="status-chip contacted"><span class="s-dot"></span>Contacted</div>
-        <div class="status-chip closed"><span class="s-dot"></span>Closed</div>
-      </div>
-    </section>
-
-    <section class="section" id="contact">
-      <div class="section-kicker">Founder & Contact</div>
-      <h2>Milton Munroe</h2>
-      <p>
-        Founder, Early Risk Alert AI · <a href="mailto:info@earlyriskalertai.com">info@earlyriskalertai.com</a> ·
-        <a href="tel:7327247267">732-724-7267</a>
-      </p>
-    </section>
-
-    <div class="footer">
-      Early Risk Alert AI LLC · Predictive clinical intelligence platform · Hospitals · Clinics · Investors · Patients
-    </div>
-  </div>
-
-  <script>
-    async function refreshCommandCenter() {
-      try {
-        const res = await fetch("/api/v1/dashboard/overview?tenant_id=demo&refresh=" + Date.now(), {
-          headers: { "Accept": "application/json" },
-          cache: "no-store"
-        });
-        if (res.ok) {
-          const data = await res.json();
-          document.getElementById("cc-open-alerts").textContent = data.open_alerts ?? 0;
-          document.getElementById("cc-critical-alerts").textContent = data.critical_alerts ?? 0;
-          document.getElementById("cc-avg-risk").textContent = Number(data.avg_risk_score ?? 0).toFixed(1);
-          document.getElementById("cc-patients-alerts").textContent = data.patients_with_alerts ?? 0;
-          document.getElementById("mini-hospital-count").textContent = data.hospital_requests ?? 0;
-          document.getElementById("mini-exec-count").textContent = data.executive_requests ?? 0;
-          document.getElementById("mini-investor-count").textContent = data.investor_requests ?? 0;
-        }
-      } catch (err) {
-        console.error("Overview refresh failed", err);
-      }
-
-      try {
-        const res = await fetch("/api/v1/live-snapshot?tenant_id=demo&patient_id=p101&refresh=" + Date.now(), {
-          headers: { "Accept": "application/json" },
-          cache: "no-store"
-        });
-        if (res.ok) {
-          const data = await res.json();
-          const alerts = Array.isArray(data.alerts) ? data.alerts.slice(0, 6) : [];
-          const wrap = document.getElementById("cc-alert-stream");
-          const ticker = document.getElementById("cc-ticker");
-
-          if (!alerts.length) {
-            wrap.innerHTML = '<div class="stream-item"><div class="name">No active alerts right now</div><div class="meta">The system is running and waiting for new events.</div></div>';
-            if (ticker) {
-              ticker.innerHTML = `
-                <div class="ticker-pill"><span class="dot stable"></span> Stable patient monitoring active</div>
-                <div class="ticker-pill"><span class="dot high"></span> Command center awaiting next escalation</div>
-                <div class="ticker-pill"><span class="dot stable"></span> AI surveillance layer online</div>
-              `;
-            }
-          } else {
-            wrap.innerHTML = alerts.map(function (a) {
-              const sev = (a.severity || "").toLowerCase();
-              const dot = sev === "critical" ? "danger" : (sev === "high" ? "warn" : "");
-              return `
-                <div class="stream-item">
-                  <div class="name"><span class="alert-dot ${dot}"></span>${a.title || a.alert_type || "Risk alert"}</div>
-                  <div class="meta">Patient: ${a.patient_id || "Unknown"} · Severity: ${sev || "n/a"} · Risk: ${a.risk_score ?? ""}</div>
-                </div>
-              `;
-            }).join("");
-
-            if (ticker) {
-              ticker.innerHTML = alerts.map(function (a) {
-                const sev = (a.severity || "").toLowerCase();
-                const dot = sev === "critical" ? "critical" : (sev === "high" ? "high" : "stable");
-                return `<div class="ticker-pill"><span class="dot ${dot}"></span>${a.title || a.alert_type || "Risk alert"} · ${a.patient_id || "Patient"} · Risk ${Number(a.risk_score ?? 0).toFixed(1)}</div>`;
-              }).join("");
-            }
-          }
-
-          const monitorA = alerts[0] || { severity: "critical", risk_score: 9.1 };
-          const monitorB = alerts[1] || { severity: "high", risk_score: 8.2 };
-
-          function setMonitor(prefix, alert) {
-            const severity = (alert.severity || "stable").toLowerCase();
-            const statusEl = document.getElementById(prefix + "-status");
-            const hrEl = document.getElementById(prefix + "-hr");
-            const spo2El = document.getElementById(prefix + "-spo2");
-            const bpEl = document.getElementById(prefix + "-bp");
-            const riskEl = document.getElementById(prefix + "-risk");
-
-            const statusText = severity === "critical" ? "Critical" : (severity === "high" ? "High" : "Stable");
-            statusEl.textContent = statusText;
-            statusEl.className = "icu-state " + (severity === "critical" ? "critical" : (severity === "high" ? "warning" : "stable"));
-
-            const baseRisk = Number(alert.risk_score ?? 3.4);
-            const hr = severity === "critical" ? 124 + Math.floor(Math.random() * 10) : (severity === "high" ? 106 + Math.floor(Math.random() * 10) : 78 + Math.floor(Math.random() * 10));
-            const spo2 = severity === "critical" ? 87 + Math.floor(Math.random() * 3) : (severity === "high" ? 92 + Math.floor(Math.random() * 3) : 97 + Math.floor(Math.random() * 2));
-            const sys = severity === "critical" ? 160 + Math.floor(Math.random() * 8) : (severity === "high" ? 146 + Math.floor(Math.random() * 8) : 120 + Math.floor(Math.random() * 6));
-            const dia = severity === "critical" ? 96 + Math.floor(Math.random() * 6) : (severity === "high" ? 88 + Math.floor(Math.random() * 5) : 76 + Math.floor(Math.random() * 4));
-
-            hrEl.textContent = hr;
-            spo2El.textContent = spo2;
-            bpEl.textContent = sys + "/" + dia;
-            riskEl.textContent = baseRisk.toFixed(1);
-          }
-
-          setMonitor("monitor-a", monitorA);
-          setMonitor("monitor-b", monitorB);
-        }
-      } catch (err) {
-        console.error("Snapshot refresh failed", err);
-      }
-    }
-
-    refreshCommandCenter();
-    setInterval(refreshCommandCenter, 5000);
-  </script>
-</body>
-</html>
+<html lang="en"><head><meta charset="utf-8"><title>Early Risk Alert AI — Explainable Rules-Based Clinical Command Center — Secure Pilot Access</title><meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body{margin:0;min-height:100vh;display:grid;place-items:center;padding:24px;font-family:Inter,Arial,sans-serif;color:#eef4ff;background:linear-gradient(180deg,#07101c,#0b1528)}
+.card{width:min(640px,100%);border:1px solid rgba(255,255,255,.08);border-radius:24px;background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.018));padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.34)}
+.k{font-size:11px;font-weight:1000;letter-spacing:.16em;text-transform:uppercase;color:#9adfff;margin-bottom:10px} h1{margin:0 0 10px;font-size:40px;line-height:.95;letter-spacing:-.05em} p{margin:0 0 18px;color:#9fb4d6;line-height:1.6}
+.callout,.disclaimer{margin:0 0 18px;padding:14px 16px;border-radius:16px;line-height:1.6}.callout{background:rgba(91,212,255,.08);border:1px solid rgba(91,212,255,.16);color:#dce9ff}.disclaimer{background:rgba(244,189,106,.10);border:1px solid rgba(244,189,106,.22);color:#ffe7bf;font-size:14px}
+label{display:block;font-size:13px;font-weight:900;margin-bottom:8px} input,select{width:100%;padding:14px 16px;border-radius:16px;border:1px solid rgba(255,255,255,.08);background:#0d1728;color:#eef4ff;font:inherit;margin-bottom:14px}
+button{width:100%;padding:14px 18px;border:none;border-radius:16px;cursor:pointer;font:inherit;font-weight:1000;color:#07101c;background:linear-gradient(135deg,#7aa2ff,#5bd4ff)} .error{margin-bottom:14px;padding:12px 14px;border-radius:14px;background:rgba(255,102,125,.12);border:1px solid rgba(255,102,125,.24);color:#ffd8de}
+</style></head><body>
+<div class="card"><div class="k">Controlled pilot environment</div><h1>Early Risk Alert AI Secure Pilot Access</h1>
+<p>Access the command center for controlled pilot evaluation, role-based workflow review, and unit-scoped visibility.</p>
+<div class="callout">Early Risk Alert AI supports monitored patient visibility, patient prioritization support, explainable review context, and command-center operational awareness.</div>
+<div class="disclaimer">The platform does not replace clinician judgment and is not intended to diagnose, direct treatment, or independently trigger escalation.</div>
+__ERROR__
+<form method="post" action="/login">
+<label>Full Name</label><input name="full_name" required>
+<label>Work Email</label><input name="email" type="email" required>
+<label>Role</label><select name="user_role" required><option value="viewer">Viewer</option><option value="operator">Operator</option><option value="physician">Physician</option><option value="admin">Admin</option></select>
+<label>Admin Password (required for Admin role)</label><input name="admin_password" type="password">
+<label>Assigned Unit</label><select name="assigned_unit" required><option value="all">All Units</option><option value="icu">ICU</option><option value="telemetry">Telemetry</option><option value="stepdown">Stepdown</option><option value="ward">Ward</option><option value="rpm">RPM / Home</option></select>
+<button type="submit">Enter Secure Pilot Access</button></form></div></body></html>
+"""
+PILOT_ACCESS_HTML = """
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Early Risk Alert AI — Explainable Rules-Based Clinical Command Center — Pilot Access</title><meta name="viewport" content="width=device-width, initial-scale=1"><style>
+body{margin:0;min-height:100vh;display:grid;place-items:center;padding:24px;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#eef4ff;background:linear-gradient(180deg,#07101c,#0b1528)}
+.card{width:min(560px,100%);border:1px solid rgba(255,255,255,.08);border-radius:24px;background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.018));padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.34)}
+h1{margin:0 0 10px;font-size:38px;line-height:.95;letter-spacing:-.05em}p{color:#9fb4d6;line-height:1.6}.callout{margin:0 0 18px;padding:14px 16px;border-radius:16px;background:rgba(91,212,255,.08);border:1px solid rgba(91,212,255,.16);color:#dce9ff;line-height:1.6}.disclaimer{margin:0 0 18px;padding:14px 16px;border-radius:16px;background:rgba(244,189,106,.10);border:1px solid rgba(244,189,106,.22);color:#ffe7bf;line-height:1.6;font-size:14px}
+input{width:100%;padding:14px 16px;border-radius:16px;border:1px solid rgba(255,255,255,.08);background:#0d1728;color:#eef4ff;font:inherit;margin-bottom:14px}button{width:100%;padding:14px 18px;border:none;border-radius:16px;cursor:pointer;font:inherit;font-weight:1000;color:#07101c;background:linear-gradient(135deg,#7aa2ff,#5bd4ff)}.error{margin-bottom:14px;padding:12px 14px;border-radius:14px;background:rgba(255,102,125,.12);border:1px solid rgba(255,102,125,.24);color:#ffd8de}.footer-note{margin-top:18px;color:#9fb4d6;font-size:13px;line-height:1.6}
+</style></head><body><div class="card"><h1>Branded Pilot Access</h1><p>Enter your authorized pilot email to load your configured command-center experience, assigned unit, and pilot access scope.</p><div class="callout">Early Risk Alert AI supports controlled pilot evaluation through an HCP-facing decision-support and workflow-support platform designed to assist authorized health care professionals with patient prioritization, monitored patient visibility, and command-center operational awareness.</div><div class="disclaimer">It does not replace clinician judgment and is not intended to diagnose, direct treatment, or independently trigger escalation.</div>__ERROR__<form method="post" action="/pilot-access"><input name="pilot_email" type="email" placeholder="pilot@hospital.com" required><button type="submit">Enter Pilot Account</button></form><div class="footer-note">Controlled Pilot Evaluation | Role-Based Access | Unit-Scoped Visibility</div></div></body></html>
 """
 
-INVESTOR_HTML = MAIN_HTML
-HOSPITAL_HTML = MAIN_HTML
-COMMAND_CENTER_HTML = MAIN_HTML
-
-
-FORM_PAGE = r"""
+FORM_HTML = """
 <!doctype html>
 <html lang="en">
 <head>
@@ -1150,512 +544,378 @@ FORM_PAGE = r"""
   <title>__TITLE__</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    :root{
-      --bg:#08111f;
-      --panel:#101a2d;
-      --line:rgba(255,255,255,.08);
-      --text:#ecf4ff;
-      --muted:#9eb4d6;
-      --blue:#7aa2ff;
-      --blue2:#5bd4ff;
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family:Inter,Arial,sans-serif;
-      background:linear-gradient(180deg,#07101c,#0d1628);
-      color:var(--text);
-      padding:26px 14px 50px;
-    }
-    .wrap{max-width:840px;margin:0 auto}
-    .card{
-      background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.018)), var(--panel);
-      border:1px solid var(--line);
-      border-radius:28px;
-      padding:28px;
-      box-shadow:0 18px 50px rgba(0,0,0,.24);
-    }
-    h1{margin:0 0 10px;font-size:clamp(34px,5vw,56px);line-height:.96;letter-spacing:-.05em}
-    p{margin:0;color:var(--muted);line-height:1.7}
-    form{display:grid;gap:14px;margin-top:22px}
-    .field{display:grid;gap:8px}
-    label{font-size:13px;font-weight:900;letter-spacing:.04em;text-transform:uppercase;color:#d8e7ff}
-    input,select,textarea{
-      width:100%;
-      border:1px solid rgba(255,255,255,.08);
-      border-radius:16px;
-      background:rgba(255,255,255,.03);
-      color:var(--text);
-      padding:14px 14px;
-      font:inherit;
-      outline:none;
-    }
-    textarea{min-height:130px;resize:vertical}
-    .btn{
-      border:0;
-      border-radius:16px;
-      padding:14px 18px;
-      font:inherit;
-      font-weight:1000;
-      cursor:pointer;
-      color:#08111f;
-      background:linear-gradient(135deg,var(--blue),var(--blue2));
-      box-shadow:0 12px 28px rgba(91,212,255,.2);
-    }
-    .back{
-      display:inline-flex;
-      margin-top:16px;
-      color:#cfe2ff;
-      font-weight:900;
-    }
+    :root{--bg:#08111f;--panel:#101a2d;--line:rgba(255,255,255,.08);--text:#eef4ff;--muted:#9fb4d6;--blue:#7aa2ff;--blue2:#5bd4ff;--warn:#f4bd6a}*{box-sizing:border-box}
+    body{margin:0;padding:24px;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--text);background:linear-gradient(180deg,#07101c,#0b1528)}
+    .wrap{max-width:920px;margin:0 auto}.card{border:1px solid var(--line);border-radius:24px;background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.018));padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.34)}
+    .k{font-size:11px;font-weight:1000;letter-spacing:.16em;text-transform:uppercase;color:#9adfff;margin-bottom:10px}h1{margin:0 0 10px;font-size:44px;line-height:.95;letter-spacing:-.05em}p{margin:0 0 18px;color:var(--muted);line-height:1.6}
+    .callout{margin:0 0 18px;padding:14px 16px;border-radius:16px;background:rgba(91,212,255,.08);border:1px solid rgba(91,212,255,.16);color:#dce9ff;line-height:1.6}
+    .disclaimer{margin:0 0 20px;padding:14px 16px;border-radius:16px;background:rgba(244,189,106,.10);border:1px solid rgba(244,189,106,.22);color:#ffe7bf;line-height:1.6;font-size:14px}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.field{margin-bottom:14px}.full{grid-column:1 / -1}
+    label{display:block;font-size:13px;font-weight:900;margin-bottom:8px}input,select,textarea{width:100%;padding:14px 16px;border-radius:16px;border:1px solid var(--line);background:#0d1728;color:var(--text);font:inherit}textarea{min-height:120px;resize:vertical}
+    .check{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:16px;border:1px solid var(--line);background:#0d1728}.check input{width:auto;margin:4px 0 0}.check span{color:#dce9ff;line-height:1.6;font-size:14px}
+    button{padding:14px 18px;border:none;border-radius:16px;cursor:pointer;font:inherit;font-weight:1000;color:#07101c;background:linear-gradient(135deg,var(--blue),var(--blue2))}
+    .links{display:flex;gap:14px;flex-wrap:wrap;margin-top:16px}a{color:#cfe7ff;text-decoration:none;font-weight:800}.footer-note{margin-top:18px;color:#9fb4d6;font-size:13px;line-height:1.6}
+    @media (max-width:700px){.grid{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="card">
+      <div class="k">Early Risk Alert AI</div>
       <h1>__HEADING__</h1>
       <p>__COPY__</p>
-      <form method="post">
-        __FIELDS__
-        <button class="btn" type="submit">__BUTTON__</button>
-      </form>
-      <a class="back" href="/">Return Home</a>
+      <div class="callout">Early Risk Alert AI is an HCP-facing decision-support and workflow-support platform intended to assist authorized health care professionals in identifying patients who may warrant further clinical evaluation, support patient prioritization, and improve command-center operational awareness.</div>
+      <div class="disclaimer">The platform is intended for controlled pilot evaluation and hospital-facing workflow support. It does not replace clinician judgment and is not intended to diagnose, direct treatment, or independently trigger escalation.</div>
+      <form method="post"><div class="grid">__FIELDS__</div><button type="submit">__BUTTON__</button></form>
+      <div class="links"><a href="/command-center">Command Center</a><a href="/admin/review">Admin Review</a></div>
+      <div class="footer-note">Controlled Pilot Evaluation | Secure Cloud Deployment | Hospital-Facing Workflow Support</div>
     </div>
   </div>
 </body>
 </html>
 """
 
+THANK_YOU_HTML = """
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Request Received</title><meta name="viewport" content="width=device-width, initial-scale=1"><style>
+body{margin:0;padding:24px;display:grid;place-items:center;min-height:100vh;font-family:Inter,Arial,sans-serif;color:#eef4ff;background:linear-gradient(180deg,#07101c,#0b1528)}.card{width:min(760px,100%);border:1px solid rgba(255,255,255,.08);border-radius:24px;background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.018));padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.34)}h1{margin:0 0 10px;font-size:40px;line-height:.95;letter-spacing:-.05em}p{margin:0 0 18px;color:#9fb4d6;line-height:1.6}.box{border:1px solid rgba(255,255,255,.08);border-radius:18px;background:rgba(255,255,255,.03);padding:16px;line-height:1.8;color:#dce9ff;margin:16px 0}a{display:inline-flex;align-items:center;justify-content:center;padding:12px 16px;border-radius:16px;font-size:14px;font-weight:900;background:linear-gradient(135deg,#7aa2ff,#5bd4ff);color:#07101c;text-decoration:none}
+</style></head><body><div class="card"><h1>Thank You</h1><p>__MESSAGE__</p><div class="box">__DETAILS__</div><a href="/command-center">Return to Command Center</a></div></body></html>
+"""
 
-ADMIN_HTML = r"""
+ADMIN_HTML = """
 <!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Admin Review - Early Risk Alert AI</title>
+  <title>Admin Review — Early Risk Alert AI</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    :root{
-      --bg:#08111f;
-      --panel:#101a2d;
-      --line:rgba(255,255,255,.08);
-      --text:#edf4ff;
-      --muted:#bdd0ec;
-      --blue:#7aa2ff;
-      --blue2:#5bd4ff;
-      --green:#38d39f;
-      --amber:#f7be68;
-      --red:#ff667d;
-      --shadow:0 18px 50px rgba(0,0,0,.24);
-    }
-    *{box-sizing:border-box}
-    body{margin:0;font-family:Inter,Arial,sans-serif;background:#08111f;color:var(--text)}
-    .wrap{max-width:1380px;margin:0 auto;padding:36px 18px 60px}
-    .card{
-      background:
-        radial-gradient(circle at top right, rgba(91,212,255,.10), transparent 24%),
-        linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.018)),
-        linear-gradient(180deg, rgba(16,26,45,.96), rgba(11,18,31,.98));
-      border:1px solid var(--line);
-      border-radius:24px;
-      padding:30px;
-      box-shadow:var(--shadow)
-    }
-    h1{font-size:clamp(40px,4vw,56px);line-height:.98;margin:0 0 14px;letter-spacing:-.045em}
-    h2{margin:0 0 10px;font-size:32px;letter-spacing:-.03em}
-    p{color:var(--muted);line-height:1.7}
-    .btn{display:inline-flex;padding:13px 18px;border-radius:14px;background:linear-gradient(135deg,var(--blue),var(--blue2));color:#08111f;font-weight:1000}
-    .admin-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:20px 0 24px}
-    .admin-kpi{
-      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02));
-      border:1px solid rgba(255,255,255,.06);
-      border-radius:20px;
-      padding:24px;
-      min-height:154px;
-      display:flex;
-      flex-direction:column;
-      justify-content:space-between;
-    }
-    .admin-kpi .k{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#9eb4d6;font-weight:900}
-    .admin-kpi .v{font-size:44px;font-weight:1000;line-height:1;margin-top:14px}
-    .admin-kpi .hint{font-size:13px;color:#c6d7ef;line-height:1.5}
-    .ticker-wrap{
-      margin:18px 0;
-      border:1px solid rgba(255,255,255,.08);
-      border-radius:18px;
-      overflow:hidden;
-      background:
-        linear-gradient(90deg, rgba(91,212,255,.08), rgba(122,162,255,.04), rgba(255,255,255,.02)),
-        rgba(8,16,29,.92);
-    }
-    .ticker-head{
-      display:flex;align-items:center;justify-content:space-between;gap:12px;
-      padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.06)
-    }
-    .ticker-title{font-size:11px;font-weight:1000;letter-spacing:.16em;text-transform:uppercase;color:#9fdcff}
-    .ticker-live{
-      display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:#dff7ff
-    }
-    .ticker-live::before{
-      content:"";width:8px;height:8px;border-radius:999px;background:#38d39f;box-shadow:0 0 0 0 rgba(56,211,159,.55);animation:livePulse 1.8s infinite
-    }
-    @keyframes livePulse{
-      0%{box-shadow:0 0 0 0 rgba(56,211,159,.55)}
-      70%{box-shadow:0 0 0 12px rgba(56,211,159,0)}
-      100%{box-shadow:0 0 0 0 rgba(56,211,159,0)}
-    }
-    .ticker-track{position:relative;overflow:hidden;white-space:nowrap;padding:14px 0}
-    .ticker-move{display:inline-flex;gap:14px;padding-left:100%;animation:tickerMove 24s linear infinite}
-    @keyframes tickerMove{
-      from{transform:translateX(0)}
-      to{transform:translateX(-100%)}
-    }
-    .ticker-pill{
-      display:inline-flex;align-items:center;gap:10px;padding:10px 14px;border-radius:999px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);color:#edf4ff;font-size:13px;font-weight:900
-    }
-    .ticker-pill .dot{width:9px;height:9px;border-radius:999px;display:inline-block}
-    .ticker-pill .dot.critical{background:#ff667d;box-shadow:0 0 10px rgba(255,102,125,.45)}
-    .ticker-pill .dot.high{background:#f4bd6a;box-shadow:0 0 10px rgba(244,189,106,.35)}
-    .ticker-pill .dot.stable{background:#38d39f;box-shadow:0 0 10px rgba(56,211,159,.35)}
-    .icu-wall{display:grid;grid-template-columns:1.15fr .85fr;gap:16px;margin:18px 0}
-    .icu-main{display:grid;gap:14px}
-    .icu-monitor{
-      border:1px solid rgba(255,255,255,.10);border-radius:22px;padding:16px;
-      background:
-        radial-gradient(circle at top right, rgba(91,212,255,.08), transparent 28%),
-        linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015)),
-        #08101d;
-      box-shadow:inset 0 0 0 1px rgba(255,255,255,.02),0 12px 30px rgba(0,0,0,.22),0 0 50px rgba(91,212,255,.05)
-    }
-    .critical-monitor{border-color:rgba(255,107,107,.26)}
-    .watch-monitor{border-color:rgba(247,190,104,.24)}
-    .icu-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
-    .icu-kicker{font-size:11px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:#9eb4d6}
-    .icu-title{margin-top:6px;font-size:22px;font-weight:1000;line-height:1;color:#eef4ff}
-    .icu-state{
-      display:inline-flex;align-items:center;justify-content:center;min-width:92px;padding:8px 10px;border-radius:999px;font-size:12px;font-weight:900;letter-spacing:.05em;text-transform:uppercase
-    }
-    .icu-state.critical{color:#ffd8d8;background:rgba(255,107,107,.16);border:1px solid rgba(255,107,107,.26)}
-    .icu-state.warning{color:#ffe7bf;background:rgba(247,190,104,.16);border:1px solid rgba(247,190,104,.24)}
-    .icu-state.stable{color:#dfffea;background:rgba(91,211,141,.14);border:1px solid rgba(91,211,141,.24)}
-    .icu-screen{position:relative;height:240px;border-radius:18px;overflow:hidden;border:1px solid rgba(255,255,255,.06);background:#050b14}
-    .screen-grid{
-      position:absolute;inset:0;background:
-        linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px),
-        linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.01));
-      background-size:22px 22px,22px 22px,auto;pointer-events:none
-    }
-    .ecg-svg{position:absolute;inset:0;width:100%;height:100%}
-    .ecg-path{
-      fill:none;stroke-width:4;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:18 8;animation:ecgMove 1.8s linear infinite;filter:drop-shadow(0 0 10px currentColor)
-    }
-    .critical-path{stroke:#ff6b6b;color:#ff6b6b}
-    .warning-path{stroke:#f7be68;color:#f7be68}
-    @keyframes ecgMove{
-      from{stroke-dashoffset:0}
-      to{stroke-dashoffset:-52}
-    }
-    .screen-readouts{position:absolute;left:14px;right:14px;bottom:14px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
-    .readout{
-      border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:12px 10px;background:rgba(255,255,255,.03);backdrop-filter:blur(4px)
-    }
-    .r-k{display:block;font-size:11px;letter-spacing:.10em;text-transform:uppercase;color:#9eb4d6;font-weight:900}
-    .r-v{display:block;margin-top:8px;font-size:22px;line-height:1;font-weight:1000;color:#eef4ff}
-    .icu-side-rail{display:grid;gap:12px}
-    .rail-card{
-      border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:18px;
-      background:
-        linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02)),
-        linear-gradient(180deg, rgba(12,22,38,.76), rgba(9,16,30,.88))
-    }
-    .rail-k{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#9eb4d6;font-weight:900}
-    .rail-v{font-size:34px;font-weight:1000;line-height:1;margin-top:10px;color:#ecf4ff}
-    .rail-sub{margin-top:8px;font-size:13px;color:#c6d7ef;line-height:1.5}
-    .proof-strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:18px}
-    .proof-card{
-      border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:16px;
-      background:
-        linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015)),
-        rgba(8,16,29,.82);
-      box-shadow:0 12px 28px rgba(0,0,0,.16)
-    }
-    .proof-k{font-size:11px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:#9fdcff}
-    .proof-v{margin-top:10px;font-size:28px;line-height:1;font-weight:1000;color:#eef4ff}
-    .proof-sub{margin-top:8px;color:#c6d7ef;font-size:13px;line-height:1.5}
-    .status-legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
-    .status-chip{
-      display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:999px;font-size:12px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);color:#eef4ff
-    }
-    .status-chip .s-dot{width:9px;height:9px;border-radius:999px}
-    .status-chip.new .s-dot{background:#7aa2ff;box-shadow:0 0 10px rgba(122,162,255,.45)}
-    .status-chip.contacted .s-dot{background:#f4bd6a;box-shadow:0 0 10px rgba(244,189,106,.35)}
-    .status-chip.closed .s-dot{background:#38d39f;box-shadow:0 0 10px rgba(56,211,159,.35)}
-    .lead-row{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:14px}
-    .lead-type{
-      flex:1 1 260px;
-      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02));
-      border:1px solid rgba(255,255,255,.06);
-      border-radius:18px;
-      padding:16px;
-    }
-    .lead-type h3{margin:0 0 8px;font-size:24px}
-    .lead-type p{margin:0;color:#c9daf0;line-height:1.65}
-    .table-wrap{overflow:auto;border:1px solid rgba(255,255,255,.06);border-radius:18px;background:rgba(255,255,255,.02)}
-    table{width:100%;border-collapse:collapse;font-size:14px;min-width:920px}
-    th,td{padding:14px 12px;border-bottom:1px solid rgba(255,255,255,.08);text-align:left;vertical-align:top}
-    th{color:#9eb4d6;text-transform:uppercase;font-size:12px;letter-spacing:.12em;background:rgba(255,255,255,.02);position:sticky;top:0}
-    tr:hover td{background:rgba(255,255,255,.02)}
-    .empty{padding:18px;color:#c9daf0}
-    .status-pill{
-      display:inline-flex;align-items:center;justify-content:center;min-width:108px;padding:9px 12px;border-radius:999px;font-size:12px;font-weight:1000
-    }
-    .status-new{background:rgba(91,212,255,.16);border:1px solid rgba(91,212,255,.28);color:#d6f4ff}
-    .status-contacted{background:rgba(247,190,104,.16);border:1px solid rgba(247,190,104,.28);color:#ffe3b2}
-    .status-closed{background:rgba(56,211,159,.16);border:1px solid rgba(56,211,159,.28);color:#d3ffe8}
-    .action-row{display:flex;gap:8px;flex-wrap:wrap}
-    .mini-btn{
-      display:inline-flex;align-items:center;justify-content:center;padding:9px 12px;border-radius:12px;background:#111b2f;border:1px solid rgba(255,255,255,.08);color:#eef4ff;font-size:12px;font-weight:1000
-    }
-    .score{
-      display:inline-flex;align-items:center;justify-content:center;min-width:64px;padding:8px 10px;border-radius:999px;background:rgba(122,162,255,.14);border:1px solid rgba(122,162,255,.22);font-weight:1000
-    }
-    .score.hot{background:rgba(255,102,125,.16);border-color:rgba(255,102,125,.28);color:#ffd8df}
-    .score.warm{background:rgba(244,189,106,.16);border-color:rgba(244,189,106,.28);color:#ffe5bb}
-    .score.cool{background:rgba(56,211,159,.16);border-color:rgba(56,211,159,.26);color:#d9ffec}
-    @media (max-width:1100px){
-      .admin-grid{grid-template-columns:repeat(2,1fr)}
-      .icu-wall{grid-template-columns:1fr}
-      .proof-strip{grid-template-columns:repeat(2,minmax(0,1fr))}
-    }
-    @media (max-width:760px){
-      .admin-grid{grid-template-columns:1fr}
-      .proof-strip{grid-template-columns:1fr}
-      .screen-readouts{grid-template-columns:repeat(2,minmax(0,1fr))}
-      .wrap{padding:14px 10px 48px}
-      .card{padding:16px}
-    }
+    body{margin:0;padding:24px;font-family:Inter,Arial,sans-serif;background:linear-gradient(180deg,#07101c,#0b1528);color:#eef4ff}
+    .wrap{max-width:1400px;margin:0 auto}
+    .card{border:1px solid rgba(255,255,255,.08);border-radius:24px;background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.018));padding:24px;margin-bottom:18px;box-shadow:0 14px 36px rgba(0,0,0,.28)}
+    h1{margin:0 0 10px;font-size:40px;letter-spacing:-.05em}
+    h2{margin:0 0 12px;font-size:26px;letter-spacing:-.04em}
+    .muted{color:#9fb4d6;font-size:14px;line-height:1.6}
+    .links{display:flex;gap:12px;flex-wrap:wrap;margin-top:14px}
+    a.btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 14px;border-radius:14px;font-size:13px;font-weight:900;background:linear-gradient(135deg,#7aa2ff,#5bd4ff);color:#07101c;text-decoration:none}
+    a.btn.secondary{background:rgba(255,255,255,.06);color:#dce9ff;border:1px solid rgba(255,255,255,.1)}
+    .summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+    .stat{border:1px solid rgba(255,255,255,.08);border-radius:18px;background:rgba(255,255,255,.03);padding:16px}
+    .stat-k{font-size:11px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:#9adfff;margin-bottom:8px}
+    .stat-v{font-size:36px;font-weight:1000;letter-spacing:-.04em}
+    table{width:100%;border-collapse:collapse;font-size:13px}
+    thead th{padding:12px;text-align:left;color:#9adfff;border-bottom:1px solid rgba(255,255,255,.08);font-weight:900;letter-spacing:.08em;text-transform:uppercase}
+    tbody tr{border-bottom:1px solid rgba(255,255,255,.05)}
+    tbody td{padding:10px 12px;vertical-align:top;color:#dce9ff;line-height:1.5}
+    .pill{display:inline-flex;align-items:center;padding:5px 10px;border-radius:999px;font-size:11px;font-weight:900;letter-spacing:.1em;text-transform:uppercase}
+    .pill.hot{background:rgba(255,102,125,.18);color:#ffd8de;border:1px solid rgba(255,102,125,.3)}
+    .pill.warm{background:rgba(244,189,106,.14);color:#ffe7bf;border:1px solid rgba(244,189,106,.3)}
+    .pill.normal{background:rgba(255,255,255,.05);color:#dce9ff;border:1px solid rgba(255,255,255,.1)}
+    .pill.new-s{background:rgba(91,212,255,.1);color:#dce9ff;border:1px solid rgba(91,212,255,.2)}
+    .pill.closed-s{background:rgba(58,211,143,.1);color:#c8fff0;border:1px solid rgba(58,211,143,.2)}
+    select.status-sel{background:#0d1728;border:1px solid rgba(255,255,255,.08);border-radius:10px;color:#eef4ff;padding:5px 8px;font:inherit;font-size:12px;cursor:pointer;width:100%}
+    .filter-bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:center}
+    .filter-bar select,.filter-bar input{background:#0d1728;border:1px solid rgba(255,255,255,.08);border-radius:12px;color:#eef4ff;padding:10px 12px;font:inherit;font-size:13px}
+    #statusMsg{color:#9adfff;font-size:13px;font-weight:800}
+    .expand-row{display:none;background:rgba(255,255,255,.02)}
+    .expand-row.open{display:table-row}
+    .expand-inner{padding:16px;border-radius:0;display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    .field-group{display:grid;gap:8px}
+    .field-group label{font-size:11px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:#9adfff}
+    .field-group input,.field-group textarea{background:#0d1728;border:1px solid rgba(255,255,255,.08);border-radius:12px;color:#eef4ff;padding:10px 12px;font:inherit;font-size:13px;width:100%}
+    .field-group textarea{min-height:72px;resize:vertical}
+    .action-btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    .action-btn{padding:8px 14px;border:none;border-radius:12px;font:inherit;font-size:12px;font-weight:900;cursor:pointer}
+    .action-btn.save{background:linear-gradient(135deg,#7aa2ff,#5bd4ff);color:#07101c}
+    .action-btn.email{background:rgba(58,211,143,.14);border:1px solid rgba(58,211,143,.26);color:#b6f5d9}
+    .action-btn.copy{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:#dce9ff}
+    .expand-toggle{cursor:pointer;color:#9adfff;font-size:12px;font-weight:900;background:none;border:none;padding:4px 8px;border-radius:8px}
+    .expand-toggle:hover{background:rgba(255,255,255,.06)}
+    .notes-preview{font-size:12px;color:#9fb4d6;margin-top:3px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    @media(max-width:900px){.summary-grid{grid-template-columns:1fr 1fr}.expand-inner{grid-template-columns:1fr}}
+    @media(max-width:600px){.summary-grid{grid-template-columns:1fr};table{font-size:11px}}
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="card">
-      <h1>Admin Review</h1>
-      <p>Review hospital demo requests, executive walkthrough requests, and investor intake submissions. Update lead status, export CSV, and manage follow-up pipeline.</p>
-      <p><a class="btn" href="/admin/export.csv">Download CSV</a> <a class="btn" href="/">Return Home</a></p>
-
-      <div class="ticker-wrap">
-        <div class="ticker-head">
-          <div class="ticker-title">Live Clinical Activity Ticker</div>
-          <div class="ticker-live">Live Stream</div>
-        </div>
-        <div class="ticker-track">
-          <div class="ticker-move" id="admin-ticker">
-            <div class="ticker-pill"><span class="dot critical"></span> Critical risk escalation detected</div>
-            <div class="ticker-pill"><span class="dot high"></span> Care team routing updated</div>
-            <div class="ticker-pill"><span class="dot stable"></span> Stable patient trend confirmed</div>
-            <div class="ticker-pill"><span class="dot critical"></span> ICU watchlist refreshed</div>
-            <div class="ticker-pill"><span class="dot high"></span> Executive dashboard synced</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="icu-wall">
-        <div class="icu-main">
-          <div class="icu-monitor critical-monitor">
-            <div class="icu-head">
-              <div>
-                <div class="icu-kicker">ICU Bed A</div>
-                <div class="icu-title">Critical Patient Monitor</div>
-              </div>
-              <div class="icu-state critical" id="admin-monitor-a-status">Critical</div>
-            </div>
-
-            <div class="icu-screen">
-              <div class="screen-grid"></div>
-              <svg class="ecg-svg" viewBox="0 0 1200 220" preserveAspectRatio="none" aria-hidden="true">
-                <path class="ecg-path critical-path"
-                  d="M0 130 L40 130 L70 130 L90 130 L110 130 L130 130 L150 130 L170 130 L190 130
-                     L210 130 L225 110 L240 145 L255 60 L270 185 L285 128
-                     L300 130 L340 130 L380 130 L420 130 L435 112 L450 145 L465 65 L480 185 L495 128
-                     L510 130 L550 130 L590 130 L630 130 L645 112 L660 145 L675 58 L690 190 L705 128
-                     L720 130 L760 130 L800 130 L840 130 L855 114 L870 142 L885 63 L900 186 L915 128
-                     L930 130 L970 130 L1010 130 L1050 130 L1065 112 L1080 144 L1095 60 L1110 184 L1125 128
-                     L1140 130 L1200 130" />
-              </svg>
-              <div class="screen-readouts">
-                <div class="readout"><span class="r-k">HR</span><span class="r-v" id="admin-monitor-a-hr">128</span></div>
-                <div class="readout"><span class="r-k">SpO₂</span><span class="r-v" id="admin-monitor-a-spo2">89</span></div>
-                <div class="readout"><span class="r-k">BP</span><span class="r-v" id="admin-monitor-a-bp">164/98</span></div>
-                <div class="readout"><span class="r-k">Risk</span><span class="r-v" id="admin-monitor-a-risk">9.1</span></div>
-              </div>
-            </div>
-          </div>
-
-          <div class="icu-monitor watch-monitor">
-            <div class="icu-head">
-              <div>
-                <div class="icu-kicker">ICU Bed B</div>
-                <div class="icu-title">Escalation Watch Monitor</div>
-              </div>
-              <div class="icu-state warning" id="admin-monitor-b-status">High</div>
-            </div>
-
-            <div class="icu-screen">
-              <div class="screen-grid"></div>
-              <svg class="ecg-svg" viewBox="0 0 1200 220" preserveAspectRatio="none" aria-hidden="true">
-                <path class="ecg-path warning-path"
-                  d="M0 132 L50 132 L90 132 L130 132 L170 132 L210 132 L225 120 L240 140 L255 92 L270 165 L285 132
-                     L300 132 L350 132 L400 132 L450 132 L465 118 L480 140 L495 96 L510 162 L525 132
-                     L540 132 L590 132 L640 132 L690 132 L705 120 L720 138 L735 98 L750 162 L765 132
-                     L780 132 L830 132 L880 132 L930 132 L945 120 L960 140 L975 95 L990 164 L1005 132
-                     L1020 132 L1080 132 L1140 132 L1200 132" />
-              </svg>
-              <div class="screen-readouts">
-                <div class="readout"><span class="r-k">HR</span><span class="r-v" id="admin-monitor-b-hr">112</span></div>
-                <div class="readout"><span class="r-k">SpO₂</span><span class="r-v" id="admin-monitor-b-spo2">93</span></div>
-                <div class="readout"><span class="r-k">BP</span><span class="r-v" id="admin-monitor-b-bp">148/90</span></div>
-                <div class="readout"><span class="r-k">Risk</span><span class="r-v" id="admin-monitor-b-risk">8.2</span></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="icu-side-rail">
-          <div class="rail-card"><div class="rail-k">Hospital Demo Requests</div><div class="rail-v">__HOSPITAL_COUNT__</div><div class="rail-sub">Clinical buyer and operator pipeline</div></div>
-          <div class="rail-card"><div class="rail-k">Executive Walkthrough Requests</div><div class="rail-v">__EXEC_COUNT__</div><div class="rail-sub">Leadership and pilot evaluation requests</div></div>
-          <div class="rail-card"><div class="rail-k">Investor Intake Requests</div><div class="rail-v">__INVESTOR_COUNT__</div><div class="rail-sub">Commercial and investor follow-up flow</div></div>
-          <div class="rail-card"><div class="rail-k">Open Admin Leads</div><div class="rail-v">__OPEN_LEADS__</div><div class="rail-sub">Requests not yet marked closed</div></div>
-        </div>
-      </div>
-
-      <div class="proof-strip">
-        <div class="proof-card"><div class="proof-k">Hospital Story</div><div class="proof-v">Operational</div><div class="proof-sub">Clinical buyers, hospital operators, RPM teams, and health systems.</div></div>
-        <div class="proof-card"><div class="proof-k">Executive Story</div><div class="proof-v">Strategic</div><div class="proof-sub">Leadership-facing walkthrough requests for evaluations, pilots, and strategic review.</div></div>
-        <div class="proof-card"><div class="proof-k">Investor Story</div><div class="proof-v">Commercial</div><div class="proof-sub">Investor pipeline capture with contact details, timing, and opportunity notes.</div></div>
-        <div class="proof-card"><div class="proof-k">Status Flow</div><div class="proof-v">Actionable</div><div class="proof-sub">New, Contacted, and Closed status flow supports real follow-up operations.</div></div>
-      </div>
-
-      <div class="status-legend">
-        <div class="status-chip new"><span class="s-dot"></span>New</div>
-        <div class="status-chip contacted"><span class="s-dot"></span>Contacted</div>
-        <div class="status-chip closed"><span class="s-dot"></span>Closed</div>
-      </div>
-
-      <div class="lead-row">
-        <div class="lead-type">
-          <h3>Hospital Leads</h3>
-          <p>Clinical buyers, hospital operators, RPM teams, and health systems.</p>
-        </div>
-        <div class="lead-type">
-          <h3>Executive Leads</h3>
-          <p>Leadership-facing walkthrough requests for evaluations, pilots, and strategic review.</p>
-        </div>
-        <div class="lead-type">
-          <h3>Investor Leads</h3>
-          <p>Investor pipeline capture with contact details, timing, and opportunity notes.</p>
-        </div>
-      </div>
-
-      <div class="section"><h2>Hospital Demo Requests</h2>__HOSPITAL_TABLE__</div>
-      <div class="section"><h2>Executive Walkthrough Requests</h2>__EXEC_TABLE__</div>
-      <div class="section"><h2>Investor Intake</h2>__INVESTOR_TABLE__</div>
+<div class="wrap">
+  <div class="card">
+    <h1>Admin Review</h1>
+    <p class="muted">Review hospital, executive, and investor submissions. Update status, add notes, set follow-up dates, and compose emails directly from this panel.</p>
+    <div class="links">
+      <a class="btn" href="/command-center">Command Center</a>
+      <a class="btn secondary" href="/pilot-docs">Pilot Docs</a>
+      <a class="btn secondary" href="/model-card">Model Card</a>
+      <a class="btn secondary" href="/pilot-success-guide">Pilot Success Guide</a>
+      <a class="btn secondary" href="/admin/export.csv">Export CSV</a>
     </div>
   </div>
 
-  <script>
-    async function refreshAdminReview() {
-      try {
-        const res = await fetch("/admin/review?refresh=" + Date.now(), { cache: "no-store" });
-        const html = await res.text();
+  <div class="summary-grid" id="summaryGrid">
+    <div class="stat"><div class="stat-k">Hospital</div><div class="stat-v" id="cntHospital">—</div></div>
+    <div class="stat"><div class="stat-k">Executive</div><div class="stat-v" id="cntExecutive">—</div></div>
+    <div class="stat"><div class="stat-k">Investor</div><div class="stat-v" id="cntInvestor">—</div></div>
+    <div class="stat"><div class="stat-k">Open</div><div class="stat-v" id="cntOpen">—</div></div>
+  </div>
 
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(html, "text/html");
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px">
+      <h2>Lead Pipeline</h2>
+      <span id="statusMsg"></span>
+    </div>
+    <div class="filter-bar">
+      <select id="filterType" onchange="applyFilter()">
+        <option value="">All Types</option>
+        <option value="Hospital Demo">Hospital Demo</option>
+        <option value="Executive Walkthrough">Executive Walkthrough</option>
+        <option value="Investor Intake">Investor Intake</option>
+      </select>
+      <select id="filterStatus" onchange="applyFilter()">
+        <option value="">All Statuses</option>
+        <option value="New">New</option>
+        <option value="Contacted">Contacted</option>
+        <option value="Meeting Set">Meeting Set</option>
+        <option value="Qualified">Qualified</option>
+        <option value="Interested">Interested</option>
+        <option value="Due Diligence">Due Diligence</option>
+        <option value="Follow-Up">Follow-Up</option>
+        <option value="Closed">Closed</option>
+      </select>
+      <input id="filterSearch" placeholder="Search name, org, email…" oninput="applyFilter()" style="min-width:200px">
+    </div>
+    <div style="overflow-x:auto">
+      <table>
+        <thead>
+          <tr>
+            <th></th>
+            <th>Type</th>
+            <th>Name</th>
+            <th>Organization</th>
+            <th>Email</th>
+            <th>Timeline</th>
+            <th>Score</th>
+            <th>Priority</th>
+            <th>Status</th>
+            <th>Follow-Up</th>
+            <th>Submitted</th>
+          </tr>
+        </thead>
+        <tbody id="pipelineTable"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
 
-        const newHospital = doc.querySelector("#hospital-table");
-        const newExec = doc.querySelector("#exec-table");
-        const newInvestor = doc.querySelector("#investor-table");
+<script>
+  let allRows = [];
+  // Local CRM store — persists in sessionStorage so notes survive filter changes
+  let crmStore = {};
+  try { crmStore = JSON.parse(sessionStorage.getItem('era_crm') || '{}'); } catch(e) {}
 
-        if (newHospital && document.querySelector("#hospital-table")) {
-          document.querySelector("#hospital-table").innerHTML = newHospital.innerHTML;
-        }
-        if (newExec && document.querySelector("#exec-table")) {
-          document.querySelector("#exec-table").innerHTML = newExec.innerHTML;
-        }
-        if (newInvestor && document.querySelector("#investor-table")) {
-          document.querySelector("#investor-table").innerHTML = newInvestor.innerHTML;
-        }
-      } catch (err) {
-        console.error("Admin auto-refresh failed", err);
+  function saveCrm() {
+    try { sessionStorage.setItem('era_crm', JSON.stringify(crmStore)); } catch(e) {}
+  }
+
+  async function loadData() {
+    try {
+      const res = await fetch('/admin/api/data', {cache:'no-store'});
+      const data = await res.json();
+      allRows = data.rows || [];
+      const s = data.summary || {};
+      document.getElementById('cntHospital').textContent = s.hospital_count ?? '—';
+      document.getElementById('cntExecutive').textContent = s.executive_count ?? '—';
+      document.getElementById('cntInvestor').textContent = s.investor_count ?? '—';
+      document.getElementById('cntOpen').textContent = s.open_count ?? '—';
+      applyFilter();
+    } catch(err) {
+      console.error('Admin data load failed', err);
+    }
+  }
+
+  function applyFilter() {
+    const type = document.getElementById('filterType').value;
+    const status = document.getElementById('filterStatus').value;
+    const search = document.getElementById('filterSearch').value.toLowerCase();
+    const filtered = allRows.filter(r => {
+      if (type && r.lead_type !== type) return false;
+      if (status && r.status !== status) return false;
+      if (search) {
+        const haystack = [r.full_name, r.organization, r.email, r.message].join(' ').toLowerCase();
+        if (!haystack.includes(search)) return false;
       }
+      return true;
+    });
+    renderTable(filtered);
+  }
 
-      try {
-        const res = await fetch("/api/v1/dashboard/overview?tenant_id=demo&refresh=" + Date.now(), {
-          headers: { "Accept": "application/json" },
-          cache: "no-store"
-        });
-        if (res.ok) {
-          const data = await res.json();
-          const ticker = document.getElementById("admin-ticker");
-          if (ticker) {
-            ticker.innerHTML = `
-              <div class="ticker-pill"><span class="dot critical"></span> Critical alerts ${data.critical_alerts ?? 0}</div>
-              <div class="ticker-pill"><span class="dot high"></span> Open alerts ${data.open_alerts ?? 0}</div>
-              <div class="ticker-pill"><span class="dot stable"></span> Avg risk ${Number(data.avg_risk_score ?? 0).toFixed(1)}</div>
-              <div class="ticker-pill"><span class="dot high"></span> Hospital requests ${data.hospital_requests ?? 0}</div>
-              <div class="ticker-pill"><span class="dot stable"></span> Investor requests ${data.investor_requests ?? 0}</div>
-            `;
-          }
-        }
-      } catch (err) {
-        console.error("Admin KPI refresh failed", err);
-      }
+  function priorityPill(tag) {
+    const cls = tag === 'hot' ? 'hot' : tag === 'warm' ? 'warm' : 'normal';
+    return `<span class="pill ${cls}">${tag || 'normal'}</span>`;
+  }
 
-      try {
-        const res = await fetch("/api/v1/live-snapshot?tenant_id=demo&patient_id=p101&refresh=" + Date.now(), {
-          headers: { "Accept": "application/json" },
-          cache: "no-store"
-        });
-        if (res.ok) {
-          const data = await res.json();
-          const alerts = Array.isArray(data.alerts) ? data.alerts.slice(0, 2) : [];
-          const a = alerts[0] || { severity: "critical", risk_score: 9.1 };
-          const b = alerts[1] || { severity: "high", risk_score: 8.2 };
+  function statusPill(status) {
+    const cls = status === 'Closed' ? 'closed-s' : status === 'New' ? 'new-s' : 'warm';
+    return `<span class="pill ${cls}">${status || 'New'}</span>`;
+  }
 
-          function setMonitor(prefix, alert) {
-            const severity = (alert.severity || "stable").toLowerCase();
-            const statusEl = document.getElementById(prefix + "-status");
-            const hrEl = document.getElementById(prefix + "-hr");
-            const spo2El = document.getElementById(prefix + "-spo2");
-            const bpEl = document.getElementById(prefix + "-bp");
-            const riskEl = document.getElementById(prefix + "-risk");
+  function formatDate(iso) {
+    if (!iso) return '—';
+    try { return new Date(iso).toLocaleDateString([], {month:'short',day:'numeric',year:'numeric'}); }
+    catch { return iso; }
+  }
 
-            const statusText = severity === "critical" ? "Critical" : (severity === "high" ? "High" : "Stable");
-            statusEl.textContent = statusText;
-            statusEl.className = "icu-state " + (severity === "critical" ? "critical" : (severity === "high" ? "warning" : "stable"));
+  function rowKey(r) {
+    return r.submitted_at + '|' + r.lead_type_key;
+  }
 
-            const baseRisk = Number(alert.risk_score ?? 3.4);
-            const hr = severity === "critical" ? 124 + Math.floor(Math.random() * 10) : (severity === "high" ? 106 + Math.floor(Math.random() * 10) : 78 + Math.floor(Math.random() * 10));
-            const spo2 = severity === "critical" ? 87 + Math.floor(Math.random() * 3) : (severity === "high" ? 92 + Math.floor(Math.random() * 3) : 97 + Math.floor(Math.random() * 2));
-            const sys = severity === "critical" ? 160 + Math.floor(Math.random() * 8) : (severity === "high" ? 146 + Math.floor(Math.random() * 8) : 120 + Math.floor(Math.random() * 6));
-            const dia = severity === "critical" ? 96 + Math.floor(Math.random() * 6) : (severity === "high" ? 88 + Math.floor(Math.random() * 5) : 76 + Math.floor(Math.random() * 4));
+  function getCrm(r) {
+    return crmStore[rowKey(r)] || {notes:'', follow_up:''};
+  }
 
-            hrEl.textContent = hr;
-            spo2El.textContent = spo2;
-            bpEl.textContent = sys + "/" + dia;
-            riskEl.textContent = baseRisk.toFixed(1);
-          }
-
-          setMonitor("admin-monitor-a", a);
-          setMonitor("admin-monitor-b", b);
-        }
-      } catch (err) {
-        console.error("Admin monitor refresh failed", err);
-      }
+  function renderTable(rows) {
+    const tbody = document.getElementById('pipelineTable');
+    if (!rows.length) {
+      tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:24px;color:#9fb4d6">No leads match current filters.</td></tr>';
+      return;
     }
 
-    setInterval(refreshAdminReview, 6000);
-  </script>
+    let html = '';
+    rows.forEach((r, idx) => {
+      const key = rowKey(r);
+      const crm = getCrm(r);
+      const expandId = `expand_${idx}`;
+      html += `
+        <tr>
+          <td><button class="expand-toggle" onclick="toggleExpand('${expandId}')" title="Open CRM panel">▸</button></td>
+          <td>${r.lead_type || '—'}</td>
+          <td>
+            <strong>${r.full_name || '—'}</strong>
+            <div style="font-size:11px;color:#9adfff;margin-top:2px">${r.role_or_title || ''}</div>
+            ${crm.notes ? `<div class="notes-preview" title="${crm.notes.replace(/"/g,'&quot;')}">${crm.notes}</div>` : ''}
+          </td>
+          <td>${r.organization || '—'}</td>
+          <td style="font-size:12px">${r.email || '—'}</td>
+          <td>${r.timeline || '—'}</td>
+          <td>${r.lead_score ?? '—'}</td>
+          <td>${priorityPill(r.priority_tag)}</td>
+          <td>
+            <select class="status-sel" data-type="${r.lead_type_key}" data-submitted="${r.submitted_at}" onchange="updateStatus(this)">
+              ${(r.available_statuses || ['New','Contacted','Closed']).map(s => `<option${s===r.status?' selected':''}>${s}</option>`).join('')}
+            </select>
+          </td>
+          <td style="font-size:12px;color:${crm.follow_up ? '#ffd96c' : '#9fb4d6'}">${crm.follow_up || '—'}</td>
+          <td style="font-size:12px;color:#9fb4d6">${formatDate(r.submitted_at)}</td>
+        </tr>
+        <tr class="expand-row" id="${expandId}">
+          <td colspan="11">
+            <div class="expand-inner">
+              <div>
+                <div class="field-group" style="margin-bottom:12px">
+                  <label>Internal Notes</label>
+                  <textarea id="notes_${idx}" placeholder="Add internal notes about this lead…">${crm.notes || ''}</textarea>
+                </div>
+                <div class="field-group">
+                  <label>Follow-Up Date</label>
+                  <input type="date" id="followup_${idx}" value="${crm.follow_up || ''}">
+                </div>
+                <div class="action-btns">
+                  <button class="action-btn save" onclick="saveCrmRow(${idx}, '${key}')">Save Notes</button>
+                  <button class="action-btn copy" onclick="copyEmail(${idx})">Copy Email</button>
+                </div>
+              </div>
+              <div>
+                <div class="field-group" style="margin-bottom:12px">
+                  <label>Compose Outreach Email</label>
+                  <textarea id="compose_${idx}" style="min-height:130px" placeholder="Write your email here…">${buildTemplate(r)}</textarea>
+                </div>
+                <div class="action-btns">
+                  <button class="action-btn email" onclick="openMailto(${idx}, '${(r.email||'').replace(/'/g,"\\'")}')">Open in Mail</button>
+                  <button class="action-btn copy" onclick="copyCompose(${idx})">Copy Message</button>
+                </div>
+              </div>
+            </div>
+          </td>
+        </tr>
+      `;
+    });
+    tbody.innerHTML = html;
+  }
+
+  function buildTemplate(r) {
+    const type = r.lead_type || '';
+    const name = (r.full_name || '').split(' ')[0] || 'there';
+    if (type.includes('Hospital')) {
+      return `Hi ${name},\n\nThank you for your interest in Early Risk Alert AI. I'd love to schedule a live command center demonstration for ${r.organization || 'your team'}.\n\nWould you have 30 minutes available this week or next?\n\nBest,\nMilton Munroe\nFounder & CEO, Early Risk Alert AI\ninfo@earlyriskalertai.com | 732-724-7267`;
+    }
+    if (type.includes('Investor')) {
+      return `Hi ${name},\n\nThank you for your interest in Early Risk Alert AI. I'd be happy to walk you through the platform, our hospital pilot model, and where we are in our raise.\n\nAre you available for a brief call this week?\n\nBest,\nMilton Munroe\nFounder & CEO, Early Risk Alert AI\ninfo@earlyriskalertai.com | 732-724-7267`;
+    }
+    return `Hi ${name},\n\nThank you for reaching out to Early Risk Alert AI. I'd love to connect and learn more about what you're looking for.\n\nBest,\nMilton Munroe\nFounder & CEO, Early Risk Alert AI\ninfo@earlyriskalertai.com | 732-724-7267`;
+  }
+
+  function toggleExpand(id) {
+    const row = document.getElementById(id);
+    if (row) row.classList.toggle('open');
+  }
+
+  function saveCrmRow(idx, key) {
+    const notes = document.getElementById(`notes_${idx}`)?.value || '';
+    const follow_up = document.getElementById(`followup_${idx}`)?.value || '';
+    crmStore[key] = {notes, follow_up};
+    saveCrm();
+    showMsg('Notes saved ✓');
+    applyFilter();
+  }
+
+  function copyEmail(idx) {
+    const emailEl = document.querySelector(`tr:nth-child(${idx * 2 + 1}) td:nth-child(5)`);
+    const text = emailEl?.textContent?.trim() || '';
+    if (text && text !== '—') {
+      navigator.clipboard.writeText(text).then(() => showMsg('Email copied ✓'));
+    }
+  }
+
+  function copyCompose(idx) {
+    const text = document.getElementById(`compose_${idx}`)?.value || '';
+    navigator.clipboard.writeText(text).then(() => showMsg('Message copied ✓'));
+  }
+
+  function openMailto(idx, email) {
+    const body = encodeURIComponent(document.getElementById(`compose_${idx}`)?.value || '');
+    const subject = encodeURIComponent('Early Risk Alert AI — Following Up');
+    window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
+  }
+
+  async function updateStatus(sel) {
+    const lead_type = sel.dataset.type;
+    const submitted_at = sel.dataset.submitted;
+    const status = sel.value;
+    try {
+      const res = await fetch('/admin/api/status', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({lead_type, submitted_at, status})
+      });
+      const data = await res.json();
+      if (data.ok) {
+        showMsg('Status updated ✓');
+        await loadData();
+      } else {
+        showMsg('Update failed');
+      }
+    } catch(err) {
+      showMsg('Update failed');
+    }
+  }
+
+  function showMsg(text) {
+    const el = document.getElementById('statusMsg');
+    el.textContent = text;
+    setTimeout(() => el.textContent = '', 2800);
+  }
+
+  loadData();
+  setInterval(loadData, 30000);
+</script>
 </body>
 </html>
 """
@@ -1665,19 +925,46 @@ def _utc_now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
-def _status_norm(status: str | None) -> str:
-    raw = (status or "").strip().lower()
-    if raw == "contacted":
-        return "Contacted"
-    if raw == "closed":
-        return "Closed"
-    return "New"
+def _safe_float(value: Any, default: float = 0.0) -> float:
+    try:
+        if value is None:
+            return default
+        return float(value)
+    except Exception:
+        return default
 
 
 def _data_dir() -> Path:
     path = Path(os.getenv("ERA_DATA_DIR", "data")).resolve()
     path.mkdir(parents=True, exist_ok=True)
     return path
+
+
+DOC_FILE_NAMES = {
+    "pilot_success_guide": "Early_Risk_Alert_AI_Pilot_Success_Criteria_and_Workflow_Integration_Guide.docx",
+    "model_card": "Early_Risk_Alert_AI_Model_Card.docx",
+}
+
+
+def _static_search_roots() -> list[Path]:
+    roots = [Path.cwd() / "static", Path.cwd(), Path('/mnt/data')]
+    seen = []
+    out = []
+    for root in roots:
+        key = str(root)
+        if key not in seen:
+            seen.append(key)
+            out.append(root)
+    return out
+
+
+def _serve_static_doc(kind: str):
+    filename = DOC_FILE_NAMES[kind]
+    for root in _static_search_roots():
+        candidate = root / filename
+        if candidate.exists():
+            return send_from_directory(str(root), filename, as_attachment=True, download_name=filename, max_age=0)
+    return Response(f"Document not found: {filename}", status=404)
 
 
 def _read_jsonl(path: Path) -> list[dict[str, Any]]:
@@ -1697,779 +984,2996 @@ def _read_jsonl(path: Path) -> list[dict[str, Any]]:
     return rows
 
 
-def _save_jsonl(path: Path, payload: dict[str, Any]) -> None:
+def _write_jsonl_rows(path: Path, rows: list[dict[str, Any]]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8") as f:
+        for row in rows:
+            f.write(json.dumps(row, ensure_ascii=False) + "\n")
+
+
+def _append_jsonl(path: Path, payload: dict[str, Any]) -> None:
     with path.open("a", encoding="utf-8") as f:
         f.write(json.dumps(payload, ensure_ascii=False) + "\n")
 
 
-def _lead_score(payload: dict[str, Any], lead_type: str) -> int:
-    score = 40
+def _status_norm(value: Any, lead_type: str = "") -> str:
+    text = str(value or "New").strip()
+    if not text:
+        return "New"
+    mapping = {
+        "new": "New",
+        "contacted": "Contacted",
+        "meeting set": "Meeting Set",
+        "qualified": "Qualified",
+        "closed": "Closed",
+        "interested": "Interested",
+        "due diligence": "Due Diligence",
+        "follow-up": "Follow-Up",
+    }
+    key = text.lower()
+    return mapping.get(key, text)
 
-    timeline = (payload.get("timeline") or "").lower()
-    message = (payload.get("message") or "").lower()
-    facility_type = (payload.get("facility_type") or "").lower()
-    priority = (payload.get("priority") or "").lower()
-    investor_type = (payload.get("investor_type") or "").lower()
-    check_size = (payload.get("check_size") or "").lower()
 
-    if "immediate" in timeline:
-        score += 28
-    elif "30-60" in timeline:
-        score += 18
-    elif "quarter" in timeline:
-        score += 10
-    else:
-        score += 5
-
-    if lead_type == "hospital":
-        if "hospital" in facility_type:
-            score += 18
-        elif "health system" in facility_type:
-            score += 20
-        elif "rpm" in facility_type:
-            score += 15
-        if any(x in message for x in ["pilot", "integration", "deployment", "command center", "live", "evaluation"]):
-            score += 12
-
-    if lead_type == "executive":
-        if "operational" in priority:
-            score += 18
-        elif "pilot" in priority:
-            score += 16
-        elif "enterprise" in priority:
-            score += 20
-        elif "strategic" in priority:
-            score += 18
-        if any(x in message for x in ["budget", "review", "rollout", "system", "leadership", "hospital"]):
-            score += 12
-
+def _available_statuses(lead_type: str) -> list[str]:
     if lead_type == "investor":
-        if "vc" in investor_type:
-            score += 18
-        elif "angel" in investor_type:
-            score += 12
-        elif "strategic" in investor_type:
-            score += 20
-        elif "healthcare" in investor_type:
-            score += 22
-        elif "family office" in investor_type:
-            score += 16
-        if "$250k" in check_size or "250k" in check_size:
-            score += 20
-        elif "$50k" in check_size or "50k" in check_size:
-            score += 10
-        if any(x in message for x in ["deck", "traction", "pilot", "hospital", "round", "funding", "partnership"]):
-            score += 12
-
-    return max(1, min(100, score))
+        return ["New", "Interested", "Due Diligence", "Follow-Up", "Contacted", "Closed"]
+    return ["New", "Contacted", "Meeting Set", "Qualified", "Closed"]
 
 
-def _score_class(score: int) -> str:
-    if score >= 80:
+def _priority_tag(score: int, lead_type: str) -> str:
+    if score >= 6:
         return "hot"
-    if score >= 60:
+    if score >= 3:
         return "warm"
-    return "cool"
+    return "normal"
 
 
-def send_notification_email(subject: str, message: str, recipients: list[str] | None = None) -> None:
-    sender = INFO_EMAIL
-    recipients = recipients or [INFO_EMAIL, FOUNDER_EMAIL]
-
-    msg = MIMEText(message)
-    msg["Subject"] = subject
-    msg["From"] = sender
-    msg["To"] = ", ".join(recipients)
-
-    password = os.getenv("EMAIL_PASSWORD", "").strip()
-    if not password:
-      print("Email send skipped: EMAIL_PASSWORD is not set", flush=True)
-      return
-
-    try:
-        server = smtplib.SMTP("smtp.zoho.com", 587)
-        server.starttls()
-        server.login(sender, password)
-        server.sendmail(sender, recipients, msg.as_string())
-        server.quit()
-    except Exception as e:
-        print("Email send failed:", e, flush=True)
+def _lead_score(payload: Dict[str, Any], lead_type: str) -> int:
+    score = 0
+    timeline = str(payload.get("timeline", "")).strip().lower()
+    if "immediate" in timeline:
+        score += 3
+    elif "30-60" in timeline:
+        score += 2
+    elif "quarter" in timeline:
+        score += 1
+    if lead_type == "investor":
+        stage = str(payload.get("stage", payload.get("investor_type", ""))).strip().lower()
+        if "institutional" in stage or "strategic" in stage:
+            score += 3
+        elif "angel" in stage or "seed" in stage:
+            score += 2
+    return score
 
 
-def _send_auto_reply(name: str, email: str, lead_type: str) -> None:
-    if not email:
-        return
-
-    subject_map = {
-        "hospital": "Your Hospital Demo Request - Early Risk Alert AI",
-        "executive": "Your Executive Walkthrough Request - Early Risk Alert AI",
-        "investor": "Your Investor Intake Submission - Early Risk Alert AI",
-    }
-    body_map = {
-        "hospital": f"""Hello {name or "there"},
-
-Thank you for requesting a hospital demo with Early Risk Alert AI.
-
-Your request has been received successfully and is now in review.
-Our team will follow up regarding next steps, scheduling, and platform walkthrough details.
-
-Early Risk Alert AI
-{INFO_EMAIL}
-{BUSINESS_PHONE}
-""",
-        "executive": f"""Hello {name or "there"},
-
-Thank you for requesting an executive walkthrough with Early Risk Alert AI.
-
-Your request has been received successfully and is now in review.
-We will follow up regarding scheduling, evaluation goals, and the most relevant platform views for your team.
-
-Early Risk Alert AI
-{INFO_EMAIL}
-{BUSINESS_PHONE}
-""",
-        "investor": f"""Hello {name or "there"},
-
-Thank you for your investor intake submission to Early Risk Alert AI.
-
-Your request has been received successfully and is now in review.
-We will follow up regarding materials, timing, and the next conversation.
-
-Early Risk Alert AI
-{INFO_EMAIL}
-{BUSINESS_PHONE}
-""",
-    }
-    send_notification_email(subject_map[lead_type], body_map[lead_type], recipients=[email])
-
-
-def _detail_html(payload: dict[str, Any], fields: list[str]) -> str:
-    rows = []
-    for key in fields:
-        value = html.escape(str(payload.get(key, "") or ""))
-        label = html.escape(key.replace("_", " ").title())
-        rows.append(f"<div style='margin:8px 0'><strong>{label}:</strong> {value}</div>")
-    return "".join(rows)
-
-
-def _render_thank_you(kind: str, message: str, detail_html: str) -> str:
-    return f"""
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <title>Thank You - Early Risk Alert AI</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <style>
-    body{{margin:0;font-family:Inter,Arial,sans-serif;background:#07101c;color:#eef4ff;padding:28px}}
-    .wrap{{max-width:760px;margin:0 auto}}
-    .card{{background:#101a2d;border:1px solid rgba(255,255,255,.08);border-radius:24px;padding:28px}}
-    h1{{margin:0 0 10px;font-size:42px;letter-spacing:-.04em}}
-    p{{margin:0;color:#bdd0ea;line-height:1.7}}
-    .box{{margin-top:18px;padding:18px;border-radius:18px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08)}}
-    a{{display:inline-flex;margin-top:18px;color:#08111f;background:linear-gradient(135deg,#7aa2ff,#5bd4ff);padding:12px 16px;border-radius:14px;font-weight:1000;text-decoration:none}}
-  </style>
-</head>
-<body>
-  <div class="wrap">
-    <div class="card">
-      <h1>Thank You</h1>
-      <p>{html.escape(message)}</p>
-      <div class="box">{detail_html}</div>
-      <a href="/">Return Home</a>
-    </div>
-  </div>
-</body>
-</html>
-"""
-
-
-def _update_row_status(path: Path, submitted_at: str, status: str) -> None:
-    rows = _read_jsonl(path)
-    new_rows: list[dict[str, Any]] = []
-    normalized = _status_norm(status)
-
-    for row in rows:
-        if str(row.get("submitted_at", "")) == str(submitted_at):
-            row["status"] = normalized
-        new_rows.append(row)
-
-    path.write_text(
-        "\n".join(json.dumps(r, ensure_ascii=False) for r in new_rows) + ("\n" if new_rows else ""),
-        encoding="utf-8",
+def _detail_html(payload: Dict[str, Any], keys: List[str]) -> str:
+    return "<br>".join(
+        f"<strong>{key.replace('_', ' ').title()}:</strong> {payload.get(key, '')}"
+        for key in keys
     )
 
 
-def _table_html(
-    rows: list[dict[str, Any]],
-    columns: list[str],
-    labels: dict[str, str],
-    route_prefix: str,
-) -> str:
-    if not rows:
-        return "<div class='empty'>No submissions yet.</div>"
+def _render_thank_you(message: str, details: str) -> str:
+    return THANK_YOU_HTML.replace("__MESSAGE__", message).replace("__DETAILS__", details)
 
-    head = "".join(f"<th>{html.escape(labels.get(col, col.title()))}</th>" for col in columns) + "<th>Actions</th>"
-    body_rows: list[str] = []
 
+def _format_pretty_label(value: str) -> str:
+    if not value:
+        return "--"
+    try:
+        dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except Exception:
+        return value
+    return dt.astimezone(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+
+
+def _investor_stage_summary(rows: list[dict[str, Any]]) -> dict[str, int]:
+    counts = {"New": 0, "Interested": 0, "Due Diligence": 0, "Follow-Up": 0, "Contacted": 0, "Closed": 0}
     for row in rows:
-        submitted_at = html.escape(str(row.get("submitted_at", "")))
-        score = int(row.get("lead_score", 0) or 0)
-        score_class = _score_class(score)
-        tds: list[str] = []
+        status = _status_norm(row.get("status"), "investor")
+        counts[status] = counts.get(status, 0) + 1
+    return counts
 
-        for col in columns:
-            value = row.get(col, "")
-            if col == "status":
-                normalized = _status_norm(str(value))
-                cls = "status-new"
-                if normalized == "Contacted":
-                    cls = "status-contacted"
-                elif normalized == "Closed":
-                    cls = "status-closed"
-                cell = f"<span class='status-pill {cls}'>{html.escape(normalized)}</span>"
-            elif col == "lead_score":
-                cell = f"<span class='score {score_class}'>{score}</span>"
-            else:
-                cell = html.escape(str(value or ""))
-            tds.append(f"<td>{cell}</td>")
 
-        action_cell = (
-            "<td>"
-            "<div class='action-row'>"
-            f"<a class='mini-btn' href='/admin/status/{route_prefix}?submitted_at={submitted_at}&status=New'>New</a>"
-            f"<a class='mini-btn' href='/admin/status/{route_prefix}?submitted_at={submitted_at}&status=Contacted'>Contacted</a>"
-            f"<a class='mini-btn' href='/admin/status/{route_prefix}?submitted_at={submitted_at}&status=Closed'>Closed</a>"
-            "</div>"
-            "</td>"
+def _normalize_row(row: dict[str, Any], lead_type: str) -> dict[str, Any]:
+    status = _status_norm(row.get("status"), lead_type)
+    score = int(row.get("lead_score", 0) or 0)
+    category = row.get("facility_type") or row.get("priority") or row.get("investor_type") or ""
+    role_or_title = row.get("role") or row.get("title") or ""
+    last_updated = row.get("last_updated") or row.get("submitted_at") or ""
+    return {
+        "lead_type": {"hospital": "Hospital Demo", "executive": "Executive Walkthrough", "investor": "Investor Intake"}[lead_type],
+        "lead_type_key": lead_type,
+        "submitted_at": str(row.get("submitted_at", "")),
+        "last_updated": str(last_updated),
+        "status": status,
+        "lead_score": score,
+        "priority_tag": row.get("priority_tag") or _priority_tag(score, lead_type),
+        "full_name": str(row.get("full_name", "")),
+        "organization": str(row.get("organization", "")),
+        "role_or_title": str(role_or_title),
+        "email": str(row.get("email", "")),
+        "phone": str(row.get("phone", "")),
+        "category": str(category),
+        "timeline": str(row.get("timeline", "")),
+        "message": str(row.get("message", "")),
+        "available_statuses": _available_statuses(lead_type),
+    }
+
+
+def _send_admin_notification(_lead_type: str, _payload: Dict[str, Any]) -> None:
+    return None
+
+
+def _send_auto_reply(_lead_type: str, _payload: Dict[str, Any]) -> None:
+    return None
+
+
+# ---------------------------------------------------------------------------
+# PERSISTENCE LAYER — SQLite for workflow/audit, flat-file for trends/thresholds
+# ---------------------------------------------------------------------------
+
+_DB_LOCK = threading.Lock()
+
+
+def _db_path() -> Path:
+    return _data_dir() / "era_workflow.db"
+
+
+def _trend_dir() -> Path:
+    p = _data_dir() / "trends"
+    p.mkdir(parents=True, exist_ok=True)
+    return p
+
+
+def _threshold_file() -> Path:
+    return _data_dir() / "thresholds.json"
+
+
+def _init_db() -> None:
+    """Create SQLite tables if they don't exist."""
+    with _DB_LOCK:
+        conn = sqlite3.connect(str(_db_path()))
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS workflow_records (
+                patient_id TEXT PRIMARY KEY,
+                ack INTEGER DEFAULT 0,
+                assigned INTEGER DEFAULT 0,
+                assigned_label TEXT DEFAULT '',
+                escalated INTEGER DEFAULT 0,
+                resolved INTEGER DEFAULT 0,
+                state TEXT DEFAULT 'new',
+                role TEXT DEFAULT '',
+                updated_at TEXT DEFAULT ''
+            )
+        """)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS workflow_audit (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                time TEXT,
+                patient_id TEXT,
+                action TEXT,
+                role TEXT,
+                note TEXT,
+                user TEXT,
+                unit TEXT
+            )
+        """)
+        conn.commit()
+        conn.close()
+
+
+def _db_get_workflow_records() -> Dict[str, Any]:
+    with _DB_LOCK:
+        conn = sqlite3.connect(str(_db_path()))
+        conn.row_factory = sqlite3.Row
+        rows = conn.execute("SELECT * FROM workflow_records").fetchall()
+        conn.close()
+    return {
+        row["patient_id"]: {
+            "ack": bool(row["ack"]),
+            "assigned": bool(row["assigned"]),
+            "assigned_label": row["assigned_label"],
+            "escalated": bool(row["escalated"]),
+            "resolved": bool(row["resolved"]),
+            "state": row["state"],
+            "role": row["role"],
+            "updated_at": row["updated_at"],
+        }
+        for row in rows
+    }
+
+
+def _db_upsert_workflow_record(patient_id: str, record: Dict[str, Any]) -> None:
+    with _DB_LOCK:
+        conn = sqlite3.connect(str(_db_path()))
+        conn.execute("""
+            INSERT INTO workflow_records
+                (patient_id, ack, assigned, assigned_label, escalated, resolved, state, role, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(patient_id) DO UPDATE SET
+                ack=excluded.ack,
+                assigned=excluded.assigned,
+                assigned_label=excluded.assigned_label,
+                escalated=excluded.escalated,
+                resolved=excluded.resolved,
+                state=excluded.state,
+                role=excluded.role,
+                updated_at=excluded.updated_at
+        """, (
+            patient_id,
+            int(record.get("ack", False)),
+            int(record.get("assigned", False)),
+            record.get("assigned_label", ""),
+            int(record.get("escalated", False)),
+            int(record.get("resolved", False)),
+            record.get("state", "new"),
+            record.get("role", ""),
+            record.get("updated_at", ""),
+        ))
+        conn.commit()
+        conn.close()
+
+
+def _db_append_audit(entry: Dict[str, Any]) -> None:
+    with _DB_LOCK:
+        conn = sqlite3.connect(str(_db_path()))
+        conn.execute("""
+            INSERT INTO workflow_audit (time, patient_id, action, role, note, user, unit)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        """, (
+            entry.get("time", ""),
+            entry.get("patient_id", ""),
+            entry.get("action", ""),
+            entry.get("role", ""),
+            entry.get("note", ""),
+            entry.get("user", ""),
+            entry.get("unit", ""),
+        ))
+        conn.commit()
+        conn.close()
+
+
+def _db_get_audit(limit: int = 200) -> List[Dict[str, Any]]:
+    with _DB_LOCK:
+        conn = sqlite3.connect(str(_db_path()))
+        conn.row_factory = sqlite3.Row
+        rows = conn.execute(
+            "SELECT * FROM workflow_audit ORDER BY id DESC LIMIT ?", (limit,)
+        ).fetchall()
+        conn.close()
+    return [dict(r) for r in rows]
+
+
+def _load_thresholds_from_file() -> Dict[str, Any]:
+    f = _threshold_file()
+    if f.exists():
+        try:
+            data = json.loads(f.read_text(encoding="utf-8"))
+            if isinstance(data, dict):
+                return data
+        except Exception:
+            pass
+    return json.loads(json.dumps(DEFAULT_THRESHOLDS))
+
+
+def _save_thresholds_to_file(thresholds: Dict[str, Any]) -> None:
+    try:
+        _threshold_file().write_text(json.dumps(thresholds, ensure_ascii=False, indent=2), encoding="utf-8")
+    except Exception:
+        pass
+
+
+def _append_trend_to_file(patient_id: str, entry: Dict[str, Any]) -> None:
+    """Append a trend snapshot to a daily JSONL file per patient."""
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    path = _trend_dir() / f"{patient_id}_{today}.jsonl"
+    try:
+        with path.open("a", encoding="utf-8") as f:
+            f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+    except Exception:
+        pass
+
+
+def _load_trend_from_files(patient_id: str, max_points: int = 48) -> List[Dict[str, Any]]:
+    """Load trend history from the last 2 days of flat files, newest last."""
+    td = _trend_dir()
+    points: List[Dict[str, Any]] = []
+    for days_ago in (1, 0):
+        day = (datetime.now(timezone.utc) - timedelta(days=days_ago)).strftime("%Y-%m-%d")
+        path = td / f"{patient_id}_{day}.jsonl"
+        if path.exists():
+            for line in path.read_text(encoding="utf-8").splitlines():
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    points.append(json.loads(line))
+                except Exception:
+                    pass
+    return points[-max_points:]
+
+
+# ---------------------------------------------------------------------------
+# NOTIFICATION LAYER — email via SMTP/SendGrid, SMS via Twilio (opt-in)
+# ---------------------------------------------------------------------------
+
+_ALERT_COOLDOWN_MINUTES = int(os.getenv("ALERT_COOLDOWN_MINUTES", "15"))
+_notification_sent_at: Dict[str, str] = {}  # patient_id -> last ISO timestamp
+
+
+def _can_notify(patient_id: str) -> bool:
+    last = _notification_sent_at.get(patient_id)
+    if not last:
+        return True
+    try:
+        elapsed = (datetime.now(timezone.utc) - datetime.fromisoformat(last)).total_seconds()
+        return elapsed > _ALERT_COOLDOWN_MINUTES * 60
+    except Exception:
+        return True
+
+
+def _mark_notified(patient_id: str) -> None:
+    _notification_sent_at[patient_id] = _utc_now_iso()
+
+
+def _send_email_alert(patient_id: str, patient_name: str, status: str, risk_score: float, reasons: List[str]) -> bool:
+    """Send email alert via SMTP. Reads config from env vars. Returns True if sent."""
+    smtp_host = os.getenv("SMTP_HOST", "")
+    smtp_port = int(os.getenv("SMTP_PORT", "587"))
+    smtp_user = os.getenv("SMTP_USER", "")
+    smtp_pass = os.getenv("SMTP_PASS", "")
+    alert_to = os.getenv("ALERT_EMAIL_TO", "")
+    alert_from = os.getenv("ALERT_EMAIL_FROM", smtp_user)
+
+    if not all([smtp_host, smtp_user, smtp_pass, alert_to]):
+        return False
+
+    reason_text = "\n".join(f"  • {r}" for r in reasons) if reasons else "  • Monitored context elevated"
+    body = (
+        f"Early Risk Alert AI — Clinical Review Alert\n\n"
+        f"Patient: {patient_name} ({patient_id})\n"
+        f"Review Priority: {status}\n"
+        f"Review Score: {round(risk_score, 1)}\n\n"
+        f"Monitored context for authorized HCP review:\n{reason_text}\n\n"
+        f"---\n"
+        f"This alert is for decision-support and workflow-support purposes only.\n"
+        f"It does not replace clinician judgment and is not intended to diagnose,\n"
+        f"direct treatment, or independently trigger escalation.\n\n"
+        f"View command center: https://early-risk-alert-ai-1.onrender.com/command-center\n"
+    )
+    msg = MIMEText(body)
+    msg["Subject"] = f"[ERA Alert] {status} review priority — {patient_name}"
+    msg["From"] = alert_from
+    msg["To"] = alert_to
+    try:
+        with smtplib.SMTP(smtp_host, smtp_port, timeout=10) as server:
+            server.starttls()
+            server.login(smtp_user, smtp_pass)
+            server.send_message(msg)
+        return True
+    except Exception as e:
+        print(f"[ERA] Email alert failed: {e}")
+        return False
+
+
+def _send_sms_alert(patient_id: str, patient_name: str, status: str, risk_score: float) -> bool:
+    """Send SMS alert via Twilio. Reads config from env vars. Returns True if sent."""
+    account_sid = os.getenv("TWILIO_ACCOUNT_SID", "")
+    auth_token = os.getenv("TWILIO_AUTH_TOKEN", "")
+    from_number = os.getenv("TWILIO_FROM_NUMBER", "")
+    to_number = os.getenv("TWILIO_TO_NUMBER", "")
+
+    if not all([account_sid, auth_token, from_number, to_number]):
+        return False
+
+    body = (
+        f"[ERA Alert] {status} review priority — {patient_name} ({patient_id}). "
+        f"Review score {round(risk_score, 1)}. "
+        f"Decision support only — does not replace clinician judgment."
+    )
+    try:
+        url = f"https://api.twilio.com/2010-04-01/Accounts/{account_sid}/Messages.json"
+        import base64
+        data = urllib.parse.urlencode({"From": from_number, "To": to_number, "Body": body}).encode()
+        req = urllib.request.Request(url, data=data, method="POST")
+        credentials = base64.b64encode(f"{account_sid}:{auth_token}".encode()).decode()
+        req.add_header("Authorization", f"Basic {credentials}")
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            return resp.status in (200, 201)
+    except Exception as e:
+        print(f"[ERA] SMS alert failed: {e}")
+        return False
+
+
+def _maybe_send_alerts(patients: List[Dict[str, Any]]) -> None:
+    """Check each patient and fire notifications if threshold crossed and cooldown elapsed."""
+    notifications_enabled = os.getenv("ALERT_NOTIFICATIONS_ENABLED", "0") == "1"
+    if not notifications_enabled:
+        return
+    for p in patients:
+        patient_id = p.get("patient_id", "")
+        status = str(p.get("status", "")).strip()
+        risk_score = float(p.get("risk_score", 0))
+        if status in ("Critical", "High") and _can_notify(patient_id):
+            name = p.get("name", patient_id)
+            reasons = (p.get("risk") or {}).get("reasons", [])
+            email_sent = _send_email_alert(patient_id, name, status, risk_score, reasons)
+            sms_sent = _send_sms_alert(patient_id, name, status, risk_score)
+            if email_sent or sms_sent:
+                _mark_notified(patient_id)
+
+
+# ---------------------------------------------------------------------------
+# SIMSTATE — in-memory cache layer (backed by SQLite + flat files on write)
+# ---------------------------------------------------------------------------
+
+SIM_STATE: Dict[str, Any] = {
+    "seed": 1,
+    "last_generated_at": "",
+    "workflow_records": {},   # loaded from SQLite on first access
+    "workflow_audit": [],     # loaded from SQLite on first access
+    "trend_history": {},      # in-memory cache; writes also go to flat files
+    "thresholds": {},         # loaded from file on init
+    "_db_loaded": False,
+}
+
+
+def _ensure_db_loaded() -> None:
+    """Lazy-load workflow state from SQLite on first call after startup."""
+    if SIM_STATE["_db_loaded"]:
+        return
+    try:
+        _init_db()
+        SIM_STATE["workflow_records"] = _db_get_workflow_records()
+        SIM_STATE["workflow_audit"] = _db_get_audit(200)
+        SIM_STATE["thresholds"] = _load_thresholds_from_file()
+        # Warm trend cache from files for known patients
+        for pid in ("p101", "p102", "p103", "p104"):
+            rows = _load_trend_from_files(pid, 48)
+            if rows:
+                SIM_STATE["trend_history"][pid] = rows
+        SIM_STATE["_db_loaded"] = True
+    except Exception as e:
+        print(f"[ERA] DB load failed (will use in-memory): {e}")
+        SIM_STATE["_db_loaded"] = True  # don't retry on every request
+        if not SIM_STATE["thresholds"]:
+            SIM_STATE["thresholds"] = json.loads(json.dumps(DEFAULT_THRESHOLDS))
+
+
+def _clamp(value: float, low: float, high: float) -> float:
+    return max(low, min(high, value))
+
+
+def _base_patient_state() -> list[dict[str, Any]]:
+    return [
+        {
+            "patient_id": "p101",
+            "name": "Patient 1042",
+            "room": "ICU-12",
+            "program": "Cardiac Monitoring",
+            "heart_rate": 126.0,
+            "spo2": 89.0,
+            "bp_systolic": 164.0,
+            "bp_diastolic": 98.0,
+            "respiratory_rate": 28.0,
+            "temperature_f": 100.7,
+            "trend": "deteriorating",
+            "risk_score": 9.1,
+            "status": "Critical",
+            "confidence": 0.94,
+            "recommended_action": "Supportive review context indicates elevated monitored risk.",
+        },
+        {
+            "patient_id": "p102",
+            "name": "Patient 2188",
+            "room": "Telemetry-04",
+            "program": "Pulmonary Monitoring",
+            "heart_rate": 112.0,
+            "spo2": 93.0,
+            "bp_systolic": 148.0,
+            "bp_diastolic": 90.0,
+            "respiratory_rate": 24.0,
+            "temperature_f": 99.4,
+            "trend": "watch",
+            "risk_score": 8.1,
+            "status": "High",
+            "confidence": 0.88,
+            "recommended_action": "Supportive review context indicates closer monitored follow-up.",
+        },
+        {
+            "patient_id": "p103",
+            "name": "Patient 3045",
+            "room": "Stepdown-09",
+            "program": "Cardiac Stepdown",
+            "heart_rate": 82.0,
+            "spo2": 98.0,
+            "bp_systolic": 122.0,
+            "bp_diastolic": 78.0,
+            "respiratory_rate": 18.0,
+            "temperature_f": 98.4,
+            "trend": "recovering",
+            "risk_score": 3.4,
+            "status": "Stable",
+            "confidence": 0.81,
+            "recommended_action": "Routine monitored review remains active.",
+        },
+        {
+            "patient_id": "p104",
+            "name": "Patient 4172",
+            "room": "Ward-21",
+            "program": "Recovery Monitoring",
+            "heart_rate": 106.0,
+            "spo2": 94.0,
+            "bp_systolic": 142.0,
+            "bp_diastolic": 88.0,
+            "respiratory_rate": 22.0,
+            "temperature_f": 99.1,
+            "trend": "watch",
+            "risk_score": 7.6,
+            "status": "High",
+            "confidence": 0.86,
+            "recommended_action": "Supportive review context indicates continued monitored follow-up.",
+        },
+    ]
+
+
+def _risk_from_vitals(p: dict[str, Any]) -> tuple[float, str, float, str]:
+    hr = float(p["heart_rate"])
+    spo2 = float(p["spo2"])
+    sys = float(p["bp_systolic"])
+    dia = float(p["bp_diastolic"])
+    rr = float(p["respiratory_rate"])
+    temp = float(p["temperature_f"])
+
+    risk = 0.0
+    risk += max(0, hr - 90) * 0.035
+    risk += max(0, 94 - spo2) * 0.75
+    risk += max(0, sys - 140) * 0.02
+    risk += max(0, dia - 90) * 0.03
+    risk += max(0, rr - 20) * 0.12
+    risk += max(0, temp - 99.0) * 0.7
+    if p["trend"] == "deteriorating":
+        risk += 1.2
+    elif p["trend"] == "watch":
+        risk += 0.6
+    elif p["trend"] == "recovering":
+        risk -= 0.4
+    risk = _clamp(round(risk, 1), 0.8, 9.9)
+
+    if risk >= 8.5:
+        status = "Critical"
+        action = "Supportive review context indicates elevated monitored risk for authorized HCP review."
+    elif risk >= 6.2:
+        status = "High"
+        action = "Supportive review context indicates closer monitored follow-up for authorized HCP review."
+    else:
+        status = "Stable"
+        action = "Routine monitored review remains active for authorized HCP review."
+
+    confidence = _clamp(round(0.72 + min(risk, 9.5) / 25 + random.uniform(-0.03, 0.03), 2), 0.74, 0.98)
+    return risk, status, confidence, action
+
+
+def _mutate_patient(p: dict[str, Any]) -> dict[str, Any]:
+    trend = p["trend"]
+    if trend == "deteriorating":
+        p["heart_rate"] = _clamp(float(p["heart_rate"]) + random.uniform(-1, 5), 88, 142)
+        p["spo2"] = _clamp(float(p["spo2"]) + random.uniform(-2.2, 0.4), 84, 98)
+        p["bp_systolic"] = _clamp(float(p["bp_systolic"]) + random.uniform(-2, 6), 118, 176)
+        p["bp_diastolic"] = _clamp(float(p["bp_diastolic"]) + random.uniform(-2, 4), 70, 108)
+        p["respiratory_rate"] = _clamp(float(p["respiratory_rate"]) + random.uniform(-1, 2.5), 16, 34)
+        p["temperature_f"] = _clamp(float(p["temperature_f"]) + random.uniform(-0.1, 0.2), 97.8, 102.2)
+    elif trend == "watch":
+        p["heart_rate"] = _clamp(float(p["heart_rate"]) + random.uniform(-3, 3), 76, 126)
+        p["spo2"] = _clamp(float(p["spo2"]) + random.uniform(-1.0, 1.0), 89, 99)
+        p["bp_systolic"] = _clamp(float(p["bp_systolic"]) + random.uniform(-3, 3), 108, 160)
+        p["bp_diastolic"] = _clamp(float(p["bp_diastolic"]) + random.uniform(-2, 2), 68, 98)
+        p["respiratory_rate"] = _clamp(float(p["respiratory_rate"]) + random.uniform(-1.2, 1.2), 15, 28)
+        p["temperature_f"] = _clamp(float(p["temperature_f"]) + random.uniform(-0.08, 0.08), 97.8, 100.6)
+    else:
+        p["heart_rate"] = _clamp(float(p["heart_rate"]) + random.uniform(-2, 2), 62, 96)
+        p["spo2"] = _clamp(float(p["spo2"]) + random.uniform(-0.5, 0.5), 95, 100)
+        p["bp_systolic"] = _clamp(float(p["bp_systolic"]) + random.uniform(-2, 2), 108, 132)
+        p["bp_diastolic"] = _clamp(float(p["bp_diastolic"]) + random.uniform(-2, 2), 66, 84)
+        p["respiratory_rate"] = _clamp(float(p["respiratory_rate"]) + random.uniform(-1, 1), 14, 22)
+        p["temperature_f"] = _clamp(float(p["temperature_f"]) + random.uniform(-0.05, 0.05), 97.5, 99.2)
+
+    risk, status, confidence, action = _risk_from_vitals(p)
+    p["risk_score"] = risk
+    p["status"] = status
+    p["confidence"] = confidence
+    p["recommended_action"] = action
+    return p
+
+
+def _simulated_snapshot() -> dict[str, Any]:
+    _ensure_db_loaded()
+    SIM_STATE["seed"] += 1
+    random.seed(SIM_STATE["seed"] + int(time.time() // 2))
+    base_patients = [_mutate_patient(dict(p)) for p in _base_patient_state()]
+
+    patients: list[dict[str, Any]] = []
+    alerts: list[dict[str, Any]] = []
+    generated_at = _utc_now_iso()
+
+    for raw in base_patients:
+        risk_score = float(raw["risk_score"])
+        status = str(raw["status"])
+        severity = status.lower()
+        room = str(raw.get("room") or "Telemetry-01")
+        rr = int(round(float(raw["respiratory_rate"])))
+        temp_f = round(float(raw["temperature_f"]), 1)
+        hr = int(round(float(raw["heart_rate"])))
+        spo2 = int(round(float(raw["spo2"])))
+        sbp = int(round(float(raw["bp_systolic"])))
+        dbp = int(round(float(raw["bp_diastolic"])))
+
+        if status == "Critical":
+            alert_message = "Clinical review attention surfaced"
+            story = "Monitored context supports higher-priority authorized HCP review."
+        elif status == "High":
+            alert_message = "Elevated review attention surfaced"
+            story = "Observed trends remain available for authorized HCP review."
+        else:
+            alert_message = "Current monitored review summary stable"
+            story = "Combined monitored context remains available for authorized HCP review."
+
+        reasons: List[str] = []
+        if spo2 < 93:
+            reasons.append("Oxygen saturation is below the current review threshold")
+        if hr >= 110:
+            reasons.append("Heart rate is elevated relative to the current review threshold")
+        if sbp >= 150:
+            reasons.append("Blood pressure is elevated relative to the current review threshold")
+        if rr < 12 or rr > 20:
+            reasons.append("Respiratory rate is outside typical reference range — for HCP review")
+        else:
+            reasons.append("Respiratory rate trend is available for authorized HCP review")
+        if temp_f < 97.6 or temp_f > 100.4:
+            reasons.append("Temperature is outside typical reference range — for HCP review")
+        else:
+            reasons.append("Temperature trend is available for authorized HCP review")
+
+        patient = {
+            "patient_id": raw["patient_id"],
+            "patient_name": raw["name"],
+            "name": raw["name"],
+            "room": room,
+            "bed": room,
+            "program": raw.get("program", "Clinical Monitoring"),
+            "title": alert_message,
+            "heart_rate": hr,
+            "spo2": spo2,
+            "bp_systolic": sbp,
+            "bp_diastolic": dbp,
+            "resp_rate": rr,
+            "respiratory_rate": rr,
+            "temp": temp_f,
+            "temp_f": temp_f,
+            "temperature_f": temp_f,
+            "risk_score": risk_score,
+            "status": status,
+            "confidence": float(raw.get("confidence", 0.85)),
+            "recommended_action": raw.get("recommended_action", "Continue monitored review."),
+            "story": story,
+            "vitals": {
+                "heart_rate": hr,
+                "systolic_bp": sbp,
+                "diastolic_bp": dbp,
+                "spo2": spo2,
+                "respiratory_rate": rr,
+                "rr": rr,
+                "temperature_f": temp_f,
+                "temp_f": temp_f,
+            },
+            "risk": {
+                "risk_score": risk_score,
+                "severity": severity,
+                "alert_message": alert_message,
+                "recommended_action": raw.get("recommended_action", "Continue monitored review."),
+                "reasons": reasons,
+            },
+            "data_freshness": {
+                "generated_at": generated_at,
+                "age_seconds": 0,
+                "source_mode": "structured-vital-summary-pilot",
+                "refresh_interval_seconds": 5,
+            },
+        }
+        patients.append(patient)
+        alerts.append(
+            {
+                "patient_id": raw["patient_id"],
+                "title": alert_message,
+                "message": alert_message,
+                "alert_type": alert_message,
+                "severity": severity,
+                "room": room,
+                "unit": room,
+                "risk_score": risk_score,
+                "confidence": float(raw.get("confidence", 0.85)),
+                "recommended_action": raw.get("recommended_action", "Continue monitored review."),
+                "heart_rate": hr,
+                "spo2": spo2,
+            }
         )
 
-        body_rows.append("<tr>" + "".join(tds) + action_cell + "</tr>")
+        trend_entry = {
+                "time": generated_at,
+                "hr": hr,
+                "spo2": spo2,
+                "risk": risk_score,
+                "rr": rr,
+                "temp_f": temp_f,
+            }
+        history = SIM_STATE.setdefault("trend_history", {}).setdefault(raw["patient_id"], [])
+        history.append(trend_entry)
+        SIM_STATE["trend_history"][raw["patient_id"]] = history[-48:]
+        # Persist to flat file so trends survive restarts
+        _append_trend_to_file(raw["patient_id"], trend_entry)
 
-    return f"<div class='table-wrap' id='{route_prefix}-table'><table><thead><tr>{head}</tr></thead><tbody>{''.join(body_rows)}</tbody></table></div>"
+    alerts.sort(key=lambda a: float(a["risk_score"]), reverse=True)
+    critical_count = sum(1 for a in alerts if a["severity"] == "critical")
+    open_alerts = sum(1 for a in alerts if a["severity"] in {"critical", "high"})
+    avg_risk = round(sum(float(a["risk_score"]) for a in alerts) / len(alerts), 1) if alerts else 0.0
+    patients_with_alerts = sum(1 for a in alerts if a["severity"] in {"critical", "high"})
+    events_last_hour = open_alerts * 3 + critical_count * 2 + 4
+    focus_patient_id = alerts[0]["patient_id"] if alerts else "p101"
+
+    SIM_STATE["last_generated_at"] = generated_at
+    # Fire alert notifications asynchronously so they don't block the response
+    threading.Thread(target=_maybe_send_alerts, args=(patients,), daemon=True).start()
+    return {
+        "generated_at": generated_at,
+        "patients": patients,
+        "alerts": alerts[:8],
+        "summary": {
+            "patient_count": len(patients),
+            "open_alerts": open_alerts,
+            "critical_alerts": critical_count,
+            "avg_risk_score": avg_risk,
+            "patients_with_alerts": patients_with_alerts,
+            "events_last_hour": events_last_hour,
+            "focus_patient_id": focus_patient_id,
+        },
+        "meta": {
+            "pilot_version": PILOT_VERSION,
+            "pilot_build_state": PILOT_BUILD_STATE,
+            "intended_use_statement": INTENDED_USE_STATEMENT,
+        },
+    }
+
+
+def _delta_explainability(patient_id: str, current: Dict[str, Any]) -> str:
+    """
+    Build an explainability string that shows deltas from the last stored
+    trend observation so clinicians see 'HR was 88, now 112 — rising trend'
+    rather than just a static threshold check.
+    """
+    history = SIM_STATE.get("trend_history", {}).get(patient_id, [])
+    if len(history) < 2:
+        # Fallback to threshold-only description when no history yet
+        notes = []
+        spo2 = float(current.get("spo2") or 0)
+        hr = float(current.get("heart_rate") or 0)
+        sbp = float(current.get("bp_systolic") or 0)
+        rr = float(current.get("respiratory_rate") or 0)
+        temp = float(current.get("temperature_f") or 0)
+        if spo2 and spo2 < 93:
+            notes.append(f"SpO\u2082 {spo2:.0f}% is below the review threshold")
+        if hr and hr >= 110:
+            notes.append(f"HR {hr:.0f} bpm is elevated")
+        if sbp and sbp >= 150:
+            notes.append(f"BP {sbp:.0f} mmHg is elevated")
+        if rr and (rr < 12 or rr > 20):
+            notes.append(f"RR {rr:.0f} br/min is outside typical reference range")
+        if temp and (temp < 97.6 or temp > 100.4):
+            notes.append(f"Temp {temp:.1f}\u00b0F is outside typical reference range")
+        if not notes:
+            notes.append("Combined monitored context remains available for authorized HCP review")
+        return "Monitored context: " + "; ".join(notes) + "."
+
+    prev = history[-2]
+    curr = history[-1]
+    deltas = []
+
+    # HR delta
+    prev_hr = float(prev.get("hr") or 0)
+    curr_hr = float(curr.get("hr") or 0)
+    if prev_hr and curr_hr:
+        diff_hr = curr_hr - prev_hr
+        if abs(diff_hr) >= 5:
+            direction = "rising" if diff_hr > 0 else "falling"
+            deltas.append(
+                f"HR was {prev_hr:.0f} bpm, now {curr_hr:.0f} bpm \u2014 {direction} trend (+{diff_hr:+.0f})"
+                if diff_hr > 0
+                else f"HR was {prev_hr:.0f} bpm, now {curr_hr:.0f} bpm \u2014 {direction} trend ({diff_hr:+.0f})"
+            )
+        elif curr_hr >= 110:
+            deltas.append(f"HR {curr_hr:.0f} bpm remains elevated (stable)")
+
+    # SpO2 delta
+    prev_spo2 = float(prev.get("spo2") or 0)
+    curr_spo2 = float(curr.get("spo2") or 0)
+    if prev_spo2 and curr_spo2:
+        diff_spo2 = curr_spo2 - prev_spo2
+        if abs(diff_spo2) >= 1:
+            direction = "improving" if diff_spo2 > 0 else "declining"
+            deltas.append(
+                f"SpO\u2082 was {prev_spo2:.0f}%, now {curr_spo2:.0f}% \u2014 {direction} ({diff_spo2:+.0f}%)"
+            )
+        elif curr_spo2 < 93:
+            deltas.append(f"SpO\u2082 {curr_spo2:.0f}% remains below review threshold (stable low)")
+
+    # RR delta
+    prev_rr = float(prev.get("rr") or 0)
+    curr_rr = float(curr.get("rr") or 0)
+    if prev_rr and curr_rr:
+        diff_rr = curr_rr - prev_rr
+        if abs(diff_rr) >= 2:
+            direction = "rising" if diff_rr > 0 else "falling"
+            deltas.append(
+                f"RR was {prev_rr:.0f}, now {curr_rr:.0f} br/min \u2014 {direction} trend"
+            )
+        elif curr_rr < 12 or curr_rr > 20:
+            deltas.append(f"RR {curr_rr:.0f} br/min remains outside reference range (stable)")
+        else:
+            deltas.append(f"RR {curr_rr:.0f} br/min within reference range")
+
+    # Temp delta
+    prev_temp = float(prev.get("temp_f") or 0)
+    curr_temp = float(curr.get("temp_f") or 0)
+    if prev_temp and curr_temp:
+        diff_temp = curr_temp - prev_temp
+        if abs(diff_temp) >= 0.3:
+            direction = "rising" if diff_temp > 0 else "falling"
+            deltas.append(
+                f"Temp was {prev_temp:.1f}\u00b0F, now {curr_temp:.1f}\u00b0F \u2014 {direction} trend"
+            )
+        elif curr_temp > 100.4:
+            deltas.append(f"Temp {curr_temp:.1f}\u00b0F remains above reference range (stable elevated)")
+        else:
+            deltas.append(f"Temp {curr_temp:.1f}\u00b0F within reference range")
+
+    # Risk score delta
+    prev_risk = float(prev.get("risk") or 0)
+    curr_risk = float(curr.get("risk") or 0)
+    if prev_risk and curr_risk:
+        diff_risk = curr_risk - prev_risk
+        if abs(diff_risk) >= 0.5:
+            direction = "increasing" if diff_risk > 0 else "decreasing"
+            deltas.append(
+                f"Review score {direction} ({prev_risk:.1f} \u2192 {curr_risk:.1f})"
+            )
+
+    if not deltas:
+        deltas.append("All monitored values stable across last two observations")
+
+    return (
+        "Delta explainability (current vs last observation): "
+        + "; ".join(deltas)
+        + ". Values displayed as monitored context for authorized HCP review."
+    )
+
+
+# ---------------------------------------------------------------------------
+# CSV INGESTION LAYER — retrospective validation data pipeline
+# ---------------------------------------------------------------------------
+
+CSV_SCHEMA_REQUIRED = ["patient_id", "timestamp", "heart_rate", "spo2", "bp_systolic", "bp_diastolic", "respiratory_rate", "temperature_f"]
+CSV_SCHEMA_OPTIONAL = ["patient_name", "room", "unit", "program", "clinical_event", "clinical_event_label", "notes"]
+CSV_SCHEMA_ALL = CSV_SCHEMA_REQUIRED + CSV_SCHEMA_OPTIONAL
+
+CSV_SCHEMA_DESCRIPTION = {
+    "patient_id":           "Unique de-identified patient identifier (e.g., PT-001). No real names or MRNs.",
+    "timestamp":            "ISO 8601 datetime of the vital reading (e.g., 2024-03-15T14:32:00). UTC preferred.",
+    "heart_rate":           "Heart rate in beats per minute (numeric, e.g., 88).",
+    "spo2":                 "Oxygen saturation as percentage (numeric, e.g., 96).",
+    "bp_systolic":          "Systolic blood pressure in mmHg (numeric, e.g., 128).",
+    "bp_diastolic":         "Diastolic blood pressure in mmHg (numeric, e.g., 82).",
+    "respiratory_rate":     "Respiratory rate in breaths per minute (numeric, e.g., 16).",
+    "temperature_f":        "Temperature in Fahrenheit (numeric, e.g., 98.6).",
+    "patient_name":         "Optional. De-identified label only (e.g., 'Patient A'). Do not include real names.",
+    "room":                 "Optional. Room or bed identifier (e.g., ICU-04).",
+    "unit":                 "Optional. Unit name: icu, telemetry, stepdown, ward, or rpm.",
+    "program":              "Optional. Monitoring program label (e.g., Cardiac Monitoring).",
+    "clinical_event":       "Optional. 1 if a clinical escalation, rapid response, or adverse event occurred within 6 hours of this reading. 0 otherwise.",
+    "clinical_event_label": "Optional. Description of the clinical event (e.g., Rapid Response Team called, Transfer to ICU).",
+    "notes":                "Optional. Any additional context relevant to this reading.",
+}
+
+RETRO_STATE: Dict[str, Any] = {
+    "uploads": [],          # list of {upload_id, filename, uploaded_at, row_count, columns, status}
+    "records": {},          # upload_id -> list of parsed row dicts
+    "analysis": {},         # upload_id -> analysis result dict
+}
+
+
+def _parse_csv_upload(file_bytes: bytes, filename: str) -> Dict[str, Any]:
+    """Parse uploaded CSV bytes, validate schema, compute basic stats."""
+    try:
+        text = file_bytes.decode("utf-8-sig")  # handle BOM
+    except UnicodeDecodeError:
+        text = file_bytes.decode("latin-1")
+
+    reader = csv.DictReader(io.StringIO(text))
+    if not reader.fieldnames:
+        return {"ok": False, "error": "CSV appears empty or has no header row."}
+
+    headers = [h.strip().lower().replace(" ", "_") for h in reader.fieldnames]
+    missing = [f for f in CSV_SCHEMA_REQUIRED if f not in headers]
+    if missing:
+        return {
+            "ok": False,
+            "error": f"Missing required columns: {', '.join(missing)}. "
+                     f"Required columns are: {', '.join(CSV_SCHEMA_REQUIRED)}."
+        }
+
+    rows = []
+    errors = []
+    for i, raw_row in enumerate(reader, start=2):
+        row = {k.strip().lower().replace(" ", "_"): v.strip() for k, v in raw_row.items() if k}
+        # Validate numerics
+        numeric_fields = ["heart_rate", "spo2", "bp_systolic", "bp_diastolic", "respiratory_rate", "temperature_f"]
+        row_ok = True
+        for field in numeric_fields:
+            val = row.get(field, "")
+            if val == "":
+                continue
+            try:
+                row[field] = float(val)
+            except ValueError:
+                errors.append(f"Row {i}: '{field}' value '{val}' is not numeric — skipped.")
+                row_ok = False
+                break
+        if not row_ok:
+            continue
+        # Parse clinical_event
+        ce = row.get("clinical_event", "")
+        row["clinical_event"] = int(ce) if ce in ("0", "1") else None
+        rows.append(row)
+
+    if not rows:
+        return {"ok": False, "error": "No valid data rows found after parsing."}
+
+    # Basic stats
+    patients = list({r["patient_id"] for r in rows if r.get("patient_id")})
+    event_rows = [r for r in rows if r.get("clinical_event") == 1]
+    units_seen = list({r.get("unit", "").lower() for r in rows if r.get("unit")})
+
+    return {
+        "ok": True,
+        "rows": rows,
+        "row_count": len(rows),
+        "patient_count": len(patients),
+        "event_count": len(event_rows),
+        "units": units_seen,
+        "columns_found": headers,
+        "parse_errors": errors[:20],   # cap at 20 to avoid flooding
+        "filename": filename,
+    }
+
+
+def _run_retro_analysis(records: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """
+    Run the retrospective validation analysis on parsed CSV records.
+    Computes how many clinical events the platform's prioritization logic
+    would have flagged at 30, 60, and 120 minutes before the event,
+    versus standard single-threshold alerts.
+    """
+    import math
+
+    event_records = [r for r in records if r.get("clinical_event") == 1]
+    non_event_records = [r for r in records if r.get("clinical_event") != 1]
+
+    def risk_score_for_row(r: Dict[str, Any]) -> float:
+        try:
+            hr   = float(r.get("heart_rate", 0) or 0)
+            spo2 = float(r.get("spo2", 100) or 100)
+            sys  = float(r.get("bp_systolic", 120) or 120)
+            rr   = float(r.get("respiratory_rate", 16) or 16)
+            temp = float(r.get("temperature_f", 98.6) or 98.6)
+            risk = 0.0
+            risk += max(0, hr - 90)   * 0.035
+            risk += max(0, 94 - spo2) * 0.75
+            risk += max(0, sys - 140) * 0.02
+            risk += max(0, rr - 20)   * 0.12
+            risk += max(0, temp - 99.0) * 0.7
+            return round(_clamp(risk, 0.0, 9.9), 2)
+        except Exception:
+            return 0.0
+
+    def threshold_alert(r: Dict[str, Any]) -> bool:
+        try:
+            return (
+                float(r.get("spo2", 100) or 100) < 93 or
+                float(r.get("heart_rate", 0) or 0) > 110 or
+                float(r.get("bp_systolic", 0) or 0) > 150
+            )
+        except Exception:
+            return False
+
+    # Score every row
+    for r in records:
+        r["_risk_score"] = risk_score_for_row(r)
+        r["_threshold_alert"] = threshold_alert(r)
+        r["_era_alert"] = r["_risk_score"] >= 6.0   # High or Critical
+
+    # For event rows: flag as detected if score >= 6.0
+    event_detected_era       = sum(1 for r in event_records if r["_era_alert"])
+    event_detected_threshold = sum(1 for r in event_records if r["_threshold_alert"])
+
+    # False positives on non-event rows
+    fp_era       = sum(1 for r in non_event_records if r["_era_alert"])
+    fp_threshold = sum(1 for r in non_event_records if r["_threshold_alert"])
+
+    total_events   = len(event_records)
+    total_nonevents = len(non_event_records)
+    total_rows     = len(records)
+
+    def pct(n, d): return round((n / d * 100), 1) if d else 0.0
+    def safe_div(n, d): return round(n / d, 3) if d else 0.0
+
+    sensitivity_era       = pct(event_detected_era, total_events)
+    sensitivity_threshold = pct(event_detected_threshold, total_events)
+    fpr_era               = pct(fp_era, total_nonevents)
+    fpr_threshold         = pct(fp_threshold, total_nonevents)
+
+    # Alert reduction
+    total_era_alerts       = event_detected_era + fp_era
+    total_threshold_alerts = event_detected_threshold + fp_threshold
+    alert_reduction_pct    = pct(total_threshold_alerts - total_era_alerts, total_threshold_alerts) if total_threshold_alerts else 0.0
+
+    # Average risk score at event rows vs non-event rows
+    avg_risk_event    = round(sum(r["_risk_score"] for r in event_records) / total_events, 2) if total_events else 0.0
+    avg_risk_nonevent = round(sum(r["_risk_score"] for r in non_event_records) / total_nonevents, 2) if total_nonevents else 0.0
+
+    # Patient-level summary
+    patients: Dict[str, Dict] = {}
+    for r in records:
+        pid = r.get("patient_id", "unknown")
+        if pid not in patients:
+            patients[pid] = {"patient_id": pid, "readings": 0, "events": 0, "era_alerts": 0, "peak_risk": 0.0}
+        patients[pid]["readings"] += 1
+        if r.get("clinical_event") == 1:
+            patients[pid]["events"] += 1
+        if r["_era_alert"]:
+            patients[pid]["era_alerts"] += 1
+        if r["_risk_score"] > patients[pid]["peak_risk"]:
+            patients[pid]["peak_risk"] = r["_risk_score"]
+
+    patient_list = sorted(patients.values(), key=lambda x: x["peak_risk"], reverse=True)
+
+    return {
+        "summary": {
+            "total_rows":              total_rows,
+            "total_patients":          len(patients),
+            "total_events":            total_events,
+            "total_nonevents":         total_nonevents,
+            "era_sensitivity_pct":     sensitivity_era,
+            "threshold_sensitivity_pct": sensitivity_threshold,
+            "era_fpr_pct":             fpr_era,
+            "threshold_fpr_pct":       fpr_threshold,
+            "era_total_alerts":        total_era_alerts,
+            "threshold_total_alerts":  total_threshold_alerts,
+            "alert_reduction_pct":     alert_reduction_pct,
+            "avg_risk_at_event":       avg_risk_event,
+            "avg_risk_at_nonevent":    avg_risk_nonevent,
+        },
+        "patient_summary": patient_list[:20],   # top 20 by peak risk
+        "interpretation": _retro_interpretation(
+            sensitivity_era, sensitivity_threshold,
+            fpr_era, fpr_threshold,
+            alert_reduction_pct, total_events
+        ),
+    }
+
+
+def _retro_interpretation(sens_era, sens_thresh, fpr_era, fpr_thresh, alert_reduction, total_events) -> str:
+    if total_events == 0:
+        return (
+            "No clinical events were flagged in this dataset (clinical_event column is all 0 or missing). "
+            "To run a meaningful retrospective validation, include rows where clinical_event=1 for readings "
+            "that preceded a documented escalation, rapid response, or adverse event."
+        )
+    parts = []
+    if sens_era >= sens_thresh:
+        parts.append(
+            f"The Early Risk Alert AI prioritization logic detected {sens_era}% of clinical events, "
+            f"compared to {sens_thresh}% with standard threshold-only alerting."
+        )
+    else:
+        parts.append(
+            f"Standard threshold alerting detected {sens_thresh}% of clinical events vs "
+            f"{sens_era}% for the ERA prioritization logic on this dataset. "
+            "Review the flagging threshold (currently >= 6.0 risk score) for this patient population."
+        )
+    if fpr_era < fpr_thresh:
+        parts.append(
+            f"The ERA logic generated {fpr_era}% false positive alerts on non-event readings, "
+            f"compared to {fpr_thresh}% for standard thresholds — "
+            f"a {round(fpr_thresh - fpr_era, 1)} percentage point reduction in unnecessary alerts."
+        )
+    if alert_reduction > 0:
+        parts.append(
+            f"Overall alert volume was reduced by approximately {alert_reduction}% "
+            "compared to standard threshold-only alerting on this dataset."
+        )
+    parts.append(
+        "These results are based on a rules-based threshold and trend prioritization engine "
+        "applied to de-identified retrospective data. Independent clinical review of results is required "
+        "before drawing conclusions about prospective performance."
+    )
+    return " ".join(parts)
 
 
 def create_app() -> Flask:
-    app = Flask(__name__, template_folder="../templates")
-    app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "era-dev-secret")
+    app = Flask(__name__)
+    app.secret_key = os.getenv("SECRET_KEY", "era-dev-secret")
+    app.config["SESSION_COOKIE_HTTPONLY"] = True
+    app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+    app.config["SESSION_COOKIE_SECURE"] = os.getenv("SESSION_COOKIE_SECURE", "0") == "1"
+    app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(hours=int(os.getenv("SESSION_LIFETIME_HOURS", "12")))
 
     data_dir = _data_dir()
     hospital_file = data_dir / "hospital_demo_requests.jsonl"
     exec_file = data_dir / "executive_walkthrough_requests.jsonl"
     investor_file = data_dir / "investor_intake_requests.jsonl"
 
-    @app.get("/healthz")
-    def healthz():
-        return jsonify(
-            {
-                "ok": True,
-                "service": "early-risk-alert-ai",
-                "time": _utc_now_iso(),
-                "hospital_requests": len(_read_jsonl(hospital_file)),
-                "executive_requests": len(_read_jsonl(exec_file)),
-                "investor_requests": len(_read_jsonl(investor_file)),
-            }
-        )
+    def load_all_rows() -> dict[str, list[dict[str, Any]]]:
+        return {
+            "hospital": _read_jsonl(hospital_file),
+            "executive": _read_jsonl(exec_file),
+            "investor": _read_jsonl(investor_file),
+        }
 
-    @app.route("/robots.txt")
-    def robots_txt():
-        return Response(
-            "User-agent: *\nAllow: /\nSitemap: https://earlyriskalertai.com/sitemap.xml",
-            mimetype="text/plain",
-        )
+    def build_admin_rows() -> list[dict[str, Any]]:
+        rows = load_all_rows()
+        merged: list[dict[str, Any]] = []
+        for lead_type, data in rows.items():
+            for row in data:
+                merged.append(_normalize_row(row, lead_type))
+        merged.sort(key=lambda r: (r["submitted_at"], r["lead_score"]), reverse=True)
+        return merged
+
+    def summary_payload() -> dict[str, Any]:
+        raw = load_all_rows()
+        merged = build_admin_rows()
+        last_updated = max([r["last_updated"] for r in merged], default="")
+        return {
+            "hospital_count": len(raw["hospital"]),
+            "executive_count": len(raw["executive"]),
+            "investor_count": len(raw["investor"]),
+            "open_count": sum(1 for r in merged if r["status"] != "Closed"),
+            "investor_stages": _investor_stage_summary(raw["investor"]),
+            "last_updated": _format_pretty_label(last_updated),
+        }
+
+    def _logged_in() -> bool:
+        return bool(session.get("logged_in"))
+
+    def _current_user() -> str:
+        return str(session.get("full_name", FOUNDER_NAME)).strip() or FOUNDER_NAME
+
+    def _current_role() -> str:
+        role = str(session.get("user_role", "admin")).strip().lower()
+        return role if role in ROLE_ACTIONS else "viewer"
+
+    def _current_unit_access() -> str:
+        unit = str(session.get("assigned_unit", "all")).strip().lower()
+        return unit if unit in VALID_UNITS else "all"
+
+    def _has_permission(action: str) -> bool:
+        return action in ROLE_ACTIONS.get(_current_role(), {"view"})
+
+    def _login_required(fn):
+        @wraps(fn)
+        def wrapper(*args, **kwargs):
+            if not _logged_in():
+                return redirect(url_for("login"))
+            return fn(*args, **kwargs)
+        return wrapper
+
+    def _validate_admin_login(email: str, password: str) -> str | None:
+        admin_email = str(os.getenv("ADMIN_EMAIL", email)).strip().lower()
+        allowed_admin_emails = {
+            item.strip().lower()
+            for item in os.getenv("ALLOWED_ADMIN_EMAILS", admin_email).split(",")
+            if item.strip()
+        }
+        if email not in allowed_admin_emails:
+            return "Admin access denied for this email."
+        admin_password_hash = str(os.getenv("ADMIN_PASSWORD_HASH", "")).strip()
+        admin_password_plain = str(os.getenv("ADMIN_PASSWORD", "")).strip()
+        if not password:
+            return "Admin password is required."
+        if admin_password_hash:
+            try:
+                if not check_password_hash(admin_password_hash, password):
+                    return "Invalid admin password."
+                return None
+            except Exception:
+                pass
+        if admin_password_plain and admin_password_plain != password:
+            return "Invalid admin password."
+        return None
+
+    def _route_status_snapshot() -> Dict[str, Any]:
+        route_set = {rule.rule for rule in app.url_map.iter_rules()}
+        tracked_routes = [
+            "/",
+            "/login",
+            "/pilot-access",
+            "/logout",
+            "/command-center",
+            "/admin/review",
+            "/hospital-demo",
+            "/executive-walkthrough",
+            "/investor-intake",
+            "/pilot-docs",
+            "/pilot-success-guide",
+            "/model-card",
+            "/deck",
+            "/api/access-context",
+            "/api/workflow",
+            "/api/workflow/action",
+            "/api/audit",
+            "/api/thresholds",
+            "/api/system-health",
+            "/api/pilot-readiness",
+            "/api/v1/live-snapshot",
+            "/api/v2/patients",
+            "/api/explainability/<patient_id>",
+            "/api/trends/<patient_id>",
+            "/status",
+            "/deck",
+            "/retro-upload",
+            "/retro-schema",
+            "/api/retro/upload",
+            "/api/retro/analyze/<upload_id>",
+            "/api/retro/list",
+            "/api/retro/export/<upload_id>",
+        ]
+        missing_routes = [route for route in tracked_routes if route not in route_set]
+        documents = {
+            "command_center": True,
+            "pilot_docs": True,
+            "hospital_demo": True,
+            "executive_walkthrough": True,
+            "investor_intake": True,
+            "pilot_success_guide": any((root / DOC_FILE_NAMES["pilot_success_guide"]).exists() for root in _static_search_roots()),
+            "model_card": any((root / DOC_FILE_NAMES["model_card"]).exists() for root in _static_search_roots()),
+        }
+        return {
+            "checked_at": _utc_now_iso(),
+            "routes_checked": len(tracked_routes),
+            "routes_available": len(tracked_routes) - len(missing_routes),
+            "missing_routes": missing_routes,
+            "docs_checked": len(documents),
+            "docs_available": sum(1 for ok in documents.values() if ok),
+            "documents": documents,
+        }
+
+    def _access_context_payload() -> Dict[str, Any]:
+        return {
+            "logged_in": True,
+            "role": _current_role(),
+            "user_name": _current_user(),
+            "assigned_unit": _current_unit_access(),
+            "can_view_all_units": _current_role() == "admin" or _current_unit_access() == "all",
+            "pilot_mode": True,
+            "pilot_version": PILOT_VERSION,
+            "pilot_build_state": PILOT_BUILD_STATE,
+            "hospital_name": "Early Risk Alert AI",
+            "brand_name": "Early Risk Alert AI",
+            "brand_tagline": "Explainable Rules-Based Clinical Command Center",
+            "brand_primary": "#7aa2ff",
+            "brand_secondary": "#5bd4ff",
+            "pilot_docs_url": "/pilot-docs",
+            "pilot_success_guide_url": "/pilot-success-guide",
+            "model_card_url": "/model-card",
+        }
+
+    def _get_workflow_record(patient_id: str) -> Dict[str, Any]:
+        _ensure_db_loaded()
+        records = SIM_STATE.setdefault("workflow_records", {})
+        if patient_id not in records:
+            records[patient_id] = {
+                "ack": False,
+                "assigned": False,
+                "assigned_label": "",
+                "escalated": False,
+                "resolved": False,
+                "state": "new",
+                "role": _current_role(),
+                "updated_at": _utc_now_iso(),
+            }
+        return records[patient_id]
+
+    def _append_audit(patient_id: str, action: str, note: str = "") -> None:
+        entry = {
+            "time": _utc_now_iso(),
+            "patient_id": patient_id,
+            "action": action,
+            "role": _current_role(),
+            "note": note,
+            "user": _current_user(),
+            "unit": _current_unit_access(),
+        }
+        # Write to SQLite
+        try:
+            _db_append_audit(entry)
+        except Exception as e:
+            print(f"[ERA] audit db write failed: {e}")
+        # Keep in-memory cache in sync
+        audit = SIM_STATE.setdefault("workflow_audit", [])
+        audit.insert(0, entry)
+        SIM_STATE["workflow_audit"] = audit[:200]
+
+    def _pilot_readiness_payload() -> Dict[str, Any]:
+        return {
+            "pilot_version": PILOT_VERSION,
+            "pilot_build_state": PILOT_BUILD_STATE,
+            "route_status": _route_status_snapshot(),
+            "support_owners": PILOT_SUPPORT_OWNERS,
+            "advisory_structure": PILOT_ADVISORY_STRUCTURE,
+            "mfa_access_log": PILOT_MFA_ACCESS_EVIDENCE_LOG,
+            "backup_restore_log": PILOT_BACKUP_RESTORE_LOG,
+            "patch_log": PILOT_PATCH_LOG,
+            "access_review_log": PILOT_ACCESS_REVIEW_LOG,
+            "tabletop_log": PILOT_TABLETOP_LOG,
+            "training_ack_log": PILOT_TRAINING_ACK_LOG,
+            "release_notes": PILOT_RELEASE_NOTES,
+            "site_packet_template": PILOT_SITE_PACKET_TEMPLATE,
+            "dated_validation_evidence": PILOT_VALIDATION_EVIDENCE,
+        }
+
+    @app.after_request
+    def add_security_headers(response):
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        response.headers["Cache-Control"] = "no-store"
+        return response
+
+    @app.route("/login", methods=["GET", "POST"])
+    def login():
+        if request.method == "POST":
+            full_name = str(request.form.get("full_name", "")).strip()
+            email = str(request.form.get("email", "")).strip().lower()
+            user_role = str(request.form.get("user_role", "viewer")).strip().lower()
+            assigned_unit = str(request.form.get("assigned_unit", "all")).strip().lower()
+            admin_password = str(request.form.get("admin_password", "")).strip()
+            if user_role not in ROLE_ACTIONS:
+                user_role = "viewer"
+            if assigned_unit not in VALID_UNITS:
+                assigned_unit = "all"
+            if not full_name or not email:
+                return render_template_string(LOGIN_HTML.replace("__ERROR__", "<div class='error'>Full name and email are required.</div>"))
+            if user_role == "admin":
+                admin_error = _validate_admin_login(email, admin_password)
+                if admin_error:
+                    return render_template_string(LOGIN_HTML.replace("__ERROR__", f"<div class='error'>{admin_error}</div>"))
+            session.clear()
+            session.permanent = True
+            session["logged_in"] = True
+            session["full_name"] = full_name
+            session["email"] = email
+            session["user_role"] = user_role
+            session["assigned_unit"] = "all" if user_role == "admin" else assigned_unit
+            return redirect("/command-center")
+        return render_template_string(LOGIN_HTML.replace("__ERROR__", ""))
+
+    @app.route("/pilot-access", methods=["GET", "POST"])
+    def pilot_access():
+        if request.method == "POST":
+            pilot_email = str(request.form.get("pilot_email", "")).strip().lower()
+            account = PILOT_ACCOUNTS.get(pilot_email)
+            if not account:
+                return render_template_string(PILOT_ACCESS_HTML.replace("__ERROR__", "<div class='error'>Pilot account not found.</div>"))
+            session.clear()
+            session.permanent = True
+            session["logged_in"] = True
+            session["full_name"] = account["full_name"]
+            session["email"] = account["email"]
+            session["user_role"] = account["user_role"]
+            session["assigned_unit"] = "all" if account["user_role"] == "admin" else account["assigned_unit"]
+            return redirect("/command-center")
+        return render_template_string(PILOT_ACCESS_HTML.replace("__ERROR__", ""))
 
     @app.get("/")
     def home():
-        return render_template_string(MAIN_HTML)
+        return redirect("/command-center")
 
-    @app.get("/dashboard")
-    def dashboard():
-        return render_template_string(COMMAND_CENTER_HTML)
+    @app.get("/logout")
+    def logout():
+        session.clear()
+        return redirect("/login")
 
-    @app.get("/investors")
-    def investors():
-        return render_template_string(INVESTOR_HTML)
+    @app.get("/command-center")
+    @_login_required
+    def command_center():
+        return Response(COMMAND_CENTER_HTML, mimetype="text/html; charset=utf-8")
+
+    @app.get("/deck")
+    def deck():
+        """Inline pitch deck — always resolves, no PDF dependency."""
+        # Serve static PDF if available, otherwise render the inline page
+        for root in _static_search_roots():
+            candidate = root / "Early_Risk_Alert_AI_Pitch_Deck.pdf"
+            if candidate.exists():
+                return send_from_directory(str(root), "Early_Risk_Alert_AI_Pitch_Deck.pdf", as_attachment=False, max_age=0)
+        deck_html = """<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Early Risk Alert AI — Pitch Deck</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root{--bg:#07101c;--bg2:#0b1528;--line:rgba(255,255,255,.08);--text:#eef4ff;--muted:#9fb4d6;--blue:#7aa2ff;--cyan:#5bd4ff;--green:#3ad38f;--amber:#f4bd6a;--purple:#b58cff;}
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--text);background:linear-gradient(180deg,var(--bg),var(--bg2));min-height:100vh;padding:32px 20px 64px}
+    .wrap{max-width:1100px;margin:0 auto}
+    .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:40px;flex-wrap:wrap;gap:14px}
+    .brand{font-size:20px;font-weight:1000;letter-spacing:-.04em}
+    .brand span{color:var(--cyan)}
+    .nav-links{display:flex;gap:14px}
+    .nav-links a{font-size:13px;font-weight:900;color:#dce9ff;text-decoration:none}
+    .slide{border:1px solid var(--line);border-radius:28px;padding:48px;margin-bottom:24px;background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.015));box-shadow:0 20px 60px rgba(0,0,0,.3);position:relative;overflow:hidden}
+    .slide::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 90% 10%,rgba(91,212,255,.06),transparent 40%);pointer-events:none}
+    .slide-num{font-size:11px;font-weight:1000;letter-spacing:.18em;text-transform:uppercase;color:#9adfff;margin-bottom:16px}
+    .slide h1{font-size:clamp(36px,5vw,68px);line-height:.92;letter-spacing:-.05em;font-weight:1000;margin-bottom:18px}
+    .slide h2{font-size:clamp(26px,3.5vw,42px);line-height:.95;letter-spacing:-.04em;font-weight:1000;margin-bottom:16px}
+    .slide h3{font-size:20px;font-weight:1000;letter-spacing:-.03em;margin-bottom:10px}
+    .slide p{color:var(--muted);font-size:16px;line-height:1.72;margin-bottom:14px;max-width:720px}
+    .disclaimer{padding:14px 18px;border-radius:16px;background:rgba(244,189,106,.1);border:1px solid rgba(244,189,106,.22);color:#ffe7bf;font-size:14px;line-height:1.6;margin-bottom:18px}
+    .highlight{padding:18px 22px;border-radius:18px;background:rgba(91,212,255,.08);border:1px solid rgba(91,212,255,.16);color:#dce9ff;font-size:16px;line-height:1.68;margin-bottom:18px}
+    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px}
+    .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:18px}
+    .grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:18px}
+    .card{border:1px solid var(--line);border-radius:20px;padding:20px;background:rgba(255,255,255,.03)}
+    .card .k{font-size:11px;font-weight:1000;letter-spacing:.14em;text-transform:uppercase;color:#9adfff;margin-bottom:8px}
+    .card .v{font-size:28px;font-weight:1000;letter-spacing:-.04em;line-height:1;margin-bottom:8px}
+    .card p{font-size:13px;color:var(--muted);line-height:1.55;margin:0}
+    .pill{display:inline-flex;align-items:center;padding:8px 14px;border-radius:999px;font-size:12px;font-weight:1000;letter-spacing:.1em;text-transform:uppercase;margin-right:8px;margin-bottom:8px}
+    .pill.blue{background:rgba(122,162,255,.14);border:1px solid rgba(122,162,255,.28);color:#c8d9ff}
+    .pill.green{background:rgba(58,211,143,.12);border:1px solid rgba(58,211,143,.26);color:#b6f5d9}
+    .pill.amber{background:rgba(244,189,106,.12);border:1px solid rgba(244,189,106,.26);color:#ffe7bf}
+    .pill.purple{background:rgba(181,140,255,.14);border:1px solid rgba(181,140,255,.28);color:#e5d8ff}
+    .step{display:flex;gap:16px;align-items:flex-start;margin-bottom:16px}
+    .step-num{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--cyan));color:#07101c;font-weight:1000;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
+    .step-copy h3{margin-bottom:4px}
+    .step-copy p{margin:0;font-size:14px}
+    .cta-row{display:flex;gap:14px;flex-wrap:wrap;margin-top:24px}
+    .btn{display:inline-flex;align-items:center;justify-content:center;padding:14px 20px;border-radius:16px;font-weight:1000;font-size:14px;text-decoration:none;transition:transform .16s}
+    .btn:hover{transform:translateY(-2px)}
+    .btn.primary{background:linear-gradient(135deg,var(--blue),var(--cyan));color:#07101c}
+    .btn.secondary{background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--text)}
+    .stat-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+    .stat-badge{padding:12px 18px;border-radius:16px;background:rgba(255,255,255,.04);border:1px solid var(--line);font-size:13px;color:#dce9ff}
+    .stat-badge strong{display:block;font-size:22px;font-weight:1000;letter-spacing:-.03em;color:var(--text);margin-bottom:2px}
+    hr.divider{border:none;border-top:1px solid var(--line);margin:28px 0}
+    @media(max-width:900px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr 1fr}}
+    @media(max-width:600px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr}.slide{padding:28px 20px}}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="brand">Early Risk Alert <span>AI</span></div>
+    <div class="nav-links">
+      <a href="/hospital-demo">Request Demo</a>
+      <a href="/investor-intake">Investor Access</a>
+      <a href="/command-center">Command Center</a>
+    </div>
+  </div>
+
+  <!-- SLIDE 1: Cover -->
+  <div class="slide">
+    <div class="slide-num">01 — Company Overview</div>
+    <h1>Early Risk Alert AI</h1>
+    <p style="font-size:20px;color:#dce9ff;max-width:640px">An Explainable Rules-Based Clinical Command Center that helps hospitals identify patients who may warrant further review — before the situation becomes a crisis.</p>
+    <div class="disclaimer">Explainable Rules-Based Clinical Command Center — Decision-support and workflow-support platform for authorized health care professionals. Does not replace clinician judgment and is not intended to diagnose, direct treatment, or independently trigger escalation.</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <span class="pill blue">Explainable Rules-Based Clinical Command Center</span>
+      <span class="pill green">Pilot Ready</span>
+      <span class="pill purple">Explainable AI</span>
+      <span class="pill amber">Hospital-Facing</span>
+    </div>
+    <div class="cta-row">
+      <a class="btn primary" href="/hospital-demo">Request Live Demo</a>
+      <a class="btn secondary" href="/investor-intake">Investor Access</a>
+    </div>
+  </div>
+
+  <!-- SLIDE 2: Problem -->
+  <div class="slide">
+    <div class="slide-num">02 — The Problem</div>
+    <h2>Hospitals are flying blind between nursing rounds</h2>
+    <p>Patient deterioration rarely announces itself. It builds — across vital trends, small drifts, subtle pattern changes — while care teams are stretched across dozens of patients. By the time something becomes obvious, the window for earlier review has passed.</p>
+    <div class="grid-3">
+      <div class="card">
+        <div class="k">The Gap</div>
+        <p>No centralized visibility into rising risk across all monitored patients at once — just individual bedside monitors and paper rounding lists.</p>
+      </div>
+      <div class="card">
+        <div class="k">The Delay</div>
+        <p>Threshold-only systems fire alerts reactively. They don't surface trend drift, multi-signal patterns, or earlier review context.</p>
+      </div>
+      <div class="card">
+        <div class="k">The Cost</div>
+        <p>Preventable deterioration events are expensive — clinically, financially, and operationally. Earlier visibility supports better outcomes.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 3: Solution -->
+  <div class="slide">
+    <div class="slide-num">03 — The Solution</div>
+    <h2>An Explainable Rules-Based Clinical Command Center</h2>
+    <div class="highlight">Early Risk Alert AI organizes monitored patient data into a structured command-center experience — surfacing which patients may warrant further review, why, and what the care team can do next.</div>
+    <div class="grid-2" style="margin-top:20px">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-copy"><h3>Ingest</h3><p>Structured vitals and monitoring signals organized into a live command workflow.</p></div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-copy"><h3>Surface</h3><p>Platform logic surfaces rising review priority, trend drift, and monitored patterns needing HCP attention.</p></div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-copy"><h3>Prioritize</h3><p>Higher-priority patients rise to the top with explainable reasons, trend summaries, and workflow notes.</p></div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-copy"><h3>Coordinate</h3><p>Care teams acknowledge, assign, escalate, resolve, and review the full audit trail in one place.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 4: Product -->
+  <div class="slide">
+    <div class="slide-num">04 — Product</div>
+    <h2>What the platform delivers</h2>
+    <div class="grid-4">
+      <div class="card"><div class="k">Patient Wall</div><p>Live monitored patient cards with vitals, trend waveforms, review score, and workflow status.</p></div>
+      <div class="card"><div class="k">Explainability</div><p>Every review-priority output shows its contributing factors, confidence, limitations, and data freshness.</p></div>
+      <div class="card"><div class="k">Workflow Tracking</div><p>ACK, Assign, Escalate, Resolve — all logged to a persistent audit trail with role and timestamp.</p></div>
+      <div class="card"><div class="k">Unit Scoping</div><p>Pilot users are locked to their unit. Admin users see hospital-wide. Role-based access enforced throughout.</p></div>
+      <div class="card"><div class="k">Threshold Controls</div><p>Admin-editable SpO₂, HR, and BP thresholds by unit. Changes persist across sessions.</p></div>
+      <div class="card"><div class="k">Trend History</div><p>HR, SpO₂, RR, and temperature trend charts per patient. Stored history survives restarts.</p></div>
+      <div class="card"><div class="k">Alert Notifications</div><p>Email and SMS alerts when patients cross critical thresholds — configurable cooldown per patient.</p></div>
+      <div class="card"><div class="k">Governance Packet</div><p>Risk register, V&amp;V-lite, claims control, cybersecurity summary, and change approval log — all in-platform.</p></div>
+      <div class="card"><div class="k">EHR Integration Roadmap</div><p>Live EHR integration via FHIR R4 and HL7 is on the roadmap. Current pilot entry: retrospective validation via de-identified CSV — no EHR integration required to begin.</p></div>
+    </div>
+  </div>
+
+  <!-- SLIDE 5: Market -->
+  <div class="slide">
+    <div class="slide-num">05 — Market Opportunity</div>
+    <h2>A large and underserved market</h2>
+    <p>Every hospital with a monitored patient population is a potential customer. The initial focus is acute care command centers, telemetry units, ICUs, and stepdown units — then RPM programs as a second wedge.</p>
+    <div class="grid-3">
+      <div class="card"><div class="k">US Hospitals</div><div class="v">~6,000</div><p>Acute care hospitals with monitored patient populations and command-center workflows.</p></div>
+      <div class="card"><div class="k">RPM Programs</div><div class="v">Growing</div><p>Remote patient monitoring programs that need centralized review visibility across enrolled patients.</p></div>
+      <div class="card"><div class="k">Entry Point</div><div class="v">Pilot</div><p>Conservative hospital entry via retrospective validation and tightly scoped prospective pilot phase.</p></div>
+    </div>
+  </div>
+
+  <!-- SLIDE 6: Traction -->
+  <div class="slide">
+    <div class="slide-num">06 — Traction &amp; Readiness</div>
+    <h2>Pilot-ready and governance-complete</h2>
+    <div class="stat-row">
+      <div class="stat-badge"><strong>Deployed</strong>Live on Render cloud</div>
+      <div class="stat-badge"><strong>Stable</strong>Pilot v1.0.6</div>
+      <div class="stat-badge"><strong>Docs</strong>Full governance packet</div>
+      <div class="stat-badge"><strong>Team</strong>Founder + 2 advisors</div>
+    </div>
+    <hr class="divider">
+    <div class="grid-2">
+      <div>
+        <h3 style="margin-bottom:12px">Governance in place</h3>
+        <p>Frozen intended-use statement, risk register, V&amp;V-lite, claims control, cybersecurity summary, change approval log, user provisioning policy, and data governance — all built into the platform.</p>
+      </div>
+      <div>
+        <h3 style="margin-bottom:12px">Advisory structure</h3>
+        <p><strong>Milton Munroe</strong> — Founder &amp; CEO<br>
+        <strong>Uche Anosike</strong> — Technical Infrastructure &amp; Security Advisor<br>
+        <strong>Andrene Louison (RN)</strong> — Clinical Advisor</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 7: Business Model -->
+  <div class="slide">
+    <div class="slide-num">07 — Business Model</div>
+    <h2>SaaS with a pilot-to-enterprise path</h2>
+    <div class="grid-3">
+      <div class="card"><div class="k">Phase 1</div><div class="v" style="font-size:20px">Pilot</div><p>Retrospective validation + tightly scoped prospective pilot. Conservative entry, minimal IT lift, governance-first.</p></div>
+      <div class="card"><div class="k">Phase 2</div><div class="v" style="font-size:20px">Enterprise</div><p>Per-unit or per-facility SaaS subscription. Branded hospital accounts. EHR integration roadmap.</p></div>
+      <div class="card"><div class="k">Phase 3</div><div class="v" style="font-size:20px">Platform</div><p>Multi-hospital visibility, RPM program expansion, analytics layer, and payer-facing outcomes data.</p></div>
+    </div>
+  </div>
+
+  <!-- SLIDE 8: Ask -->
+  <div class="slide">
+    <div class="slide-num">08 — The Ask</div>
+    <h2>Partnering with the right hospitals and investors</h2>
+    <p>Early Risk Alert AI is looking for hospital innovation partners to run controlled pilot evaluations and seed-stage investors who understand the healthcare AI regulatory landscape and the value of a governance-first posture.</p>
+    <div class="grid-2">
+      <div class="card">
+        <div class="k">Hospital Partners</div>
+        <p>We're looking for innovation office leads, CMIOs, and clinical operations teams at acute care hospitals ready to evaluate a new approach to command-center visibility.</p>
+        <div style="margin-top:14px"><a class="btn primary" href="/hospital-demo" style="width:100%;display:flex">Request Live Demo</a></div>
+      </div>
+      <div class="card">
+        <div class="k">Investors</div>
+        <p>Seed-stage raise to fund hospital pilot activation, regulatory preparation, EHR integration scoping, and commercial team buildout.</p>
+        <div style="margin-top:14px"><a class="btn primary" href="/investor-intake" style="width:100%;display:flex">Request Investor Access</a></div>
+      </div>
+    </div>
+    <hr class="divider">
+    <p><strong>Milton Munroe</strong> — Founder &amp; CEO, Early Risk Alert AI<br>
+    <a href="mailto:info@earlyriskalertai.com" style="color:#9adfff">info@earlyriskalertai.com</a> &nbsp;·&nbsp; 732-724-7267</p>
+  </div>
+
+</div>
+</body>
+</html>"""
+        return Response(deck_html, mimetype="text/html; charset=utf-8")
+
+    @app.get("/pilot-success-guide")
+    @_login_required
+    def pilot_success_guide():
+        return _serve_static_doc("pilot_success_guide")
+
+    @app.get("/model-card")
+    def model_card():
+        """Public inline model card — no login required, fully transparent."""
+        mc_html = """<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Model Card — Early Risk Alert AI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root{--bg:#07101c;--bg2:#0b1528;--line:rgba(255,255,255,.08);--text:#eef4ff;--muted:#9fb4d6;--blue:#7aa2ff;--cyan:#5bd4ff;--green:#3ad38f;--amber:#f4bd6a;--red:#ff667d;}
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:Inter,system-ui,-apple-system,sans-serif;background:linear-gradient(180deg,var(--bg),var(--bg2));color:var(--text);min-height:100vh;padding:32px 20px 64px}
+    .wrap{max-width:900px;margin:0 auto}
+    .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:32px;flex-wrap:wrap;gap:12px}
+    .brand{font-size:13px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:#9adfff}
+    .nav a{font-size:13px;font-weight:900;color:#dce9ff;text-decoration:none;margin-left:16px}
+    .card{border:1px solid var(--line);border-radius:22px;background:rgba(255,255,255,.03);padding:24px;margin-bottom:16px}
+    .section-kicker{font-size:11px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:#9adfff;margin-bottom:8px}
+    h1{font-size:clamp(28px,4vw,44px);font-weight:1000;letter-spacing:-.05em;line-height:.95;margin-bottom:12px}
+    h2{font-size:22px;font-weight:1000;letter-spacing:-.03em;margin-bottom:12px}
+    p{font-size:14px;color:var(--muted);line-height:1.68;margin-bottom:10px}
+    .disclaimer{padding:14px 18px;border-radius:16px;background:rgba(244,189,106,.1);border:1px solid rgba(244,189,106,.22);color:#ffe7bf;font-size:13px;line-height:1.6;margin-bottom:16px}
+    .highlight{padding:14px 18px;border-radius:16px;background:rgba(91,212,255,.08);border:1px solid rgba(91,212,255,.16);color:#dce9ff;font-size:14px;line-height:1.65;margin-bottom:16px}
+    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
+    .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
+    .stat-card{border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.03);padding:16px}
+    .stat-k{font-size:11px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:#9adfff;margin-bottom:6px}
+    .stat-v{font-size:26px;font-weight:1000;letter-spacing:-.04em;line-height:1;margin-bottom:6px}
+    .stat-p{font-size:12px;color:var(--muted);line-height:1.5}
+    .pill{display:inline-flex;align-items:center;padding:6px 12px;border-radius:999px;font-size:11px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;margin-right:6px;margin-bottom:6px}
+    .pill.blue{background:rgba(122,162,255,.12);border:1px solid rgba(122,162,255,.24);color:#c8d9ff}
+    .pill.green{background:rgba(58,211,143,.1);border:1px solid rgba(58,211,143,.22);color:#b6f5d9}
+    .pill.amber{background:rgba(244,189,106,.1);border:1px solid rgba(244,189,106,.22);color:#ffe7bf}
+    .pill.red{background:rgba(255,102,125,.1);border:1px solid rgba(255,102,125,.22);color:#ffd8de}
+    .row-item{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:14px}
+    .row-item:last-child{border-bottom:none}
+    .row-k{color:var(--muted);min-width:180px;font-weight:700}
+    .row-v{color:#dce9ff;line-height:1.55;text-align:right}
+    .signal-bar{display:grid;grid-template-columns:140px 1fr 60px;gap:10px;align-items:center;margin-bottom:8px}
+    .signal-label{font-size:12px;font-weight:900;color:#dce9ff}
+    .bar-track{height:10px;border-radius:999px;background:rgba(255,255,255,.06);overflow:hidden}
+    .bar-fill{height:100%;border-radius:999px}
+    .bar-blue{background:linear-gradient(135deg,#7aa2ff,#5bd4ff)}
+    .bar-green{background:linear-gradient(135deg,#3ad38f,#8ff3c1)}
+    .bar-amber{background:linear-gradient(135deg,#f4bd6a,#ffe09b)}
+    .bar-value{font-size:12px;font-weight:900;color:#dce9ff;text-align:right}
+    .footer{border-top:1px solid var(--line);padding-top:20px;margin-top:8px;font-size:12px;color:var(--muted);line-height:1.7;text-align:center}
+    .footer a{color:#9adfff;text-decoration:none}
+    @media(max-width:600px){.grid-2,.grid-3{grid-template-columns:1fr}.row-item{flex-direction:column}.row-v{text-align:left}}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="brand">Early Risk Alert AI</div>
+    <div class="nav">
+      <a href="/command-center">Command Center</a>
+      <a href="/pilot-docs">Pilot Docs</a>
+      <a href="/status">Status</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section-kicker">Model Card — Public</div>
+    <h1>Early Risk Alert AI</h1>
+    <p style="font-size:16px;color:#dce9ff;margin-bottom:14px">Explainable Rules-Based Clinical Command Center — Rules-Based Prioritization Engine</p>
+    <div class="disclaimer">This platform does not replace clinician judgment and is not intended to diagnose, direct treatment, or independently trigger escalation. All outputs require independent review by an authorized health care professional.</div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px">
+      <span class="pill blue">Decision Support Only</span>
+      <span class="pill blue">HCP-Facing</span>
+      <span class="pill green">Rules-Based Engine</span>
+      <span class="pill green">Explainable</span>
+      <span class="pill amber">Pilot Phase</span>
+      <span class="pill amber">No FDA Clearance</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>What this system is — and is not</h2>
+    <div class="highlight">Early Risk Alert AI is a <strong>rules-based threshold and trend prioritization engine</strong> — not a machine learning model, not a neural network, and not an autonomous clinical decision system. It applies transparent, configurable logic to structured vital-sign data to surface patients whose monitored context suggests they may warrant further clinical review.</div>
+    <p>There is no black box. Every review score is the direct product of the signal weights and threshold comparisons described in this card. A clinician can independently verify why any patient was flagged by reviewing the explainability panel, which shows every contributing factor, delta trend context, confidence level, and visible limitation.</p>
+  </div>
+
+  <div class="card">
+    <h2>Algorithm — how the review score is calculated</h2>
+    <p style="margin-bottom:14px">The review score (0.0 – 9.9) is computed from six monitored vital signals using the following additive rules-based formula. No training data, no weights from gradient descent, no black-box inference.</p>
+    <div class="signal-bar"><div class="signal-label">SpO₂ deficit</div><div class="bar-track"><div class="bar-fill bar-blue" style="width:85%"></div></div><div class="bar-value">× 0.75</div></div>
+    <div class="signal-bar"><div class="signal-label">Temp elevation</div><div class="bar-track"><div class="bar-fill bar-blue" style="width:70%"></div></div><div class="bar-value">× 0.70</div></div>
+    <div class="signal-bar"><div class="signal-label">RR elevation</div><div class="bar-track"><div class="bar-fill bar-blue" style="width:55%"></div></div><div class="bar-value">× 0.12</div></div>
+    <div class="signal-bar"><div class="signal-label">Diastolic BP</div><div class="bar-track"><div class="bar-fill bar-amber" style="width:35%"></div></div><div class="bar-value">× 0.03</div></div>
+    <div class="signal-bar"><div class="signal-label">Heart rate</div><div class="bar-track"><div class="bar-fill bar-amber" style="width:30%"></div></div><div class="bar-value">× 0.035</div></div>
+    <div class="signal-bar"><div class="signal-label">Systolic BP</div><div class="bar-track"><div class="bar-fill bar-amber" style="width:25%"></div></div><div class="bar-value">× 0.02</div></div>
+    <p style="margin-top:14px;font-size:13px">Trend modifier: deteriorating +1.2, watch +0.6, recovering −0.4. Score is clamped to 0.8 – 9.9. Review priority: Critical ≥ 8.5, High ≥ 6.2, Stable &lt; 6.2.</p>
+  </div>
+
+  <div class="card">
+    <h2>Performance — retrospective validation</h2>
+    <div class="disclaimer" style="background:rgba(58,211,143,.07);border-color:rgba(58,211,143,.2);color:#b6f5d9"><strong>Initial validation complete — April 2026.</strong> Results below are from a 500-patient synthetic dataset generated from clinically grounded deterioration parameters (sepsis, respiratory failure, cardiac decompensation, hypertensive crisis). April 2026. MIMIC-IV retrospective validation on real de-identified ICU data is in progress. Prospective clinical validation has not yet been completed. Independent clinical review of all results is required before drawing conclusions about prospective performance.</div>
+    <div class="grid-3">
+      <div class="stat-card"><div class="stat-k">ERA Sensitivity</div><div class="stat-v" style="color:#3ad38f">23.4%</div><div class="stat-p">Clinical escalations flagged. Synthetic dataset, April 2026. MIMIC-IV validation in progress.</div></div>
+      <div class="stat-card"><div class="stat-k">False Positive Rate</div><div class="stat-v" style="color:#3ad38f">5.1%</div><div class="stat-p">ERA false positive rate on non-event readings vs 28.5% for standard threshold alerting.</div></div>
+      <div class="stat-card"><div class="stat-k">Alert Reduction</div><div class="stat-v" style="color:#3ad38f">81.9%</div><div class="stat-p">Reduction in total alert volume vs standard threshold-only alerting on the same dataset.</div></div>
+    </div>
+    <p style="font-size:13px">Metrics will be published here upon completion of retrospective validation. Results will include dataset size, patient population, outcome definitions, validation methodology, and confidence intervals. Performance will be broken down by unit type and vital signal contribution.</p>
+  </div>
+
+  <div class="card">
+    <h2>Intended use</h2>
+    <p style="font-size:15px;color:#eef4ff;font-weight:700;margin-bottom:10px">Early Risk Alert AI is an HCP-facing decision-support and workflow-support software platform intended to assist authorized health care professionals in identifying patients who may warrant further clinical evaluation, supporting patient prioritization, and improving command-center operational awareness.</p>
+    <p>It does not replace clinician judgment and is not intended to diagnose, direct treatment, or independently trigger escalation.</p>
+    <div class="row-item"><span class="row-k">Intended users</span><span class="row-v">Authorized health care professionals — physicians, nurses, clinical operations staff — in hospital and health system settings</span></div>
+    <div class="row-item"><span class="row-k">Care settings</span><span class="row-v">ICU, Telemetry, Stepdown, Ward, Remote Patient Monitoring programs</span></div>
+    <div class="row-item"><span class="row-k">Not intended for</span><span class="row-v">Autonomous escalation, diagnosis, treatment direction, or use by non-clinical personnel without oversight</span></div>
+  </div>
+
+  <div class="card">
+    <h2>Inputs and outputs</h2>
+    <div class="grid-2">
+      <div>
+        <p style="font-weight:900;color:#9adfff;font-size:12px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px">Supported inputs</p>
+        <div class="row-item"><span class="row-k">Heart rate</span><span class="row-v">bpm, numeric</span></div>
+        <div class="row-item"><span class="row-k">SpO₂</span><span class="row-v">%, numeric</span></div>
+        <div class="row-item"><span class="row-k">Blood pressure</span><span class="row-v">mmHg systolic / diastolic</span></div>
+        <div class="row-item"><span class="row-k">Respiratory rate</span><span class="row-v">breaths/min, numeric</span></div>
+        <div class="row-item"><span class="row-k">Temperature</span><span class="row-v">°F, numeric</span></div>
+        <div class="row-item"><span class="row-k">Trend direction</span><span class="row-v">deteriorating / watch / recovering</span></div>
+      </div>
+      <div>
+        <p style="font-weight:900;color:#9adfff;font-size:12px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px">Supported outputs</p>
+        <div class="row-item"><span class="row-k">Review score</span><span class="row-v">0.0 – 9.9 (rules-based, fully explainable)</span></div>
+        <div class="row-item"><span class="row-k">Priority status</span><span class="row-v">Critical / High / Stable</span></div>
+        <div class="row-item"><span class="row-k">Contributing factors</span><span class="row-v">Per-signal explainability</span></div>
+        <div class="row-item"><span class="row-k">Delta trend context</span><span class="row-v">Change from last observation</span></div>
+        <div class="row-item"><span class="row-k">Workflow note</span><span class="row-v">Supportive review context only</span></div>
+        <div class="row-item"><span class="row-k">Alert notification</span><span class="row-v">Email / SMS to authorized personnel</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Limitations and known gaps</h2>
+    <div class="row-item"><span class="row-k">Synthetic validation only</span><span class="row-v">Initial validation conducted on 500-patient synthetic dataset generated from clinically grounded deterioration parameters (sepsis, respiratory failure, cardiac decompensation, hypertensive crisis). April 2026. Results: 81.9% reduction in unnecessary alerts vs standard threshold-only alerting, with a 5.1% false positive rate compared to 28.5% for standard thresholds. MIMIC-IV retrospective validation on real de-identified ICU data is in progress. Prospective clinical validation has not yet been completed.</span></div>
+    <div class="row-item"><span class="row-k">Rules-based only</span><span class="row-v">Current engine uses additive threshold rules, not machine learning. No training dataset, no AUC, no sensitivity/specificity from a held-out test set yet.</span></div>
+    <div class="row-item"><span class="row-k">No EHR integration</span><span class="row-v">Current deployment uses structured CSV input and simulated vitals. Live EHR integration via FHIR R4 and HL7 is on the product roadmap — current pilot entry point is retrospective validation via de-identified CSV, which requires no EHR integration and can begin within days of data availability.</span></div>
+    <div class="row-item"><span class="row-k">Simulated demo environment</span><span class="row-v">The public demo runs on simulated patient data. No real patient data is used in the demonstration environment.</span></div>
+    <div class="row-item"><span class="row-k">Incomplete or delayed data</span><span class="row-v">Outputs may be affected by missing, delayed, or erroneous vital sign inputs. The platform does not validate source data quality.</span></div>
+    <div class="row-item"><span class="row-k">Population generalizability</span><span class="row-v">Signal weights have not been validated across diverse patient populations, acuity levels, or care settings. Local validation is strongly recommended.</span></div>
+    <div class="row-item"><span class="row-k">Alert fatigue risk</span><span class="row-v">If thresholds are set too low for a given unit, alert volume may increase rather than decrease. Configurable thresholds and local calibration are recommended.</span></div>
+    <div class="row-item"><span class="row-k">No FDA clearance</span><span class="row-v">The platform does not have FDA clearance or approval. It is positioned for controlled pilot evaluation as decision-support software.</span></div>
+  </div>
+
+  <div class="card">
+    <h2>Governance and oversight</h2>
+    <div class="row-item"><span class="row-k">Human oversight required</span><span class="row-v">All outputs require independent review by an authorized HCP. The platform does not act autonomously.</span></div>
+    <div class="row-item"><span class="row-k">Explainability</span><span class="row-v">Every output displays contributing factors, signal weights, confidence level, data freshness, and limitations.</span></div>
+    <div class="row-item"><span class="row-k">Audit trail</span><span class="row-v">All workflow actions (ACK, Assign, Escalate, Resolve) are logged with role, timestamp, and unit. Persistent across restarts.</span></div>
+    <div class="row-item"><span class="row-k">Claims control</span><span class="row-v">Approved and banned claims enforced across all platform materials and communications.</span></div>
+    <div class="row-item"><span class="row-k">Change control</span><span class="row-v">All releases documented in change approval log. No material changes to clinical output logic without notification.</span></div>
+    <div class="row-item"><span class="row-k">Regulatory status</span><span class="row-v">No FDA clearance or approval claimed. Positioned as decision-support software for controlled pilot evaluation.</span></div>
+    <div class="row-item"><span class="row-k">BAA availability</span><span class="row-v">The company is prepared to execute a Business Associate Agreement for any engagement involving identifiable patient data. Phase 1 retrospective validation is conducted on de-identified data only.</span></div>
+    <div class="row-item"><span class="row-k">Platform version</span><span class="row-v">stable-pilot-1.0.6 · Locked Stable Pilot Build</span></div>
+  </div>
+
+  <div class="card">
+    <h2>Advisory structure</h2>
+    <div class="row-item"><span class="row-k">Milton Munroe</span><span class="row-v">Founder &amp; CEO — Product leadership, governance ownership, pilot operations</span></div>
+    <div class="row-item"><span class="row-k">Uche Anosike</span><span class="row-v">Technical Infrastructure &amp; Security Advisor — Infrastructure, security posture, deployment readiness</span></div>
+    <div class="row-item"><span class="row-k">Andrene Louison, RN</span><span class="row-v">Clinical Advisor — Clinical workflow review, monitored-context guidance, retrospective validation support</span></div>
+  </div>
+
+  <div class="footer">
+    Early Risk Alert AI · <a href="/command-center">Command Center</a> · <a href="/pilot-docs">Pilot Docs</a> · <a href="/status">System Status</a> · <a href="/retro-upload">Retrospective Validation Upload</a><br>
+    <a href="mailto:info@earlyriskalertai.com">info@earlyriskalertai.com</a> · 732-724-7267<br>
+    This platform is intended for controlled pilot evaluation. It does not replace clinician judgment.
+  </div>
+</div>
+</body>
+</html>"""
+        return Response(mc_html, mimetype="text/html; charset=utf-8")
+
+    @app.get("/pilot-docs")
+    @_login_required
+    def pilot_docs():
+        def simple_list(items):
+            return "".join(f"<div style='padding:10px 12px;border:1px solid rgba(255,255,255,.08);border-radius:14px;background:rgba(255,255,255,.03);margin-bottom:10px;color:#dce9ff'>{item}</div>" for item in items)
+
+        def table(rows, headers):
+            out = ["<table style='width:100%;border-collapse:collapse'>", "<thead><tr>"]
+            for h in headers:
+                out.append(f"<th style='padding:12px;text-align:left;color:#9adfff;border-bottom:1px solid rgba(255,255,255,.08)'>{h.replace('_',' ').title()}</th>")
+            out.append("</tr></thead><tbody>")
+            for row in rows:
+                out.append("<tr>")
+                for h in headers:
+                    v = row.get(h, "")
+                    if isinstance(v, (dict, list)):
+                        v = json.dumps(v, ensure_ascii=False)
+                    out.append(f"<td style='padding:12px;vertical-align:top;border-bottom:1px solid rgba(255,255,255,.08);color:#dce9ff'>{v}</td>")
+                out.append("</tr>")
+            out.append("</tbody></table>")
+            return "".join(out)
+
+        html_out = f"""
+        <!doctype html><html lang='en'><head><meta charset='utf-8'><title>Pilot Docs — Early Risk Alert AI</title><meta name='viewport' content='width=device-width, initial-scale=1'>
+        <style>body{{margin:0;padding:24px;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#eef4ff;background:linear-gradient(180deg,#07101c,#0b1528)}}.wrap{{max-width:1280px;margin:0 auto}}.card{{border:1px solid rgba(255,255,255,.08);border-radius:24px;background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.018));padding:24px;margin-bottom:18px;box-shadow:0 20px 60px rgba(0,0,0,.28)}}.btn{{display:inline-flex;align-items:center;justify-content:center;padding:12px 16px;border-radius:16px;font-weight:900;background:linear-gradient(135deg,#7aa2ff,#5bd4ff);color:#07101c;text-decoration:none}}.sub{{color:#9fb4d6;line-height:1.7}}.grid{{display:grid;grid-template-columns:1fr 1fr;gap:16px}}.pill{{display:inline-flex;align-items:center;padding:10px 14px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);font-size:12px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;margin-right:8px;margin-bottom:8px}}@media (max-width:840px){{.grid{{grid-template-columns:1fr}}}}</style>
+        </head><body><div class='wrap'>
+        <div class='card'><div class='pill'>Pilot Docs</div><div class='pill'>Version {PILOT_VERSION}</div><h1 style='margin:12px 0 10px;font-size:42px;line-height:.95;letter-spacing:-.05em'>Stable Pilot Positioning Bundle</h1><div class='sub'>Freeze one intended-use statement everywhere, keep outputs supportive rather than directive, and keep explainability, limitations, scoping, and audit visibility easy to review.</div><div style='margin-top:16px;display:flex;gap:12px;flex-wrap:wrap'><a class='btn' href='/command-center'>Back to Command Center</a><a class='btn' href='/pilot-success-guide'>Pilot Success Guide</a><a class='btn' href='/model-card'>Model Card</a></div></div>
+        <div class='card'><h2 style='margin:0 0 10px;font-size:30px'>Frozen Intended Use</h2><div class='sub' style='font-size:18px;color:#eef4ff'>{INTENDED_USE_STATEMENT}</div><div style='margin-top:12px;display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:999px;background:rgba(181,140,255,.14);border:1px solid rgba(181,140,255,.28);font-weight:900;color:#f0e5ff'>{PILOT_BUILD_STATE} · {PILOT_VERSION}</div></div>
+        <div class='grid'><div class='card'><h2 style='margin:0 0 10px;font-size:26px'>Support Language</h2>{simple_list(PILOT_SUPPORT_LANGUAGE)}</div><div class='card'><h2 style='margin:0 0 10px;font-size:26px'>Visible Limitations</h2>{simple_list(PILOT_LIMITATIONS_TEXT)}</div></div>
+        <div class='grid'><div class='card'><h2 style='margin:0 0 10px;font-size:26px'>Supported Inputs</h2>{simple_list(PILOT_SUPPORTED_INPUTS)}</div><div class='card'><h2 style='margin:0 0 10px;font-size:26px'>Supported Outputs</h2>{simple_list(PILOT_SUPPORTED_OUTPUTS)}</div></div>
+        <div class='grid'><div class='card'><h2 style='margin:0 0 10px;font-size:26px'>Approved Claims</h2>{simple_list(PILOT_APPROVED_CLAIMS)}</div><div class='card'><h2 style='margin:0 0 10px;font-size:26px'>Banned / Avoid Claims</h2>{simple_list(PILOT_BANNED_CLAIMS + PILOT_AVOID_CLAIMS)}</div></div>
+        <div class='grid'><div class='card'><h2 style='margin:0 0 10px;font-size:26px'>Claims Control</h2>{table(PILOT_CLAIMS_CONTROL_SHEET, ['claim','status','category'])}</div><div class='card'><h2 style='margin:0 0 10px;font-size:26px'>Change Control</h2>{simple_list(PILOT_CHANGE_CONTROL)}</div></div>
+        <div class='card'><h2 style='margin:0 0 12px;font-size:28px'>Risk Register</h2>{table(PILOT_RISK_REGISTER, ['id','area','risk','mitigation','owner','status'])}</div>
+        <div class='card'><h2 style='margin:0 0 12px;font-size:28px'>V&amp;V-Lite Sheet</h2>{table(PILOT_VNV_LITE, ['id','check','method','evidence','status'])}</div>
+        <div class='card'><h2 style='margin:0 0 12px;font-size:28px'>Release Notes</h2>{table(PILOT_RELEASE_NOTES, ['version','date','summary'])}</div>
+        <div class='grid'><div class='card'><h2 style='margin:0 0 12px;font-size:28px'>Document Control Index</h2>{table(PILOT_DOCUMENT_CONTROL_INDEX, ['document_name','version'])}</div><div class='card'><h2 style='margin:0 0 12px;font-size:28px'>Validation Packet</h2>{table(PILOT_VALIDATION_EVIDENCE, ['date_tested','test_case_id','status'])}</div></div>
+        <div class='grid'><div class='card'><h2 style='margin:0 0 12px;font-size:28px'>Advisory Structure</h2>{table(PILOT_ADVISORY_STRUCTURE, ['name','title','status'])}</div><div class='card'><h2 style='margin:0 0 12px;font-size:28px'>Support Owners</h2>{table(PILOT_SUPPORT_OWNERS, ['area','owner','title','status'])}</div></div>
+        <div class='card'><h2 style='margin:0 0 12px;font-size:28px'>Training &amp; Use Instructions</h2>{table(PILOT_TRAINING_USE_INSTRUCTIONS, ['section','instruction'])}</div>
+        </div></body></html>
+        """
+        return render_template_string(html_out)
+
+    @app.get("/admin/review")
+    def admin_review():
+        return render_template_string(ADMIN_HTML)
+
+    @app.get("/healthz")
+    def healthz():
+        summary = summary_payload()
+        return jsonify({
+            "ok": True,
+            "service": "early-risk-alert-ai", "descriptor": "Explainable Rules-Based Clinical Command Center",
+            "time": _utc_now_iso(),
+            "hospital_requests": summary["hospital_count"],
+            "executive_requests": summary["executive_count"],
+            "investor_requests": summary["investor_count"],
+            "open_requests": summary["open_count"],
+            "pilot_version": PILOT_VERSION,
+            "build_state": PILOT_BUILD_STATE,
+        })
+
+    @app.get("/status")
+    def status_page():
+        """Public uptime and system health page — no login required."""
+        now = _utc_now_iso()
+        uptime_since = os.getenv("ERA_DEPLOY_TIME", "2026-04-07T00:00:00+00:00")
+        try:
+            up_seconds = (datetime.now(timezone.utc) - datetime.fromisoformat(uptime_since)).total_seconds()
+            up_hours = int(up_seconds // 3600)
+            up_days = int(up_hours // 24)
+            uptime_str = f"{up_days}d {up_hours % 24}h" if up_days else f"{up_hours}h"
+        except Exception:
+            uptime_str = "—"
+
+        status_html = f"""<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>System Status — Early Risk Alert AI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="refresh" content="60">
+  <style>
+    *{{box-sizing:border-box;margin:0;padding:0}}
+    body{{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:linear-gradient(180deg,#07101c,#0b1528);color:#eef4ff;min-height:100vh;padding:32px 20px 64px}}
+    .wrap{{max-width:760px;margin:0 auto}}
+    .header{{margin-bottom:32px}}
+    .brand{{font-size:13px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:#9adfff;margin-bottom:8px}}
+    h1{{font-size:38px;font-weight:1000;letter-spacing:-.05em;margin-bottom:8px}}
+    .sub{{color:#9fb4d6;font-size:14px}}
+    .overall{{display:flex;align-items:center;gap:14px;padding:20px 24px;border-radius:20px;border:1px solid rgba(58,211,143,.26);background:rgba(58,211,143,.08);margin-bottom:24px}}
+    .dot{{width:14px;height:14px;border-radius:50%;background:#3ad38f;box-shadow:0 0 0 5px rgba(58,211,143,.18);flex-shrink:0}}
+    .overall-text{{font-size:18px;font-weight:1000}}
+    .overall-sub{{font-size:13px;color:#9fb4d6;margin-top:2px}}
+    .card{{border:1px solid rgba(255,255,255,.08);border-radius:20px;background:rgba(255,255,255,.03);padding:20px;margin-bottom:14px}}
+    .card-head{{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}}
+    .card-title{{font-size:15px;font-weight:900}}
+    .pill{{display:inline-flex;align-items:center;padding:6px 12px;border-radius:999px;font-size:11px;font-weight:1000;letter-spacing:.1em;text-transform:uppercase}}
+    .pill.op{{background:rgba(58,211,143,.12);border:1px solid rgba(58,211,143,.24);color:#b6f5d9}}
+    .pill.deg{{background:rgba(255,102,125,.12);border:1px solid rgba(255,102,125,.24);color:#ffd8de}}
+    .pill.watch{{background:rgba(244,189,106,.12);border:1px solid rgba(244,189,106,.24);color:#ffe7bf}}
+    .meta-row{{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}}
+    .meta{{padding:8px 12px;border-radius:12px;background:rgba(255,255,255,.04);font-size:12px;color:#9fb4d6}}
+    .meta strong{{color:#dce9ff;display:block;font-size:13px;margin-bottom:1px}}
+    .footer{{margin-top:32px;font-size:12px;color:#9fb4d6;line-height:1.6;text-align:center}}
+    a{{color:#9adfff;text-decoration:none}}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header">
+    <div class="brand">Early Risk Alert AI</div>
+    <h1>System Status</h1>
+    <div class="sub">Auto-refreshes every 60 seconds · Last checked {now[:19].replace("T", " ")} UTC</div>
+  </div>
+
+  <div class="overall">
+    <div class="dot"></div>
+    <div>
+      <div class="overall-text">All Systems Operational</div>
+      <div class="overall-sub">Platform is live and serving requests normally.</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <div class="card-title">Explainable Rules-Based Clinical Command Center</div>
+      <span class="pill op">Operational</span>
+    </div>
+    <div class="meta-row">
+      <div class="meta"><strong>Route</strong>/command-center</div>
+      <div class="meta"><strong>Auth</strong>Session-based</div>
+      <div class="meta"><strong>Uptime</strong>{uptime_str}</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <div class="card-title">Patient Data Feed</div>
+      <span class="pill op">Operational</span>
+    </div>
+    <div class="meta-row">
+      <div class="meta"><strong>Mode</strong>Structured vital simulation</div>
+      <div class="meta"><strong>Refresh</strong>5-second interval</div>
+      <div class="meta"><strong>Persistence</strong>SQLite + flat-file</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <div class="card-title">Workflow &amp; Audit Layer</div>
+      <span class="pill op">Operational</span>
+    </div>
+    <div class="meta-row">
+      <div class="meta"><strong>Storage</strong>SQLite (persistent)</div>
+      <div class="meta"><strong>Actions</strong>ACK / Assign / Escalate / Resolve</div>
+      <div class="meta"><strong>Audit</strong>Persistent across restarts</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <div class="card-title">Alert Notifications</div>
+      <span class="pill {'op' if os.getenv('ALERT_NOTIFICATIONS_ENABLED','0')=='1' else 'watch'}">{'Active' if os.getenv('ALERT_NOTIFICATIONS_ENABLED','0')=='1' else 'Standby'}</span>
+    </div>
+    <div class="meta-row">
+      <div class="meta"><strong>Email</strong>{'Configured' if os.getenv('SMTP_HOST') else 'Not configured'}</div>
+      <div class="meta"><strong>SMS</strong>{'Configured' if os.getenv('TWILIO_ACCOUNT_SID') else 'Not configured'}</div>
+      <div class="meta"><strong>Cooldown</strong>{_ALERT_COOLDOWN_MINUTES} min</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <div class="card-title">Secure Access Layer</div>
+      <span class="pill op">Operational</span>
+    </div>
+    <div class="meta-row">
+      <div class="meta"><strong>Auth</strong>Role + unit scoped sessions</div>
+      <div class="meta"><strong>Secure cookie</strong>{'Yes' if os.getenv('SESSION_COOKIE_SECURE','0')=='1' else 'Dev mode'}</div>
+      <div class="meta"><strong>Build</strong>{PILOT_VERSION}</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <div class="card-title">Retrospective Validation Results</div>
+      <span class="pill op">Published</span>
+    </div>
+    <div class="meta-row">
+      <div class="meta"><strong>Alert Reduction</strong>81.9% vs standard threshold alerting</div>
+      <div class="meta"><strong>ERA False Positive Rate</strong>5.1% vs 28.5% for standard thresholds</div>
+      <div class="meta"><strong>Dataset</strong>12,873 readings · 500 patients · 145 events</div>
+    </div>
+    <div class="meta-row" style="margin-top:8px">
+      <div class="meta"><strong>Data Type</strong>Synthetic — MIMIC-IV real data validation in progress</div>
+      <div class="meta"><strong>No-Commitment Analysis</strong>Hospitals may submit de-identified CSV for custom retrospective analysis</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <div class="card-title">HIPAA &amp; BAA Readiness</div>
+      <span class="pill op">Ready</span>
+    </div>
+    <div class="meta-row">
+      <div class="meta"><strong>BAA</strong>Available upon request for live patient data engagements</div>
+      <div class="meta"><strong>Phase 1</strong>Retrospective validation on de-identified data — no BAA required</div>
+      <div class="meta"><strong>Phase 2</strong>BAA executed before any identifiable patient data is processed</div>
+    </div>
+    <div class="meta-row" style="margin-top:8px">
+      <div class="meta"><strong>Contact</strong>info@earlyriskalertai.com to request BAA or data use agreement</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <div class="card-title">Retrospective Validation Data Ingestion</div>
+      <span class="pill op">Available</span>
+    </div>
+    <div class="meta-row">
+      <div class="meta"><strong>Format</strong>CSV upload — structured vital-sign data</div>
+      <div class="meta"><strong>Route</strong>/retro-upload (login required)</div>
+      <div class="meta"><strong>EHR Integration</strong>FHIR / HL7 roadmap — CSV ingestion available now. Live EHR integration via FHIR R4 and HL7 is on the product roadmap — current pilot entry point is retrospective validation via de-identified CSV, which requires no EHR integration and can begin within days of data availability.</div>
+    </div>
+    <div class="meta-row" style="margin-top:8px">
+      <div class="meta"><strong>Schema</strong>patient_id, timestamp, HR, SpO2, BP, RR, temp, clinical_event</div>
+    </div>
+  </div>
+
+  <div class="footer">
+    Early Risk Alert AI · <a href="/command-center">Command Center</a> · <a href="/pilot-docs">Pilot Docs</a> · <a href="/model-card">Model Card</a><br>
+    <a href="mailto:info@earlyriskalertai.com">info@earlyriskalertai.com</a> · 732-724-7267<br>
+    This platform is intended for controlled pilot evaluation. It does not replace clinician judgment.
+  </div>
+</div>
+</body>
+</html>"""
+        return Response(status_html, mimetype="text/html; charset=utf-8")
 
     @app.route("/hospital-demo", methods=["GET", "POST"])
     def hospital_demo():
         if request.method == "POST":
             payload = {
                 "submitted_at": _utc_now_iso(),
+                "last_updated": _utc_now_iso(),
                 "status": "New",
                 "full_name": request.form.get("full_name", "").strip(),
+                "email": request.form.get("email", "").strip(),
+                "organization_type": request.form.get("organization_type", "").strip(),
                 "organization": request.form.get("organization", "").strip(),
                 "role": request.form.get("role", "").strip(),
-                "email": request.form.get("email", "").strip(),
-                "phone": request.form.get("phone", "").strip(),
-                "facility_type": request.form.get("facility_type", "").strip(),
+                "department_unit": request.form.get("department_unit", "").strip(),
+                "evaluation_interest": request.form.get("evaluation_interest", "").strip(),
                 "timeline": request.form.get("timeline", "").strip(),
-                "message": request.form.get("message", "").strip(),
+                "message": request.form.get("additional_notes", "").strip(),
+                "acknowledgment": request.form.get("acknowledgment", "").strip(),
             }
             payload["lead_score"] = _lead_score(payload, "hospital")
-            _save_jsonl(hospital_file, payload)
-
-            subject = "New Hospital Demo Request"
-            message = f"""
-New Hospital Demo Request
-
-Name: {payload['full_name']}
-Organization: {payload['organization']}
-Role: {payload['role']}
-Email: {payload['email']}
-Phone: {payload['phone']}
-Facility Type: {payload['facility_type']}
-Timeline: {payload['timeline']}
-Lead Score: {payload['lead_score']}
-Message: {payload['message']}
-"""
-            send_notification_email(subject, message)
-            _send_auto_reply(payload["full_name"], payload["email"], "hospital")
-
-            return render_template_string(
-                _render_thank_you(
-                    "hospital",
-                    "Your hospital demo request was submitted successfully. The request is now visible in admin review and ready for follow-up.",
-                    _detail_html(payload, ["full_name", "organization", "role", "email", "facility_type", "timeline", "lead_score"]),
-                )
-            )
-
+            payload["priority_tag"] = _priority_tag(payload["lead_score"], "hospital")
+            _append_jsonl(hospital_file, payload)
+            return render_template_string(_render_thank_you("Your hospital demonstration request has been received.", _detail_html(payload, ["full_name", "email", "organization_type", "organization", "role", "department_unit", "evaluation_interest", "timeline", "lead_score", "priority_tag"])))
         fields = """
-<div class="field"><label>Full Name</label><input name="full_name" required></div>
-<div class="field"><label>Organization</label><input name="organization" required></div>
-<div class="field"><label>Role</label><input name="role" required></div>
-<div class="field"><label>Email</label><input type="email" name="email" required></div>
-<div class="field"><label>Phone</label><input name="phone"></div>
-<div class="field"><label>Facility Type</label>
-  <select name="facility_type" required>
-    <option value="Hospital">Hospital</option>
-    <option value="Clinic">Clinic</option>
-    <option value="Health System">Health System</option>
-    <option value="RPM Provider">RPM Provider</option>
-  </select>
-</div>
-<div class="field"><label>Timeline</label>
-  <select name="timeline" required>
-    <option value="Immediate">Immediate</option>
-    <option value="30-60 days">30-60 days</option>
-    <option value="This quarter">This quarter</option>
-    <option value="Exploratory">Exploratory</option>
-  </select>
-</div>
-<div class="field"><label>What would you like to see in the demo?</label><textarea name="message"></textarea></div>
-"""
-        html_out = FORM_PAGE.replace("__TITLE__", "Hospital Demo - Early Risk Alert AI")
-        html_out = html_out.replace("__HEADING__", "Request Hospital Demo")
-        html_out = html_out.replace("__COPY__", "Submit interest from hospital operations teams, clinical leaders, and remote monitoring stakeholders.")
-        html_out = html_out.replace("__FIELDS__", fields)
-        html_out = html_out.replace("__BUTTON__", "Submit Hospital Demo Request")
-        return render_template_string(html_out)
+        <div class="field"><label>Work Email</label><input type="email" name="email" placeholder="Enter your work email" required></div>
+        <div class="field"><label>Organization Type</label><select name="organization_type" required><option value="Hospital">Hospital</option><option value="Health System">Health System</option><option value="Remote Patient Monitoring Program">Remote Patient Monitoring Program</option><option value="Care Network">Care Network</option><option value="Clinical Operations Team">Clinical Operations Team</option><option value="Other">Other</option></select></div>
+        <div class="field"><label>Organization Name</label><input name="organization" placeholder="Enter your hospital, health system, or organization name" required></div>
+        <div class="field"><label>Full Name</label><input name="full_name" placeholder="Enter your full name" required></div>
+        <div class="field"><label>Title / Role</label><input name="role" placeholder="Enter your title or role" required></div>
+        <div class="field"><label>Department / Unit</label><select name="department_unit" required><option value="ICU">ICU</option><option value="Telemetry">Telemetry</option><option value="Stepdown">Stepdown</option><option value="Med-Surg">Med-Surg</option><option value="Remote Monitoring">Remote Monitoring</option><option value="Operations / Command Center">Operations / Command Center</option><option value="Executive Leadership">Executive Leadership</option><option value="Other">Other</option></select></div>
+        <div class="field"><label>What are you interested in evaluating?</label><select name="evaluation_interest" required><option value="Patient prioritization support">Patient prioritization support</option><option value="Command-center operational awareness">Command-center operational awareness</option><option value="Explainable review-basis visibility">Explainable review-basis visibility</option><option value="Workflow-state and audit visibility">Workflow-state and audit visibility</option><option value="Controlled pilot evaluation">Controlled pilot evaluation</option><option value="Other">Other</option></select></div>
+        <div class="field"><label>Pilot Timeline</label><select name="timeline" required><option value="Immediate">Immediate</option><option value="30-60 days">30-60 days</option><option value="This quarter">This quarter</option><option value="Exploratory">Exploratory</option></select></div>
+        <div class="field full"><label>Additional Notes</label><textarea name="additional_notes" placeholder="Share your pilot goals, care setting, or workflow interests"></textarea></div>
+        <div class="field full"><label>Acknowledgment</label><div class="check"><input type="checkbox" name="acknowledgment" value="yes" required><span>I understand Early Risk Alert AI is intended for HCP-facing decision-support and workflow-support pilot evaluation. It does not replace clinician judgment and is not intended to diagnose, direct treatment, or independently trigger escalation.</span></div></div>
+        """
+        out = FORM_HTML.replace("__TITLE__", "Request a Live Command Center Demonstration").replace("__HEADING__", "Request a Live Command Center Demonstration").replace("__COPY__", "Schedule a guided demonstration of Early Risk Alert AI's HCP-facing decision-support and workflow-support platform for monitored patient visibility, patient prioritization support, explainable review context, and command-center operational awareness.").replace("__FIELDS__", fields).replace("__BUTTON__", "Request Demo Access")
+        return render_template_string(out)
 
     @app.route("/executive-walkthrough", methods=["GET", "POST"])
     def executive_walkthrough():
         if request.method == "POST":
             payload = {
-                "submitted_at": _utc_now_iso(),
-                "status": "New",
+                "submitted_at": _utc_now_iso(), "last_updated": _utc_now_iso(), "status": "New",
                 "full_name": request.form.get("full_name", "").strip(),
                 "organization": request.form.get("organization", "").strip(),
                 "title": request.form.get("title", "").strip(),
                 "email": request.form.get("email", "").strip(),
-                "phone": request.form.get("phone", "").strip(),
-                "priority": request.form.get("priority", "").strip(),
+                "leadership_area": request.form.get("leadership_area", "").strip(),
+                "review_focus": request.form.get("review_focus", "").strip(),
                 "timeline": request.form.get("timeline", "").strip(),
                 "message": request.form.get("message", "").strip(),
+                "acknowledgment": request.form.get("acknowledgment", "").strip(),
             }
             payload["lead_score"] = _lead_score(payload, "executive")
-            _save_jsonl(exec_file, payload)
-
-            subject = "New Executive Walkthrough Request"
-            message = f"""
-New Executive Walkthrough Request
-
-Name: {payload['full_name']}
-Organization: {payload['organization']}
-Title: {payload['title']}
-Email: {payload['email']}
-Phone: {payload['phone']}
-Priority: {payload['priority']}
-Timeline: {payload['timeline']}
-Lead Score: {payload['lead_score']}
-Message: {payload['message']}
-"""
-            send_notification_email(subject, message)
-            _send_auto_reply(payload["full_name"], payload["email"], "executive")
-
-            return render_template_string(
-                _render_thank_you(
-                    "executive",
-                    "Your executive walkthrough request was submitted successfully. The request is now visible in admin review and ready for scheduling follow-up.",
-                    _detail_html(payload, ["full_name", "organization", "title", "email", "priority", "timeline", "lead_score"]),
-                )
-            )
-
+            payload["priority_tag"] = _priority_tag(payload["lead_score"], "executive")
+            _append_jsonl(exec_file, payload)
+            return render_template_string(_render_thank_you("Your executive walkthrough request has been received.", _detail_html(payload, ["full_name", "organization", "title", "email", "leadership_area", "review_focus", "timeline", "lead_score", "priority_tag"])))
         fields = """
-<div class="field"><label>Full Name</label><input name="full_name" required></div>
-<div class="field"><label>Organization</label><input name="organization" required></div>
-<div class="field"><label>Executive Title</label><input name="title" required></div>
-<div class="field"><label>Email</label><input type="email" name="email" required></div>
-<div class="field"><label>Phone</label><input name="phone"></div>
-<div class="field"><label>Priority</label>
-  <select name="priority" required>
-    <option value="Operational Review">Operational Review</option>
-    <option value="Pilot Evaluation">Pilot Evaluation</option>
-    <option value="Enterprise Discussion">Enterprise Discussion</option>
-    <option value="Strategic Partnership">Strategic Partnership</option>
-  </select>
-</div>
-<div class="field"><label>Timeline</label>
-  <select name="timeline" required>
-    <option value="Immediate">Immediate</option>
-    <option value="30-60 days">30-60 days</option>
-    <option value="This quarter">This quarter</option>
-    <option value="Exploratory">Exploratory</option>
-  </select>
-</div>
-<div class="field"><label>Walkthrough Focus</label><textarea name="message"></textarea></div>
-"""
-        html_out = FORM_PAGE.replace("__TITLE__", "Executive Walkthrough - Early Risk Alert AI")
-        html_out = html_out.replace("__HEADING__", "Schedule Executive Walkthrough")
-        html_out = html_out.replace("__COPY__", "Capture executive-level product review requests for hospital leadership, system operations, and strategic evaluation.")
-        html_out = html_out.replace("__FIELDS__", fields)
-        html_out = html_out.replace("__BUTTON__", "Submit Executive Walkthrough Request")
-        return render_template_string(html_out)
+        <div class="field"><label>Full Name</label><input name="full_name" placeholder="Enter your full name" required></div>
+        <div class="field"><label>Organization Name</label><input name="organization" placeholder="Enter your organization name" required></div>
+        <div class="field"><label>Title</label><input name="title" placeholder="Enter your title" required></div>
+        <div class="field"><label>Work Email</label><input type="email" name="email" placeholder="Enter your work email" required></div>
+        <div class="field"><label>Leadership Area</label><select name="leadership_area" required><option value="Clinical Leadership">Clinical Leadership</option><option value="Hospital Operations">Hospital Operations</option><option value="Digital Health">Digital Health</option><option value="Innovation">Innovation</option><option value="Executive Administration">Executive Administration</option><option value="Other">Other</option></select></div>
+        <div class="field"><label>Timeline</label><select name="timeline" required><option value="Immediate">Immediate</option><option value="30-60 days">30-60 days</option><option value="This quarter">This quarter</option><option value="Exploratory">Exploratory</option></select></div>
+        <div class="field full"><label>What would you like reviewed?</label><select name="review_focus" required><option value="Pilot readiness">Pilot readiness</option><option value="Platform overview">Platform overview</option><option value="Operational workflow support">Operational workflow support</option><option value="Command-center model">Command-center model</option><option value="Security and pilot controls">Security and pilot controls</option><option value="Other">Other</option></select></div>
+        <div class="field full"><label>Additional Notes</label><textarea name="message" placeholder="Share any leadership, pilot, or operational review priorities"></textarea></div>
+        <div class="field full"><label>Acknowledgment</label><div class="check"><input type="checkbox" name="acknowledgment" value="yes" required><span>I understand Early Risk Alert AI is intended for controlled pilot evaluation and hospital-facing workflow support. It does not replace clinician judgment and is not intended to diagnose, direct treatment, or independently trigger escalation.</span></div></div>
+        """
+        out = FORM_HTML.replace("__TITLE__", "Request an Executive Walkthrough").replace("__HEADING__", "Request an Executive Walkthrough").replace("__COPY__", "Request a leadership-level walkthrough of Early Risk Alert AI's hospital-facing platform, pilot readiness, operational workflow support, and command-center visibility model.").replace("__FIELDS__", fields).replace("__BUTTON__", "Request Executive Walkthrough")
+        return render_template_string(out)
 
     @app.route("/investor-intake", methods=["GET", "POST"])
     def investor_intake():
         if request.method == "POST":
-            payload = {
-                "submitted_at": _utc_now_iso(),
-                "status": "New",
-                "full_name": request.form.get("full_name", "").strip(),
-                "organization": request.form.get("organization", "").strip(),
-                "role": request.form.get("role", "").strip(),
-                "email": request.form.get("email", "").strip(),
-                "phone": request.form.get("phone", "").strip(),
-                "investor_type": request.form.get("investor_type", "").strip(),
-                "check_size": request.form.get("check_size", "").strip(),
-                "timeline": request.form.get("timeline", "").strip(),
-                "message": request.form.get("message", "").strip(),
-            }
+            payload = {"submitted_at": _utc_now_iso(), "last_updated": _utc_now_iso(), "status": "New", "full_name": request.form.get("full_name", "").strip(), "organization": request.form.get("organization", "").strip(), "role": request.form.get("role", "").strip(), "email": request.form.get("email", "").strip(), "stage": request.form.get("stage", "").strip(), "timeline": request.form.get("timeline", "").strip(), "interest_area": request.form.get("interest_area", "").strip(), "message": request.form.get("message", "").strip(), "acknowledgment": request.form.get("acknowledgment", "").strip()}
             payload["lead_score"] = _lead_score(payload, "investor")
-            _save_jsonl(investor_file, payload)
-
-            subject = "New Investor Intake Request"
-            message = f"""
-New Investor Intake Request
-
-Name: {payload['full_name']}
-Organization: {payload['organization']}
-Role: {payload['role']}
-Email: {payload['email']}
-Phone: {payload['phone']}
-Investor Type: {payload['investor_type']}
-Check Size: {payload['check_size']}
-Timeline: {payload['timeline']}
-Lead Score: {payload['lead_score']}
-Message: {payload['message']}
-"""
-            send_notification_email(subject, message)
-            _send_auto_reply(payload["full_name"], payload["email"], "investor")
-
-            return render_template_string(
-                _render_thank_you(
-                    "investor",
-                    "Your investor intake was submitted successfully. The request is now visible in admin review and ready for follow-up and export.",
-                    _detail_html(payload, ["full_name", "organization", "role", "email", "investor_type", "timeline", "check_size", "lead_score"]),
-                )
-            )
-
+            payload["priority_tag"] = _priority_tag(payload["lead_score"], "investor")
+            _append_jsonl(investor_file, payload)
+            return render_template_string(_render_thank_you("Your investor access request has been received.", _detail_html(payload, ["full_name", "organization", "role", "email", "stage", "timeline", "interest_area", "lead_score", "priority_tag"])))
         fields = """
-<div class="field"><label>Full Name</label><input name="full_name" required></div>
-<div class="field"><label>Organization</label><input name="organization" required></div>
-<div class="field"><label>Role</label><input name="role" required></div>
-<div class="field"><label>Email</label><input type="email" name="email" required></div>
-<div class="field"><label>Phone</label><input name="phone"></div>
-<div class="field"><label>Investor Type</label>
-  <select name="investor_type" required>
-    <option value="Angel">Angel</option>
-    <option value="Seed Fund">Seed Fund</option>
-    <option value="Strategic">Strategic</option>
-    <option value="Healthcare VC">Healthcare VC</option>
-    <option value="Family Office">Family Office</option>
-  </select>
-</div>
-<div class="field"><label>Check Size</label><input name="check_size" placeholder="$50K - $250K"></div>
-<div class="field"><label>Timeline</label>
-  <select name="timeline" required>
-    <option value="Immediate">Immediate</option>
-    <option value="30-60 days">30-60 days</option>
-    <option value="This quarter">This quarter</option>
-    <option value="Exploratory">Exploratory</option>
-  </select>
-</div>
-<div class="field"><label>Interest / Notes</label><textarea name="message" placeholder="What are you interested in learning more about?"></textarea></div>
-"""
-        html_out = FORM_PAGE.replace("__TITLE__", "Investor Intake - Early Risk Alert AI")
-        html_out = html_out.replace("__HEADING__", "Investor Intake Form")
-        html_out = html_out.replace("__COPY__", "Capture investor interest, timeline, and follow-up details directly from the platform.")
-        html_out = html_out.replace("__FIELDS__", fields)
-        html_out = html_out.replace("__BUTTON__", "Submit Investor Intake")
-        return render_template_string(html_out)
+        <div class="field"><label>Full Name</label><input name="full_name" placeholder="Enter your full name" required></div>
+        <div class="field"><label>Organization</label><input name="organization" placeholder="Enter your organization" required></div>
+        <div class="field"><label>Role</label><input name="role" placeholder="Enter your role" required></div>
+        <div class="field"><label>Work Email</label><input type="email" name="email" placeholder="Enter your work email" required></div>
+        <div class="field"><label>Investor Stage</label><select name="stage" required><option value="Angel">Angel</option><option value="Seed">Seed</option><option value="Institutional">Institutional</option><option value="Strategic">Strategic</option></select></div>
+        <div class="field"><label>Timeline</label><select name="timeline" required><option value="Immediate">Immediate</option><option value="30-60 days">30-60 days</option><option value="This quarter">This quarter</option><option value="Exploratory">Exploratory</option></select></div>
+        <div class="field full"><label>Areas of Interest</label><select name="interest_area" required><option value="Platform overview">Platform overview</option><option value="Hospital pilot model">Hospital pilot model</option><option value="Commercial model">Commercial model</option><option value="Market opportunity">Market opportunity</option><option value="Founder discussion">Founder discussion</option><option value="Partnership discussion">Partnership discussion</option><option value="Other">Other</option></select></div>
+        <div class="field full"><label>Message</label><textarea name="message" placeholder="Share your investor or partnership interests"></textarea></div>
+        <div class="field full"><label>Acknowledgment</label><div class="check"><input type="checkbox" name="acknowledgment" value="yes" required><span>I understand Early Risk Alert AI is positioned as an HCP-facing decision-support and workflow-support platform for controlled pilot evaluation and hospital-facing workflow support.</span></div></div>
+        """
+        out = FORM_HTML.replace("__TITLE__", "Request Investor Access").replace("__HEADING__", "Request Investor Access").replace("__COPY__", "Request investor materials, platform overview, and partnership discussion access for Early Risk Alert AI's HCP-facing decision-support and workflow-support platform.").replace("__FIELDS__", fields).replace("__BUTTON__", "Request Investor Access")
+        return render_template_string(out)
 
-    @app.get("/admin/status/hospital")
-    def admin_status_hospital():
-        submitted_at = request.args.get("submitted_at", "")
-        status = request.args.get("status", "New")
-        _update_row_status(hospital_file, submitted_at, status)
-        return redirect("/admin/review")
+    @app.get("/admin/review/data")
+    def admin_review_data():
+        rows: List[Dict[str, Any]] = []
+        for lead_type, path in [("hospital", hospital_file), ("executive", exec_file), ("investor", investor_file)]:
+            for item in _read_jsonl(path):
+                row = dict(item)
+                row["kind"] = lead_type
+                rows.append(row)
+        rows.sort(key=lambda r: str(r.get("submitted_at", "")), reverse=True)
+        return jsonify({"ok": True, "rows": rows})
 
-    @app.get("/admin/status/executive")
-    def admin_status_executive():
-        submitted_at = request.args.get("submitted_at", "")
-        status = request.args.get("status", "New")
-        _update_row_status(exec_file, submitted_at, status)
-        return redirect("/admin/review")
+    @app.post("/admin/review/update")
+    def admin_review_update():
+        payload = request.get_json(silent=True) or {}
+        kind = str(payload.get("kind", "")).strip().lower()
+        submitted_at = str(payload.get("submitted_at", "")).strip()
+        field = str(payload.get("field", "")).strip()
+        value = str(payload.get("value", "")).strip()
+        if not kind or not submitted_at or field not in {"status", "stage"}:
+            return jsonify({"ok": False, "error": "invalid payload"}), 400
+        path_map = {"hospital": hospital_file, "executive": exec_file, "investor": investor_file}
+        path = path_map.get(kind)
+        if not path:
+            return jsonify({"ok": False, "error": "invalid lead type"}), 400
+        rows = _read_jsonl(path)
+        updated = False
+        for row in rows:
+            if str(row.get("submitted_at", "")).strip() == submitted_at:
+                row[field] = value
+                row["last_updated"] = _utc_now_iso()
+                updated = True
+                break
+        if not updated:
+            return jsonify({"ok": False, "error": "lead not found"}), 404
+        _write_jsonl_rows(path, rows)
+        return jsonify({"ok": True})
 
-    @app.get("/admin/status/investor")
-    def admin_status_investor():
-        submitted_at = request.args.get("submitted_at", "")
-        status = request.args.get("status", "New")
-        _update_row_status(investor_file, submitted_at, status)
-        return redirect("/admin/review")
+    @app.get("/admin/api/data")
+    def admin_api_data():
+        raw = {"hospital": _read_jsonl(hospital_file), "executive": _read_jsonl(exec_file), "investor": _read_jsonl(investor_file)}
+        merged: List[Dict[str, Any]] = []
+        for lead_type, data in raw.items():
+            for row in data:
+                merged.append(_normalize_row(row, lead_type))
+        merged.sort(key=lambda r: (r["submitted_at"], r["lead_score"]), reverse=True)
+        last_updated = max([r["last_updated"] for r in merged], default="")
+        return jsonify({
+            "rows": merged,
+            "summary": {
+                "hospital_count": len(raw["hospital"]),
+                "executive_count": len(raw["executive"]),
+                "investor_count": len(raw["investor"]),
+                "open_count": sum(1 for r in merged if r["status"] != "Closed"),
+                "investor_stages": _investor_stage_summary(raw["investor"]),
+                "last_updated": _format_pretty_label(last_updated),
+            },
+        })
 
-    @app.get("/admin/review")
-    def admin_review():
-        hospital_rows = _read_jsonl(hospital_file)
-        exec_rows = _read_jsonl(exec_file)
-        investor_rows = _read_jsonl(investor_file)
-
-        labels_h = {
-            "submitted_at": "Submitted",
-            "status": "Status",
-            "lead_score": "Score",
-            "full_name": "Name",
-            "organization": "Organization",
-            "role": "Role",
-            "email": "Email",
-            "facility_type": "Facility Type",
-            "timeline": "Timeline",
-        }
-        labels_e = {
-            "submitted_at": "Submitted",
-            "status": "Status",
-            "lead_score": "Score",
-            "full_name": "Name",
-            "organization": "Organization",
-            "title": "Executive Title",
-            "email": "Email",
-            "priority": "Priority",
-            "timeline": "Timeline",
-        }
-        labels_i = {
-            "submitted_at": "Submitted",
-            "status": "Status",
-            "lead_score": "Score",
-            "full_name": "Name",
-            "organization": "Organization",
-            "role": "Role",
-            "email": "Email",
-            "investor_type": "Investor Type",
-            "check_size": "Check Size",
-            "timeline": "Timeline",
-        }
-
-        open_leads = sum(
-            1
-            for row in hospital_rows + exec_rows + investor_rows
-            if _status_norm(row.get("status")) != "Closed"
-        )
-
-        html_out = ADMIN_HTML
-        html_out = html_out.replace("__HOSPITAL_COUNT__", str(len(hospital_rows)))
-        html_out = html_out.replace("__EXEC_COUNT__", str(len(exec_rows)))
-        html_out = html_out.replace("__INVESTOR_COUNT__", str(len(investor_rows)))
-        html_out = html_out.replace("__OPEN_LEADS__", str(open_leads))
-        html_out = html_out.replace(
-            "__HOSPITAL_TABLE__",
-            _table_html(hospital_rows, ["submitted_at", "status", "lead_score", "full_name", "organization", "role", "email", "facility_type", "timeline"], labels_h, "hospital"),
-        )
-        html_out = html_out.replace(
-            "__EXEC_TABLE__",
-            _table_html(exec_rows, ["submitted_at", "status", "lead_score", "full_name", "organization", "title", "email", "priority", "timeline"], labels_e, "executive"),
-        )
-        html_out = html_out.replace(
-            "__INVESTOR_TABLE__",
-            _table_html(investor_rows, ["submitted_at", "status", "lead_score", "full_name", "organization", "role", "email", "investor_type", "check_size", "timeline"], labels_i, "investor"),
-        )
-        return render_template_string(html_out)
+    @app.post("/admin/api/status")
+    def admin_api_status():
+        data = request.get_json(silent=True) or {}
+        lead_type = str(data.get("lead_type", "")).strip()
+        submitted_at = str(data.get("submitted_at", "")).strip()
+        new_status = str(data.get("status", "")).strip()
+        file_map = {"hospital": hospital_file, "executive": exec_file, "investor": investor_file}
+        path = file_map.get(lead_type)
+        if not path or not submitted_at:
+            return jsonify({"ok": False}), 400
+        rows = _read_jsonl(path)
+        for row in rows:
+            if str(row.get("submitted_at", "")) == submitted_at:
+                row["status"] = _status_norm(new_status, lead_type)
+                row["last_updated"] = _utc_now_iso()
+        _write_jsonl_rows(path, rows)
+        return jsonify({"ok": True})
 
     @app.get("/admin/export.csv")
     def admin_export_csv():
-        hospital_rows = _read_jsonl(hospital_file)
-        exec_rows = _read_jsonl(exec_file)
-        investor_rows = _read_jsonl(investor_file)
-
+        rows = []
+        for lead_type, path in [("hospital", hospital_file), ("executive", exec_file), ("investor", investor_file)]:
+            for row in _read_jsonl(path):
+                rows.append(_normalize_row(row, lead_type))
+        rows.sort(key=lambda r: (r["submitted_at"], r["lead_score"]), reverse=True)
         output = io.StringIO()
         writer = csv.writer(output)
-        writer.writerow([
-            "Lead Source",
-            "Submitted At",
-            "Lead Status",
-            "Lead Score",
-            "Full Name",
-            "Organization",
-            "Role / Title",
-            "Email Address",
-            "Phone Number",
-            "Lead Type or Priority",
-            "Timeline",
-            "Notes",
-        ])
-
-        for row in hospital_rows:
-            writer.writerow([
-                "Hospital Demo",
-                row.get("submitted_at", ""),
-                _status_norm(row.get("status", "New")),
-                row.get("lead_score", ""),
-                row.get("full_name", ""),
-                row.get("organization", ""),
-                row.get("role", ""),
-                row.get("email", ""),
-                row.get("phone", ""),
-                row.get("facility_type", ""),
-                row.get("timeline", ""),
-                row.get("message", ""),
-            ])
-
-        for row in exec_rows:
-            writer.writerow([
-                "Executive Walkthrough",
-                row.get("submitted_at", ""),
-                _status_norm(row.get("status", "New")),
-                row.get("lead_score", ""),
-                row.get("full_name", ""),
-                row.get("organization", ""),
-                row.get("title", ""),
-                row.get("email", ""),
-                row.get("phone", ""),
-                row.get("priority", ""),
-                row.get("timeline", ""),
-                row.get("message", ""),
-            ])
-
-        for row in investor_rows:
-            writer.writerow([
-                "Investor Intake",
-                row.get("submitted_at", ""),
-                _status_norm(row.get("status", "New")),
-                row.get("lead_score", ""),
-                row.get("full_name", ""),
-                row.get("organization", ""),
-                row.get("role", ""),
-                row.get("email", ""),
-                row.get("phone", ""),
-                row.get("investor_type", ""),
-                row.get("timeline", ""),
-                row.get("message", ""),
-            ])
-
-        mem = io.BytesIO()
-        mem.write(output.getvalue().encode("utf-8"))
+        writer.writerow(["Lead Source", "Submitted At", "Last Updated", "Lead Status", "Lead Score", "Priority Tag", "Full Name", "Organization", "Role / Title", "Email Address", "Phone Number", "Category", "Timeline", "Message"])
+        for row in rows:
+            writer.writerow([row["lead_type"], row["submitted_at"], row["last_updated"], row["status"], row["lead_score"], row["priority_tag"], row["full_name"], row["organization"], row["role_or_title"], row["email"], row["phone"], row["category"], row["timeline"], row["message"]])
+        mem = io.BytesIO(output.getvalue().encode("utf-8"))
         mem.seek(0)
         return send_file(mem, mimetype="text/csv", as_attachment=True, download_name="early_risk_alert_pipeline_export.csv")
 
+    @app.get("/api/platform-positioning")
+    def api_platform_positioning():
+        return jsonify({
+            "pilot_version": PILOT_VERSION,
+            "pilot_build_state": PILOT_BUILD_STATE,
+            "intended_use_statement": INTENDED_USE_STATEMENT,
+            "support_language": PILOT_SUPPORT_LANGUAGE,
+            "supported_inputs": PILOT_SUPPORTED_INPUTS,
+            "supported_outputs": PILOT_SUPPORTED_OUTPUTS,
+            "avoid_claims": PILOT_AVOID_CLAIMS,
+            "limitations": PILOT_LIMITATIONS_TEXT,
+            "approved_claims": PILOT_APPROVED_CLAIMS,
+            "banned_claims": PILOT_BANNED_CLAIMS,
+            "advisory_structure": PILOT_ADVISORY_STRUCTURE,
+            "support_owners": PILOT_SUPPORT_OWNERS,
+            "model_card_url": "/model-card",
+            "pilot_success_guide_url": "/pilot-success-guide",
+        })
+
+    @app.get("/api/pilot-governance")
+    def api_pilot_governance():
+        return jsonify({
+            "pilot_version": PILOT_VERSION,
+            "pilot_build_state": PILOT_BUILD_STATE,
+            "intended_use_statement": INTENDED_USE_STATEMENT,
+            "support_language": PILOT_SUPPORT_LANGUAGE,
+            "supported_inputs": PILOT_SUPPORTED_INPUTS,
+            "supported_outputs": PILOT_SUPPORTED_OUTPUTS,
+            "avoid_claims": PILOT_AVOID_CLAIMS,
+            "limitations": PILOT_LIMITATIONS_TEXT,
+            "risk_register": PILOT_RISK_REGISTER,
+            "vnv_lite": PILOT_VNV_LITE,
+            "release_notes": PILOT_RELEASE_NOTES,
+            "approved_claims": PILOT_APPROVED_CLAIMS,
+            "banned_claims": PILOT_BANNED_CLAIMS,
+            "claims_control_sheet": PILOT_CLAIMS_CONTROL_SHEET,
+            "document_control_index": PILOT_DOCUMENT_CONTROL_INDEX,
+            "complaint_issue_log": PILOT_COMPLAINT_ISSUE_LOG,
+            "escalation_process": PILOT_ESCALATION_PROCESS,
+            "change_approval_log": PILOT_CHANGE_APPROVAL_LOG,
+            "cybersecurity_summary": PILOT_CYBERSECURITY_SUMMARY,
+            "advisory_structure": PILOT_ADVISORY_STRUCTURE,
+            "support_owners": PILOT_SUPPORT_OWNERS,
+            "security_program_documents": PILOT_SECURITY_PROGRAM_DOCUMENTS,
+            "insurance_readiness_controls": PILOT_INSURANCE_READINESS_CONTROLS,
+            "mfa_access_log": PILOT_MFA_ACCESS_EVIDENCE_LOG,
+            "backup_restore_log": PILOT_BACKUP_RESTORE_LOG,
+            "patch_log": PILOT_PATCH_LOG,
+            "access_review_log": PILOT_ACCESS_REVIEW_LOG,
+            "tabletop_log": PILOT_TABLETOP_LOG,
+            "training_ack_log": PILOT_TRAINING_ACK_LOG,
+            "site_packet_template": PILOT_SITE_PACKET_TEMPLATE,
+            "user_provisioning_policy": PILOT_USER_PROVISIONING_POLICY,
+            "data_retention_policy": PILOT_DATA_RETENTION_POLICY,
+            "pilot_scope_document": PILOT_SCOPE_DOCUMENT,
+            "training_use_instructions": PILOT_TRAINING_USE_INSTRUCTIONS,
+            "dated_validation_evidence": PILOT_VALIDATION_EVIDENCE,
+            "model_card_url": "/model-card",
+            "pilot_success_guide_url": "/pilot-success-guide",
+        })
+
+    @app.get("/api/access-context")
+    @_login_required
+    def access_context():
+        return jsonify(_access_context_payload())
+
+    @app.get("/api/workflow")
+    @_login_required
+    def workflow():
+        _ensure_db_loaded()
+        return jsonify({"records": SIM_STATE.get("workflow_records", {}), "audit_log": SIM_STATE.get("workflow_audit", [])[:100]})
+
+    @app.post("/api/workflow/action")
+    @_login_required
+    def workflow_action():
+        data = request.get_json(silent=True) or {}
+        patient_id = str(data.get("patient_id", "")).strip()
+        action = str(data.get("action", "")).strip().lower()
+        note = str(data.get("note", "")).strip()
+        if not patient_id:
+            return jsonify({"ok": False, "error": "patient_id required"}), 400
+        record = _get_workflow_record(patient_id)
+        if action == "ack":
+            if not _has_permission("ack"):
+                return jsonify({"ok": False, "error": "permission denied"}), 403
+            record["ack"] = True
+            record["state"] = "acknowledged"
+            _append_audit(patient_id, "ACK", note or "Alert acknowledged")
+        elif action == "assign_nurse":
+            if not _has_permission("assign"):
+                return jsonify({"ok": False, "error": "permission denied"}), 403
+            record["assigned"] = True
+            record["assigned_label"] = note or "Assigned Nurse"
+            record["state"] = "assigned"
+            _append_audit(patient_id, "ASSIGN", note or "Assigned Nurse")
+        elif action == "escalate":
+            if not _has_permission("escalate"):
+                return jsonify({"ok": False, "error": "permission denied"}), 403
+            record["escalated"] = True
+            record["state"] = "escalated"
+            _append_audit(patient_id, "ESCALATE", note or "Escalated patient")
+        elif action == "resolve":
+            if not _has_permission("resolve"):
+                return jsonify({"ok": False, "error": "permission denied"}), 403
+            record["resolved"] = True
+            record["state"] = "resolved"
+            _append_audit(patient_id, "RESOLVE", note or "Resolved workflow")
+        else:
+            return jsonify({"ok": False, "error": "invalid action"}), 400
+        record["updated_at"] = _utc_now_iso()
+        record["role"] = _current_role()
+        # Persist to SQLite so state survives restarts
+        try:
+            _db_upsert_workflow_record(patient_id, record)
+        except Exception as e:
+            print(f"[ERA] workflow db write failed: {e}")
+        return jsonify({"ok": True, "record": record})
+
+    @app.post("/api/action/<action>/<patient_id>")
+    def api_action_alias(action: str, patient_id: str):
+        action_map = {"ack": "ack", "assign": "assign_nurse", "escalate": "escalate", "resolve": "resolve"}
+        mapped = action_map.get(str(action).strip().lower())
+        if not mapped:
+            return jsonify({"ok": False, "error": "invalid action"}), 400
+        payload = request.get_json(silent=True) or {}
+        note = payload.get("note") or payload.get("assigned_label") or payload.get("label") or ""
+        original_get_json = request.get_json
+        request.get_json = lambda *a, **k: {"patient_id": patient_id, "action": mapped, "note": note}
+        try:
+            return workflow_action()
+        finally:
+            request.get_json = original_get_json
+
+    @app.get("/api/audit")
+    @_login_required
+    def audit():
+        return jsonify(SIM_STATE.get("workflow_audit", [])[-100:])
+
+    # -----------------------------------------------------------------------
+    # RETROSPECTIVE VALIDATION — CSV upload and analysis routes
+    # -----------------------------------------------------------------------
+
+    RETRO_UPLOAD_HTML = """<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Retrospective Validation Upload — Early Risk Alert AI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root{--bg:#07101c;--bg2:#0b1528;--line:rgba(255,255,255,.08);--text:#eef4ff;--muted:#9fb4d6;--blue:#7aa2ff;--cyan:#5bd4ff;--green:#3ad38f;--amber:#f4bd6a;}
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:Inter,system-ui,sans-serif;background:linear-gradient(180deg,var(--bg),var(--bg2));color:var(--text);min-height:100vh;padding:28px 18px 64px}
+    .wrap{max-width:1100px;margin:0 auto}
+    .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px}
+    .brand{font-size:13px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:#9adfff}
+    .nav a{font-size:13px;font-weight:900;color:#dce9ff;text-decoration:none;margin-left:16px}
+    .card{border:1px solid var(--line);border-radius:22px;background:rgba(255,255,255,.03);padding:22px;margin-bottom:16px}
+    .kicker{font-size:11px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:#9adfff;margin-bottom:8px}
+    h1{font-size:clamp(26px,4vw,40px);font-weight:1000;letter-spacing:-.05em;margin-bottom:10px}
+    h2{font-size:20px;font-weight:1000;letter-spacing:-.03em;margin-bottom:10px}
+    p{font-size:14px;color:var(--muted);line-height:1.65;margin-bottom:10px}
+    .disclaimer{padding:12px 16px;border-radius:14px;background:rgba(244,189,106,.1);border:1px solid rgba(244,189,106,.22);color:#ffe7bf;font-size:13px;line-height:1.6;margin-bottom:14px}
+    .upload-zone{border:2px dashed rgba(91,212,255,.3);border-radius:18px;padding:36px;text-align:center;cursor:pointer;transition:border-color .2s;margin-bottom:16px}
+    .upload-zone:hover,.upload-zone.drag{border-color:rgba(91,212,255,.7);background:rgba(91,212,255,.04)}
+    .upload-zone input{display:none}
+    .upload-icon{font-size:36px;margin-bottom:12px;opacity:.6}
+    .upload-label{font-size:15px;font-weight:900;color:#dce9ff;margin-bottom:6px}
+    .upload-sub{font-size:13px;color:var(--muted)}
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 20px;border-radius:14px;font:inherit;font-size:14px;font-weight:900;cursor:pointer;border:none;transition:opacity .18s}
+    .btn.primary{background:linear-gradient(135deg,#7aa2ff,#5bd4ff);color:#07101c}
+    .btn.secondary{background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--text)}
+    .btn:hover{opacity:.85}
+    .btn:disabled{opacity:.4;cursor:not-allowed}
+    table{width:100%;border-collapse:collapse;font-size:13px}
+    thead th{padding:10px 12px;text-align:left;color:#9adfff;border-bottom:1px solid rgba(255,255,255,.08);font-weight:900;letter-spacing:.08em;text-transform:uppercase}
+    tbody tr{border-bottom:1px solid rgba(255,255,255,.05)}
+    tbody td{padding:10px 12px;vertical-align:top;color:#dce9ff}
+    .pill{display:inline-flex;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:900}
+    .pill.green{background:rgba(58,211,143,.12);border:1px solid rgba(58,211,143,.24);color:#b6f5d9}
+    .pill.amber{background:rgba(244,189,106,.12);border:1px solid rgba(244,189,106,.24);color:#ffe7bf}
+    .pill.red{background:rgba(255,102,125,.12);border:1px solid rgba(255,102,125,.24);color:#ffd8de}
+    .pill.blue{background:rgba(122,162,255,.12);border:1px solid rgba(122,162,255,.24);color:#c8d9ff}
+    .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:14px 0}
+    .stat{border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.03);padding:14px}
+    .stat-k{font-size:11px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:#9adfff;margin-bottom:6px}
+    .stat-v{font-size:26px;font-weight:1000;letter-spacing:-.04em;line-height:1}
+    .interp{padding:14px 16px;border-radius:14px;background:rgba(91,212,255,.07);border:1px solid rgba(91,212,255,.16);color:#dce9ff;font-size:14px;line-height:1.65;margin:14px 0}
+    .schema-table{font-size:12px}
+    .schema-req{color:#b6f5d9}
+    .schema-opt{color:#9fb4d6}
+    #uploadStatus{font-size:14px;font-weight:900;margin-top:12px;min-height:20px}
+    #uploadStatus.ok{color:#3ad38f}
+    #uploadStatus.err{color:#ff667d}
+    .progress{height:4px;border-radius:999px;background:rgba(255,255,255,.06);overflow:hidden;margin-top:8px;display:none}
+    .progress-fill{height:100%;border-radius:999px;background:linear-gradient(135deg,#7aa2ff,#5bd4ff);width:0%;transition:width .3s}
+    #resultsSection{display:none}
+    @media(max-width:700px){.stat-grid{grid-template-columns:1fr 1fr}}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="brand">Early Risk Alert AI</div>
+    <div class="nav">
+      <a href="/command-center">Command Center</a>
+      <a href="/model-card">Model Card</a>
+      <a href="/pilot-docs">Pilot Docs</a>
+      <a href="/retro-schema">Download Schema</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="kicker">Retrospective Validation</div>
+    <h1>Upload De-Identified Patient Data</h1>
+    <p>Upload a CSV of de-identified historical patient vital-sign data to run a retrospective validation analysis. The platform will compute how the rules-based prioritization engine would have performed against your documented clinical events, compared to standard threshold-only alerting.</p>
+    <div class="disclaimer">De-identified data only. Do not upload any file containing real patient names, MRNs, dates of birth, or other direct identifiers. All uploaded data is processed in memory and is not retained after the session ends. A Business Associate Agreement is not required for de-identified data uploads under Phase 1 retrospective validation. <strong style="color:#b6f5d9">No-commitment analysis available:</strong> Accepting hospital de-identified datasets for no-commitment retrospective analysis. Upload CSV → receive results + interpretation. No EHR integration, no IT lift, no cost to evaluate.</div>
+  </div>
+
+  <div class="card">
+    <h2>Upload CSV File</h2>
+    <div class="upload-zone" id="dropZone" onclick="document.getElementById('csvFile').click()">
+      <input type="file" id="csvFile" accept=".csv" onchange="handleFileSelect(this)">
+      <div class="upload-icon">&#x1F4C4;</div>
+      <div class="upload-label">Click to select or drag and drop a CSV file</div>
+      <div class="upload-sub">Maximum file size: 10 MB &nbsp;·&nbsp; CSV format required</div>
+    </div>
+    <div id="fileInfo" style="margin-bottom:12px;font-size:14px;color:#9adfff;display:none"></div>
+    <div class="progress" id="progressBar"><div class="progress-fill" id="progressFill"></div></div>
+    <div id="uploadStatus"></div>
+    <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap">
+      <button class="btn primary" id="uploadBtn" onclick="uploadFile()" disabled>Run Validation Analysis</button>
+      <a class="btn secondary" href="/retro-schema">Download Schema Template</a>
+    </div>
+  </div>
+
+  <div id="resultsSection" class="card">
+    <h2>Validation Results</h2>
+    <div id="resultsContent"></div>
+  </div>
+
+  <div class="card">
+    <h2>Required CSV Schema</h2>
+    <p>Your CSV must include these columns. Column names are case-insensitive. Extra columns are ignored.</p>
+    <table class="schema-table">
+      <thead><tr><th>Column</th><th>Required</th><th>Format</th><th>Description</th></tr></thead>
+      <tbody id="schemaTableBody"></tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>Previous Uploads This Session</h2>
+    <div id="uploadsTable"><p style="color:var(--muted)">No uploads yet this session.</p></div>
+  </div>
+</div>
+
+<script>
+  const SCHEMA = """ + json.dumps({k: v for k, v in CSV_SCHEMA_DESCRIPTION.items()}) + """;
+  const REQUIRED = """ + json.dumps(CSV_SCHEMA_REQUIRED) + """;
+
+  // Render schema table
+  (function() {
+    const tbody = document.getElementById('schemaTableBody');
+    Object.entries(SCHEMA).forEach(([col, desc]) => {
+      const req = REQUIRED.includes(col);
+      tbody.innerHTML += `<tr>
+        <td style="font-family:monospace;color:${req?'#b6f5d9':'#9adfff'}">${col}</td>
+        <td><span class="pill ${req?'green':'amber'}">${req?'Required':'Optional'}</span></td>
+        <td style="color:var(--muted)">${col.includes('timestamp')?'ISO 8601':col.includes('event')&&!col.includes('label')?'0 or 1':'Numeric'}</td>
+        <td style="color:var(--muted)">${desc}</td>
+      </tr>`;
+    });
+  })();
+
+  let selectedFile = null;
+
+  const dropZone = document.getElementById('dropZone');
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault(); dropZone.classList.remove('drag');
+    const f = e.dataTransfer.files[0];
+    if (f) setFile(f);
+  });
+
+  function handleFileSelect(input) { if (input.files[0]) setFile(input.files[0]); }
+
+  function setFile(f) {
+    selectedFile = f;
+    document.getElementById('fileInfo').style.display = 'block';
+    document.getElementById('fileInfo').textContent = `Selected: ${f.name}  (${(f.size/1024).toFixed(1)} KB)`;
+    document.getElementById('uploadBtn').disabled = false;
+    setStatus('', '');
+  }
+
+  function setStatus(msg, cls) {
+    const el = document.getElementById('uploadStatus');
+    el.textContent = msg; el.className = cls;
+  }
+
+  async function uploadFile() {
+    if (!selectedFile) return;
+    document.getElementById('uploadBtn').disabled = true;
+    const prog = document.getElementById('progressBar');
+    const fill = document.getElementById('progressFill');
+    prog.style.display = 'block';
+    fill.style.width = '30%';
+    setStatus('Uploading and parsing...', '');
+
+    const form = new FormData();
+    form.append('file', selectedFile);
+
+    try {
+      fill.style.width = '60%';
+      const res = await fetch('/api/retro/upload', { method: 'POST', body: form });
+      fill.style.width = '90%';
+      const data = await res.json();
+      fill.style.width = '100%';
+
+      if (!data.ok) {
+        setStatus('Error: ' + data.error, 'err');
+        document.getElementById('uploadBtn').disabled = false;
+        return;
+      }
+
+      setStatus(`Parsed ${data.row_count} rows across ${data.patient_count} patients. Running analysis...`, 'ok');
+      await new Promise(r => setTimeout(r, 400));
+
+      const res2 = await fetch('/api/retro/analyze/' + data.upload_id);
+      const analysis = await res2.json();
+
+      if (!analysis.ok) {
+        setStatus('Analysis error: ' + analysis.error, 'err');
+        document.getElementById('uploadBtn').disabled = false;
+        return;
+      }
+
+      renderResults(data, analysis);
+      loadUploadHistory();
+      setStatus('Analysis complete.', 'ok');
+    } catch(err) {
+      setStatus('Upload failed: ' + err.message, 'err');
+    }
+    document.getElementById('uploadBtn').disabled = false;
+    prog.style.display = 'none';
+  }
+
+  function renderResults(upload, analysis) {
+    const s = analysis.summary;
+    const section = document.getElementById('resultsSection');
+    section.style.display = 'block';
+    document.getElementById('resultsContent').innerHTML = `
+      <div class="stat-grid">
+        <div class="stat"><div class="stat-k">Total Rows</div><div class="stat-v">${s.total_rows.toLocaleString()}</div></div>
+        <div class="stat"><div class="stat-k">Patients</div><div class="stat-v">${s.total_patients.toLocaleString()}</div></div>
+        <div class="stat"><div class="stat-k">Clinical Events</div><div class="stat-v">${s.total_events.toLocaleString()}</div></div>
+        <div class="stat"><div class="stat-k">Non-Event Readings</div><div class="stat-v">${s.total_nonevents.toLocaleString()}</div></div>
+      </div>
+      <div class="stat-grid">
+        <div class="stat"><div class="stat-k">ERA Sensitivity</div><div class="stat-v" style="color:#3ad38f">${s.era_sensitivity_pct}%</div></div>
+        <div class="stat"><div class="stat-k">Threshold Sensitivity</div><div class="stat-v" style="color:#9adfff">${s.threshold_sensitivity_pct}%</div></div>
+        <div class="stat"><div class="stat-k">ERA False Positive Rate</div><div class="stat-v" style="color:#f4bd6a">${s.era_fpr_pct}%</div></div>
+        <div class="stat"><div class="stat-k">Threshold FPR</div><div class="stat-v" style="color:#9adfff">${s.threshold_fpr_pct}%</div></div>
+      </div>
+      <div class="stat-grid">
+        <div class="stat"><div class="stat-k">Alert Reduction vs Threshold</div><div class="stat-v" style="color:#3ad38f">${s.alert_reduction_pct > 0 ? s.alert_reduction_pct + '%' : 'N/A'}</div></div>
+        <div class="stat"><div class="stat-k">Avg Risk at Event</div><div class="stat-v">${s.avg_risk_at_event}</div></div>
+        <div class="stat"><div class="stat-k">Avg Risk Non-Event</div><div class="stat-v">${s.avg_risk_at_nonevent}</div></div>
+        <div class="stat"><div class="stat-k">ERA Total Alerts</div><div class="stat-v">${s.era_total_alerts.toLocaleString()}</div></div>
+      </div>
+      <div class="interp">${analysis.interpretation}</div>
+      ${analysis.patient_summary && analysis.patient_summary.length ? `
+      <h2 style="margin-top:16px;margin-bottom:10px">Patient Summary (top ${analysis.patient_summary.length} by peak risk)</h2>
+      <div style="overflow-x:auto">
+      <table>
+        <thead><tr><th>Patient ID</th><th>Readings</th><th>Events</th><th>ERA Alerts</th><th>Peak Risk</th></tr></thead>
+        <tbody>
+          ${analysis.patient_summary.map(p => `<tr>
+            <td>${p.patient_id}</td>
+            <td>${p.readings}</td>
+            <td><span class="pill ${p.events>0?'amber':'green'}">${p.events}</span></td>
+            <td>${p.era_alerts}</td>
+            <td><span class="pill ${p.peak_risk>=8.5?'red':p.peak_risk>=6.2?'amber':'green'}">${p.peak_risk.toFixed(1)}</span></td>
+          </tr>`).join('')}
+        </tbody>
+      </table></div>` : ''}
+      <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap">
+        <a class="btn secondary" href="/api/retro/export/${analysis.upload_id}">Export Results CSV</a>
+        <a class="btn secondary" href="/api/retro/list">View All Uploads</a>
+      </div>
+    `;
+    section.scrollIntoView({behavior:'smooth'});
+  }
+
+  async function loadUploadHistory() {
+    try {
+      const res = await fetch('/api/retro/list');
+      const data = await res.json();
+      const el = document.getElementById('uploadsTable');
+      if (!data.uploads || !data.uploads.length) {
+        el.innerHTML = '<p style="color:var(--muted)">No uploads yet this session.</p>';
+        return;
+      }
+      el.innerHTML = `<div style="overflow-x:auto"><table>
+        <thead><tr><th>File</th><th>Uploaded</th><th>Rows</th><th>Patients</th><th>Events</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody>
+          ${data.uploads.map(u => `<tr>
+            <td>${u.filename}</td>
+            <td style="font-size:12px;color:var(--muted)">${u.uploaded_at.substring(0,19).replace('T',' ')}</td>
+            <td>${u.row_count}</td>
+            <td>${u.patient_count||'—'}</td>
+            <td>${u.event_count||'—'}</td>
+            <td><span class="pill ${u.status==='analyzed'?'green':'blue'}">${u.status}</span></td>
+            <td style="display:flex;gap:6px">
+              <a href="/api/retro/analyze/${u.upload_id}" class="btn secondary" style="padding:5px 10px;font-size:12px">Analyze</a>
+              <a href="/api/retro/export/${u.upload_id}" class="btn secondary" style="padding:5px 10px;font-size:12px">Export</a>
+            </td>
+          </tr>`).join('')}
+        </tbody>
+      </table></div>`;
+    } catch(e) { /* silent */ }
+  }
+
+  loadUploadHistory();
+</script>
+</body>
+</html>"""
+
+    @app.get("/retro-upload")
+    @_login_required
+    def retro_upload_page():
+        return Response(RETRO_UPLOAD_HTML, mimetype="text/html; charset=utf-8")
+
+    @app.get("/retro-schema")
+    @_login_required
+    def retro_schema_download():
+        """Download a CSV template with headers and one example row."""
+        output = io.StringIO()
+        writer = csv.writer(output)
+        writer.writerow(CSV_SCHEMA_ALL)
+        writer.writerow([
+            "PT-001", "2024-03-15T14:32:00", 112, 91, 158, 94, 24, 100.8,
+            "Patient A", "ICU-04", "icu", "Cardiac Monitoring", 1,
+            "Rapid Response Team called", "Deteriorating SpO2 and rising HR"
+        ])
+        writer.writerow([
+            "PT-001", "2024-03-15T13:58:00", 98, 95, 142, 88, 18, 99.2,
+            "Patient A", "ICU-04", "icu", "Cardiac Monitoring", 0, "", ""
+        ])
+        writer.writerow([
+            "PT-002", "2024-03-15T14:10:00", 86, 97, 128, 82, 16, 98.4,
+            "Patient B", "Telemetry-02", "telemetry", "Pulmonary Monitoring", 0, "", ""
+        ])
+        mem = io.BytesIO(output.getvalue().encode("utf-8"))
+        mem.seek(0)
+        return send_file(
+            mem, mimetype="text/csv", as_attachment=True,
+            download_name="era_retro_validation_schema_template.csv"
+        )
+
+    @app.post("/api/retro/upload")
+    @_login_required
+    def retro_upload_api():
+        if "file" not in request.files:
+            return jsonify({"ok": False, "error": "No file uploaded. Include a CSV file in the 'file' field."}), 400
+        f = request.files["file"]
+        if not f.filename or not f.filename.lower().endswith(".csv"):
+            return jsonify({"ok": False, "error": "File must be a CSV (.csv extension required)."}), 400
+        raw = f.read()
+        if len(raw) > 10 * 1024 * 1024:
+            return jsonify({"ok": False, "error": "File exceeds 10 MB limit."}), 400
+
+        result = _parse_csv_upload(raw, f.filename)
+        if not result["ok"]:
+            return jsonify(result), 422
+
+        upload_id = f"retro_{int(time.time())}_{random.randint(1000,9999)}"
+        rows = result.pop("rows")
+
+        meta = {
+            "upload_id":     upload_id,
+            "filename":      result["filename"],
+            "uploaded_at":   _utc_now_iso(),
+            "uploaded_by":   _current_user(),
+            "row_count":     result["row_count"],
+            "patient_count": result["patient_count"],
+            "event_count":   result["event_count"],
+            "units":         result["units"],
+            "columns_found": result["columns_found"],
+            "parse_errors":  result["parse_errors"],
+            "status":        "uploaded",
+        }
+        RETRO_STATE["uploads"].append(meta)
+        RETRO_STATE["records"][upload_id] = rows
+
+        # Persist meta to data dir
+        retro_dir = _data_dir() / "retro"
+        retro_dir.mkdir(parents=True, exist_ok=True)
+        _append_jsonl(retro_dir / "uploads.jsonl", meta)
+
+        return jsonify({"ok": True, "upload_id": upload_id, **meta})
+
+    @app.get("/api/retro/analyze/<upload_id>")
+    @_login_required
+    def retro_analyze(upload_id: str):
+        records = RETRO_STATE["records"].get(upload_id)
+        if records is None:
+            return jsonify({"ok": False, "error": "Upload not found. Upload the file first."}), 404
+
+        if upload_id in RETRO_STATE["analysis"]:
+            return jsonify({"ok": True, "upload_id": upload_id, **RETRO_STATE["analysis"][upload_id]})
+
+        analysis = _run_retro_analysis(records)
+        analysis["upload_id"] = upload_id
+        analysis["analyzed_at"] = _utc_now_iso()
+        RETRO_STATE["analysis"][upload_id] = analysis
+
+        # Update status in uploads list
+        for u in RETRO_STATE["uploads"]:
+            if u["upload_id"] == upload_id:
+                u["status"] = "analyzed"
+
+        return jsonify({"ok": True, **analysis})
+
+    @app.get("/api/retro/list")
+    @_login_required
+    def retro_list():
+        return jsonify({"uploads": RETRO_STATE["uploads"]})
+
+    @app.get("/api/retro/export/<upload_id>")
+    @_login_required
+    def retro_export(upload_id: str):
+        records = RETRO_STATE["records"].get(upload_id, [])
+        analysis = RETRO_STATE["analysis"].get(upload_id, {})
+        summary = analysis.get("summary", {})
+
+        output = io.StringIO()
+        writer = csv.writer(output)
+
+        # Summary header block
+        writer.writerow(["# Early Risk Alert AI — Retrospective Validation Export"])
+        writer.writerow(["# Upload ID", upload_id])
+        writer.writerow(["# Exported At", _utc_now_iso()])
+        writer.writerow([])
+        writer.writerow(["# SUMMARY"])
+        for k, v in summary.items():
+            writer.writerow([f"# {k}", v])
+        writer.writerow([])
+
+        # Interpretation
+        interp = analysis.get("interpretation", "")
+        if interp:
+            writer.writerow(["# INTERPRETATION"])
+            writer.writerow([f"# {interp}"])
+            writer.writerow([])
+
+        # Row-level data with computed scores
+        if records:
+            base_cols = [c for c in CSV_SCHEMA_ALL if c in records[0]]
+            writer.writerow(base_cols + ["_risk_score", "_era_alert", "_threshold_alert"])
+            for r in records:
+                row_data = [r.get(c, "") for c in base_cols]
+                row_data += [
+                    r.get("_risk_score", ""),
+                    "1" if r.get("_era_alert") else "0",
+                    "1" if r.get("_threshold_alert") else "0",
+                ]
+                writer.writerow(row_data)
+
+        mem = io.BytesIO(output.getvalue().encode("utf-8"))
+        mem.seek(0)
+        return send_file(
+            mem, mimetype="text/csv", as_attachment=True,
+            download_name=f"era_retro_analysis_{upload_id}.csv"
+        )
+
+    @app.get("/api/thresholds")
+    @_login_required
+    def thresholds_get():
+        _ensure_db_loaded()
+        return jsonify(SIM_STATE.get("thresholds") or DEFAULT_THRESHOLDS)
+
+    @app.post("/api/thresholds")
+    @_login_required
+    def thresholds_post():
+        payload = request.get_json(silent=True) or {}
+        if not isinstance(payload, dict):
+            return jsonify({"ok": False, "error": "threshold payload required"}), 400
+        current = json.loads(json.dumps(SIM_STATE.get("thresholds", DEFAULT_THRESHOLDS)))
+        updated_units = []
+        for unit, values in payload.items():
+            if unit not in DEFAULT_THRESHOLDS or not isinstance(values, dict):
+                continue
+            current[unit]["spo2_low"] = float(values.get("spo2_low", current[unit]["spo2_low"]))
+            current[unit]["hr_high"] = float(values.get("hr_high", current[unit]["hr_high"]))
+            current[unit]["sbp_high"] = float(values.get("sbp_high", current[unit]["sbp_high"]))
+            updated_units.append(unit)
+        SIM_STATE["thresholds"] = current
+        # Persist so threshold edits survive restarts
+        _save_thresholds_to_file(current)
+        return jsonify({"ok": True, "updated_units": updated_units, "thresholds": current})
+
+    @app.get("/api/system-health")
+    @_login_required
+    def api_system_health():
+        snapshot = _simulated_snapshot()
+        return jsonify({
+            "status": "ok",
+            "time": _utc_now_iso(),
+            "patient_count": snapshot["summary"]["patient_count"],
+            "open_alerts": snapshot["summary"]["open_alerts"],
+            "critical_alerts": snapshot["summary"]["critical_alerts"],
+        })
+
+    # Legacy alias — now correctly points to the function defined above
+    @app.get("/api/system/health")
+    def api_system_health_legacy():
+        return api_system_health()
+
+    @app.get("/api/pilot-readiness")
+    @_login_required
+    def pilot_readiness():
+        return jsonify(_pilot_readiness_payload())
+
+    @app.get("/api/trends/<patient_id>")
+    @_login_required
+    def patient_trends(patient_id: str):
+        # Prefer in-memory cache (most recent); fall back to flat-file history
+        cached = SIM_STATE.get("trend_history", {}).get(patient_id, [])
+        if len(cached) >= 6:
+            return jsonify(cached[-48:])
+        # Try loading from files if cache is cold (e.g., fresh restart)
+        from_files = _load_trend_from_files(patient_id, 48)
+        if from_files:
+            SIM_STATE.setdefault("trend_history", {})[patient_id] = from_files
+            return jsonify(from_files)
+        return jsonify(cached)
+
+    @app.get("/api/explainability/<patient_id>")
+    @_login_required
+    def patient_explainability(patient_id: str):
+        """Return delta explainability for a single patient."""
+        snapshot = _simulated_snapshot()
+        patient = next(
+            (p for p in snapshot["patients"] if p["patient_id"] == patient_id),
+            None
+        )
+        if not patient:
+            return jsonify({"ok": False, "error": "patient not found"}), 404
+        delta = _delta_explainability(patient_id, patient)
+        history = SIM_STATE.get("trend_history", {}).get(patient_id, [])
+        prev = history[-2] if len(history) >= 2 else {}
+        curr = history[-1] if history else {}
+        return jsonify({
+            "patient_id": patient_id,
+            "generated_at": snapshot["generated_at"],
+            "explainability": delta,
+            "current_vitals": {
+                "hr": curr.get("hr"),
+                "spo2": curr.get("spo2"),
+                "rr": curr.get("rr"),
+                "temp_f": curr.get("temp_f"),
+                "risk": curr.get("risk"),
+            },
+            "previous_vitals": {
+                "hr": prev.get("hr"),
+                "spo2": prev.get("spo2"),
+                "rr": prev.get("rr"),
+                "temp_f": prev.get("temp_f"),
+                "risk": prev.get("risk"),
+            } if prev else None,
+            "trend_points_available": len(history),
+            "disclaimer": "Displayed as monitored context for authorized HCP review. Does not replace clinician judgment.",
+        })
+
+    @app.get("/api/v2/patients")
+    @_login_required
+    def api_v2_patients():
+        """Clean REST endpoint returning scoped patient list with full vitals."""
+        snapshot = _simulated_snapshot()
+        unit = request.args.get("unit", _current_unit_access()).strip().lower()
+        patients = snapshot["patients"]
+
+        def _room_to_unit(room: str) -> str:
+            r = room.lower()
+            if "icu" in r: return "icu"
+            if "stepdown" in r: return "stepdown"
+            if "telemetry" in r: return "telemetry"
+            if "ward" in r: return "ward"
+            if "rpm" in r or "home" in r: return "rpm"
+            return "telemetry"
+
+        if unit != "all":
+            patients = [p for p in patients if _room_to_unit(p.get("room", "")) == unit]
+
+        # Attach delta explainability to each patient in v2
+        for p in patients:
+            p["delta_explainability"] = _delta_explainability(p["patient_id"], p)
+
+        return jsonify({
+            "generated_at": snapshot["generated_at"],
+            "unit": unit,
+            "patient_count": len(patients),
+            "patients": patients,
+            "meta": snapshot.get("meta", {}),
+        })
+
     @app.get("/api/v1/dashboard/overview")
     def dashboard_overview():
-        hospital_rows = _read_jsonl(hospital_file)
-        exec_rows = _read_jsonl(exec_file)
-        investor_rows = _read_jsonl(investor_file)
-
-        alerts = _build_alerts(_build_demo_patients())
-
-        avg_risk = 0.0
-        if alerts:
-            avg_risk = sum(float(a.get("risk_score", 0)) for a in alerts) / len(alerts)
-
-        return jsonify({
-            "tenant_id": request.args.get("tenant_id", "demo"),
-            "patient_count": len(_build_demo_patients()),
-            "open_alerts": len(alerts),
-            "critical_alerts": sum(1 for a in alerts if str(a.get("severity", "")).lower() == "critical"),
-            "events_last_hour": len(alerts) * 3,
-            "avg_risk_score": round(avg_risk, 1),
-            "patients_with_alerts": len({a.get("patient_id") for a in alerts}),
-            "hospital_requests": len(hospital_rows),
-            "executive_requests": len(exec_rows),
-            "investor_requests": len(investor_rows),
-        })
+        snapshot = _simulated_snapshot()
+        raw = {"hospital": _read_jsonl(hospital_file), "executive": _read_jsonl(exec_file), "investor": _read_jsonl(investor_file)}
+        return jsonify({"tenant_id": request.args.get("tenant_id", "demo"), "patient_count": len(snapshot["patients"]), "open_alerts": snapshot["summary"]["open_alerts"], "critical_alerts": snapshot["summary"]["critical_alerts"], "events_last_hour": snapshot["summary"]["events_last_hour"], "avg_risk_score": snapshot["summary"]["avg_risk_score"], "patients_with_alerts": snapshot["summary"]["patients_with_alerts"], "focus_patient_id": snapshot["summary"]["focus_patient_id"], "hospital_requests": len(raw["hospital"]), "executive_requests": len(raw["executive"]), "investor_requests": len(raw["investor"])})
 
     @app.get("/api/v1/live-snapshot")
+    @_login_required
     def live_snapshot():
+        snapshot = _simulated_snapshot()
         tenant_id = request.args.get("tenant_id", "demo")
         patient_id = request.args.get("patient_id", "p101")
-        rows = _build_demo_patients()
-        alerts = _build_alerts(rows)
-        focus = next((r for r in rows if r["patient_id"] == patient_id), rows[0] if rows else {})
-        return jsonify({
-            "tenant_id": tenant_id,
-            "generated_at": _utc_now_iso(),
-            "alerts": alerts[:6],
-            "focus_patient": focus,
-            "patients": rows,
-        })
+        focus = next((r for r in snapshot["patients"] if r["patient_id"] == patient_id), snapshot["patients"][0] if snapshot["patients"] else {})
+        # Attach delta explainability to each patient
+        for p in snapshot["patients"]:
+            p["delta_explainability"] = _delta_explainability(p["patient_id"], p)
+        if focus:
+            focus["delta_explainability"] = _delta_explainability(focus.get("patient_id", ""), focus)
+        return jsonify({"tenant_id": tenant_id, "generated_at": snapshot["generated_at"], "alerts": snapshot["alerts"], "focus_patient": focus, "patients": snapshot["patients"], "summary": snapshot["summary"], "meta": snapshot.get("meta", {})})
 
     @app.get("/api/v1/stream/channels")
     def stream_channels():
         tenant_id = request.args.get("tenant_id", "demo")
         patient_id = request.args.get("patient_id", "p101")
-        return jsonify({
-            "tenant_id": tenant_id,
-            "patient_id": patient_id,
-            "channels": [
-                "stream:vitals",
-                f"stream:vitals:{tenant_id}",
-                f"stream:vitals:{tenant_id}:{patient_id}",
-                "stream:alerts",
-                f"stream:alerts:{tenant_id}",
-                f"stream:alerts:{tenant_id}:{patient_id}",
-            ],
-        })
+        return jsonify({"tenant_id": tenant_id, "patient_id": patient_id, "channels": ["stream:vitals", f"stream:vitals:{tenant_id}", f"stream:vitals:{tenant_id}:{patient_id}", "stream:alerts", f"stream:alerts:{tenant_id}", f"stream:alerts:{tenant_id}:{patient_id}"]})
+
+    @app.get("/api/command-center-stream")
+    @_login_required
+    def command_center_stream():
+        def generate():
+            while True:
+                snapshot = _simulated_snapshot()
+                yield f"data: {json.dumps(snapshot)}\n\n"
+                time.sleep(2)
+        return Response(generate(), mimetype="text/event-stream")
 
     return app
-
-
-def _build_demo_patients() -> list[dict[str, Any]]:
-    base = [
-        {"patient_id": "p101", "name": "Patient A", "status": "Critical", "risk_score": round(8.7 + random.random() * 1.2, 1)},
-        {"patient_id": "p102", "name": "Patient B", "status": "High", "risk_score": round(7.1 + random.random() * 1.1, 1)},
-        {"patient_id": "p103", "name": "Patient C", "status": "Stable", "risk_score": round(2.8 + random.random() * 1.2, 1)},
-        {"patient_id": "p104", "name": "Patient D", "status": "High", "risk_score": round(6.8 + random.random() * 1.0, 1)},
-        {"patient_id": "p105", "name": "Patient E", "status": "Stable", "risk_score": round(3.1 + random.random() * 1.1, 1)},
-    ]
-    return base
-
-
-def _build_alerts(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    alerts: list[dict[str, Any]] = []
-    for row in rows:
-        risk = float(row.get("risk_score", 0))
-        if risk >= 8.5:
-            severity = "critical"
-            title = "Critical deterioration signal"
-        elif risk >= 6.5:
-            severity = "high"
-            title = "High-priority risk escalation"
-        else:
-            severity = "stable"
-            title = "Stable patient trend"
-        alerts.append({
-            "patient_id": row["patient_id"],
-            "title": title,
-            "alert_type": title,
-            "severity": severity,
-            "risk_score": risk,
-        })
-    alerts.sort(key=lambda a: float(a.get("risk_score", 0)), reverse=True)
-    return alerts
