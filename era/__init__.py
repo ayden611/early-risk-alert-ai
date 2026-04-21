@@ -4715,29 +4715,24 @@ def create_app() -> Flask:
 
   let selectedFile = null;
 
-  // ── Full-page drop target — catches files dropped anywhere on the page ──────
-  // This prevents the browser from navigating to the file AND catches drops
-  // that land outside the upload zone box.
   const dropZone = document.getElementById('dropZone');
 
   function _highlightZone(on) {
     if (on) {
       dropZone.classList.add('drag');
       dropZone.style.borderColor = 'rgba(91,212,255,.9)';
-      dropZone.style.background  = 'rgba(91,212,255,.08)';
+      dropZone.style.background = 'rgba(91,212,255,.08)';
     } else {
       dropZone.classList.remove('drag');
       dropZone.style.borderColor = '';
-      dropZone.style.background  = '';
+      dropZone.style.background = '';
     }
   }
 
-  // Block browser default for all drag events anywhere on page
-  document.addEventListener('dragenter', e => { e.preventDefault(); e.stopPropagation(); _highlightZone(true);  }, false);
-  document.addEventListener('dragover',  e => { e.preventDefault(); e.stopPropagation(); _highlightZone(true);  }, false);
+  document.addEventListener('dragenter', e => { e.preventDefault(); e.stopPropagation(); _highlightZone(true); }, false);
+  document.addEventListener('dragover',  e => { e.preventDefault(); e.stopPropagation(); _highlightZone(true); }, false);
   document.addEventListener('dragleave', e => {
     e.preventDefault(); e.stopPropagation();
-    // Only un-highlight if leaving the window entirely
     if (!e.relatedTarget) _highlightZone(false);
   }, false);
   document.addEventListener('drop', e => {
@@ -4754,19 +4749,22 @@ def create_app() -> Flask:
     }
   }, false);
 
-  function handleFileSelect(input) { if (input.files[0]) setFile(input.files[0]); }
+  function handleFileSelect(input) {
+    if (input.files[0]) setFile(input.files[0]);
+  }
 
   function setFile(f) {
     selectedFile = f;
     document.getElementById('fileInfo').style.display = 'block';
-    document.getElementById('fileInfo').textContent = `Selected: ${f.name}  (${(f.size/1024).toFixed(1)} KB)`;
+    document.getElementById('fileInfo').textContent = `Selected: ${f.name}  (${(f.size/1024/1024).toFixed(1)} MB)`;
     document.getElementById('uploadBtn').disabled = false;
-    setStatus('File ready. Click Run Validation Analysis to begin.', 'ok');
+    setStatus('File ready — click "Run Validation Analysis"', 'ok');
   }
 
   function setStatus(msg, cls) {
     const el = document.getElementById('uploadStatus');
-    el.textContent = msg; el.className = cls;
+    el.textContent = msg;
+    el.className = cls || '';
   }
 
   async function uploadFile() {
@@ -4781,271 +4779,72 @@ def create_app() -> Flask:
     try {
       const fd = new FormData();
       fd.append('file', selectedFile);
-      fill.style.width = '40%';
+
       const res = await fetch('/api/retro/upload', { method: 'POST', body: fd });
-      fill.style.width = '70%';
+      fill.style.width = '50%';
+
       const contentType = res.headers.get('content-type') || '';
       if (!contentType.includes('application/json')) {
-        const bodyText = await res.text();
-        throw new Error('Server error (' + res.status + '): ' + bodyText.slice(0, 200));
+        const text = await res.text().catch(() => '');
+        throw new Error(`Server returned non-JSON (${res.status}): ${text.substring(0,200)}`);
       }
+
       const data = await res.json();
-      fill.style.width = '80%';
       if (!data.ok) {
-        setStatus('Error: ' + (data.error || 'Upload failed'), 'err');
+        setStatus('Upload error: ' + (data.error || 'Unknown'), 'err');
         document.getElementById('uploadBtn').disabled = false;
         prog.style.display = 'none';
         return;
       }
-      setStatus('File received. Running analysis...', 'ok');
+
+      fill.style.width = '70%';
+      setStatus('File received. Starting analysis...', 'ok');
+
+      // If analysis came back inline use it immediately
       if (data.analysis_inline && data.summary) {
         fill.style.width = '100%';
         renderResults(data, data);
         loadUploadHistory();
-        setStatus('Analysis complete.', 'ok');
+        setStatus('Analysis complete ✓', 'ok');
         document.getElementById('uploadBtn').disabled = false;
         prog.style.display = 'none';
         return;
       }
-      const isLarge = data.async === true || data.large_file === true;
-      fill.style.width = '85%';
-      if (isLarge) setStatus('Large dataset — analysis running in background...', '');
+
+      // Poll for async results — keeps existing infrastructure
       let analysis = null;
-      for (let attempt = 0; attempt < 36; attempt++) {
-        await new Promise(r => setTimeout(r, 5000));
-        fill.style.width = Math.min(97, 85 + attempt) + '%';
-        setStatus('Analyzing... (' + ((attempt+1)*5) + 's elapsed)', '');
+      for (let attempt = 0; attempt < 40; attempt++) {
+        await new Promise(r => setTimeout(r, attempt < 5 ? 3000 : 5000));
+        fill.style.width = Math.min(98, 70 + (attempt * 1.5)) + '%';
+        setStatus(`Analyzing... (${Math.round((attempt + 1) * 4)}s elapsed)`, '');
         try {
           const pr = await fetch('/api/retro/analyze/' + data.upload_id);
           const pj = await pr.json();
-          if (pj.pending || pj.status === 'running') continue;
-          if (!pj.ok) { setStatus('Analysis error: ' + (pj.error || 'Unknown'), 'err'); break; }
-          analysis = pj; break;
-        } catch(e) { continue; }
+          if (pj.ok && pj.summary) { analysis = pj; break; }
+          if (pj.error && !pj.pending) throw new Error(pj.error);
+        } catch(pollErr) { continue; }
       }
+
       if (analysis) {
         fill.style.width = '100%';
         renderResults(data, analysis);
         loadUploadHistory();
-        setStatus('Analysis complete.', 'ok');
+        setStatus('Analysis complete ✓', 'ok');
       } else {
         document.getElementById('uploadStatus').innerHTML =
-          'Still running. <button class="btn secondary" style="padding:6px 14px;font-size:13px;margin-left:8px" onclick="retryPoll(\'' + data.upload_id + '\')">Check for Results</button>';
+          'Analysis still running. ' +
+          '<button class="btn secondary" style="padding:6px 14px;font-size:13px;margin-left:8px" ' +
+          'onclick="retryPoll(\''+ data.upload_id +'\')">' +
+          'Check for Results</button>';
         loadUploadHistory();
       }
-      document.getElementById('uploadBtn').disabled = false;
-      prog.style.display = 'none';
-      return;
+
     } catch(err) {
-      setStatus('Upload failed: ' + err.message, 'err');
-      console.error('Upload error:', err);
+      console.error('Upload failed:', err);
+      setStatus('Failed: ' + err.message, 'err');
     }
     document.getElementById('uploadBtn').disabled = false;
     prog.style.display = 'none';
-  }
-
-
-  function renderResults(upload, analysis) {
-    const s = analysis.summary;
-    const tc = analysis.threshold_comparison || [];
-    const section = document.getElementById('resultsSection');
-    section.style.display = 'block';
-
-    // Threshold comparison table rows
-    const threshRows = tc.map(t => `
-      <tr style="background:${t.threshold===6.0?'rgba(58,211,143,.05)':''}">
-        <td><strong style="color:${t.threshold===4.0?'#f4bd6a':t.threshold===5.0?'#9adfff':'#3ad38f'}">${t.threshold.toFixed(1)}</strong></td>
-        <td>${t.era_sensitivity_pct}%</td>
-        <td>${t.era_fpr_pct}%</td>
-        <td style="color:#3ad38f">${t.alert_reduction_pct}%</td>
-        <td>${t.era_total_alerts.toLocaleString()}</td>
-        <td style="font-size:11px;color:var(--muted)">${t.recommendation}</td>
-      </tr>`).join('');
-
-    document.getElementById('resultsContent').innerHTML = `
-      <div class="stat-grid">
-        <div class="stat"><div class="stat-k">Total Rows</div><div class="stat-v">${s.total_rows.toLocaleString()}</div></div>
-        <div class="stat"><div class="stat-k">Patients</div><div class="stat-v">${s.total_patients.toLocaleString()}</div></div>
-        <div class="stat"><div class="stat-k">Clinical Events</div><div class="stat-v">${s.total_events.toLocaleString()}</div></div>
-        <div class="stat"><div class="stat-k">Non-Event Readings</div><div class="stat-v">${s.total_nonevents.toLocaleString()}</div></div>
-      </div>
-
-      <div class="stat-grid">
-        <div class="stat"><div class="stat-k">Patient Detection (t=6.0)</div><div class="stat-v" style="color:#3ad38f">${s.era_patient_sensitivity_pct !== undefined ? s.era_patient_sensitivity_pct + "%" : s.era_sensitivity_pct + "%"}</div><div style="font-size:11px;color:var(--muted);margin-top:3px">% of patients-with-events flagged in ${s.event_window_hours || 4}-hr pre-event window</div></div>
-        <div class="stat"><div class="stat-k">Reading Sensitivity (t=6.0)</div><div class="stat-v" style="color:#9adfff">${s.era_sensitivity_pct}%</div><div style="font-size:11px;color:var(--muted);margin-top:3px">${s.event_window_hours || 4}-hr event window</div></div>
-        <div class="stat"><div class="stat-k">ERA False Positive Rate</div><div class="stat-v" style="color:#3ad38f">${s.era_fpr_pct}%</div><div style="font-size:11px;color:var(--muted);margin-top:3px">vs ${s.threshold_fpr_pct}% standard</div></div>
-        <div class="stat"><div class="stat-k">Threshold Sensitivity</div><div class="stat-v" style="color:#9fb4d6">${s.threshold_sensitivity_pct}%</div><div style="font-size:11px;color:var(--muted);margin-top:3px">Baseline</div></div>
-      </div>
-
-      <div class="stat-grid">
-        <div class="stat"><div class="stat-k">Alert Reduction (t=6.0)</div><div class="stat-v" style="color:#3ad38f">${s.alert_reduction_pct > 0 ? s.alert_reduction_pct + '%' : 'N/A'}</div></div>
-        <div class="stat"><div class="stat-k">Avg Risk at Event</div><div class="stat-v">${s.avg_risk_at_event}</div></div>
-        <div class="stat"><div class="stat-k">Avg Risk Non-Event</div><div class="stat-v">${s.avg_risk_at_nonevent}</div></div>
-        <div class="stat"><div class="stat-k">ERA Total Alerts (t=6.0)</div><div class="stat-v">${s.era_total_alerts.toLocaleString()}</div></div>
-      </div>
-
-      ${tc.length ? `
-      <h2 style="margin-top:18px;margin-bottom:10px;font-size:16px;font-weight:900">
-        Threshold Comparison — 4.0 vs 5.0 vs 6.0
-      </h2>
-      <div style="background:rgba(58,211,143,.04);border:1px solid rgba(58,211,143,.15);
-        border-radius:12px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:#b6f5d9;line-height:1.6">
-        <strong>How to read this table:</strong>
-        Lower threshold = higher patient detection and sensitivity, but higher false positive rate and more alerts.
-        Higher threshold = fewer alerts and lower false positives, but lower sensitivity.
-        Recommended: t=4.0 for ICU/high-acuity, t=5.0 for mixed units, t=6.0 for telemetry/alarm fatigue reduction.
-        Green row (6.0) is the current default. Patient detection is the primary metric for hospital conversations.
-      </div>
-      <div style="overflow-x:auto;margin-bottom:16px">
-      <table>
-        <thead>
-          <tr>
-            <th>Threshold</th>
-            <th>Patient Detection</th>
-            <th>Reading Sensitivity</th>
-            <th>False Positive Rate</th>
-            <th>Alert Reduction</th>
-            <th>Best For</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${threshRows}
-          <tr style="background:rgba(255,255,255,.03);border-top:2px solid rgba(255,255,255,.1)">
-            <td><strong style="color:#9fb4d6">Standard</strong></td>
-            <td style="color:#9fb4d6">${s.threshold_patient_sensitivity_pct !== undefined ? s.threshold_patient_sensitivity_pct + '%' : '—'}</td>
-            <td>${s.threshold_sensitivity_pct}%</td>
-            <td style="color:#ff667d">${s.threshold_fpr_pct}%</td>
-            <td style="color:#9fb4d6">—</td>
-            <td style="font-size:11px;color:var(--muted)">Baseline threshold-only alerting (no ERA)</td>
-          </tr>
-        </tbody>
-      </table></div>` : ''}
-
-      <div class="interp">${analysis.interpretation}</div>
-
-      ${analysis.patient_summary && analysis.patient_summary.length ? `
-      <h2 style="margin-top:16px;margin-bottom:10px">Patient Summary (top ${analysis.patient_summary.length} by peak risk)</h2>
-      <div style="overflow-x:auto">
-      <table>
-        <thead><tr><th>Patient ID</th><th>Readings</th><th>Events</th><th>ERA Alerts</th><th>Peak Risk</th></tr></thead>
-        <tbody>
-          ${analysis.patient_summary.map(p => `<tr>
-            <td>${p.patient_id}</td>
-            <td>${p.readings}</td>
-            <td><span class="pill ${p.events>0?'amber':'green'}">${p.events}</span></td>
-            <td>${p.era_alerts}</td>
-            <td><span class="pill ${p.peak_risk>=8.5?'red':p.peak_risk>=6.2?'amber':'green'}">${p.peak_risk.toFixed(1)}</span></td>
-          </tr>`).join('')}
-        </tbody>
-      </table></div>` : ''}
-
-      <!-- Consistency box -->
-      <div style="margin:16px 0;padding:14px 16px;border-radius:14px;background:rgba(122,162,255,.07);border:1px solid rgba(122,162,255,.18);font-size:13px;color:#dce9ff;line-height:1.65">
-        <strong style="color:#9adfff">Consistency across scales:</strong> These results are consistent with validation runs across 500, 1,000, 2,000, 5,000, and 10,000 patient synthetic datasets. ERA sensitivity 18.8–23.4% at t=6.0, false positive rate 4.2–5.1%, alert reduction 81.9–84.2%. Results most stable at 2,000–10,000 patients. MIMIC-IV real de-identified ICU validation planned Q2 2026, subject to data-access approval.
-      </div>
-      <!-- Next steps CTA -->
-      <div style="margin:12px 0;padding:12px 16px;border-radius:12px;background:rgba(58,211,143,.06);border:1px solid rgba(58,211,143,.15);font-size:13px;color:#b6f5d9;line-height:1.6">
-        <strong>What to do next:</strong> Export these results and share with your clinical champion. If results are compelling, request a pilot agreement and governance packet from <a href="mailto:info@earlyriskalertai.com" style="color:#9adfff">info@earlyriskalertai.com</a>. Independent clinical review of all results is required before drawing conclusions about prospective performance.
-      </div>
-      <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap">
-        <a class="btn secondary" href="/api/retro/export/${analysis.upload_id}">Export Results CSV</a>
-        <button class="btn secondary" onclick="copyResultsEmail(analysis_${analysis.upload_id.replace('-','_')})">Copy for Email</button>
-        <a class="btn secondary" href="/api/retro/list">View All Uploads</a>
-        <a class="btn secondary" href="/model-card" target="_blank">Full Model Card</a>
-        <a class="btn secondary" href="/pilot-onboarding" target="_blank">Pilot Checklist</a>
-      </div>
-    `;
-    // Store analysis for copy button
-    window._lastAnalysis = analysis;
-    section.scrollIntoView({behavior:'smooth'});
-  }
-
-  function copyResultsEmail() {
-    const a = window._lastAnalysis;
-    if (!a || !a.summary) { alert("No results to copy. Run an analysis first."); return; }
-    const s = a.summary;
-    const tc = (a.threshold_comparison || []);
-    const t4 = tc.find(t => t.threshold === 4.0) || {};
-    const t5 = tc.find(t => t.threshold === 5.0) || {};
-    const t6 = tc.find(t => t.threshold === 6.0) || {};
-    const text = [
-      "Early Risk Alert AI — Retrospective Validation Results",
-      "=".repeat(50),
-      "",
-      `Dataset: ${s.total_rows.toLocaleString()} readings · ${s.total_patients.toLocaleString()} patients · ${s.total_events.toLocaleString()} clinical events`,
-      "",
-      "PRIMARY RESULTS (threshold 6.0 — default):",
-      `  ERA Sensitivity:      ${s.era_sensitivity_pct}%`,
-      `  ERA False Positive Rate: ${s.era_fpr_pct}%`,
-      `  Alert Reduction:      ${s.alert_reduction_pct}%`,
-      `  Standard Threshold FPR: ${s.threshold_fpr_pct}%`,
-      "",
-      "THRESHOLD COMPARISON:",
-      `  t=4.0 (ICU):     ${t4.era_sensitivity_pct || "-"}% sens · ${t4.era_fpr_pct || "-"}% FPR · ${t4.alert_reduction_pct || "-"}% alert reduction`,
-      `  t=5.0 (Mixed):   ${t5.era_sensitivity_pct || "-"}% sens · ${t5.era_fpr_pct || "-"}% FPR · ${t5.alert_reduction_pct || "-"}% alert reduction`,
-      `  t=6.0 (Default): ${t6.era_sensitivity_pct || "-"}% sens · ${t6.era_fpr_pct || "-"}% FPR · ${t6.alert_reduction_pct || "-"}% alert reduction`,
-      `  Standard only:   ${s.threshold_sensitivity_pct}% sens · ${s.threshold_fpr_pct}% FPR`,
-      "",
-      "INTERPRETATION:",
-      a.interpretation || "",
-      "",
-      "NOTE: Synthetic retrospective validation only. Independent clinical review required.",
-      "Contact: info@earlyriskalertai.com · Model card: /model-card",
-    ].join("\\n");
-    navigator.clipboard.writeText(text)
-      .then(() => alert("Results copied to clipboard. Paste into your email."))
-      .catch(() => { const ta = document.createElement("textarea"); ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand("copy"); document.body.removeChild(ta); alert("Results copied to clipboard."); });
-  }
-
-  async function retryPoll(uploadId) {
-    setStatus('Checking for results...', '');
-    try {
-      for (let att = 0; att < 20; att++) {
-        const pr = await fetch('/api/retro/analyze/' + uploadId);
-        const pj = await pr.json();
-        if (pj.pending || pj.status === 'running') {
-          setStatus(`Still running... (${(att+1)*6}s elapsed)`, '');
-          await new Promise(r => setTimeout(r, 6000));
-          continue;
-        }
-        if (!pj.ok) { setStatus('Error: ' + (pj.error || 'Analysis failed'), 'err'); return; }
-        renderResults({upload_id: uploadId, row_count: pj.summary?.total_rows || 0,
-                       patient_count: pj.summary?.total_patients || 0}, pj);
-        setStatus('Analysis complete.', 'ok');
-        loadUploadHistory();
-        return;
-      }
-      setStatus('Still running — try again in 30 seconds.', '');
-    } catch(e) { setStatus('Network error: ' + e.message, 'err'); }
-  }
-
-  async function loadUploadHistory() {
-    try {
-      const res = await fetch('/api/retro/list');
-      const data = await res.json();
-      const el = document.getElementById('uploadsTable');
-      if (!data.uploads || !data.uploads.length) {
-        el.innerHTML = '<p style="color:var(--muted)">No uploads yet this session.</p>';
-        return;
-      }
-      el.innerHTML = `<div style="overflow-x:auto"><table>
-        <thead><tr><th>File</th><th>Uploaded</th><th>Rows</th><th>Patients</th><th>Events</th><th>Status</th><th>Actions</th></tr></thead>
-        <tbody>
-          ${data.uploads.map(u => `<tr>
-            <td>${u.filename}</td>
-            <td style="font-size:12px;color:var(--muted)">${u.uploaded_at.substring(0,19).replace('T',' ')}</td>
-            <td>${u.row_count}</td>
-            <td>${u.patient_count||'—'}</td>
-            <td>${u.event_count||'—'}</td>
-            <td><span class="pill ${u.status==='analyzed'?'green':'blue'}">${u.status}</span></td>
-            <td style="display:flex;gap:6px">
-              <a href="/api/retro/analyze/${u.upload_id}" class="btn secondary" style="padding:5px 10px;font-size:12px">Analyze</a>
-              <a href="/api/retro/export/${u.upload_id}" class="btn secondary" style="padding:5px 10px;font-size:12px">Export</a>
-            </td>
-          </tr>`).join('')}
-        </tbody>
-      </table></div>`;
-    } catch(e) { /* silent */ }
   }
 
   loadUploadHistory();
@@ -5088,16 +4887,26 @@ def create_app() -> Flask:
     @app.post("/api/retro/upload")
     @_login_required
     def retro_upload_api():
-        """Legacy multipart form upload — kept for API compatibility."""
+        """Simple multipart upload — keeps async analysis intact."""
         if "file" not in request.files:
-            return jsonify({"ok": False, "error": "No file uploaded. Include a CSV file in the 'file' field."}), 400
+            return jsonify({"ok": False, "error": "No file uploaded."}), 400
         f = request.files["file"]
-        if not f.filename or not f.filename.lower().endswith(".csv"):
-            return jsonify({"ok": False, "error": "File must be a CSV (.csv extension required)."}), 400
-        raw = f.read()
-        if len(raw) > 100 * 1024 * 1024:
-            return jsonify({"ok": False, "error": "File exceeds 100 MB limit. For datasets larger than 50 MB, contact info@earlyriskalertai.com."}), 400
-        return _process_retro_upload(raw, f.filename)
+        if not f or not f.filename:
+            return jsonify({"ok": False, "error": "Invalid file."}), 400
+        filename = f.filename.lower()
+        if not (filename.endswith(".csv") or filename.endswith(".gz")):
+            return jsonify({"ok": False, "error": "Only .csv or .csv.gz files are allowed."}), 400
+        try:
+            raw = f.read()
+            if len(raw) > 100 * 1024 * 1024:
+                return jsonify({"ok": False, "error": "File too large (max 100 MB)."}), 400
+            if filename.endswith(".gz"):
+                import gzip as _gzip
+                raw = _gzip.decompress(raw)
+            return _process_retro_upload(raw, f.filename)
+        except Exception as e:
+            print(f"[RETRO UPLOAD ERROR] {type(e).__name__}: {e}")
+            return jsonify({"ok": False, "error": f"Upload failed: {str(e)}"}), 500
 
     @app.post("/api/retro/upload-chunk")
     @_login_required
