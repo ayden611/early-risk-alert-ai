@@ -4775,139 +4775,29 @@ def create_app() -> Flask:
     const prog = document.getElementById('progressBar');
     const fill = document.getElementById('progressFill');
     prog.style.display = 'block';
-    fill.style.width = '10%';
-    setStatus('Reading file...', '');
+    fill.style.width = '15%';
+    setStatus('Uploading file...', '');
 
     try {
-      // For large files (>20MB), use multipart form upload
-      // For small/medium files, use JSON text upload
-      const fileSizeMB = selectedFile.size / (1024 * 1024);
-      let res;
-
-      if (fileSizeMB > 8) {
-        // Files over 8MB: chunk into 3MB pieces and send sequentially
-        fill.style.width = '15%';
-        setStatus(`Reading ${fileSizeMB.toFixed(0)} MB file...`, '');
-        const text = await new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = e => resolve(e.target.result);
-          reader.onerror = () => reject(new Error('Could not read file'));
-          reader.readAsText(selectedFile, 'UTF-8');
-        });
-        const CHUNK_SIZE = 3 * 1024 * 1024;
-        const totalChunks = Math.ceil(text.length / CHUNK_SIZE);
-        const sessionId = 'sess_' + Date.now() + '_' + Math.random().toString(36).slice(2);
-        let finalData = null;
-        for (let i = 0; i < totalChunks; i++) {
-          const chunk = text.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE);
-          fill.style.width = Math.round(15 + (i / totalChunks) * 55) + '%';
-          setStatus(`Uploading chunk ${i+1} of ${totalChunks}...`, '');
-          const chunkRes = await fetch('/api/retro/upload-chunk', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              session_id: sessionId,
-              chunk_index: i,
-              total_chunks: totalChunks,
-              filename: selectedFile.name,
-              content: chunk,
-            }),
-          });
-          const ct = chunkRes.headers.get('content-type') || '';
-          if (!ct.includes('application/json')) {
-            const hint = await chunkRes.text().catch(() => '');
-            throw new Error(`Chunk ${i+1} failed (${chunkRes.status}): ${hint.slice(0,120)}`);
-          }
-          const chunkData = await chunkRes.json();
-          if (!chunkData.ok) throw new Error(chunkData.error || `Chunk ${i+1} failed`);
-          // Last chunk returns full analysis
-          if (chunkData.done !== false) { finalData = chunkData; break; }
-        }
-        // Last chunk triggers async assembly — poll for results
-        if (!finalData) throw new Error('Chunked upload did not complete');
-        fill.style.width = '75%';
-        setStatus('All chunks uploaded. Assembling and analyzing in background...', '');
-        // If inline analysis came back (small file assembled fast)
-        if (finalData.analysis_inline && finalData.summary) {
-          fill.style.width = '100%';
-          renderResults(finalData, finalData);
-          loadUploadHistory();
-          setStatus('Analysis complete.', 'ok');
-          document.getElementById('uploadBtn').disabled = false;
-          prog.style.display = 'none';
-          return;
-        }
-        // Async — poll until done
-        const pollId = finalData.upload_id;
-        if (!pollId) throw new Error('No upload_id returned from chunked upload');
-        fill.style.width = '80%';
-        let asyncResult = null;
-        for (let att = 0; att < 40; att++) {
-          await new Promise(r => setTimeout(r, 5000));
-          fill.style.width = Math.min(95, 80 + att) + '%';
-          setStatus(`Analyzing 260,000+ rows... (${(att+1)*5}s elapsed)`, '');
-          try {
-            const pr = await fetch('/api/retro/analyze/' + pollId);
-            const pj = await pr.json();
-            if (pj.pending || pj.status === 'running') continue;
-            if (!pj.ok) throw new Error(pj.error || 'Analysis failed');
-            asyncResult = pj; break;
-          } catch(pollErr) { continue; }
-        }
-        if (asyncResult) {
-          fill.style.width = '100%';
-          renderResults(finalData, asyncResult);
-          loadUploadHistory();
-          setStatus('Analysis complete.', 'ok');
-        } else {
-          setStatus('Analysis still running — check Previous Uploads below in ~30s.', '');
-          loadUploadHistory();
-        }
-        document.getElementById('uploadBtn').disabled = false;
-        prog.style.display = 'none';
-        return;
-      } else {
-        // Small/medium file: read as text and send as JSON
-        const text = await new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = e => resolve(e.target.result);
-          reader.onerror = () => reject(new Error('Could not read file'));
-          reader.readAsText(selectedFile, 'UTF-8');
-        });
-        fill.style.width = '30%';
-        setStatus(`Read ${(text.length / 1024).toFixed(0)} KB. Uploading...`, '');
-        const payload = { filename: selectedFile.name, content: text };
-        fill.style.width = '55%';
-        res = await fetch('/api/retro/upload-text', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
-      }
-
-      fill.style.width = '80%';
-
-      // Safe JSON parse — show real error if server returned HTML
-      let data;
+      const fd = new FormData();
+      fd.append('file', selectedFile);
+      fill.style.width = '40%';
+      const res = await fetch('/api/retro/upload', { method: 'POST', body: fd });
+      fill.style.width = '70%';
       const contentType = res.headers.get('content-type') || '';
       if (!contentType.includes('application/json')) {
         const bodyText = await res.text();
-        const hint = bodyText.length < 300 ? bodyText : bodyText.slice(0, 200) + '...';
-        throw new Error(`Server returned non-JSON response (status ${res.status}). Hint: ${hint}`);
+        throw new Error('Server error (' + res.status + '): ' + bodyText.slice(0, 200));
       }
-      data = await res.json();
-      fill.style.width = '90%';
-
+      const data = await res.json();
+      fill.style.width = '80%';
       if (!data.ok) {
-        setStatus('Error: ' + data.error, 'err');
+        setStatus('Error: ' + (data.error || 'Upload failed'), 'err');
         document.getElementById('uploadBtn').disabled = false;
         prog.style.display = 'none';
         return;
       }
-
-      setStatus(`Parsed ${data.row_count.toLocaleString()} rows across ${data.patient_count} patients. Running analysis...`, 'ok');
-
-      // If upload response already contains analysis, use it directly
+      setStatus('File received. Running analysis...', 'ok');
       if (data.analysis_inline && data.summary) {
         fill.style.width = '100%';
         renderResults(data, data);
@@ -4917,69 +4807,35 @@ def create_app() -> Flask:
         prog.style.display = 'none';
         return;
       }
-
       const isLarge = data.async === true || data.large_file === true;
-      if (isLarge) {
-        fill.style.width = '70%';
-        setStatus(`Large dataset (${data.row_count.toLocaleString()} rows) — streaming analysis in progress...`, '');
-      }
-
-      // Poll for results — server handles internal retry for race conditions
-      // Checks every 6 seconds, up to 90 seconds total (15 attempts)
+      fill.style.width = '85%';
+      if (isLarge) setStatus('Large dataset — analysis running in background...', '');
       let analysis = null;
-      const maxAttempts = 36;
-      for (let attempt = 0; attempt < maxAttempts; attempt++) {
-        // Small datasets: analyze immediately. Large: wait 6s between polls.
-        if (attempt > 0 || isLarge) {
-          await new Promise(r => setTimeout(r, 6000));
-        }
-
-        let res2, r2;
+      for (let attempt = 0; attempt < 36; attempt++) {
+        await new Promise(r => setTimeout(r, 5000));
+        fill.style.width = Math.min(97, 85 + attempt) + '%';
+        setStatus('Analyzing... (' + ((attempt+1)*5) + 's elapsed)', '');
         try {
-          res2 = await fetch('/api/retro/analyze/' + data.upload_id);
-          if (!res2.headers.get('content-type')?.includes('application/json')) {
-            const hint = await res2.text().catch(() => '');
-            throw new Error(`Server returned non-JSON (HTTP ${res2.status}). ${hint.slice(0,120)}`);
-          }
-          r2 = await res2.json();
-        } catch(fetchErr) {
-          setStatus('Network error: ' + fetchErr.message, 'err');
-          document.getElementById('uploadBtn').disabled = false;
-          prog.style.display = 'none';
-          return;
-        }
-
-        if (r2.pending || r2.status === 'running') {
-          const pct = Math.min(95, 70 + attempt * 2);
-          fill.style.width = pct + '%';
-          const elapsed = (attempt + 1) * 6;
-          setStatus(`Streaming analysis in progress... (${elapsed}s elapsed — large datasets can take up to 3 minutes)`, '');
-          continue;
-        }
-        if (!r2.ok) {
-          setStatus('Analysis error: ' + (r2.error || 'Unknown error'), 'err');
-          document.getElementById('uploadBtn').disabled = false;
-          prog.style.display = 'none';
-          return;
-        }
-        analysis = r2;
-        break;
+          const pr = await fetch('/api/retro/analyze/' + data.upload_id);
+          const pj = await pr.json();
+          if (pj.pending || pj.status === 'running') continue;
+          if (!pj.ok) { setStatus('Analysis error: ' + (pj.error || 'Unknown'), 'err'); break; }
+          analysis = pj; break;
+        } catch(e) { continue; }
       }
-
-      if (!analysis) {
-        setStatus('', '');
-        document.getElementById('uploadStatus').innerHTML =
-          'Analysis is still running on the server. <button class="btn secondary" style="padding:6px 14px;font-size:13px;margin-left:8px" onclick="retryPoll(\'' + data.upload_id + '\')">Check for Results</button>';
+      if (analysis) {
+        fill.style.width = '100%';
+        renderResults(data, analysis);
         loadUploadHistory();
-        document.getElementById('uploadBtn').disabled = false;
-        prog.style.display = 'none';
-        return;
+        setStatus('Analysis complete.', 'ok');
+      } else {
+        document.getElementById('uploadStatus').innerHTML =
+          'Still running. <button class="btn secondary" style="padding:6px 14px;font-size:13px;margin-left:8px" onclick="retryPoll(\'' + data.upload_id + '\')">Check for Results</button>';
+        loadUploadHistory();
       }
-
-      renderResults(data, analysis);
-      loadUploadHistory();
-      setStatus('Analysis complete.', 'ok');
-
+      document.getElementById('uploadBtn').disabled = false;
+      prog.style.display = 'none';
+      return;
     } catch(err) {
       setStatus('Upload failed: ' + err.message, 'err');
       console.error('Upload error:', err);
@@ -4987,6 +4843,7 @@ def create_app() -> Flask:
     document.getElementById('uploadBtn').disabled = false;
     prog.style.display = 'none';
   }
+
 
   function renderResults(upload, analysis) {
     const s = analysis.summary;
