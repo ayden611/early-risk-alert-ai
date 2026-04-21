@@ -4582,275 +4582,30 @@ def create_app() -> Flask:
     # RETROSPECTIVE VALIDATION — CSV upload and analysis routes
     # -----------------------------------------------------------------------
 
-    RETRO_UPLOAD_HTML = """<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <title>Retrospective Validation Upload — Early Risk Alert AI</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <style>
-    :root{--bg:#07101c;--bg2:#0b1528;--line:rgba(255,255,255,.08);--text:#eef4ff;--muted:#9fb4d6;--blue:#7aa2ff;--cyan:#5bd4ff;--green:#3ad38f;--amber:#f4bd6a;}
-    *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:Inter,system-ui,sans-serif;background:linear-gradient(180deg,var(--bg),var(--bg2));color:var(--text);min-height:100vh;padding:28px 18px 64px}
-    .wrap{max-width:1100px;margin:0 auto}
-    .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px}
-    .brand{font-size:13px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:#9adfff}
-    .nav a{font-size:13px;font-weight:900;color:#dce9ff;text-decoration:none;margin-left:16px}
-    .card{border:1px solid var(--line);border-radius:22px;background:rgba(255,255,255,.03);padding:22px;margin-bottom:16px}
-    .kicker{font-size:11px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:#9adfff;margin-bottom:8px}
-    h1{font-size:clamp(26px,4vw,40px);font-weight:1000;letter-spacing:-.05em;margin-bottom:10px}
-    h2{font-size:20px;font-weight:1000;letter-spacing:-.03em;margin-bottom:10px}
-    p{font-size:14px;color:var(--muted);line-height:1.65;margin-bottom:10px}
-    .disclaimer{padding:12px 16px;border-radius:14px;background:rgba(244,189,106,.1);border:1px solid rgba(244,189,106,.22);color:#ffe7bf;font-size:13px;line-height:1.6;margin-bottom:14px}
-    .upload-zone{border:2px dashed rgba(91,212,255,.3);border-radius:18px;padding:36px;text-align:center;cursor:pointer;transition:border-color .2s;margin-bottom:16px}
-    .upload-zone:hover,.upload-zone.drag{border-color:rgba(91,212,255,.7);background:rgba(91,212,255,.04)}
-    .upload-zone input{display:none}
-    .upload-icon{font-size:36px;margin-bottom:12px;opacity:.6}
-    .upload-label{font-size:15px;font-weight:900;color:#dce9ff;margin-bottom:6px}
-    .upload-sub{font-size:13px;color:var(--muted)}
-    .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 20px;border-radius:14px;font:inherit;font-size:14px;font-weight:900;cursor:pointer;border:none;transition:opacity .18s}
-    .btn.primary{background:linear-gradient(135deg,#7aa2ff,#5bd4ff);color:#07101c}
-    .btn.secondary{background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--text)}
-    .btn:hover{opacity:.85}
-    .btn:disabled{opacity:.4;cursor:not-allowed}
-    table{width:100%;border-collapse:collapse;font-size:13px}
-    thead th{padding:10px 12px;text-align:left;color:#9adfff;border-bottom:1px solid rgba(255,255,255,.08);font-weight:900;letter-spacing:.08em;text-transform:uppercase}
-    tbody tr{border-bottom:1px solid rgba(255,255,255,.05)}
-    tbody td{padding:10px 12px;vertical-align:top;color:#dce9ff}
-    .pill{display:inline-flex;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:900}
-    .pill.green{background:rgba(58,211,143,.12);border:1px solid rgba(58,211,143,.24);color:#b6f5d9}
-    .pill.amber{background:rgba(244,189,106,.12);border:1px solid rgba(244,189,106,.24);color:#ffe7bf}
-    .pill.red{background:rgba(255,102,125,.12);border:1px solid rgba(255,102,125,.24);color:#ffd8de}
-    .pill.blue{background:rgba(122,162,255,.12);border:1px solid rgba(122,162,255,.24);color:#c8d9ff}
-    .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:14px 0}
-    .stat{border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.03);padding:14px}
-    .stat-k{font-size:11px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:#9adfff;margin-bottom:6px}
-    .stat-v{font-size:26px;font-weight:1000;letter-spacing:-.04em;line-height:1}
-    .interp{padding:14px 16px;border-radius:14px;background:rgba(91,212,255,.07);border:1px solid rgba(91,212,255,.16);color:#dce9ff;font-size:14px;line-height:1.65;margin:14px 0}
-    .schema-table{font-size:12px}
-    .schema-req{color:#b6f5d9}
-    .schema-opt{color:#9fb4d6}
-    #uploadStatus{font-size:14px;font-weight:900;margin-top:12px;min-height:20px}
-    #uploadStatus.ok{color:#3ad38f}
-    #uploadStatus.err{color:#ff667d}
-    .progress{height:4px;border-radius:999px;background:rgba(255,255,255,.06);overflow:hidden;margin-top:8px;display:none}
-    .progress-fill{height:100%;border-radius:999px;background:linear-gradient(135deg,#7aa2ff,#5bd4ff);width:0%;transition:width .3s}
-    #resultsSection{display:none}
-    @media(max-width:700px){.stat-grid{grid-template-columns:1fr 1fr}}
-  </style>
-</head>
-<body>
-<div class="wrap">
-  <div class="topbar">
-    <div class="brand">Early Risk Alert AI</div>
-    <div class="nav">
-      <a href="/command-center">Command Center</a>
-      <a href="/model-card">Model Card</a>
-      <a href="/pilot-docs">Pilot Docs</a>
-      <a href="/retro-schema">Download Schema</a>
-    </div>
-  </div>
+    def _load_retro_upload_html():
+        import json as _json
+        from pathlib import Path as _Path
+        template_path = _Path(__file__).parent / "web" / "retro_upload.html"
+        if template_path.exists():
+            raw = template_path.read_text(encoding="utf-8")
+            try:
+                from era import CSV_SCHEMA_DESCRIPTION, CSV_SCHEMA_REQUIRED
+            except Exception:
+                CSV_SCHEMA_DESCRIPTION = {}
+                CSV_SCHEMA_REQUIRED = []
+            raw = raw.replace(
+                '""" + json.dumps({k: v for k, v in CSV_SCHEMA_DESCRIPTION.items()}) + """',
+                _json.dumps({k: v for k, v in CSV_SCHEMA_DESCRIPTION.items()})
+            ).replace(
+                '""" + json.dumps(CSV_SCHEMA_REQUIRED) + """',
+                _json.dumps(CSV_SCHEMA_REQUIRED)
+            )
+            return raw
+        print("[WARNING] retro_upload.html not found")
+        return "<h1>Retro Upload Template Missing</h1>"
 
-  <div class="card">
-    <div class="kicker">Retrospective Validation</div>
-    <h1>Upload De-Identified Patient Data</h1>
-    <p>Upload a CSV of de-identified historical patient vital-sign data to run a retrospective validation analysis. The platform will compute how the rules-based prioritization engine would have performed against your documented clinical events, compared to standard threshold-only alerting.</p>
-    <div class="disclaimer">De-identified data only. Do not upload any file containing real patient names, MRNs, dates of birth, or other direct identifiers. All uploaded data is processed in memory and is not retained after the session ends. A Business Associate Agreement is not required for de-identified data uploads under Phase 1 retrospective validation. <strong style="color:#b6f5d9">No-commitment analysis available:</strong> Accepting hospital de-identified datasets for no-commitment retrospective analysis. Upload CSV → receive results + interpretation. No EHR integration, no IT lift, no cost to evaluate.</div>
-  </div>
+    RETRO_UPLOAD_HTML = _load_retro_upload_html()
 
-  <div class="card">
-    <h2>Upload CSV File</h2>
-    <div class="upload-zone" id="dropZone">
-      <input type="file" id="csvFile" accept=".csv,text/csv,application/gzip,application/x-gzip,.gz" onchange="handleFileSelect(this)">
-      <div class="upload-icon" onclick="document.getElementById('csvFile').click()" style="cursor:pointer">&#x1F4C4;</div>
-      <div class="upload-label" onclick="document.getElementById('csvFile').click()" style="cursor:pointer">Click to select — or drag and drop anywhere on this page</div>
-      <div class="upload-sub">Maximum file size: 50 MB &nbsp;·&nbsp; CSV and CSV.GZ supported</div>
-    </div>
-    <div id="fileInfo" style="margin-bottom:12px;font-size:14px;color:#9adfff;display:none"></div>
-    <div class="progress" id="progressBar"><div class="progress-fill" id="progressFill"></div></div>
-    <div id="uploadStatus"></div>
-    <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap">
-      <button class="btn primary" id="uploadBtn" onclick="uploadFile()" disabled>Run Validation Analysis</button>
-      <a class="btn secondary" href="/retro-schema">Download Schema Template</a>
-    </div>
-  </div>
-
-  <div id="resultsSection" class="card">
-    <h2>Validation Results</h2>
-    <div id="resultsContent"></div>
-  </div>
-
-  <div class="card">
-    <h2>Required CSV Schema</h2>
-    <p>Your CSV must include these columns. Column names are case-insensitive. Extra columns are ignored.</p>
-    <table class="schema-table">
-      <thead><tr><th>Column</th><th>Required</th><th>Format</th><th>Description</th></tr></thead>
-      <tbody id="schemaTableBody"></tbody>
-    </table>
-  </div>
-
-  <div class="card">
-    <h2>Previous Uploads This Session</h2>
-    <div id="uploadsTable"><p style="color:var(--muted)">No uploads yet this session.</p></div>
-  </div>
-</div>
-
-<script>
-  const SCHEMA = """ + json.dumps({k: v for k, v in CSV_SCHEMA_DESCRIPTION.items()}) + """;
-  const REQUIRED = """ + json.dumps(CSV_SCHEMA_REQUIRED) + """;
-
-  // Render schema table
-  (function() {
-    const tbody = document.getElementById('schemaTableBody');
-    Object.entries(SCHEMA).forEach(([col, desc]) => {
-      const req = REQUIRED.includes(col);
-      tbody.innerHTML += `<tr>
-        <td style="font-family:monospace;color:${req?'#b6f5d9':'#9adfff'}">${col}</td>
-        <td><span class="pill ${req?'green':'amber'}">${req?'Required':'Optional'}</span></td>
-        <td style="color:var(--muted)">${col.includes('timestamp')?'ISO 8601':col.includes('event')&&!col.includes('label')?'0 or 1':'Numeric'}</td>
-        <td style="color:var(--muted)">${desc}</td>
-      </tr>`;
-    });
-  })();
-
-  let selectedFile = null;
-
-  const dropZone = document.getElementById('dropZone');
-
-  function _highlightZone(on) {
-    if (on) {
-      dropZone.classList.add('drag');
-      dropZone.style.borderColor = 'rgba(91,212,255,.9)';
-      dropZone.style.background = 'rgba(91,212,255,.08)';
-    } else {
-      dropZone.classList.remove('drag');
-      dropZone.style.borderColor = '';
-      dropZone.style.background = '';
-    }
-  }
-
-  document.addEventListener('dragenter', e => { e.preventDefault(); e.stopPropagation(); _highlightZone(true); }, false);
-  document.addEventListener('dragover',  e => { e.preventDefault(); e.stopPropagation(); _highlightZone(true); }, false);
-  document.addEventListener('dragleave', e => {
-    e.preventDefault(); e.stopPropagation();
-    if (!e.relatedTarget) _highlightZone(false);
-  }, false);
-  document.addEventListener('drop', e => {
-    e.preventDefault(); e.stopPropagation();
-    _highlightZone(false);
-    const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
-    if (f) {
-      const fn = f.name.toLowerCase();
-      if (!fn.endsWith('.csv') && !fn.endsWith('.gz')) {
-        setStatus('Please select a CSV or CSV.GZ file', 'err');
-        return;
-      }
-      setFile(f);
-    }
-  }, false);
-
-  function handleFileSelect(input) {
-    if (input.files[0]) setFile(input.files[0]);
-  }
-
-  function setFile(f) {
-    selectedFile = f;
-    document.getElementById('fileInfo').style.display = 'block';
-    document.getElementById('fileInfo').textContent = `Selected: ${f.name}  (${(f.size/1024/1024).toFixed(1)} MB)`;
-    document.getElementById('uploadBtn').disabled = false;
-    setStatus('File ready — click "Run Validation Analysis"', 'ok');
-  }
-
-  function setStatus(msg, cls) {
-    const el = document.getElementById('uploadStatus');
-    el.textContent = msg;
-    el.className = cls || '';
-  }
-
-  async function uploadFile() {
-    if (!selectedFile) return;
-    document.getElementById('uploadBtn').disabled = true;
-    const prog = document.getElementById('progressBar');
-    const fill = document.getElementById('progressFill');
-    prog.style.display = 'block';
-    fill.style.width = '15%';
-    setStatus('Uploading file...', '');
-
-    try {
-      const fd = new FormData();
-      fd.append('file', selectedFile);
-
-      const res = await fetch('/api/retro/upload', { method: 'POST', body: fd });
-      fill.style.width = '50%';
-
-      const contentType = res.headers.get('content-type') || '';
-      if (!contentType.includes('application/json')) {
-        const text = await res.text().catch(() => '');
-        throw new Error(`Server returned non-JSON (${res.status}): ${text.substring(0,200)}`);
-      }
-
-      const data = await res.json();
-      if (!data.ok) {
-        setStatus('Upload error: ' + (data.error || 'Unknown'), 'err');
-        document.getElementById('uploadBtn').disabled = false;
-        prog.style.display = 'none';
-        return;
-      }
-
-      fill.style.width = '70%';
-      setStatus('File received. Starting analysis...', 'ok');
-
-      // If analysis came back inline use it immediately
-      if (data.analysis_inline && data.summary) {
-        fill.style.width = '100%';
-        renderResults(data, data);
-        loadUploadHistory();
-        setStatus('Analysis complete ✓', 'ok');
-        document.getElementById('uploadBtn').disabled = false;
-        prog.style.display = 'none';
-        return;
-      }
-
-      // Poll for async results — keeps existing infrastructure
-      let analysis = null;
-      for (let attempt = 0; attempt < 40; attempt++) {
-        await new Promise(r => setTimeout(r, attempt < 5 ? 3000 : 5000));
-        fill.style.width = Math.min(98, 70 + (attempt * 1.5)) + '%';
-        setStatus(`Analyzing... (${Math.round((attempt + 1) * 4)}s elapsed)`, '');
-        try {
-          const pr = await fetch('/api/retro/analyze/' + data.upload_id);
-          const pj = await pr.json();
-          if (pj.ok && pj.summary) { analysis = pj; break; }
-          if (pj.error && !pj.pending) throw new Error(pj.error);
-        } catch(pollErr) { continue; }
-      }
-
-      if (analysis) {
-        fill.style.width = '100%';
-        renderResults(data, analysis);
-        loadUploadHistory();
-        setStatus('Analysis complete ✓', 'ok');
-      } else {
-        document.getElementById('uploadStatus').innerHTML =
-          'Analysis still running. ' +
-          '<button class="btn secondary" style="padding:6px 14px;font-size:13px;margin-left:8px" ' +
-          'onclick="retryPoll(\''+ data.upload_id +'\')">' +
-          'Check for Results</button>';
-        loadUploadHistory();
-      }
-
-    } catch(err) {
-      console.error('Upload failed:', err);
-      setStatus('Failed: ' + err.message, 'err');
-    }
-    document.getElementById('uploadBtn').disabled = false;
-    prog.style.display = 'none';
-  }
-
-  loadUploadHistory();
-</script>
-</body>
-</html>"""
 
     @app.get("/retro-upload")
     @_login_required
