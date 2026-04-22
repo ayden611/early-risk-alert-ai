@@ -3,7 +3,7 @@ COMMAND_CENTER_HTML = r"""
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Early Risk Alert AI — Explainable Rules-Based Clinical Command Center</title>
+  <title>Early Risk Alert AI — Explainable Rules-Based Command-Center Platform</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     :root{
@@ -29,7 +29,7 @@ COMMAND_CENTER_HTML = r"""
       --brandText:#07101c;
       --live:#6bffb1;
     }
- 
+
     *{box-sizing:border-box}
     html{scroll-behavior:smooth}
     body{
@@ -44,7 +44,7 @@ COMMAND_CENTER_HTML = r"""
     a{text-decoration:none;color:inherit}
     button{font:inherit}
     .shell{max-width:1480px;margin:0 auto;padding:18px 16px 56px}
- 
+
     .topbar{
       position:sticky;top:0;z-index:70;
       border-bottom:1px solid var(--line);
@@ -70,7 +70,7 @@ COMMAND_CENTER_HTML = r"""
     .nav-links a{
       font-size:14px;font-weight:900;color:#dce9ff;
     }
- 
+
     .pilot-banner{
       margin-top:18px;
       border:1px solid rgba(255,255,255,.09);
@@ -100,7 +100,7 @@ COMMAND_CENTER_HTML = r"""
     .policy-pills,.meta-pills,.hero-pills,.toolbar,.wall-tools,.mini-pills{
       display:flex;gap:10px;flex-wrap:wrap;align-items:center;
     }
- 
+
     .policy-pill,.status-pill{
       display:inline-flex;align-items:center;justify-content:center;
       padding:10px 14px;border-radius:999px;font-size:12px;font-weight:1000;letter-spacing:.12em;text-transform:uppercase;
@@ -121,7 +121,7 @@ COMMAND_CENTER_HTML = r"""
     .status-pill.live-dot::before{
       content:"";width:8px;height:8px;border-radius:50%;background:#0b7d43;box-shadow:0 0 0 4px rgba(11,125,67,.14);
     }
- 
+
     .hero{
       margin-top:18px;
       border:1px solid var(--line);
@@ -155,7 +155,7 @@ COMMAND_CENTER_HTML = r"""
     .hero-actions,.section-actions{
       display:flex;gap:12px;flex-wrap:wrap;margin-top:18px;
     }
- 
+
     .btn{
       display:inline-flex;align-items:center;justify-content:center;gap:8px;
       padding:12px 16px;border-radius:16px;font-size:14px;font-weight:900;
@@ -180,13 +180,13 @@ COMMAND_CENTER_HTML = r"""
     .btn.critical-btn{background:linear-gradient(135deg,#ff667d,#ff97aa);color:#08111f}
     .btn.wall-btn{background:linear-gradient(135deg,#b58cff,#d8bfff);color:#08111f}
     .btn.wall-btn.active{box-shadow:0 0 0 3px rgba(181,140,255,.18), 0 12px 30px rgba(181,140,255,.2)}
- 
+
     .toolbar select,.threshold-editor select,.threshold-editor input{
       background:#0d1728;border:1px solid rgba(255,255,255,.08);border-radius:14px;color:var(--text);
       padding:12px 14px;font:inherit;font-weight:800;
     }
     .threshold-editor input{padding:10px 12px}
- 
+
     .section{margin-top:18px}
     .section-card{
       border:1px solid var(--line);
@@ -206,7 +206,7 @@ COMMAND_CENTER_HTML = r"""
     .section-sub{
       font-size:14px;color:var(--muted);line-height:1.55;margin:6px 0 0;
     }
- 
+
     .telemetry-top{
       display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:16px;
     }
@@ -226,7 +226,7 @@ COMMAND_CENTER_HTML = r"""
     .stat-card .hint{
       margin-top:8px;font-size:13px;line-height:1.5;color:#c8d8ef;
     }
- 
+
     .command-grid{
       display:grid;grid-template-columns:1.5fr .95fr;gap:18px;align-items:start;
     }
@@ -272,7 +272,7 @@ COMMAND_CENTER_HTML = r"""
     .ecg-green{stroke:#77ffb4;color:#77ffb4}
     .ecg-amber{stroke:#ffd96c;color:#ffd96c}
     .ecg-red{stroke:#ff7c8d;color:#ff7c8d}
- 
+
     .monitor-metrics{
       position:relative;z-index:1;margin-top:14px;display:grid;grid-template-columns:repeat(4,1fr);gap:10px;
     }
@@ -282,7 +282,7 @@ COMMAND_CENTER_HTML = r"""
     }
     .metric-k{font-size:11px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:#9eb8dc}
     .metric-v{font-size:18px;font-weight:1000;line-height:1;letter-spacing:-.03em}
- 
+
     .monitor-story{
       position:relative;z-index:1;margin-top:14px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
     }
@@ -292,7 +292,7 @@ COMMAND_CENTER_HTML = r"""
     .monitor-actions{
       position:relative;z-index:1;margin-top:14px;display:flex;gap:8px;flex-wrap:wrap;
     }
- 
+
     .side-stack{display:grid;gap:16px}
     .intel-card,.module-card,.business-card{
       border:1px solid var(--line);border-radius:24px;
@@ -304,7 +304,7 @@ COMMAND_CENTER_HTML = r"""
     .intel-card h3,.module-card h3,.business-card h3{
       margin:0 0 12px;font-size:20px;font-weight:1000;letter-spacing:-.03em;
     }
- 
+
     .alert-feed,.queue-list,.timeline-panel,.audit-list,.why-now,.insight-list{
       display:grid;gap:10px;
     }
@@ -329,7 +329,7 @@ COMMAND_CENTER_HTML = r"""
     .timeline-copy{
       font-size:13px;line-height:1.55;color:#e4efff;
     }
- 
+
     .modules-grid{
       display:grid;grid-template-columns:repeat(3,1fr);gap:16px;
     }
@@ -345,7 +345,7 @@ COMMAND_CENTER_HTML = r"""
     .module-body{
       min-height:160px;
     }
- 
+
     .bars{
       display:grid;gap:10px;
     }
@@ -366,7 +366,7 @@ COMMAND_CENTER_HTML = r"""
     .bar-value{
       text-align:right;font-size:12px;font-weight:1000;color:#dce9ff;
     }
- 
+
     .sparkline{
       width:100%;height:72px;border-radius:16px;border:1px solid rgba(255,255,255,.05);background:rgba(255,255,255,.02);
       overflow:hidden;padding:8px;
@@ -378,7 +378,7 @@ COMMAND_CENTER_HTML = r"""
     }
     .sparkline.large path.line{stroke-width:3.5}
     .sparkline path.area{opacity:.14}
- 
+
     .forecast-grid,.roi-grid,.audience-grid,.scenario-grid,.how-grid{
       display:grid;gap:14px;
     }
@@ -386,7 +386,7 @@ COMMAND_CENTER_HTML = r"""
     .roi-grid{grid-template-columns:repeat(4,1fr)}
     .audience-grid,.how-grid{grid-template-columns:repeat(4,1fr)}
     .scenario-grid{grid-template-columns:repeat(3,1fr)}
- 
+
     .mini-card{
       border:1px solid rgba(255,255,255,.06);
       border-radius:18px;
@@ -403,11 +403,11 @@ COMMAND_CENTER_HTML = r"""
     .mini-copy{
       margin-top:8px;font-size:13px;color:#cfe0f4;line-height:1.55;
     }
- 
+
     .business-copy{
       color:#cfe0f4;font-size:14px;line-height:1.7;margin:0;
     }
- 
+
     .detail-drawer{
       position:fixed;top:0;right:-500px;width:480px;max-width:100%;height:100vh;z-index:120;
       background:linear-gradient(180deg, rgba(12,22,38,.98), rgba(7,14,26,.99));
@@ -440,7 +440,7 @@ COMMAND_CENTER_HTML = r"""
       position:fixed;inset:0;background:rgba(0,0,0,.42);z-index:110;display:none;
     }
     .overlay.show{display:block}
- 
+
     .terms-modal{
       position:fixed;inset:0;z-index:140;display:none;
       align-items:center;justify-content:center;
@@ -470,7 +470,7 @@ COMMAND_CENTER_HTML = r"""
       font-size:15px;
       line-height:1.72;
     }
- 
+
     .threshold-editor{
       display:grid;gap:10px;
     }
@@ -492,12 +492,12 @@ COMMAND_CENTER_HTML = r"""
       line-height:1.6;
       color:#d8e6fb;
     }
- 
+
     .footer{
       margin-top:18px;border:1px solid var(--line);border-radius:22px;padding:18px;
       background:rgba(255,255,255,.03);color:#a7bddc;font-size:13px;line-height:1.6;text-align:center;
     }
- 
+
     .wall-mode .shell{max-width:100%;padding:10px 10px 34px}
     .wall-mode .topbar-inner{max-width:100%}
     .wall-mode .hero,
@@ -522,7 +522,7 @@ COMMAND_CENTER_HTML = r"""
     .wall-mode .intel-card{padding:14px}
     .wall-mode .telemetry-top{gap:10px;margin-bottom:12px}
     .wall-mode .stat-card{min-height:100px;padding:14px}
- 
+
     @media (max-width:1280px){
       .hero-grid,.command-grid,.pilot-banner-grid{grid-template-columns:1fr}
       .modules-grid{grid-template-columns:repeat(2,1fr)}
@@ -554,7 +554,7 @@ COMMAND_CENTER_HTML = r"""
       <div>
         <div class="brand-kicker" id="brandKicker">HCP-facing decision-support · Rules-based · Explainable · CITI certified</div>
         <div class="brand-title" id="brandTitle">Early Risk Alert AI</div>
-        <div class="brand-sub" id="brandSub">Clinical Command Center</div>
+        <div class="brand-sub" id="brandSub">Command-Center Platform</div>
       </div>
       <div class="nav-links">
         <a href="/command-center">Command Center</a>
@@ -567,7 +567,7 @@ COMMAND_CENTER_HTML = r"""
       </div>
     </div>
   </div>
- 
+
   <div class="shell">
     <section class="pilot-banner">
       <div class="pilot-banner-grid">
@@ -577,23 +577,23 @@ COMMAND_CENTER_HTML = r"""
           <p class="pilot-copy">
             This platform is presented in a controlled pilot environment for demonstration, workflow evaluation, and stakeholder review.
             It does not replace clinical judgment, hospital protocols, or emergency response systems.
-            All insights, alerts, monitored trends, and thresholds support — not replace — licensed clinical decision-making.
+            All review-priority outputs, monitored trends, and thresholds are presented to support — not replace — licensed clinical decision-making.
           </p>
         </div>
- 
+
         <div style="display:grid;gap:12px;">
           <div class="policy-pills">
             <button class="policy-pill status-pill dark" type="button" onclick="openPolicyModal('terms')">Terms</button>
             <button class="policy-pill status-pill dark" type="button" onclick="openPolicyModal('privacy')">Privacy</button>
             <button class="policy-pill status-pill dark" type="button" onclick="openPolicyModal('disclaimer')">Pilot Disclaimer</button>
           </div>
- 
+
           <div class="meta-pills">
             <div class="status-pill live-dot" id="liveSystemPill">Live System</div>
             <div class="status-pill muted" id="lastUpdatedPillTop">Last Updated --</div>
             <div class="status-pill info" id="topRiskPill">Top Review-Priority Patient --</div>
           </div>
- 
+
           <div class="meta-pills">
             <div class="status-pill locked" id="unitLockPill">Unit Lock</div>
             <div class="status-pill dark" id="securityModePill">MFA Implemented · Pilot Security Layer</div>
@@ -601,17 +601,17 @@ COMMAND_CENTER_HTML = r"""
         </div>
       </div>
     </section>
- 
+
     <section class="hero">
       <div class="hero-grid">
         <div class="hero-copy">
           <div class="hero-kicker">Pilot operating layer</div>
-          <h1 id="heroTitle">Early Risk Alert AI — Explainable Rules-Based Clinical Command Center</h1>
+          <h1 id="heroTitle">Early Risk Alert AI — Explainable Rules-Based Command-Center Platform</h1>
           <p id="heroCopy">
-            <strong style="color:#eef4ff">Rules-based prioritization with explainable deltas — not black-box AI.</strong> Early Risk Alert AI surfaces which patients may warrant further review, why, and what changed — with a <strong style="color:#3ad38f">71.6% reduction in unnecessary alerts</strong> and <strong style="color:#3ad38f">6.2% false positive rate</strong> vs 20.4% for standard thresholds <em style="font-size:12px;font-weight:400">(10,000-patient synthetic dataset, April 2026 — see model card)</em>.
-          <br><span style="font-size:14px;color:#9fb4d6;margin-top:8px;display:block">Live EHR integration via FHIR R4 and HL7 is on the product roadmap — current pilot entry point is retrospective validation via de-identified CSV, which requires no EHR integration and can begin within days of data availability.</span>
+            <strong style="color:#eef4ff">Rules-based prioritization with explainable deltas — not black-box AI.</strong> Early Risk Alert AI surfaces which patients may warrant further review, why, and what changed — with a <strong style="color:#3ad38f">71.6% review burden reduction</strong> and <strong style="color:#3ad38f">6.2% false positive rate</strong> vs 20.4% for standard thresholds <em style="font-size:12px;font-weight:400">(10,000-patient synthetic dataset, April 2026 — see model card)</em>.
+          <br><span style="font-size:14px;color:#9fb4d6;margin-top:8px;display:block">FHIR R4 and HL7 integration remain on the product roadmap. The current pilot entry point is retrospective validation via de-identified CSV, which requires no EHR integration and can begin within days of data availability.</span>
           </p>
- 
+
           <div class="hero-actions">
             <a class="btn primary" href="/hospital-demo">Request Live Demo</a>
             <a class="btn secondary" href="/investor-intake">Investor Access</a>
@@ -619,7 +619,7 @@ COMMAND_CENTER_HTML = r"""
             <a class="btn secondary" href="/pilot-docs">Pilot Docs</a>
             <a class="btn secondary" href="/model-card" target="_blank" rel="noopener" title="Validation methodology, signal weights, and performance results">Model Card</a>
           </div>
- 
+
           <div class="hero-pills" style="margin-top:18px;">
             <div class="status-pill watch" id="pilotModePill">Pilot Mode</div>
             <div class="status-pill info" id="currentRolePill">Role</div>
@@ -630,7 +630,7 @@ COMMAND_CENTER_HTML = r"""
             <a class="status-pill info" href="/model-card" target="_blank" rel="noopener" style="text-decoration:none;cursor:pointer" title="Validation methodology, signal weights, performance results">Model Card</a>
           </div>
         </div>
- 
+
         <div class="hero-side">
           <div class="hero-kicker">Access + scope</div>
           <p>
@@ -638,7 +638,7 @@ COMMAND_CENTER_HTML = r"""
             Admin users retain full hospital-wide visibility across all units and all pilot accounts.
             Trend views, audit visibility, and thresholds are wired to backend routes and reflect your current access scope.
           </p>
- 
+
           <div class="toolbar" style="margin-top:18px;">
             <select id="unitFilter">
               <option value="all">All Units</option>
@@ -651,7 +651,7 @@ COMMAND_CENTER_HTML = r"""
             <div class="status-pill info" id="selectedUnitPill">All Units</div>
             <div class="status-pill muted" id="hospitalBrandPill">Pilot Account</div>
           </div>
- 
+
           <div class="wall-tools" style="margin-top:14px;">
             <button class="btn wall-btn" id="wallModeBtn" type="button" onclick="toggleWallMode()">Enable Wall Mode</button>
             <div class="status-pill wall" id="wallModePill">Wall Mode Off</div>
@@ -660,20 +660,20 @@ COMMAND_CENTER_HTML = r"""
         </div>
       </div>
     </section>
- 
+
     <section class="section">
       <div class="section-card">
         <div class="section-head">
           <div>
             <h2 class="section-title">Hospital Command Wall</h2>
-            <div class="section-sub">Explainable rules-based prioritization — not black-box AI. 71.6% alert reduction and 6.2% false positive rate vs 20.4% for standard threshold alerting (10,000-patient synthetic dataset, April 2026). Structured patient summaries, delta trend context, workflow handling, and persistent audit trail. FHIR/HL7 EHR integration on roadmap — current entry point is de-identified CSV retrospective validation, no IT lift required.</div>
+            <div class="section-sub">Explainable rules-based prioritization — not black-box AI. 71.6% review burden reduction and 6.2% false positive rate versus 20.4% for standard threshold-based review rules (10,000-patient synthetic dataset, April 2026). Structured patient summaries, delta trend context, workflow handling, and persistent audit visibility. FHIR/HL7 EHR integration remains on the roadmap — current entry point is de-identified CSV retrospective validation, with no EHR integration required.</div>
           </div>
           <div class="mini-pills">
             <div class="status-pill live" id="wallStatus">Live</div>
             <div class="status-pill info" id="wallModeStatusPill">Standard View</div>
           </div>
         </div>
- 
+
         <!-- PATIENT SEARCH BAR -->
         <div style="margin-bottom:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
           <div style="flex:1;min-width:200px;position:relative">
@@ -683,15 +683,15 @@ COMMAND_CENTER_HTML = r"""
           <button id="demModeBtn" onclick="toggleDemoMode()" style="padding:10px 16px;border-radius:12px;border:1px solid rgba(244,189,106,.3);background:rgba(244,189,106,.08);color:#ffe7bf;font:inherit;font-size:12px;font-weight:900;cursor:pointer;white-space:nowrap;letter-spacing:.06em;text-transform:uppercase">&#x1F3AC; Live Demo Mode: OFF</button>
           <a href="/pilot-onboarding" target="_blank" style="padding:10px 14px;border-radius:12px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:#9adfff;font-size:12px;font-weight:900;text-decoration:none;white-space:nowrap;letter-spacing:.06em;text-transform:uppercase">&#x1F4CB; Pilot Checklist</a>
         </div>
- 
+
         <div class="telemetry-top">
           <div class="stat-card">
-            <div class="k">Open Alerts</div>
+            <div class="k">Open Review Items</div>
             <div class="v" id="open-alerts">0</div>
             <div class="hint">Active alert count within your current access scope.</div>
           </div>
           <div class="stat-card">
-            <div class="k">Priority Alerts</div>
+            <div class="k">Higher-Priority Review Items</div>
             <div class="v" id="critical-alerts">0</div>
             <div class="hint">Highest-priority review items within the current access scope.</div>
           </div>
@@ -706,35 +706,35 @@ COMMAND_CENTER_HTML = r"""
             <div class="hint">Current pilot or admin command center scope.</div>
           </div>
         </div>
- 
+
         <div class="command-grid">
           <div class="monitor-grid" id="wall"></div>
- 
+
           <div class="side-stack">
             <div class="intel-card">
-              <h3>Live Alerts Feed</h3>
+              <h3>Live Review Feed</h3>
               <div class="alert-feed" id="queue"></div>
             </div>
- 
+
             <div class="intel-card">
               <h3>Top Review-Priority Queue</h3>
               <div class="queue-list" id="top-risk-list"></div>
             </div>
- 
+
             <div class="intel-card">
               <h3>Explainable Review Basis</h3>
               <div class="why-now" id="ai-reasoning-panel">
                 <div class="why-line">Waiting for patient intelligence stream...</div>
               </div>
             </div>
- 
+
             <div class="intel-card">
               <h3>Review Insight</h3>
               <div class="insight-list" id="ai-insight-panel">
                 <div class="info-line">Waiting for active review insight...</div>
               </div>
             </div>
- 
+
             <div class="intel-card">
               <h3>Workflow Snapshot</h3>
               <div class="queue-list">
@@ -760,32 +760,32 @@ COMMAND_CENTER_HTML = r"""
                 </div>
               </div>
             </div>
- 
+
             <div class="intel-card">
               <h3>System Health</h3>
               <div class="queue-list" id="system-health-list"></div>
             </div>
- 
+
             <div class="intel-card">
               <h3>Security + Pilot Controls</h3>
               <div class="queue-list" id="security-controls-list"></div>
             </div>
- 
+
             <div class="intel-card">
               <h3>Governance + Readiness</h3>
               <div class="queue-list" id="readiness-evidence-list"></div>
             </div>
- 
+
             <div class="intel-card">
               <h3>Patient Timeline</h3>
               <div class="timeline-panel" id="patient-timeline"></div>
             </div>
- 
+
             <div class="intel-card">
               <h3>Audit Trail</h3>
               <div class="audit-list" id="audit-log"></div>
             </div>
- 
+
             <div class="intel-card">
               <h3>Audit Summary</h3>
               <div class="queue-list" id="audit-summary-list"></div>
@@ -794,7 +794,7 @@ COMMAND_CENTER_HTML = r"""
         </div>
       </div>
     </section>
- 
+
     <section class="section">
       <div class="section-card">
         <div class="section-head">
@@ -804,7 +804,7 @@ COMMAND_CENTER_HTML = r"""
           </div>
           <div class="status-pill muted">Pilot / Evaluation Mode</div>
         </div>
- 
+
         <div class="modules-grid">
           <div class="module-card">
             <div class="module-head">
@@ -816,7 +816,7 @@ COMMAND_CENTER_HTML = r"""
             </div>
             <div class="module-body" id="reporting-dashboard-module"></div>
           </div>
- 
+
           <div class="module-card">
             <div class="module-head">
               <div>
@@ -827,7 +827,7 @@ COMMAND_CENTER_HTML = r"""
             </div>
             <div class="module-body" id="thresholds-module"></div>
           </div>
- 
+
           <div class="module-card">
             <div class="module-head">
               <div>
@@ -838,7 +838,7 @@ COMMAND_CENTER_HTML = r"""
             </div>
             <div class="module-body" id="oxygen-trend-module"></div>
           </div>
- 
+
           <div class="module-card">
             <div class="module-head">
               <div>
@@ -849,7 +849,7 @@ COMMAND_CENTER_HTML = r"""
             </div>
             <div class="module-body" id="risk-timeline-module"></div>
           </div>
- 
+
           <div class="module-card">
             <div class="module-head">
               <div>
@@ -860,7 +860,7 @@ COMMAND_CENTER_HTML = r"""
             </div>
             <div class="module-body" id="capacity-module"></div>
           </div>
- 
+
           <div class="module-card">
             <div class="module-head">
               <div>
@@ -871,7 +871,7 @@ COMMAND_CENTER_HTML = r"""
             </div>
             <div class="module-body" id="forecast-module"></div>
           </div>
- 
+
           <div class="module-card">
             <div class="module-head">
               <div>
@@ -882,7 +882,7 @@ COMMAND_CENTER_HTML = r"""
             </div>
             <div class="module-body" id="clusters-module"></div>
           </div>
- 
+
           <div class="module-card">
             <div class="module-head">
               <div>
@@ -893,7 +893,7 @@ COMMAND_CENTER_HTML = r"""
             </div>
             <div class="module-body" id="heatmap-module"></div>
           </div>
- 
+
           <div class="module-card">
             <div class="module-head">
               <div>
@@ -904,7 +904,7 @@ COMMAND_CENTER_HTML = r"""
             </div>
             <div class="module-body" id="workflow-readiness-module"></div>
           </div>
- 
+
           <div class="module-card">
             <div class="module-head">
               <div>
@@ -915,7 +915,7 @@ COMMAND_CENTER_HTML = r"""
             </div>
             <div class="module-body" id="route-status-module"></div>
           </div>
- 
+
           <div class="module-card">
             <div class="module-head">
               <div>
@@ -926,18 +926,18 @@ COMMAND_CENTER_HTML = r"""
             </div>
             <div class="module-body" id="pilot-packet-module"></div>
           </div>
- 
+
           <div class="module-card">
             <div class="module-head">
               <div>
                 <div class="module-title">Validation Results</div>
-                <div class="module-sub">Rules-based prioritization vs standard threshold alerting</div>
+                <div class="module-sub">Rules-based prioritization vs standard threshold-based review rules</div>
               </div>
               <div class="status-pill green" style="background:rgba(58,211,143,.14);border:1px solid rgba(58,211,143,.3);color:#b6f5d9">Published</div>
             </div>
             <div class="module-body" id="validation-results-module"></div>
           </div>
- 
+
           <div class="module-card">
             <div class="module-head">
               <div>
@@ -951,7 +951,7 @@ COMMAND_CENTER_HTML = r"""
         </div>
       </div>
     </section>
- 
+
     <section class="section business-sections">
       <div class="section-card">
         <div class="section-head">
@@ -966,7 +966,7 @@ COMMAND_CENTER_HTML = r"""
         <div class="forecast-grid" id="operations-wall-summary"></div>
       </div>
     </section>
- 
+
     <section class="section business-sections">
       <div class="section-card">
         <div class="section-head">
@@ -978,14 +978,14 @@ COMMAND_CENTER_HTML = r"""
         </div>
         <div class="roi-grid">
           <div class="mini-card">
-            <div class="mini-k">Alert Reduction</div>
+            <div class="mini-k">Review Burden Reduction</div>
             <div class="mini-v" style="color:#3ad38f">71.6%</div>
-            <div class="mini-copy">Reduction in unnecessary alerts vs standard threshold-only alerting (confirmed across 5 cohort sizes, 500–10,000 patients, April 2026). 6.2% false positive rate vs 20.4% for standard thresholds.</div>
+            <div class="mini-copy">Reduction in unnecessary review interruptions vs standard threshold-based review rules (confirmed across 5 cohort sizes, 500–10,000 patients, April 2026). 6.2% false positive rate vs 20.4% for standard thresholds.</div>
           </div>
           <div class="mini-card">
             <div class="mini-k">False Positive Rate</div>
             <div class="mini-v" style="color:#3ad38f">6.2%</div>
-            <div class="mini-copy">ERA false positive rate vs 20.4% for standard threshold alerting — a 14.2 point reduction in unnecessary interruptions.</div>
+            <div class="mini-copy">ERA false positive rate vs 20.4% for standard threshold-based review rules — a 14.2 point reduction in unnecessary interruptions.</div>
           </div>
           <div class="mini-card">
             <div class="mini-k">Monitoring Visibility</div>
@@ -1000,7 +1000,7 @@ COMMAND_CENTER_HTML = r"""
         </div>
       </div>
     </section>
- 
+
     <section class="section business-sections">
       <div class="section-card">
         <div class="section-head">
@@ -1012,7 +1012,7 @@ COMMAND_CENTER_HTML = r"""
         <div class="audience-grid">
           <div class="mini-card">
             <div class="mini-k">Hospitals</div>
-            <div class="mini-copy">Command-center visibility for monitored patients, response workflows, and unit-level alert prioritization.</div>
+            <div class="mini-copy">Command-center visibility for monitored patients, response workflows, and unit-level patient prioritization.</div>
           </div>
           <div class="mini-card">
             <div class="mini-k">Clinical Leaders</div>
@@ -1029,7 +1029,7 @@ COMMAND_CENTER_HTML = r"""
         </div>
       </div>
     </section>
- 
+
     <section class="section business-sections">
       <div class="section-card">
         <div class="section-head">
@@ -1041,7 +1041,7 @@ COMMAND_CENTER_HTML = r"""
         <div class="scenario-grid" id="scenario-grid"></div>
       </div>
     </section>
- 
+
     <section class="section business-sections">
       <div class="section-card">
         <div class="section-head">
@@ -1070,14 +1070,14 @@ COMMAND_CENTER_HTML = r"""
         </div>
       </div>
     </section>
- 
+
     <div class="footer">
-      Early Risk Alert AI · Explainable Rules-Based Clinical Command Center · Unit-Based Pilot Access · Hospital Branded Accounts · Explainable Alert Workflow · Persistent Audit Visibility · Pilot / Evaluation Environment
+      Early Risk Alert AI · Explainable Rules-Based Command-Center Platform · Unit-Based Pilot Access · Hospital Branded Accounts · Explainable Review Workflow · Persistent Audit Visibility · Pilot / Evaluation Environment
     </div>
   </div>
- 
+
   <div class="overlay" id="drawerOverlay" onclick="closePatientDrawer()"></div>
- 
+
   <aside class="detail-drawer" id="patientDrawer">
     <div class="drawer-top">
       <div>
@@ -1086,17 +1086,17 @@ COMMAND_CENTER_HTML = r"""
       </div>
       <button class="btn secondary small" onclick="closePatientDrawer()">Close</button>
     </div>
- 
+
     <div class="drawer-block">
       <div class="drawer-k">Clinical Summary</div>
       <div class="drawer-v" id="drawerSummary">Waiting for patient selection.</div>
     </div>
- 
+
     <div class="drawer-block">
       <div class="drawer-k">Monitored Context</div>
       <div class="drawer-v">Values displayed as monitored context for authorized HCP review.</div>
     </div>
- 
+
     <div class="drawer-grid">
       <div class="drawer-block">
         <div class="drawer-k">Heart Rate</div>
@@ -1123,34 +1123,34 @@ COMMAND_CENTER_HTML = r"""
         <div class="drawer-v" id="drawerRisk">--</div>
       </div>
     </div>
- 
+
     <div class="drawer-block">
       <div class="drawer-k">Supportive Review Note</div>
       <div class="drawer-v" id="drawerAction">--</div>
     </div>
- 
+
     <div class="drawer-block">
       <div class="drawer-k">Explainable Review Basis</div>
       <div class="drawer-v" id="drawerExplainability">--</div>
     </div>
- 
+
     <div class="drawer-block">
       <div class="drawer-k">Workflow Status</div>
       <div class="drawer-v" id="drawerWorkflow">No workflow action saved yet.</div>
     </div>
- 
+
     <div class="drawer-block">
       <div class="drawer-k">Trend History</div>
       <div id="drawerTrendSparkline"></div>
       <div class="timeline-panel" id="drawerTrendTable" style="margin-top:12px;"></div>
     </div>
- 
+
     <div class="drawer-block">
       <div class="drawer-k">Timeline Snapshot</div>
       <div class="timeline-panel" id="drawerTimeline"></div>
     </div>
   </aside>
- 
+
   <div class="terms-modal" id="policyModal">
     <div class="modal-card">
       <div class="drawer-top">
@@ -1163,7 +1163,7 @@ COMMAND_CENTER_HTML = r"""
       <div class="modal-copy" id="policyModalBody"></div>
     </div>
   </div>
- 
+
   <script>
     let activePatients = [];
     let activeAlerts = [];
@@ -1173,13 +1173,13 @@ COMMAND_CENTER_HTML = r"""
     let auditLog = [];
     let currentUnitFilter = "all";
     let selectedPatientId = null;
- 
+
     let accessRole = "viewer";
     let accessAssignedUnit = "all";
     let canViewAllUnits = true;
     let accessHospital = "Pilot";
     let brandName = "Early Risk Alert AI";
-    let brandTagline = "Explainable Rules-Based Clinical Command Center";
+    let brandTagline = "Explainable Rules-Based Command-Center Platform";
     let brand1 = "#7aa2ff";
     let brand2 = "#5bd4ff";
     let pilotModeEnabled = true;
@@ -1191,7 +1191,7 @@ COMMAND_CENTER_HTML = r"""
     let trendsEndpointAvailable = false;
     let thresholdsEndpointAvailable = false;
     let pilotReadiness = {};
- 
+
     const DEFAULT_THRESHOLDS = {
       icu: {spo2_low:92, hr_high:120, sbp_high:160},
       telemetry: {spo2_low:93, hr_high:110, sbp_high:150},
@@ -1200,7 +1200,7 @@ COMMAND_CENTER_HTML = r"""
       rpm: {spo2_low:94, hr_high:105, sbp_high:145},
       all: {spo2_low:93, hr_high:112, sbp_high:152}
     };
- 
+
     const POLICY_CONTENT = {
       terms: {
         title: "Terms",
@@ -1227,49 +1227,49 @@ COMMAND_CENTER_HTML = r"""
         `
       }
     };
- 
+
     function safe(v, fallback="--"){
       return v === undefined || v === null || v === "" ? fallback : v;
     }
- 
+
     function safeNumber(v, fallback=0){
       const n = Number(v);
       return Number.isFinite(n) ? n : fallback;
     }
- 
+
     function hasValue(v){
       return !(v === undefined || v === null || v === "");
     }
- 
+
     function formatHeartRate(v){
       return hasValue(v) ? `${safeNumber(v)} bpm` : "--";
     }
- 
+
     function formatSpO2(v){
       return hasValue(v) ? `${safeNumber(v)}%` : "--";
     }
- 
+
     function formatBloodPressure(sys, dia){
       return hasValue(sys) && hasValue(dia) ? `${safeNumber(sys)}/${safeNumber(dia)} mmHg` : "--";
     }
- 
+
     function formatRespiratoryRate(v, withRef=false){
       if (!hasValue(v)) return "--";
       const base = `${safeNumber(v)} breaths/min`;
       return withRef ? `${base} (Ref: 12–20)` : base;
     }
- 
+
     function formatTemperature(v, withRef=false){
       if (!hasValue(v)) return "--";
       const num = safeNumber(v);
       const base = `${num.toFixed(1)} °F`;
       return withRef ? `${base} (Ref: 97.6–100.4)` : base;
     }
- 
+
     function clamp(n, low, high){
       return Math.max(low, Math.min(high, n));
     }
- 
+
     function formatTime(value){
       try{
         return new Date(value).toLocaleTimeString([], {hour:'numeric', minute:'2-digit'});
@@ -1277,7 +1277,7 @@ COMMAND_CENTER_HTML = r"""
         return "--";
       }
     }
- 
+
     function formatDateTime(value){
       try{
         return new Date(value).toLocaleString([], {month:'short', day:'numeric', hour:'numeric', minute:'2-digit'});
@@ -1285,11 +1285,11 @@ COMMAND_CENTER_HTML = r"""
         return "--";
       }
     }
- 
+
     function formatPercent(value){
       return Math.round(clamp(Number(value) || 0, 0, 100)) + "%";
     }
- 
+
     function unitLabel(unit){
       unit = String(unit || "all").toLowerCase();
       if (unit === "icu") return "ICU";
@@ -1299,14 +1299,14 @@ COMMAND_CENTER_HTML = r"""
       if (unit === "rpm") return "RPM / Home";
       return "All Units";
     }
- 
+
     function statusClass(status){
       const s = String(status || "").toLowerCase();
       if (s.includes("critical") || s.includes("degraded") || s.includes("missing") || s.includes("failed")) return "critical";
       if (s.includes("pending") || s.includes("review") || s.includes("watch") || s.includes("moderate") || s.includes("acknowledged") || s.includes("assigned") || s.includes("documented") || s.includes("structured")) return "watch";
       return "live";
     }
- 
+
     function pulseLabel(status){
       const s = String(status || "").toLowerCase();
       if (s === "critical") return "Critical";
@@ -1319,14 +1319,14 @@ COMMAND_CENTER_HTML = r"""
       if (s === "degraded") return "Degraded";
       return "Stable";
     }
- 
+
     function ecgClass(status){
       const s = String(status || "").toLowerCase();
       if (s === "critical" || s === "escalated") return "ecg-red";
       if (s === "high" || s === "moderate" || s === "acknowledged" || s === "assigned") return "ecg-amber";
       return "ecg-green";
     }
- 
+
     function roomToUnit(room){
       const r = String(room || "").toLowerCase();
       if (r.includes("icu")) return "icu";
@@ -1336,22 +1336,22 @@ COMMAND_CENTER_HTML = r"""
       if (r.includes("rpm") || r.includes("home")) return "rpm";
       return "telemetry";
     }
- 
+
     function thresholdsForUnit(unit){
       const key = String(unit || "all").toLowerCase();
       return thresholdStore[key] || thresholdStore.all || DEFAULT_THRESHOLDS[key] || DEFAULT_THRESHOLDS.all;
     }
- 
+
     function editableThresholdUnit(){
       if (currentUnitFilter !== "all") return currentUnitFilter;
       if (accessAssignedUnit !== "all") return accessAssignedUnit;
       return null;
     }
- 
+
     function buildPath(points){
       return points.map((p, i) => (i === 0 ? "M" : "L") + p[0] + "," + p[1]).join(" ");
     }
- 
+
     function waveformPoints(mode){
       if (mode === "critical") {
         return [[0,72],[30,72],[46,72],[58,70],[72,72],[86,72],[98,50],[106,100],[116,24],[126,108],[136,72],[162,72],[186,72],[204,70],[220,72],[236,72],[250,54],[258,96],[268,22],[278,106],[290,72],[318,72],[336,72],[352,70],[368,72],[382,72],[398,46],[406,104],[416,20],[428,110],[440,72],[466,72],[486,72],[504,70],[520,72],[536,72],[550,52],[558,98],[568,24],[578,106],[592,72],[620,72]];
@@ -1361,7 +1361,7 @@ COMMAND_CENTER_HTML = r"""
       }
       return [[0,78],[48,78],[82,78],[96,76],[110,78],[126,78],[138,66],[146,84],[156,52],[166,88],[178,78],[220,78],[254,78],[268,76],[282,78],[298,78],[310,68],[318,84],[328,56],[338,88],[350,78],[392,78],[426,78],[440,76],[454,78],[470,78],[482,68],[490,84],[500,56],[510,88],[522,78],[566,78],[600,78]];
     }
- 
+
     function explainabilityForPatient(patient){
       const notes = [];
       const spo2 = safeNumber(patient.spo2);
@@ -1370,29 +1370,29 @@ COMMAND_CENTER_HTML = r"""
       const rr = safeNumber(patient.respiratory_rate);
       const temp = safeNumber(patient.temperature_f);
       const t = thresholdsForUnit(patient.unit || currentUnitFilter);
- 
+
       if (spo2 && spo2 < safeNumber(t.spo2_low, 93)) notes.push("Oxygen saturation is below the current review threshold");
       else if (spo2 && spo2 < safeNumber(t.spo2_low, 93) + 2) notes.push("Oxygen saturation is trending below the current target range");
- 
+
       if (hr && hr >= safeNumber(t.hr_high, 110)) notes.push("Heart rate is elevated relative to the current review threshold");
       else if (hr && hr >= safeNumber(t.hr_high, 110) - 5) notes.push("Heart rate trend is rising");
- 
+
       if (sbp && sbp >= safeNumber(t.sbp_high, 150)) notes.push("Blood pressure is elevated relative to the current review threshold");
- 
+
       if (rr){
         if (rr < 12 || rr > 20) notes.push("Respiratory rate is outside typical reference range — for HCP review");
         else notes.push("Respiratory rate trend is available for authorized HCP review");
       }
- 
+
       if (temp){
         if (temp < 97.6 || temp > 100.4) notes.push("Temperature is outside typical reference range — for HCP review");
         else notes.push("Temperature trend is available for authorized HCP review");
       }
- 
+
       if (!notes.length) notes.push("Combined monitored context remains available for authorized HCP review");
       return "Includes monitored vital context such as heart rate, oxygen saturation, respiratory rate, and temperature, along with trend behavior and workflow signals. " + notes.join("; ") + ".";
     }
- 
+
     function normalizePatient(raw){
       if (!raw) return null;
       const vitals = raw.vitals || {};
@@ -1419,7 +1419,7 @@ COMMAND_CENTER_HTML = r"""
         reasons: risk.reasons || []
       };
     }
- 
+
     function normalizeAlert(alert){
       if (!alert) return null;
       return {
@@ -1429,7 +1429,7 @@ COMMAND_CENTER_HTML = r"""
         unit: alert.room || alert.unit || "Unit"
       };
     }
- 
+
     function normalizeAuditEntry(entry){
       if (!entry) return null;
       return {
@@ -1441,7 +1441,7 @@ COMMAND_CENTER_HTML = r"""
         user: entry.user || entry.role || "--"
       };
     }
- 
+
     function mergeAuditLogs(){
       const map = new Map();
       [...workflowAuditLog, ...persistentAuditLog].forEach(item => {
@@ -1454,29 +1454,29 @@ COMMAND_CENTER_HTML = r"""
         return new Date(b.time || 0).getTime() - new Date(a.time || 0).getTime();
       });
     }
- 
+
     function filterPatientsByUnit(patients){
       const source = (patients || []).map(normalizePatient).filter(Boolean);
       if (currentUnitFilter === "all") return source;
       return source.filter(p => p.unit === currentUnitFilter);
     }
- 
+
     function filterAlertsByUnit(alerts){
       const source = (alerts || []).map(normalizeAlert).filter(Boolean);
       if (currentUnitFilter === "all") return source;
       return source.filter(a => roomToUnit(a.unit) === currentUnitFilter);
     }
- 
+
     function findPatient(patientId){
       return activePatients.find(p => String(p.patient_id) === String(patientId)) || null;
     }
- 
+
     function getTopRiskPatient(){
       return filterPatientsByUnit(activePatients)
         .slice()
         .sort((a,b) => safeNumber(b.risk_score) - safeNumber(a.risk_score))[0] || null;
     }
- 
+
     function getWorkflowRecord(patientId){
       return workflowState[String(patientId)] || {
         ack: false,
@@ -1489,7 +1489,7 @@ COMMAND_CENTER_HTML = r"""
         role: ""
       };
     }
- 
+
     function workflowText(patientId){
       const record = getWorkflowRecord(patientId);
       const parts = [];
@@ -1498,11 +1498,11 @@ COMMAND_CENTER_HTML = r"""
       if (record.updated_at) parts.push(formatTime(record.updated_at));
       return parts.join(" · ");
     }
- 
+
     function patientRiskPercent(patient){
       return clamp(Math.round((safeNumber(patient.risk_score) / 9) * 100), 0, 99);
     }
- 
+
     function fallbackPatientTrendSeries(patient, metric){
       const riskPct = patientRiskPercent(patient);
       const spo2 = safeNumber(patient.spo2, 96);
@@ -1510,30 +1510,30 @@ COMMAND_CENTER_HTML = r"""
       const rr = safeNumber(patient.respiratory_rate, 18);
       const temp = safeNumber(patient.temperature_f, 98.6);
       const status = String(patient.status || "").toLowerCase();
- 
+
       if (metric === "spo2"){
         if (status === "critical") return [spo2 + 5, spo2 + 3, spo2 + 2, spo2 + 1, spo2, spo2 - 1].map(v => clamp(v, 82, 100));
         if (status === "high") return [spo2 + 3, spo2 + 2, spo2 + 1, spo2, spo2, spo2 - 1].map(v => clamp(v, 88, 100));
         return [spo2 - 1, spo2, spo2, spo2 + 1, spo2, spo2].map(v => clamp(v, 90, 100));
       }
- 
+
       if (metric === "risk"){
         const base = clamp(riskPct - 18, 6, 95);
         return [base - 12, base - 7, base - 3, base + 4, riskPct - 3, riskPct].map(v => clamp(v, 0, 100));
       }
- 
+
       if (metric === "hr"){
         if (status === "critical") return [hr - 12, hr - 6, hr - 4, hr + 1, hr + 4, hr].map(v => clamp(v, 60, 150));
         if (status === "high") return [hr - 8, hr - 5, hr - 2, hr + 1, hr + 2, hr].map(v => clamp(v, 60, 140));
         return [hr - 3, hr - 2, hr - 1, hr, hr, hr].map(v => clamp(v, 55, 130));
       }
- 
+
       if (metric === "rr"){
         if (status === "critical") return [rr - 4, rr - 2, rr - 1, rr + 1, rr + 2, rr].map(v => clamp(v, 10, 34));
         if (status === "high") return [rr - 3, rr - 2, rr - 1, rr, rr + 1, rr].map(v => clamp(v, 10, 30));
         return [rr - 1, rr - 1, rr, rr, rr + 1, rr].map(v => clamp(v, 10, 28));
       }
- 
+
       if (metric === "temp"){
         const series = status === "critical"
           ? [temp - 0.6, temp - 0.3, temp - 0.1, temp + 0.1, temp + 0.2, temp]
@@ -1542,16 +1542,16 @@ COMMAND_CENTER_HTML = r"""
             : [temp - 0.1, temp, temp, temp + 0.1, temp, temp];
         return series.map(v => Number(Math.max(96, Math.min(103, v)).toFixed(1)));
       }
- 
+
       return [0,0,0,0,0,0];
     }
- 
+
     function sparklineSvg(series, colorClass, large=false){
       const values = (series || []).map(v => safeNumber(v));
       if (!values.length){
         return `<div class="note-box">Trend history not available.</div>`;
       }
- 
+
       const width = 300;
       const height = large ? 92 : 56;
       const min = Math.min(...values);
@@ -1564,11 +1564,11 @@ COMMAND_CENTER_HTML = r"""
       });
       const line = pts.map((p, i) => (i ? "L" : "M") + p[0].toFixed(1) + "," + p[1].toFixed(1)).join(" ");
       const area = line + " L " + width + "," + height + " L 0," + height + " Z";
- 
+
       const stroke =
         colorClass === "critical" ? "#ff7c8d" :
         colorClass === "watch" ? "#ffd96c" : "#77ffb4";
- 
+
       return `
         <div class="sparkline ${large ? 'large' : ''}">
           <svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" aria-hidden="true">
@@ -1578,40 +1578,40 @@ COMMAND_CENTER_HTML = r"""
         </div>
       `;
     }
- 
+
     function applyBranding(data){
       brandName = safe(data.brand_name, "Early Risk Alert AI");
-      brandTagline = safe(data.brand_tagline, "Explainable Rules-Based Clinical Command Center");
+      brandTagline = safe(data.brand_tagline, "Explainable Rules-Based Command-Center Platform");
       brand1 = safe(data.brand_primary, "#7aa2ff");
       brand2 = safe(data.brand_secondary, "#5bd4ff");
- 
+
       document.documentElement.style.setProperty("--brand1", brand1);
       document.documentElement.style.setProperty("--brand2", brand2);
- 
+
       const brandTitle = document.getElementById("brandTitle");
       const brandSub = document.getElementById("brandSub");
       const heroTitle = document.getElementById("heroTitle");
       const hospitalBrandPill = document.getElementById("hospitalBrandPill");
- 
+
       if (brandTitle) brandTitle.textContent = brandName;
       if (brandSub) brandSub.textContent = brandTagline;
-      if (heroTitle) heroTitle.textContent = brandName + " — Explainable Rules-Based Clinical Command Center";
+      if (heroTitle) heroTitle.textContent = brandName + " — Explainable Rules-Based Command-Center Platform";
       if (hospitalBrandPill) hospitalBrandPill.textContent = accessHospital;
     }
- 
+
     async function loadAccessContext(){
       try{
         const res = await fetch("/api/access-context", {cache:"no-store"});
         const data = await res.json();
- 
+
         accessRole = String(data.role || "viewer").toLowerCase();
         accessAssignedUnit = String(data.assigned_unit || "all").toLowerCase();
         canViewAllUnits = !!data.can_view_all_units;
         accessHospital = safe(data.hospital_name, "Pilot");
         pilotModeEnabled = !!data.pilot_mode;
- 
+
         applyBranding(data);
- 
+
         const unitFilter = document.getElementById("unitFilter");
         const selectedUnitPill = document.getElementById("selectedUnitPill");
         const unitAccessPill = document.getElementById("unitAccessPill");
@@ -1620,7 +1620,7 @@ COMMAND_CENTER_HTML = r"""
         const pilotModePill = document.getElementById("pilotModePill");
         const systemBannerPill = document.getElementById("systemBannerPill");
         const unitLockPill = document.getElementById("unitLockPill");
- 
+
         if (unitFilter) {
           if (!canViewAllUnits) {
             unitFilter.value = accessAssignedUnit;
@@ -1630,7 +1630,7 @@ COMMAND_CENTER_HTML = r"""
             currentUnitFilter = unitFilter.value || "all";
           }
         }
- 
+
         if (selectedUnitPill) selectedUnitPill.textContent = unitLabel(currentUnitFilter);
         if (unitAccessPill) unitAccessPill.textContent = "Unit Access: " + unitLabel(accessAssignedUnit);
         if (currentRolePill) currentRolePill.textContent = "Role: " + accessRole;
@@ -1644,7 +1644,7 @@ COMMAND_CENTER_HTML = r"""
         console.error("access context failed", err);
       }
     }
- 
+
     async function loadWorkflowState(){
       try{
         const res = await fetch("/api/workflow", {cache:"no-store"});
@@ -1656,7 +1656,7 @@ COMMAND_CENTER_HTML = r"""
         console.error("workflow load failed", err);
       }
     }
- 
+
     async function loadPersistentAudit(){
       try{
         const res = await fetch("/api/audit", {cache:"no-store"});
@@ -1668,7 +1668,7 @@ COMMAND_CENTER_HTML = r"""
       }
       mergeAuditLogs();
     }
- 
+
     async function loadThresholds(){
       thresholdStore = JSON.parse(JSON.stringify(DEFAULT_THRESHOLDS));
       try{
@@ -1683,23 +1683,23 @@ COMMAND_CENTER_HTML = r"""
         thresholdsEndpointAvailable = false;
       }
     }
- 
+
     async function saveThresholds(){
       if (accessRole !== "admin" || !thresholdsEndpointAvailable) return;
- 
+
       const unit = editableThresholdUnit();
       if (!unit){
         alert("Select a single unit to edit thresholds.");
         return;
       }
- 
+
       const spo2_low = safeNumber(document.getElementById("thr-spo2-low")?.value, thresholdsForUnit(unit).spo2_low);
       const hr_high = safeNumber(document.getElementById("thr-hr-high")?.value, thresholdsForUnit(unit).hr_high);
       const sbp_high = safeNumber(document.getElementById("thr-sbp-high")?.value, thresholdsForUnit(unit).sbp_high);
- 
+
       const body = {};
       body[unit] = {spo2_low, hr_high, sbp_high};
- 
+
       try{
         const res = await fetch("/api/thresholds", {
           method: "POST",
@@ -1718,7 +1718,7 @@ COMMAND_CENTER_HTML = r"""
         alert("Unable to save thresholds.");
       }
     }
- 
+
     async function loadSystemHealth(){
       try{
         const res = await fetch("/api/system-health", {cache:"no-store"});
@@ -1728,7 +1728,7 @@ COMMAND_CENTER_HTML = r"""
         lastSystemHealth = {status:"degraded"};
       }
     }
- 
+
     async function loadPilotReadiness(){
       try{
         const res = await fetch("/api/pilot-readiness", {cache:"no-store"});
@@ -1742,7 +1742,7 @@ COMMAND_CENTER_HTML = r"""
       renderRouteStatusModule();
       renderPilotPacketModule();
     }
- 
+
     async function refreshSnapshot(){
       try{
         const res = await fetch("/api/v1/live-snapshot?refresh=" + Date.now(), {cache:"no-store"});
@@ -1756,7 +1756,7 @@ COMMAND_CENTER_HTML = r"""
         console.error("snapshot failed", err);
       }
     }
- 
+
     async function loadPatientTrend(patientId){
       if (!patientId) return [];
       try{
@@ -1771,13 +1771,13 @@ COMMAND_CENTER_HTML = r"""
       }
       return trendCache[patientId] || [];
     }
- 
+
     async function primeTrendCache(){
       const visible = filterPatientsByUnit(activePatients)
         .slice()
         .sort((a,b) => safeNumber(b.risk_score) - safeNumber(a.risk_score))
         .slice(0, 4);
- 
+
       await Promise.all(visible.map(p => loadPatientTrend(p.patient_id)));
       renderModules();
       if (selectedPatientId){
@@ -1786,7 +1786,7 @@ COMMAND_CENTER_HTML = r"""
         if (drawerOpen) openPatientDrawer(current);
       }
     }
- 
+
     function getPatientTrendSeries(patient, metric){
       const records = trendCache[patient.patient_id] || [];
       if (records.length > 1){
@@ -1798,7 +1798,7 @@ COMMAND_CENTER_HTML = r"""
       }
       return fallbackPatientTrendSeries(patient, metric);
     }
- 
+
     function buildPatientHistoryTimeline(patient){
       const records = (trendCache[patient.patient_id] || []).slice(-5).reverse();
       if (!records.length){
@@ -1816,7 +1816,7 @@ COMMAND_CENTER_HTML = r"""
         </div>
       `).join("");
     }
- 
+
     function buildDrawerTrendBlocks(patient){
       const hrSeries = getPatientTrendSeries(patient, "hr");
       const rrSeries = getPatientTrendSeries(patient, "rr");
@@ -1831,7 +1831,7 @@ COMMAND_CENTER_HTML = r"""
         ${sparklineSvg(tempSeries, klass)}
       `;
     }
- 
+
     async function postWorkflowAction(patientId, action, note=""){
       try{
         const res = await fetch("/api/workflow/action", {
@@ -1857,42 +1857,42 @@ COMMAND_CENTER_HTML = r"""
         return false;
       }
     }
- 
+
     async function ackPatient(patientId){
       const ok = await postWorkflowAction(patientId, "ack");
       if (!ok) return;
       rerenderAll();
       if (selectedPatientId === patientId) openPatientDrawer(patientId);
     }
- 
+
     async function assignPatient(patientId){
       const ok = await postWorkflowAction(patientId, "assign_nurse", "Assigned Nurse");
       if (!ok) return;
       rerenderAll();
       if (selectedPatientId === patientId) openPatientDrawer(patientId);
     }
- 
+
     async function escalatePatient(patientId){
       const ok = await postWorkflowAction(patientId, "escalate");
       if (!ok) return;
       rerenderAll();
       if (selectedPatientId === patientId) openPatientDrawer(patientId);
     }
- 
+
     async function resolvePatient(patientId){
       const ok = await postWorkflowAction(patientId, "resolve");
       if (!ok) return;
       rerenderAll();
       if (selectedPatientId === patientId) openPatientDrawer(patientId);
     }
- 
+
     async function openPatientDrawer(patientId){
       const patient = findPatient(patientId);
       if (!patient) return;
       selectedPatientId = patientId;
- 
+
       await loadPatientTrend(patientId);
- 
+
       document.getElementById("drawerPatientName").textContent = safe(patient.name);
       document.getElementById("drawerPatientSub").textContent = `${safe(patient.patient_id)} · ${safe(patient.bed)} · ${safe(patient.program)}`;
       document.getElementById("drawerSummary").textContent = safe(patient.alert_message);
@@ -1905,10 +1905,10 @@ COMMAND_CENTER_HTML = r"""
       document.getElementById("drawerAction").textContent = safe(patient.recommended_action);
       document.getElementById("drawerExplainability").textContent = explainabilityForPatient(patient);
       document.getElementById("drawerWorkflow").textContent = workflowText(patientId);
- 
+
       document.getElementById("drawerTrendSparkline").innerHTML = buildDrawerTrendBlocks(patient);
       document.getElementById("drawerTrendTable").innerHTML = buildPatientHistoryTimeline(patient);
- 
+
       const records = (trendCache[patient.patient_id] || []).slice(-3).reverse();
       const timelineHtml = records.length ? records.map(r => `
         <div class="timeline-item">
@@ -1925,34 +1925,34 @@ COMMAND_CENTER_HTML = r"""
           <div class="timeline-copy">Stored history is not yet available, so the current snapshot is driving the display.</div>
         </div>
       `;
- 
+
       document.getElementById("drawerTimeline").innerHTML = timelineHtml + `
         <div class="timeline-item">
           <div class="timeline-time">Action</div>
           <div class="timeline-copy">${safe(patient.recommended_action)}</div>
         </div>
       `;
- 
+
       document.getElementById("patientDrawer").classList.add("open");
       document.getElementById("drawerOverlay").classList.add("show");
     }
- 
+
     function closePatientDrawer(){
       document.getElementById("patientDrawer").classList.remove("open");
       document.getElementById("drawerOverlay").classList.remove("show");
     }
- 
+
     function openPolicyModal(kind){
       const item = POLICY_CONTENT[kind] || POLICY_CONTENT.disclaimer;
       document.getElementById("policyModalTitle").textContent = item.title;
       document.getElementById("policyModalBody").innerHTML = item.body.trim().replace(/\n/g, "<br><br>");
       document.getElementById("policyModal").classList.add("show");
     }
- 
+
     function closePolicyModal(){
       document.getElementById("policyModal").classList.remove("show");
     }
- 
+
     function toggleWallMode(){
       wallModeEnabled = !wallModeEnabled;
       document.body.classList.toggle("wall-mode", wallModeEnabled);
@@ -1966,13 +1966,13 @@ COMMAND_CENTER_HTML = r"""
       if (pill) pill.textContent = wallModeEnabled ? "Wall Mode On" : "Wall Mode Off";
       if (status) status.textContent = wallModeEnabled ? "Wall View" : "Standard View";
     }
- 
+
     function renderActionButtons(record, pid){
       const ackDisabled = accessRole === "viewer" ? "disabled" : "";
       const assignDisabled = (accessRole !== "admin" && accessRole !== "operator" && accessRole !== "physician") ? "disabled" : "";
       const escalateDisabled = (accessRole !== "admin" && accessRole !== "physician") ? "disabled" : "";
       const resolveDisabled = (accessRole !== "admin" && accessRole !== "physician") ? "disabled" : "";
- 
+
       return `
         <button class="btn ${record.ack ? 'live-btn' : 'secondary'} small" onclick="ackPatient('${pid}')" ${ackDisabled}>${record.ack ? 'ACK Saved' : 'ACK'}</button>
         <button class="btn ${record.assigned ? 'warn-btn' : 'secondary'} small" onclick="assignPatient('${pid}')" ${assignDisabled}>${record.assigned ? 'Assigned' : 'Assign'}</button>
@@ -1981,7 +1981,7 @@ COMMAND_CENTER_HTML = r"""
         <button class="btn secondary small" onclick="openPatientDrawer('${pid}')">Details</button>
       `;
     }
- 
+
     function renderMonitor(patient){
       const status = String(patient.status || "").toLowerCase();
       const ecg = ecgClass(status);
@@ -1989,7 +1989,7 @@ COMMAND_CENTER_HTML = r"""
       const riskText = patientRiskPercent(patient) + "%";
       const pid = safe(patient.patient_id);
       const record = getWorkflowRecord(pid);
- 
+
       return `
         <div class="monitor">
           <div class="monitor-top">
@@ -1999,13 +1999,13 @@ COMMAND_CENTER_HTML = r"""
             </div>
             <div class="status-pill ${statusClass(record.state !== 'new' ? record.state : patient.status)}">${pulseLabel(record.state !== 'new' ? record.state : patient.status)}</div>
           </div>
- 
+
           <div class="monitor-wave" onclick="openPatientDrawer('${pid}')">
             <svg viewBox="0 0 640 120" preserveAspectRatio="none" aria-hidden="true">
               <path class="ecg-path ${ecg}" d="${path}"></path>
             </svg>
           </div>
- 
+
           <div class="monitor-metrics">
             <div class="metric-box"><span class="metric-k">HR</span><span class="metric-v">${formatHeartRate(patient.heart_rate)}</span></div>
             <div class="metric-box"><span class="metric-k">SpO₂</span><span class="metric-v">${formatSpO2(patient.spo2)}</span></div>
@@ -2014,19 +2014,19 @@ COMMAND_CENTER_HTML = r"""
             <div class="metric-box"><span class="metric-k">Temp</span><span class="metric-v">${formatTemperature(patient.temperature_f)}</span></div>
             <div class="metric-box"><span class="metric-k">Risk</span><span class="metric-v">${riskText}</span></div>
           </div>
- 
+
           <div class="monitor-story">
             <div class="story-text">${safe(patient.story)}<br><span class="alert-sub">Values displayed as monitored context for authorized HCP review.</span></div>
             <div class="status-pill ${statusClass(record.state !== 'new' ? record.state : patient.status)}">${pid}</div>
           </div>
- 
+
           <div class="monitor-actions">
             ${renderActionButtons(record, pid)}
           </div>
         </div>
       `;
     }
- 
+
     function renderAlert(alert){
       const sev = String(alert.severity || "").toLowerCase();
       const pill = sev === "critical" ? "critical" : (sev === "high" || sev === "moderate") ? "watch" : "live";
@@ -2040,7 +2040,7 @@ COMMAND_CENTER_HTML = r"""
         </div>
       `;
     }
- 
+
     function renderPatients(){
       const source = applySearchFilter(filterPatientsByUnit(activePatients))
         .sort((a,b) => safeNumber(b.risk_score) - safeNumber(a.risk_score))
@@ -2050,19 +2050,19 @@ COMMAND_CENTER_HTML = r"""
         : `<div class="monitor"><div class="monitor-title">No patients visible in current access scope.</div></div>`;
       document.getElementById("wall").innerHTML = source.map(renderMonitor).join("") || noMsg;
     }
- 
+
     function renderAlertsList(){
       const source = filterAlertsByUnit(activeAlerts).slice(0,6);
       document.getElementById("queue").innerHTML = source.map(renderAlert).join("") || `
         <div class="alert-item"><div><div class="alert-copy">No active alerts in current scope.</div></div><div class="status-pill live">Clear</div></div>
       `;
     }
- 
+
     function renderTopRiskPatients(){
       const source = filterPatientsByUnit(activePatients)
         .sort((a,b) => safeNumber(b.risk_score) - safeNumber(a.risk_score))
         .slice(0,4);
- 
+
       document.getElementById("top-risk-list").innerHTML = source.map(p => `
         <div class="queue-item">
           <div class="queue-copy">${safe(p.name)} · ${safe(p.patient_id)} · Review score ${patientRiskPercent(p)}%</div>
@@ -2070,16 +2070,16 @@ COMMAND_CENTER_HTML = r"""
         </div>
       `).join("") || `<div class="queue-item"><div class="queue-copy">No risk queue visible.</div><div class="status-pill muted">Scope</div></div>`;
     }
- 
+
     function renderAIReasoning(){
       const top = getTopRiskPatient();
       const panel = document.getElementById("ai-reasoning-panel");
- 
+
       if (!top){
         panel.innerHTML = `<div class="why-line">Waiting for patient intelligence stream...</div>`;
         return;
       }
- 
+
       panel.innerHTML = `
         <div class="why-line">Highest review-priority patient: ${safe(top.name)} (${safe(top.patient_id)})</div>
         <div class="why-line">Current review priority: ${safe(top.status)} · Review score ${patientRiskPercent(top)}%</div>
@@ -2087,29 +2087,29 @@ COMMAND_CENTER_HTML = r"""
         <div class="why-line">Explainable reason: ${explainabilityForPatient(top)}</div>
       `;
     }
- 
+
     function renderAIInsight(){
       const top = getTopRiskPatient();
       const panel = document.getElementById("ai-insight-panel");
- 
+
       if (!top){
         panel.innerHTML = `<div class="info-line">Waiting for active review insight...</div>`;
         return;
       }
- 
+
       const spo2 = safeNumber(top.spo2, 96);
       const hr = safeNumber(top.heart_rate, 82);
       const rr = safeNumber(top.respiratory_rate, 18);
       const temp = safeNumber(top.temperature_f, 98.6);
       const reviewAttentionLevel = safeNumber(top.risk_score) >= 7 ? "elevated" : "active";
- 
+
       panel.innerHTML = `
         <div class="info-line"><strong>Review Insight:</strong> Oxygen saturation is ${spo2 < 94 ? "trending downward" : "being closely monitored"} with ${hr >= 110 ? "rising heart-rate pressure" : "emerging physiologic drift"}.</div>
         <div class="info-line">Monitored context also includes RR ${formatRespiratoryRate(rr, true)} and Temperature ${formatTemperature(temp, true)} for authorized HCP review.</div>
         <div class="info-line">Suggested workflow note: Current review attention is ${reviewAttentionLevel}. ${safe(top.recommended_action)}</div>
       `;
     }
- 
+
     function renderWorkflow(){
       const records = Object.values(workflowState || {});
       const currentAlerts = filterAlertsByUnit(activeAlerts);
@@ -2119,7 +2119,7 @@ COMMAND_CENTER_HTML = r"""
       document.getElementById("wf-escalated").textContent = String(records.filter(r => r.escalated).length);
       document.getElementById("wf-resolved").textContent = String(records.filter(r => r.resolved).length);
     }
- 
+
     function renderSystemHealth(){
       const status = String(lastSystemHealth.status || "unknown").toLowerCase();
       const healthy = status === "ok" || status === "connected";
@@ -2130,10 +2130,10 @@ COMMAND_CENTER_HTML = r"""
         <div class="queue-item"><div class="queue-copy">Assigned Unit</div><div class="status-pill watch">${unitLabel(accessAssignedUnit)}</div></div>
         <div class="queue-item"><div class="queue-copy">System Status</div><div class="status-pill ${healthy ? 'live' : 'critical'}">${healthy ? 'Connected' : safe(status, 'unknown')}</div></div>
         <div class="queue-item"><div class="queue-copy">Patients in Feed</div><div class="status-pill muted">${safe(lastSystemHealth.patient_count, activePatients.length)}</div></div>
-        <div class="queue-item"><div class="queue-copy">Priority Alerts</div><div class="status-pill critical">${safe(lastSystemHealth.critical_alerts, 0)}</div></div>
+        <div class="queue-item"><div class="queue-copy">Higher-Priority Review Items</div><div class="status-pill critical">${safe(lastSystemHealth.critical_alerts, 0)}</div></div>
       `;
     }
- 
+
     function renderSecurityControls(){
       const list = document.getElementById("security-controls-list");
       const unitState = canViewAllUnits ? "Hospital Scope" : "Locked to " + unitLabel(accessAssignedUnit);
@@ -2143,7 +2143,7 @@ COMMAND_CENTER_HTML = r"""
       const mfaRows = pilotReadiness.mfa_access_log || [];
       const mfaRow = mfaRows[0] || {};
       const docsSummary = routeStatus.docs_checked ? `${safeNumber(routeStatus.docs_available, 0)}/${safeNumber(routeStatus.docs_checked, 0)} docs visible` : "Doc review pending";
- 
+
       list.innerHTML = `
         <div class="queue-item">
           <div>
@@ -2203,11 +2203,11 @@ COMMAND_CENTER_HTML = r"""
         </div>
       `;
     }
- 
+
     function renderReadinessEvidence(){
       const list = document.getElementById("readiness-evidence-list");
       if (!list) return;
- 
+
       const routeStatus = pilotReadiness.route_status || {};
       const owners = pilotReadiness.support_owners || [];
       const backup = (pilotReadiness.backup_restore_log || [])[0] || {};
@@ -2223,7 +2223,7 @@ COMMAND_CENTER_HTML = r"""
       const latestRelease = ((pilotReadiness.release_notes || [])[0] || {}).version || ((pilotReadiness.release_notes || []).slice(-1)[0] || {}).version || "--";
       const validationCount = (pilotReadiness.dated_validation_evidence || []).length;
       const buildState = safe(pilotReadiness.pilot_build_state, "Locked Stable Pilot Build");
- 
+
       list.innerHTML = `
         <div class="queue-item">
           <div>
@@ -2297,7 +2297,7 @@ COMMAND_CENTER_HTML = r"""
         </div>
       `;
     }
- 
+
 function renderRouteStatusModule(){
       const target = document.getElementById("route-status-module");
       if (!target) return;
@@ -2305,7 +2305,7 @@ function renderRouteStatusModule(){
       const docs = routeStatus.documents || {};
       const docEntries = Object.entries(docs);
       const missing = routeStatus.missing_routes || [];
- 
+
       target.innerHTML = `
         <div class="bars">
           <div class="bar-row">
@@ -2325,7 +2325,7 @@ function renderRouteStatusModule(){
         </div>
       `;
     }
- 
+
     function renderPilotPacketModule(){
       const target = document.getElementById("pilot-packet-module");
       if (!target) return;
@@ -2334,7 +2334,7 @@ function renderRouteStatusModule(){
         target.innerHTML = `<div class="mini-copy">Site packet template will appear when pilot-readiness data is available.</div>`;
         return;
       }
- 
+
       target.innerHTML = `
         <div class="queue-list">
           ${packet.slice(0, 6).map(item => `
@@ -2349,11 +2349,11 @@ function renderRouteStatusModule(){
         </div>
       `;
     }
- 
+
     function renderPatientTimeline(){
       const top = getTopRiskPatient();
       const panel = document.getElementById("patient-timeline");
- 
+
       if (!top){
         panel.innerHTML = `
           <div class="timeline-item">
@@ -2363,7 +2363,7 @@ function renderRouteStatusModule(){
         `;
         return;
       }
- 
+
       const records = (trendCache[top.patient_id] || []).slice(-4).reverse();
       if (records.length){
         panel.innerHTML = records.map(r => `
@@ -2379,7 +2379,7 @@ function renderRouteStatusModule(){
         `;
         return;
       }
- 
+
       panel.innerHTML = `
         <div class="timeline-item">
           <div class="timeline-time">Now</div>
@@ -2399,7 +2399,7 @@ function renderRouteStatusModule(){
         </div>
       `;
     }
- 
+
     function renderAuditLog(){
       const target = document.getElementById("audit-log");
       if (!auditLog.length){
@@ -2414,7 +2414,7 @@ function renderRouteStatusModule(){
         `;
         return;
       }
- 
+
       target.innerHTML = auditLog.slice(0, 8).map(entry => `
         <div class="audit-item">
           <div>
@@ -2425,14 +2425,14 @@ function renderRouteStatusModule(){
         </div>
       `).join("");
     }
- 
+
     function renderAuditSummary(){
       const target = document.getElementById("audit-summary-list");
       const total = auditLog.length;
       const last = auditLog[0];
       const acks = auditLog.filter(a => String(a.action).toLowerCase().includes("ack")).length;
       const escalations = auditLog.filter(a => String(a.action).toLowerCase().includes("escalate")).length;
- 
+
       target.innerHTML = `
         <div class="queue-item">
           <div class="queue-copy">Visible audit entries</div>
@@ -2455,13 +2455,13 @@ function renderRouteStatusModule(){
         </div>
       `;
     }
- 
+
     function renderReportingDashboardModule(){
       const patients = filterPatientsByUnit(activePatients);
       const alerts = filterAlertsByUnit(activeAlerts);
       const avgRisk = patients.length ? patients.reduce((n,p)=>n+patientRiskPercent(p),0)/patients.length : 0;
       const top = getTopRiskPatient();
- 
+
       document.getElementById("reporting-dashboard-module").innerHTML = `
         <div class="bars">
           <div class="bar-row">
@@ -2485,12 +2485,12 @@ function renderRouteStatusModule(){
         </div>
       `;
     }
- 
+
     function renderThresholdsModule(){
       const pill = document.getElementById("thresholdModePill");
       const unit = editableThresholdUnit();
       const current = thresholdsForUnit(unit || currentUnitFilter);
- 
+
       if (accessRole === "admin" && thresholdsEndpointAvailable && unit){
         if (pill) pill.textContent = "Admin Editable";
         document.getElementById("thresholds-module").innerHTML = `
@@ -2518,7 +2518,7 @@ function renderRouteStatusModule(){
         `;
         return;
       }
- 
+
       if (pill) pill.textContent = thresholdsEndpointAvailable ? "Read Only" : "Fallback";
       if (accessRole === "admin" && thresholdsEndpointAvailable && !unit){
         document.getElementById("thresholds-module").innerHTML = `
@@ -2526,7 +2526,7 @@ function renderRouteStatusModule(){
         `;
         return;
       }
- 
+
       document.getElementById("thresholds-module").innerHTML = `
         <div class="bars">
           <div class="bar-row">
@@ -2550,7 +2550,7 @@ function renderRouteStatusModule(){
         </div>
       `;
     }
- 
+
     function renderOxygenTrendModule(){
       const top = getTopRiskPatient();
       const pill = document.getElementById("oxygenTrendModePill");
@@ -2567,7 +2567,7 @@ function renderRouteStatusModule(){
         </div>
       `;
     }
- 
+
     function renderRiskTimelineModule(){
       const top = getTopRiskPatient();
       if (!top){
@@ -2601,13 +2601,13 @@ function renderRouteStatusModule(){
         </div>
       `;
     }
- 
+
     function renderCapacityModule(){
       const patients = filterPatientsByUnit(activePatients);
       const alerts = filterAlertsByUnit(activeAlerts);
       const visibleUnitCount = currentUnitFilter === "all" ? 5 : 1;
       const capacity = clamp(42 + (patients.length * 8) + (alerts.length * 6) + (visibleUnitCount * 4), 18, 96);
- 
+
       document.getElementById("capacity-module").innerHTML = `
         <div class="bars">
           <div class="bar-row">
@@ -2621,7 +2621,7 @@ function renderRouteStatusModule(){
         </div>
       `;
     }
- 
+
     function renderForecastModule(){
       const top = getTopRiskPatient();
       const target = document.getElementById("forecast-module");
@@ -2629,14 +2629,14 @@ function renderRouteStatusModule(){
         target.innerHTML = `<div class="mini-copy">No review priority outlook available in current scope.</div>`;
         return;
       }
- 
+
       const trend = getPatientTrendSeries(top, "risk");
       const latest = trend[trend.length - 1] || patientRiskPercent(top);
       const prev = trend[Math.max(trend.length - 2, 0)] || latest;
       const slope = latest - prev;
       const forecastPct = clamp(latest + Math.max(slope, 4), 0, 99);
       const reviewAttentionLevel = forecastPct >= 85 ? "High" : forecastPct >= 65 ? "Elevated" : "Moderate";
- 
+
       target.innerHTML = `
         <div class="forecast-grid">
           <div class="mini-card">
@@ -2652,18 +2652,18 @@ function renderRouteStatusModule(){
         </div>
       `;
     }
- 
+
     function renderClustersModule(){
       const patients = filterPatientsByUnit(activePatients);
       let oxygen = 0, pressure = 0, hr = 0;
- 
+
       patients.forEach(p => {
         const t = thresholdsForUnit(p.unit);
         if (safeNumber(p.spo2, 100) < safeNumber(t.spo2_low, 93)) oxygen += 1;
         if (safeNumber(p.bp_systolic, 0) >= safeNumber(t.sbp_high, 150)) pressure += 1;
         if (safeNumber(p.heart_rate, 0) >= safeNumber(t.hr_high, 110)) hr += 1;
       });
- 
+
       document.getElementById("clusters-module").innerHTML = `
         <div class="bars">
           <div class="bar-row">
@@ -2684,7 +2684,7 @@ function renderRouteStatusModule(){
         </div>
       `;
     }
- 
+
     function renderHeatmapModule(){
       const unitStats = {
         icu: {label:"ICU", risk:0, count:0},
@@ -2693,7 +2693,7 @@ function renderRouteStatusModule(){
         ward: {label:"Ward", risk:0, count:0},
         rpm: {label:"RPM", risk:0, count:0}
       };
- 
+
       activePatients.forEach(p => {
         const u = p.unit;
         if (unitStats[u]){
@@ -2701,7 +2701,7 @@ function renderRouteStatusModule(){
           unitStats[u].risk += patientRiskPercent(p);
         }
       });
- 
+
       const rows = Object.values(unitStats).map(u => {
         const avg = u.count ? Math.round(u.risk / u.count) : 0;
         const klass = avg >= 70 ? "critical" : avg >= 45 ? "warn" : "";
@@ -2713,10 +2713,10 @@ function renderRouteStatusModule(){
           </div>
         `;
       }).join("");
- 
+
       document.getElementById("heatmap-module").innerHTML = `<div class="bars">${rows}</div>`;
     }
- 
+
     function renderWorkflowReadinessModule(){
       const records = Object.values(workflowState || {});
       const total = Math.max(records.length, 1);
@@ -2724,7 +2724,7 @@ function renderRouteStatusModule(){
       const assigned = Math.round((records.filter(r => r.assigned).length / total) * 100);
       const escalated = Math.round((records.filter(r => r.escalated).length / total) * 100);
       const resolved = Math.round((records.filter(r => r.resolved).length / total) * 100);
- 
+
       document.getElementById("workflow-readiness-module").innerHTML = `
         <div class="bars">
           <div class="bar-row">
@@ -2750,12 +2750,12 @@ function renderRouteStatusModule(){
         </div>
       `;
     }
- 
+
     function renderOperationsWallSummary(){
       const top = getTopRiskPatient();
       const alerts = filterAlertsByUnit(activeAlerts);
       const patients = filterPatientsByUnit(activePatients);
- 
+
       document.getElementById("operations-wall-summary").innerHTML = `
         <div class="mini-card">
           <div class="mini-k">Live State</div>
@@ -2779,7 +2779,7 @@ function renderRouteStatusModule(){
         </div>
       `;
     }
- 
+
     function renderScenarioGrid(){
       const top = getTopRiskPatient();
       const target = document.getElementById("scenario-grid");
@@ -2791,7 +2791,7 @@ function renderRouteStatusModule(){
         `;
         return;
       }
- 
+
       target.innerHTML = `
         <div class="mini-card">
           <div class="mini-k">Signal Change</div>
@@ -2807,7 +2807,7 @@ function renderRouteStatusModule(){
         </div>
       `;
     }
- 
+
     function updateSummary(){
       const sourcePatients = filterPatientsByUnit(activePatients);
       const sourceAlerts = filterAlertsByUnit(activeAlerts);
@@ -2816,23 +2816,23 @@ function renderRouteStatusModule(){
       const avgRisk = sourcePatients.length
         ? (sourcePatients.reduce((n, p) => n + patientRiskPercent(p), 0) / sourcePatients.length)
         : 0;
- 
+
       document.getElementById("open-alerts").textContent = String(openAlerts);
       document.getElementById("critical-alerts").textContent = String(criticalAlerts);
       document.getElementById("avg-risk").textContent = Math.round(avgRisk) + "%";
       document.getElementById("unit-count").textContent = unitLabel(currentUnitFilter);
- 
+
       const timeText = "Last Updated " + (lastUpdatedAt ? formatTime(lastUpdatedAt) : "--");
       const lastUpdatedPill = document.getElementById("lastUpdatedPill");
       const lastUpdatedPillTop = document.getElementById("lastUpdatedPillTop");
       if (lastUpdatedPill) lastUpdatedPill.textContent = timeText;
       if (lastUpdatedPillTop) lastUpdatedPillTop.textContent = timeText;
- 
+
       const top = getTopRiskPatient();
       const topRiskText = top ? `Top Review Priority: ${safe(top.bed)} (${patientRiskPercent(top)}% review score)` : "Top Review-Priority Patient --";
       const topRiskPill = document.getElementById("topRiskPill");
       if (topRiskPill) topRiskPill.textContent = topRiskText;
- 
+
       const healthy = ["ok", "connected"].includes(String(lastSystemHealth.status || "").toLowerCase());
       const liveSystemPill = document.getElementById("liveSystemPill");
       const feedHealthPill = document.getElementById("feedHealthPill");
@@ -2847,7 +2847,7 @@ function renderRouteStatusModule(){
         wallStatus.textContent = healthy ? "Live" : "Review";
       }
     }
- 
+
     function renderModules(){
       renderReportingDashboardModule();
       renderThresholdsModule();
@@ -2865,14 +2865,14 @@ function renderRouteStatusModule(){
       renderValidationResultsModule();
       renderNoCommitModule();
     }
- 
+
     function renderValidationResultsModule(){
       const target = document.getElementById("validation-results-module");
       if (!target) return;
       target.innerHTML = `
         <div class="bars">
           <div class="bar-row">
-            <div class="bar-label">Alert Reduction</div>
+            <div class="bar-label">Review Burden Reduction</div>
             <div class="bar-track"><div class="bar-fill" style="width:71.6%;background:linear-gradient(135deg,#3ad38f,#8ff3c1)"></div></div>
             <div class="bar-value" style="color:#3ad38f">71.6%</div>
           </div>
@@ -2944,8 +2944,8 @@ function renderRouteStatusModule(){
         </div>
         <div class="mini-copy" style="margin-top:12px;">
           Synthetic retrospective dataset engineered with clinically grounded deterioration trajectories (sepsis, respiratory failure, cardiac decompensation, hypertensive crisis).<br>
-          <strong style="color:#3ad38f">✓ 10,000-patient validation confirmed — 71.6% alert reduction · 6.2% ERA FPR vs 20.4% standard · 38.3% patient detection in 6-hr pre-event window · 260,765 readings · April 2026.</strong><br>
-          Threshold settings: t=4.0 (ICU) 61.4% patient detection / 9.6% FPR / 52% alert reduction · t=5.0 (mixed) 48.1% / 7.8% / 63.2% · t=6.0 (telemetry/default) 38.3% / 6.2% / 71.6%.<br>
+          <strong style="color:#3ad38f">✓ 10,000-patient validation confirmed — 71.6% review burden reduction · 6.2% ERA FPR vs 20.4% standard · 38.3% patient detection in 6-hr pre-event window · 260,765 readings · April 2026.</strong><br>
+          Threshold settings: t=4.0 (ICU) 61.4% patient detection / 9.6% FPR / 52% review burden reduction · t=5.0 (mixed) 48.1% / 7.8% / 63.2% · t=6.0 (telemetry/default) 38.3% / 6.2% / 71.6%.<br>
           MIMIC-IV real de-identified ICU data validation planned Q2 2026 — application submitted April 10, 2026. Results published publicly upon completion.
         </div>
         <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
@@ -2954,7 +2954,7 @@ function renderRouteStatusModule(){
         </div>
       `;
     }
- 
+
     function renderNoCommitModule(){
       const target = document.getElementById("no-commit-module");
       if (!target) return;
@@ -2962,7 +2962,7 @@ function renderRouteStatusModule(){
         <div class="note-box" style="margin-bottom:12px">
           Upload your hospital's de-identified vital-sign CSV and receive a retrospective analysis
           showing how the ERA prioritization logic would have performed against your documented
-          clinical events — compared to standard threshold-only alerting.
+          clinical events — compared to standard threshold-based review rules.
           <strong style="color:#dce9ff">No EHR integration. No IT lift. No cost to evaluate.</strong>
         </div>
         <div class="bars">
@@ -2987,12 +2987,12 @@ function renderRouteStatusModule(){
         </div>
       `;
     }
- 
+
     // ── LIVE DEMO MODE ──────────────────────────────────────────────
     let demoModeActive = false;
     let demoInterval = null;
     let patientSearchTerm = "";
- 
+
     function toggleDemoMode(){
       demoModeActive = !demoModeActive;
       const btn = document.getElementById("demModeBtn");
@@ -3011,7 +3011,7 @@ function renderRouteStatusModule(){
         if (demoInterval){ clearInterval(demoInterval); demoInterval = null; }
       }
     }
- 
+
     function applyDemoDrift(){
       if (!activePatients || !activePatients.length) return;
       const archetypes = [
@@ -3054,14 +3054,14 @@ function renderRouteStatusModule(){
       const el = document.getElementById("lastUpdatedPill");
       if (el) el.textContent = "Demo drift " + new Date().toLocaleTimeString();
     }
- 
+
     // ── PATIENT SEARCH FILTER ────────────────────────────────────────
     function filterPatientSearch(){
       patientSearchTerm = (document.getElementById("patientSearchInput")?.value || "").toLowerCase().trim();
       renderPatients();
       renderTopRiskPatients();
     }
- 
+
     function applySearchFilter(patients){
       if (!patientSearchTerm) return patients;
       return patients.filter(p => {
@@ -3075,7 +3075,7 @@ function renderRouteStatusModule(){
                unit.includes(patientSearchTerm);
       });
     }
- 
+
     function rerenderAll(){
       renderPatients();
       renderAlertsList();
@@ -3092,7 +3092,7 @@ function renderRouteStatusModule(){
       renderModules();
       updateSummary();
     }
- 
+
     async function boot(){
       await loadAccessContext();
       await loadThresholds();
@@ -3101,7 +3101,7 @@ function renderRouteStatusModule(){
       await loadSystemHealth();
       await loadPilotReadiness();
       await refreshSnapshot();
- 
+
       const unitFilter = document.getElementById("unitFilter");
       if (unitFilter){
         unitFilter.addEventListener("change", function(){
@@ -3115,7 +3115,7 @@ function renderRouteStatusModule(){
           rerenderAll();
         });
       }
- 
+
       setInterval(async () => {
         await loadWorkflowState();
         await loadPersistentAudit();
@@ -3125,10 +3125,9 @@ function renderRouteStatusModule(){
         await refreshSnapshot();
       }, 5000);
     }
- 
+
     boot();
   </script>
 </body>
 </html>
 """
- 

@@ -1434,19 +1434,19 @@ def _send_email_alert(patient_id: str, patient_name: str, status: str, risk_scor
 
     reason_text = "\n".join(f"  • {r}" for r in reasons) if reasons else "  • Monitored context elevated"
     body = (
-        f"Early Risk Alert AI — Clinical Review Alert\n\n"
+        f"Early Risk Alert AI — Review-Priority Notification\n\n"
         f"Patient: {patient_name} ({patient_id})\n"
         f"Review Priority: {status}\n"
         f"Review Score: {round(risk_score, 1)}\n\n"
         f"Monitored context for authorized HCP review:\n{reason_text}\n\n"
         f"---\n"
-        f"This alert is for decision-support and workflow-support purposes only.\n"
+        f"This review-priority notification is for decision-support and workflow-support purposes only.\n"
         f"It does not replace clinician judgment and is not intended to diagnose,\n"
         f"direct treatment, or independently trigger escalation.\n\n"
         f"View command center: https://early-risk-alert-ai-1.onrender.com/command-center\n"
     )
     msg = MIMEText(body)
-    msg["Subject"] = f"[ERA Alert] {status} review priority — {patient_name}"
+    msg["Subject"] = f"[ERA Review Notice] {status} review priority — {patient_name}"
     msg["From"] = alert_from
     msg["To"] = alert_to
     try:
@@ -1471,9 +1471,9 @@ def _send_sms_alert(patient_id: str, patient_name: str, status: str, risk_score:
         return False
 
     body = (
-        f"[ERA Alert] {status} review priority — {patient_name} ({patient_id}). "
+        f"[ERA Review Notice] {status} review priority — {patient_name} ({patient_id}). "
         f"Review score {round(risk_score, 1)}. "
-        f"Decision support only — does not replace clinician judgment."
+        f"Decision-support and workflow-support only — does not replace clinician judgment."
     )
     try:
         url = f"https://api.twilio.com/2010-04-01/Accounts/{account_sid}/Messages.json"
@@ -1965,6 +1965,13 @@ def _delta_explainability(patient_id: str, current: Dict[str, Any]) -> str:
 
 def create_app() -> Flask:
     app = Flask(__name__)
+    # In-memory state for retro upload pipeline (resets on restart — by design for pilot)
+    RETRO_STATE = {
+        "uploads": [],        # list of upload metadata dicts
+        "processing": {},     # upload_id -> processing status dict
+        "analysis": {},       # upload_id -> analysis results dict
+        "records": {},        # upload_id -> list of patient records
+    }
     app.config["MAX_CONTENT_LENGTH"] = 256 * 1024 * 1024  # 256MB for MIMIC files  # 100 MB upload limit
     app.secret_key = os.getenv("SECRET_KEY", "era-dev-secret")
     app.config["SESSION_COOKIE_HTTPONLY"] = True
@@ -2125,7 +2132,7 @@ def create_app() -> Flask:
             "pilot_build_state": PILOT_BUILD_STATE,
             "hospital_name": "Early Risk Alert AI",
             "brand_name": "Early Risk Alert AI",
-            "brand_tagline": "Explainable Rules-Based Clinical Command Center",
+            "brand_tagline": "Explainable Rules-Based Command-Center Platform",
             "brand_primary": "#7aa2ff",
             "brand_secondary": "#5bd4ff",
             "pilot_docs_url": "/pilot-docs",
@@ -2768,7 +2775,7 @@ def create_app() -> Flask:
         summary = summary_payload()
         return jsonify({
             "ok": True,
-            "service": "early-risk-alert-ai", "descriptor": "Explainable Rules-Based Clinical Command Center",
+            "service": "early-risk-alert-ai", "descriptor": "Explainable Rules-Based Command-Center Platform",
             "time": _utc_now_iso(),
             "hospital_requests": summary["hospital_count"],
             "executive_requests": summary["executive_count"],
