@@ -21,13 +21,7 @@
     .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:22px}
     .brand{font-size:13px;font-weight:1000;letter-spacing:.14em;text-transform:uppercase;color:#9adfff}
     .nav a{font-size:13px;font-weight:900;color:#dce9ff;text-decoration:none;margin-left:16px}
-    .hero,.card{
-      border:1px solid var(--line);
-      border-radius:22px;
-      background:rgba(255,255,255,.03);
-      padding:22px;
-      margin-bottom:16px;
-    }
+    .hero,.card{border:1px solid var(--line);border-radius:22px;background:rgba(255,255,255,.03);padding:22px;margin-bottom:16px}
     h1{font-size:clamp(28px,4vw,42px);font-weight:1000;letter-spacing:-.05em;margin:0 0 8px}
     h2{font-size:20px;font-weight:1000;letter-spacing:-.03em;margin:0 0 10px}
     p{font-size:14px;line-height:1.65;color:var(--muted);margin:0 0 10px}
@@ -36,30 +30,21 @@
     .field{margin-bottom:12px}
     label{display:block;font-size:12px;font-weight:900;letter-spacing:.06em;color:#dce9ff;margin-bottom:6px}
     input[type=file],input[type=number]{
-      width:100%;
-      padding:11px 12px;
-      border-radius:14px;
-      border:1px solid rgba(255,255,255,.1);
-      background:rgba(255,255,255,.04);
-      color:var(--text);
-      font:inherit;
+      width:100%;padding:11px 12px;border-radius:14px;border:1px solid rgba(255,255,255,.1);
+      background:rgba(255,255,255,.04);color:var(--text);font:inherit;
     }
     .btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
     .btn{
       display:inline-flex;align-items:center;justify-content:center;gap:8px;
-      padding:12px 16px;border-radius:14px;border:none;font:inherit;
-      font-size:14px;font-weight:900;cursor:pointer;
+      padding:12px 16px;border-radius:14px;border:none;font:inherit;font-size:14px;font-weight:900;cursor:pointer;
     }
     .btn.primary{background:linear-gradient(135deg,var(--blue),var(--cyan));color:#07101c}
     .btn.secondary{background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--text)}
     .btn.success{background:linear-gradient(135deg,var(--green),#8ff3c1);color:#07101c}
     .btn:disabled{opacity:.45;cursor:not-allowed}
-    .status{
-      margin-top:12px;font-size:14px;font-weight:900;min-height:20px;
-    }
+    .status{margin-top:12px;font-size:14px;font-weight:900;min-height:20px}
     .status.ok{color:var(--green)}
     .status.err{color:var(--red)}
-    .status.warn{color:#ffe7bf}
     .note{
       font-size:12px;line-height:1.65;color:var(--muted);
       background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);
@@ -86,10 +71,7 @@
       padding:14px 16px;border-radius:14px;background:rgba(91,212,255,.07);
       border:1px solid rgba(91,212,255,.16);color:#dce9ff;font-size:14px;line-height:1.65;margin-top:14px;
     }
-    .section-sep{height:1px;background:rgba(255,255,255,.08);margin:8px 0 2px}
-    @media (max-width: 900px){
-      .grid,.stats{grid-template-columns:1fr}
-    }
+    @media (max-width: 900px){ .grid,.stats{grid-template-columns:1fr} }
   </style>
 </head>
 <body>
@@ -100,17 +82,15 @@
       <a href="/command-center">Command Center</a>
       <a href="/retro-upload">Retro Upload</a>
       <a href="/pilot-docs">Pilot Docs</a>
-      <a href="/model-card">Model Card</a>
     </div>
   </div>
 
   <div class="hero">
     <div class="kicker">Unified data ingest</div>
     <h1>Validate ERA CSV or Convert Raw MIMIC / De-Identified Monitoring Exports</h1>
-    <p>This page gives you one controlled ingest workflow for retrospective validation. Use the left side for ERA-format CSV files. Use the right side for raw MIMIC-style files or raw de-identified exports that need conversion before analysis.</p>
+    <p>Use the left side for ERA-format CSV files. Use the right side for raw MIMIC-style files or raw de-identified exports that need conversion before analysis.</p>
     <div class="disclaimer">
       De-identified data only. Do not upload names, MRNs, dates of birth, or direct identifiers.
-      ERA CSV validation and raw-data conversion are both retrospective workflows for controlled evaluation and independent review.
     </div>
   </div>
 
@@ -133,28 +113,27 @@
       <div class="status" id="eraStatus"></div>
 
       <div class="note">
-        Use this for hospital de-identified data that already matches the ERA schema:
-        patient_id, timestamp, heart_rate, spo2, bp_systolic, bp_diastolic, respiratory_rate, temperature_f.
+        ERA schema: patient_id, timestamp, heart_rate, spo2, bp_systolic, bp_diastolic, respiratory_rate, temperature_f.
       </div>
     </div>
 
     <div class="card">
       <div class="kicker">Mode B</div>
       <h2>Raw MIMIC / Raw Export → Convert + Analyze</h2>
-      <p>Upload raw MIMIC-style monitoring files or similarly structured de-identified exports. The platform converts them to ERA format, then runs retrospective analysis in one step.</p>
+      <p>Upload raw files, convert them to ERA format, then run retrospective analysis in one step.</p>
 
       <div class="field">
-        <label>chartevents.csv or chartevents.csv.gz</label>
+        <label>chartevents.csv or .gz</label>
         <input type="file" id="mimicChartevents" accept=".csv,.gz,text/csv,application/gzip,application/x-gzip">
       </div>
 
       <div class="field">
-        <label>icustays.csv or icustays.csv.gz</label>
+        <label>icustays.csv or .gz</label>
         <input type="file" id="mimicIcustays" accept=".csv,.gz,text/csv,application/gzip,application/x-gzip">
       </div>
 
       <div class="field">
-        <label>Optional — datetimeevents.csv or datetimeevents.csv.gz</label>
+        <label>Optional datetimeevents.csv or .gz</label>
         <input type="file" id="mimicDatetimeevents" accept=".csv,.gz,text/csv,application/gzip,application/x-gzip">
       </div>
 
@@ -171,13 +150,10 @@
       <div class="status" id="mimicStatus"></div>
 
       <div class="note">
-        Required inputs: chartevents + icustays. Optional: datetimeevents for event-window flagging.
-        This is the correct path for raw MIMIC data and raw de-identified exports that do not already match the ERA schema.
+        Required: chartevents + icustays. Optional: datetimeevents.
       </div>
     </div>
   </div>
-
-  <div class="section-sep"></div>
 
   <div class="card results" id="resultsCard">
     <div class="kicker">Retrospective validation</div>
@@ -188,23 +164,13 @@
 
 <script>
   function $(id){ return document.getElementById(id); }
-
   function setStatus(elId, msg, cls){
     const el = $(elId);
     el.className = 'status' + (cls ? ' ' + cls : '');
     el.textContent = msg || '';
   }
-
-  function fmtNum(v){
-    const n = Number(v);
-    return Number.isFinite(n) ? n.toLocaleString() : String(v ?? '--');
-  }
-
-  function fmtPct(v){
-    const n = Number(v);
-    return Number.isFinite(n) ? n + '%' : '--';
-  }
-
+  function fmtNum(v){ const n = Number(v); return Number.isFinite(n) ? n.toLocaleString() : String(v ?? '--'); }
+  function fmtPct(v){ const n = Number(v); return Number.isFinite(n) ? n + '%' : '--'; }
   function escapeHtml(v){
     return String(v ?? '').replace(/[&<>"']/g, function(m){
       return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];
@@ -220,16 +186,13 @@
     const source = data.source_note || '';
 
     let html = '';
-    if (source){
-      html += '<div class="note" style="margin-bottom:12px">' + escapeHtml(source) + '</div>';
-    }
+    if (source) html += '<div class="note" style="margin-bottom:12px">' + escapeHtml(source) + '</div>';
 
     html += '<div class="stats">';
     html += '<div class="stat"><div class="stat-k">Total Rows</div><div class="stat-v">' + fmtNum(summary.total_rows) + '</div></div>';
     html += '<div class="stat"><div class="stat-k">Patients</div><div class="stat-v">' + fmtNum(summary.total_patients) + '</div></div>';
     html += '<div class="stat"><div class="stat-k">Clinical Events</div><div class="stat-v">' + fmtNum(summary.total_events) + '</div></div>';
     html += '<div class="stat"><div class="stat-k">Non-Event Readings</div><div class="stat-v">' + fmtNum(summary.total_nonevents) + '</div></div>';
-
     html += '<div class="stat"><div class="stat-k">Patient Detection (T=6.0)</div><div class="stat-v">' + fmtPct(summary.era_patient_sensitivity_pct ?? summary.era_sensitivity_pct) + '</div></div>';
     html += '<div class="stat"><div class="stat-k">Reading Sensitivity (T=6.0)</div><div class="stat-v">' + fmtPct(summary.era_sensitivity_pct) + '</div></div>';
     html += '<div class="stat"><div class="stat-k">ERA False Positive Rate</div><div class="stat-v">' + fmtPct(summary.era_fpr_pct) + '</div></div>';
@@ -237,38 +200,19 @@
     html += '</div>';
 
     if (comparison.length){
-      html += '<div class="table-wrap"><table><thead><tr>';
-      html += '<th>Threshold</th><th>Patient Detection</th><th>Reading Sensitivity</th><th>False Positive Rate</th><th>Review Burden Reduction</th><th>Best For</th>';
-      html += '</tr></thead><tbody>';
+      html += '<div class="table-wrap"><table><thead><tr><th>Threshold</th><th>Patient Detection</th><th>Reading Sensitivity</th><th>False Positive Rate</th><th>Review Burden Reduction</th><th>Best For</th></tr></thead><tbody>';
       comparison.forEach(function(row){
-        html += '<tr>';
-        html += '<td>' + escapeHtml(row.threshold) + '</td>';
-        html += '<td>' + escapeHtml(fmtPct(row.era_patient_sensitivity_pct ?? '')) + '</td>';
-        html += '<td>' + escapeHtml(fmtPct(row.era_sensitivity_pct)) + '</td>';
-        html += '<td>' + escapeHtml(fmtPct(row.era_fpr_pct)) + '</td>';
-        html += '<td>' + escapeHtml(fmtPct(row.alert_reduction_pct)) + '</td>';
-        html += '<td>' + escapeHtml(row.recommendation || '') + '</td>';
-        html += '</tr>';
+        html += '<tr><td>' + escapeHtml(row.threshold) + '</td><td>' + escapeHtml(fmtPct(row.era_patient_sensitivity_pct ?? '')) + '</td><td>' + escapeHtml(fmtPct(row.era_sensitivity_pct)) + '</td><td>' + escapeHtml(fmtPct(row.era_fpr_pct)) + '</td><td>' + escapeHtml(fmtPct(row.alert_reduction_pct)) + '</td><td>' + escapeHtml(row.recommendation || '') + '</td></tr>';
       });
       html += '</tbody></table></div>';
     }
 
-    if (interp){
-      html += '<div class="interp">' + escapeHtml(interp) + '</div>';
-    }
+    if (interp) html += '<div class="interp">' + escapeHtml(interp) + '</div>';
 
     if (patients.length){
-      html += '<div class="table-wrap"><table><thead><tr>';
-      html += '<th>Patient ID</th><th>Readings</th><th>Events</th><th>ERA Alerts</th><th>Peak Risk</th>';
-      html += '</tr></thead><tbody>';
+      html += '<div class="table-wrap"><table><thead><tr><th>Patient ID</th><th>Readings</th><th>Events</th><th>ERA Alerts</th><th>Peak Risk</th></tr></thead><tbody>';
       patients.forEach(function(p){
-        html += '<tr>';
-        html += '<td>' + escapeHtml(p.patient_id) + '</td>';
-        html += '<td>' + escapeHtml(fmtNum(p.readings)) + '</td>';
-        html += '<td>' + escapeHtml(fmtNum(p.events)) + '</td>';
-        html += '<td>' + escapeHtml(fmtNum(p.era_alerts)) + '</td>';
-        html += '<td>' + escapeHtml(String(p.peak_risk ?? '--')) + '</td>';
-        html += '</tr>';
+        html += '<tr><td>' + escapeHtml(p.patient_id) + '</td><td>' + escapeHtml(fmtNum(p.readings)) + '</td><td>' + escapeHtml(fmtNum(p.events)) + '</td><td>' + escapeHtml(fmtNum(p.era_alerts)) + '</td><td>' + escapeHtml(String(p.peak_risk ?? '--')) + '</td></tr>';
       });
       html += '</tbody></table></div>';
     }
@@ -284,42 +228,24 @@
       setStatus(statusElId, 'Analyzing... (' + ((attempt + 1) * 5) + 's elapsed)', '');
       const resp = await fetch('/api/retro/analyze/' + encodeURIComponent(uploadId));
       const data = await resp.json();
-
-      if (data.ok && data.summary){
-        data.source_note = sourceNote || data.source_note || '';
-        return data;
-      }
-      if (data.pending || data.status === 'running'){
-        continue;
-      }
-      if (data.error){
-        throw new Error(data.error);
-      }
+      if (data.ok && data.summary){ data.source_note = sourceNote || ''; return data; }
+      if (data.pending || data.status === 'running') continue;
+      if (data.error) throw new Error(data.error);
     }
-    throw new Error('Analysis timed out. Refresh and check previous uploads.');
+    throw new Error('Analysis timed out. Refresh and try again.');
   }
 
   async function runEraUpload(){
     const file = $('eraFile').files[0];
-    if (!file){
-      setStatus('eraStatus', 'Please select an ERA CSV or CSV.GZ file.', 'err');
-      return;
-    }
-
+    if (!file){ setStatus('eraStatus', 'Please select an ERA CSV or CSV.GZ file.', 'err'); return; }
     $('eraAnalyzeBtn').disabled = true;
     setStatus('eraStatus', 'Uploading and analyzing...', '');
-
     try {
       const fd = new FormData();
       fd.append('file', file);
-
       const resp = await fetch('/api/retro/upload', { method:'POST', body:fd });
       const data = await resp.json();
-
-      if (!data.ok && !data.upload_id){
-        throw new Error(data.error || 'Upload failed');
-      }
-
+      if (!data.ok && !data.upload_id) throw new Error(data.error || 'Upload failed');
       if (data.summary){
         data.source_note = 'Mode A — ERA CSV retrospective validation';
         renderResults(data);
@@ -332,7 +258,6 @@
         throw new Error('Unexpected server response.');
       }
     } catch (err) {
-      console.error(err);
       setStatus('eraStatus', 'Upload failed: ' + err.message, 'err');
     } finally {
       $('eraAnalyzeBtn').disabled = false;
@@ -343,19 +268,12 @@
     const fc = $('mimicChartevents').files[0];
     const fi = $('mimicIcustays').files[0];
     const fdte = $('mimicDatetimeevents').files[0];
-
-    if (!fc){
-      setStatus('mimicStatus', 'Please select chartevents.csv or .gz.', 'err');
-      return;
-    }
-    if (!fi){
-      setStatus('mimicStatus', 'Please select icustays.csv or .gz.', 'err');
-      return;
-    }
+    if (!fc){ setStatus('mimicStatus', 'Please select chartevents.csv or .gz.', 'err'); return; }
+    if (!fi){ setStatus('mimicStatus', 'Please select icustays.csv or .gz.', 'err'); return; }
 
     $('mimicAnalyzeBtn').disabled = true;
     $('mimicDownloadBtn').disabled = true;
-    setStatus('mimicStatus', 'Converting raw files to ERA format and running analysis...', '');
+    setStatus('mimicStatus', 'Converting raw files and running analysis...', '');
 
     try {
       const fd = new FormData();
@@ -367,9 +285,7 @@
       const resp = await fetch('/api/mimic/convert-and-analyze', { method:'POST', body:fd });
       const data = await resp.json();
 
-      if (!data.ok && !data.upload_id){
-        throw new Error((data.errors && data.errors.join(' | ')) || data.error || 'Conversion failed');
-      }
+      if (!data.ok && !data.upload_id) throw new Error((data.errors && data.errors.join(' | ')) || data.error || 'Conversion failed');
 
       if (data.summary){
         data.source_note = 'Mode B — Raw MIMIC / raw export converted to ERA format, then analyzed';
@@ -383,7 +299,6 @@
         throw new Error('Unexpected server response.');
       }
     } catch (err) {
-      console.error(err);
       setStatus('mimicStatus', 'Convert + Analyze failed: ' + err.message, 'err');
     } finally {
       $('mimicAnalyzeBtn').disabled = false;
@@ -395,15 +310,8 @@
     const fc = $('mimicChartevents').files[0];
     const fi = $('mimicIcustays').files[0];
     const fdte = $('mimicDatetimeevents').files[0];
-
-    if (!fc){
-      setStatus('mimicStatus', 'Please select chartevents.csv or .gz.', 'err');
-      return;
-    }
-    if (!fi){
-      setStatus('mimicStatus', 'Please select icustays.csv or .gz.', 'err');
-      return;
-    }
+    if (!fc){ setStatus('mimicStatus', 'Please select chartevents.csv or .gz.', 'err'); return; }
+    if (!fi){ setStatus('mimicStatus', 'Please select icustays.csv or .gz.', 'err'); return; }
 
     $('mimicAnalyzeBtn').disabled = true;
     $('mimicDownloadBtn').disabled = true;
@@ -442,7 +350,6 @@
 
       setStatus('mimicStatus', 'ERA CSV downloaded successfully.', 'ok');
     } catch (err) {
-      console.error(err);
       setStatus('mimicStatus', 'Convert + Download failed: ' + err.message, 'err');
     } finally {
       $('mimicAnalyzeBtn').disabled = false;
