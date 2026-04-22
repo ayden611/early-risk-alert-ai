@@ -5346,6 +5346,97 @@ def create_app() -> Flask:
             return jsonify({"ok": False, "error": f"Upload processing error: {str(e)}"}), 500
 
 
+
+    @app.get("/data-ingest")
+    @_login_required
+    def data_ingest_page():
+        template_path = Path(__file__).parent / "web" / "data_ingest.html"
+        if not template_path.exists():
+            return Response("<h1>Data Ingest Template Missing</h1>", mimetype="text/html; charset=utf-8")
+        return Response(template_path.read_text(encoding="utf-8"), mimetype="text/html; charset=utf-8")
+
+    @app.post("/api/mimic/convert-and-analyze")
+    @_login_required
+    def mimic_convert_and_analyze():
+        errors = []
+        chartevents_text = None
+        icustays_text = None
+        datetimeevents_text = None
+
+        for key in ["chartevents", "icustays"]:
+            f = request.files.get(key)
+            if not f:
+                errors.append(f"Missing required file: {key}.csv")
+            else:
+                try:
+                    raw = f.read()
+                    if f.filename.lower().endswith(".gz"):
+                        import gzip as _gz
+                        raw = _gz.decompress(raw)
+                    text = raw.decode("utf-8-sig")
+                    if key == "chartevents":
+                        chartevents_text = text
+                    else:
+                        icustays_text = text
+                except Exception as e:
+                    errors.append(f"Could not read {key}: {str(e)}")
+
+        if errors:
+            return jsonify({"ok": False, "errors": errors}), 400
+
+        f_dte = request.files.get("datetimeevents")
+        if f_dte:
+            try:
+                raw = f_dte.read()
+                if f_dte.filename.lower().endswith(".gz"):
+                    import gzip as _gz
+                    raw = _gz.decompress(raw)
+                datetimeevents_text = raw.decode("utf-8-sig")
+            except Exception as e:
+                return jsonify({"ok": False, "error": f"Could not read datetimeevents: {str(e)}"}), 400
+
+        try:
+            min_vitals = int(request.form.get("min_vitals", 3))
+        except Exception:
+            min_vitals = 3
+
+        vitals = _parse_mimic_chartevents(chartevents_text)
+        if isinstance(vitals, dict) and "_error" in vitals:
+            return jsonify({"ok": False, "error": vitals["_error"]}), 400
+        del chartevents_text
+
+        icustays = _parse_mimic_icustays(icustays_text)
+        del icustays_text
+
+        events = _parse_mimic_datetimeevents(datetimeevents_text) if datetimeevents_text else {}
+        if datetimeevents_text:
+            del datetimeevents_text
+
+        csv_text, stats = _build_era_csv_from_mimic(vitals, icustays, events, min_vitals=min_vitals)
+        del vitals
+
+        if not csv_text:
+            return jsonify({
+                "ok": False,
+                "error": "No rows produced. The chartevents file may not contain ERA vital sign item IDs.",
+                "stats": stats,
+                "hint": "Expected ICU chartevents vital IDs for HR, SpO2, BP, RR, and temperature."
+            }), 400
+
+        validation = _validate_mimic_extract(csv_text)
+        stats["validation"] = validation
+        if not validation.get("ok"):
+            return jsonify({
+                "ok": False,
+                "error": "Converted ERA CSV did not pass validation.",
+                "stats": stats,
+                "issues": validation.get("issues", [])
+            }), 422
+
+        filename = f"era_mimic_convert_{_utc_now_iso()[:10]}.csv"
+        return _process_retro_upload(csv_text.encode("utf-8"), filename)
+
+
     @app.route("/api/mimic/extract", methods=["GET", "POST"])
     @_login_required
     def mimic_extract():
