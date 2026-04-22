@@ -2562,7 +2562,7 @@ def _parse_csv_upload(file_bytes: bytes, filename: str) -> Dict[str, Any]:
         "columns_found": headers,
         "parse_errors":  errors,
         "filename":      filename,
-        "large_file":    row_count > 200_000,
+        "large_file":    row_count > 300_000,
         "raw_text":      text if row_count > 200_000 else None,  # kept for re-streaming
     }
 
