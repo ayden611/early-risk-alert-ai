@@ -274,6 +274,80 @@
     prog.style.display = 'none';
   }
 
+  // Results renderer
+  function renderResults(uploadMeta, analysis) {
+    const res = document.getElementById('resultsSection');
+    const content = document.getElementById('resultsContent');
+    if (!res || !content) return;
+    res.style.display = 'block';
+    const s = analysis.summary || analysis || {};
+    const pts = s.total_patients || s.patients || 0;
+    const detected = s.patients_detected || s.flagged || 0;
+    const fpr = s.false_positive_rate != null ? (parseFloat(s.false_positive_rate)*100).toFixed(1) + '%' : '—';
+    const reduction = s.alert_reduction != null ? (parseFloat(s.alert_reduction)*100).toFixed(1) + '%' : '—';
+    const detRate = s.detection_rate != null ? (parseFloat(s.detection_rate)*100).toFixed(1) + '%' : '—';
+    content.innerHTML = `
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:14px;margin-bottom:18px">
+        <div style="text-align:center;padding:14px;background:rgba(58,211,143,.07);border-radius:10px"><div style="font-size:26px;font-weight:900;color:#3ad38f">${pts.toLocaleString()}</div><div style="font-size:11px;color:#9fb4d6;margin-top:4px">Patients Analyzed</div></div>
+        <div style="text-align:center;padding:14px;background:rgba(122,162,255,.07);border-radius:10px"><div style="font-size:26px;font-weight:900;color:#7aa2ff">${detected.toLocaleString()}</div><div style="font-size:11px;color:#9fb4d6;margin-top:4px">Flagged for Review</div></div>
+        <div style="text-align:center;padding:14px;background:rgba(244,189,106,.07);border-radius:10px"><div style="font-size:26px;font-weight:900;color:#f4bd6a">${fpr}</div><div style="font-size:11px;color:#9fb4d6;margin-top:4px">False Positive Rate</div></div>
+        <div style="text-align:center;padding:14px;background:rgba(91,212,255,.07);border-radius:10px"><div style="font-size:26px;font-weight:900;color:#5bd4ff">${reduction}</div><div style="font-size:11px;color:#9fb4d6;margin-top:4px">Review Burden Reduction</div></div>
+      </div>
+      ${s.message ? `<p style="font-size:13px;color:#dce9ff;margin:0 0 12px">${s.message}</p>` : ''}
+      <div style="font-size:11px;color:#9fb4d6;padding-top:10px;border-top:1px solid rgba(255,255,255,.06)">
+        Upload ID: ${(uploadMeta && uploadMeta.upload_id) || analysis.upload_id || '—'} &nbsp;·&nbsp; 
+        Decision-support and workflow-support only — does not replace clinician judgment.
+      </div>`;
+  }
+
+  // Retry poll for background analysis
+  function retryPoll(uploadId) {
+    setStatus('Checking for results...', '');
+    fetch('/api/retro/analyze/' + uploadId)
+      .then(r => r.json())
+      .then(pj => {
+        if (pj.ok && pj.summary) {
+          renderResults({upload_id: uploadId}, pj);
+          setStatus('Analysis complete ✓', 'ok');
+        } else if (pj.pending) {
+          setStatus('Still processing. Try again in 30 seconds.', '');
+        } else {
+          setStatus('No results found. The server may have restarted — please re-upload.', 'err');
+        }
+      })
+      .catch(() => setStatus('Could not reach server. Please refresh.', 'err'));
+  }
+
+  // Load session upload history
+  function loadUploadHistory() {
+    const el = document.getElementById('uploadsTable');
+    if (!el) return;
+    fetch('/api/retro/uploads')
+      .then(r => r.json())
+      .then(data => {
+        const uploads = (data.uploads || []).slice(-8).reverse();
+        if (!uploads.length) {
+          el.innerHTML = '<p style="color:var(--muted);font-size:13px">No uploads yet this session.</p>';
+          return;
+        }
+        el.innerHTML = '<table style="width:100%;border-collapse:collapse;font-size:12px">' +
+          '<thead><tr style="border-bottom:1px solid rgba(255,255,255,.1)">' +
+          '<th style="padding:6px 10px;text-align:left;color:#7aa2ff">File</th>' +
+          '<th style="padding:6px 10px;text-align:left;color:#7aa2ff">Rows</th>' +
+          '<th style="padding:6px 10px;text-align:left;color:#7aa2ff">Uploaded</th>' +
+          '<th style="padding:6px 10px;color:#7aa2ff"></th>' +
+          '</tr></thead><tbody>' +
+          uploads.map(u => `<tr style="border-bottom:1px solid rgba(255,255,255,.05)">
+            <td style="padding:6px 10px;color:#dce9ff">${u.filename || '—'}</td>
+            <td style="padding:6px 10px;color:#9fb4d6">${u.total_rows ? u.total_rows.toLocaleString() : '—'}</td>
+            <td style="padding:6px 10px;color:#9fb4d6">${u.uploaded_at ? new Date(u.uploaded_at).toLocaleTimeString() : '—'}</td>
+            <td style="padding:6px 10px"><button onclick="retryPoll('${u.upload_id}')" style="background:rgba(122,162,255,.12);border:1px solid rgba(122,162,255,.3);border-radius:6px;padding:4px 10px;color:#7aa2ff;font-size:11px;cursor:pointer">View Results</button></td>
+          </tr>`).join('') +
+          '</tbody></table>';
+      })
+      .catch(() => { if (el) el.innerHTML = '<p style="color:var(--muted);font-size:12px">Could not load history.</p>'; });
+  }
+
   loadUploadHistory();
 </script>
 </body>
