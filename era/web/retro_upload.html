@@ -189,72 +189,83 @@
     const prog = document.getElementById('progressBar');
     const fill = document.getElementById('progressFill');
     prog.style.display = 'block';
-    fill.style.width = '15%';
-    setStatus('Uploading file...', '');
-
+    fill.style.width = '10%';
+    setStatus('Reading file...', '');
     try {
-      const fd = new FormData();
-      fd.append('file', selectedFile);
-
-      const res = await fetch('/api/retro/upload', { method: 'POST', body: fd });
-      fill.style.width = '50%';
-
-      const contentType = res.headers.get('content-type') || '';
-      if (!contentType.includes('application/json')) {
-        const text = await res.text().catch(() => '');
-        throw new Error(`Server returned non-JSON (${res.status}): ${text.substring(0,200)}`);
+      const fileSizeMB = selectedFile.size / (1024 * 1024);
+      const text = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = e => resolve(e.target.result);
+        reader.onerror = () => reject(new Error('Could not read file'));
+        reader.readAsText(selectedFile, 'UTF-8');
+      });
+      fill.style.width = '20%';
+      let data;
+      if (fileSizeMB > 4) {
+        // Large file: chunk to avoid Render 30s timeout
+        const CHUNK_SIZE = 2 * 1024 * 1024;
+        const totalChunks = Math.ceil(text.length / CHUNK_SIZE);
+        const sessionId = 'sess_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+        setStatus('Uploading ' + fileSizeMB.toFixed(0) + ' MB in ' + totalChunks + ' chunks...', '');
+        for (let i = 0; i < totalChunks; i++) {
+          fill.style.width = Math.round(20 + (i / totalChunks) * 50) + '%';
+          setStatus('Uploading chunk ' + (i+1) + ' of ' + totalChunks + '...', '');
+          const chunkRes = await fetch('/api/retro/upload-chunk', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+              session_id: sessionId, chunk_index: i, total_chunks: totalChunks,
+              filename: selectedFile.name, content: text.slice(i * CHUNK_SIZE, (i+1) * CHUNK_SIZE)
+            })
+          });
+          if (!chunkRes.ok) { const h = await chunkRes.text().catch(()=>''); throw new Error('Chunk ' + (i+1) + ' failed (' + chunkRes.status + '): ' + h.slice(0,100)); }
+          const cd = await chunkRes.json();
+          if (!cd.ok) throw new Error(cd.error || 'Chunk ' + (i+1) + ' failed');
+          if (cd.done) { data = cd; break; }
+        }
+        if (!data) throw new Error('Upload did not complete');
+        fill.style.width = '75%';
+        setStatus('All chunks sent. Analyzing in background...', '');
+      } else {
+        fill.style.width = '40%';
+        setStatus('Uploading ' + fileSizeMB.toFixed(1) + ' MB...', '');
+        const res = await fetch('/api/retro/upload-text', {
+          method: 'POST', headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({filename: selectedFile.name, content: text})
+        });
+        fill.style.width = '65%';
+        const ct = res.headers.get('content-type') || '';
+        if (!ct.includes('application/json')) { const h = await res.text().catch(()=>''); throw new Error('Server error (' + res.status + '): ' + h.slice(0,200)); }
+        data = await res.json();
+        if (!data.ok) throw new Error(data.error || 'Upload failed');
       }
-
-      const data = await res.json();
-      if (!data.ok) {
-        setStatus('Upload error: ' + (data.error || 'Unknown'), 'err');
-        document.getElementById('uploadBtn').disabled = false;
-        prog.style.display = 'none';
-        return;
-      }
-
-      fill.style.width = '70%';
-      setStatus('File received. Starting analysis...', 'ok');
-
-      // If analysis came back inline use it immediately
       if (data.analysis_inline && data.summary) {
         fill.style.width = '100%';
-        renderResults(data, data);
-        loadUploadHistory();
+        renderResults(data, data); loadUploadHistory();
         setStatus('Analysis complete ✓', 'ok');
         document.getElementById('uploadBtn').disabled = false;
-        prog.style.display = 'none';
-        return;
+        prog.style.display = 'none'; return;
       }
-
-      // Poll for async results — keeps existing infrastructure
       let analysis = null;
-      for (let attempt = 0; attempt < 72; attempt++) {
-        await new Promise(r => setTimeout(r, attempt < 3 ? 3000 : 5000));
-        fill.style.width = Math.min(98, 70 + (attempt * 1.5)) + '%';
-        setStatus(`Analyzing ${(selectedFile ? (selectedFile.size/1024/1024).toFixed(0) : '?')}MB file... (${Math.round((attempt + 1) * 4)}s elapsed — large files can take 3-5 minutes)`, '');
+      for (let att = 0; att < 72; att++) {
+        await new Promise(r => setTimeout(r, att < 3 ? 3000 : 5000));
+        fill.style.width = Math.min(98, 75 + att) + '%';
+        setStatus('Analyzing ' + fileSizeMB.toFixed(0) + ' MB... (' + Math.round((att+1)*4.5) + 's elapsed)', '');
         try {
           const pr = await fetch('/api/retro/analyze/' + data.upload_id);
           const pj = await pr.json();
           if (pj.ok && pj.summary) { analysis = pj; break; }
           if (pj.error && !pj.pending) throw new Error(pj.error);
-        } catch(pollErr) { continue; }
+        } catch(e) { continue; }
       }
-
       if (analysis) {
         fill.style.width = '100%';
-        renderResults(data, analysis);
-        loadUploadHistory();
+        renderResults(data, analysis); loadUploadHistory();
         setStatus('Analysis complete ✓', 'ok');
       } else {
-        document.getElementById('uploadStatus').innerHTML =
-          'Analysis still running. ' +
-          '<button class="btn secondary" style="padding:6px 14px;font-size:13px;margin-left:8px" ' +
-          'onclick="retryPoll(\''+ data.upload_id +'\')">' +
-          'Check for Results</button>';
+        document.getElementById('uploadStatus').innerHTML = 'Analysis running in background. <button class="btn secondary" style="padding:6px 14px;font-size:13px;margin-left:8px" onclick="retryPoll(\'' + data.upload_id + '\')">Check for Results</button>';
         loadUploadHistory();
       }
-
     } catch(err) {
       console.error('Upload failed:', err);
       setStatus('Failed: ' + err.message, 'err');
