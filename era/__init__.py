@@ -1,3 +1,6 @@
+
+
+
 from __future__ import annotations
 
 import csv
@@ -3164,14 +3167,6 @@ def _process_retro_upload(raw: bytes, filename: str):
       Analysis runs in a background thread to avoid Render timeout.
       Client polls /api/retro/analyze/<id> every 5s for results.
     """
-    # Decompress .gz files transparently
-    if filename.lower().endswith(".gz"):
-        try:
-            import gzip as _gz
-            raw = _gz.decompress(raw)
-            filename = filename[:-3]  # strip .gz so downstream sees .csv
-        except Exception as e:
-            return jsonify({"ok": False, "error": f"Could not decompress .gz file: {e}"}), 422
     result = _parse_csv_upload(raw, filename)
     if not result["ok"]:
         return jsonify(result), 422
@@ -4582,38 +4577,594 @@ def create_app() -> Flask:
     # RETROSPECTIVE VALIDATION — CSV upload and analysis routes
     # -----------------------------------------------------------------------
 
-    def _load_retro_upload_html():
-        """Load retro upload page from separate file - fixes truncation on Render."""
-        try:
-            from pathlib import Path
-            import json
-            template_path = Path(__file__).parent / "web" / "retro_upload.html"
-            if not template_path.exists():
-                print(f"[WARNING] retro_upload.html missing at {template_path}")
-                return "<h1>Retro Upload Template Missing - Please contact support</h1>"
-            raw = template_path.read_text(encoding="utf-8")
-            try:
-                from era import CSV_SCHEMA_DESCRIPTION, CSV_SCHEMA_REQUIRED
-            except Exception:
-                CSV_SCHEMA_DESCRIPTION = {}
-                CSV_SCHEMA_REQUIRED = []
-            raw = raw.replace(
-                '""" + json.dumps({k: v for k, v in CSV_SCHEMA_DESCRIPTION.items()}) + """',
-                json.dumps(dict(CSV_SCHEMA_DESCRIPTION))
-            )
-            raw = raw.replace(
-                '""" + json.dumps(CSV_SCHEMA_REQUIRED) + """',
-                json.dumps(CSV_SCHEMA_REQUIRED)
-            )
-            return raw
-        except Exception as e:
-            print(f"[RETRO LOADER ERROR] {type(e).__name__}: {e}")
-            import traceback
-            traceback.print_exc()
-            return "<h1>Retro Upload Page Failed to Load. Please refresh or contact support.</h1>"
+    RETRO_UPLOAD_HTML = """<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Retrospective Validation Upload — Early Risk Alert AI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root{--bg:#07101c;--bg2:#0b1528;--line:rgba(255,255,255,.08);--text:#eef4ff;--muted:#9fb4d6;--blue:#7aa2ff;--cyan:#5bd4ff;--green:#3ad38f;--amber:#f4bd6a;}
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:Inter,system-ui,sans-serif;background:linear-gradient(180deg,var(--bg),var(--bg2));color:var(--text);min-height:100vh;padding:28px 18px 64px}
+    .wrap{max-width:1100px;margin:0 auto}
+    .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px}
+    .brand{font-size:13px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:#9adfff}
+    .nav a{font-size:13px;font-weight:900;color:#dce9ff;text-decoration:none;margin-left:16px}
+    .card{border:1px solid var(--line);border-radius:22px;background:rgba(255,255,255,.03);padding:22px;margin-bottom:16px}
+    .kicker{font-size:11px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:#9adfff;margin-bottom:8px}
+    h1{font-size:clamp(26px,4vw,40px);font-weight:1000;letter-spacing:-.05em;margin-bottom:10px}
+    h2{font-size:20px;font-weight:1000;letter-spacing:-.03em;margin-bottom:10px}
+    p{font-size:14px;color:var(--muted);line-height:1.65;margin-bottom:10px}
+    .disclaimer{padding:12px 16px;border-radius:14px;background:rgba(244,189,106,.1);border:1px solid rgba(244,189,106,.22);color:#ffe7bf;font-size:13px;line-height:1.6;margin-bottom:14px}
+    .upload-zone{border:2px dashed rgba(91,212,255,.3);border-radius:18px;padding:36px;text-align:center;cursor:pointer;transition:border-color .2s;margin-bottom:16px}
+    .upload-zone:hover,.upload-zone.drag{border-color:rgba(91,212,255,.7);background:rgba(91,212,255,.04)}
+    .upload-zone input{display:none}
+    .upload-icon{font-size:36px;margin-bottom:12px;opacity:.6}
+    .upload-label{font-size:15px;font-weight:900;color:#dce9ff;margin-bottom:6px}
+    .upload-sub{font-size:13px;color:var(--muted)}
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 20px;border-radius:14px;font:inherit;font-size:14px;font-weight:900;cursor:pointer;border:none;transition:opacity .18s}
+    .btn.primary{background:linear-gradient(135deg,#7aa2ff,#5bd4ff);color:#07101c}
+    .btn.secondary{background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--text)}
+    .btn:hover{opacity:.85}
+    .btn:disabled{opacity:.4;cursor:not-allowed}
+    table{width:100%;border-collapse:collapse;font-size:13px}
+    thead th{padding:10px 12px;text-align:left;color:#9adfff;border-bottom:1px solid rgba(255,255,255,.08);font-weight:900;letter-spacing:.08em;text-transform:uppercase}
+    tbody tr{border-bottom:1px solid rgba(255,255,255,.05)}
+    tbody td{padding:10px 12px;vertical-align:top;color:#dce9ff}
+    .pill{display:inline-flex;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:900}
+    .pill.green{background:rgba(58,211,143,.12);border:1px solid rgba(58,211,143,.24);color:#b6f5d9}
+    .pill.amber{background:rgba(244,189,106,.12);border:1px solid rgba(244,189,106,.24);color:#ffe7bf}
+    .pill.red{background:rgba(255,102,125,.12);border:1px solid rgba(255,102,125,.24);color:#ffd8de}
+    .pill.blue{background:rgba(122,162,255,.12);border:1px solid rgba(122,162,255,.24);color:#c8d9ff}
+    .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:14px 0}
+    .stat{border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.03);padding:14px}
+    .stat-k{font-size:11px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:#9adfff;margin-bottom:6px}
+    .stat-v{font-size:26px;font-weight:1000;letter-spacing:-.04em;line-height:1}
+    .interp{padding:14px 16px;border-radius:14px;background:rgba(91,212,255,.07);border:1px solid rgba(91,212,255,.16);color:#dce9ff;font-size:14px;line-height:1.65;margin:14px 0}
+    .schema-table{font-size:12px}
+    .schema-req{color:#b6f5d9}
+    .schema-opt{color:#9fb4d6}
+    #uploadStatus{font-size:14px;font-weight:900;margin-top:12px;min-height:20px}
+    #uploadStatus.ok{color:#3ad38f}
+    #uploadStatus.err{color:#ff667d}
+    .progress{height:4px;border-radius:999px;background:rgba(255,255,255,.06);overflow:hidden;margin-top:8px;display:none}
+    .progress-fill{height:100%;border-radius:999px;background:linear-gradient(135deg,#7aa2ff,#5bd4ff);width:0%;transition:width .3s}
+    #resultsSection{display:none}
+    @media(max-width:700px){.stat-grid{grid-template-columns:1fr 1fr}}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="brand">Early Risk Alert AI</div>
+    <div class="nav">
+      <a href="/command-center">Command Center</a>
+      <a href="/model-card">Model Card</a>
+      <a href="/pilot-docs">Pilot Docs</a>
+      <a href="/retro-schema">Download Schema</a>
+    </div>
+  </div>
 
-    RETRO_UPLOAD_HTML = _load_retro_upload_html()
+  <div class="card">
+    <div class="kicker">Retrospective Validation</div>
+    <h1>Upload De-Identified Patient Data</h1>
+    <p>Upload a CSV of de-identified historical patient vital-sign data to run a retrospective validation analysis. The platform will compute how the rules-based prioritization engine would have performed against your documented clinical events, compared to standard threshold-only alerting.</p>
+    <div class="disclaimer">De-identified data only. Do not upload any file containing real patient names, MRNs, dates of birth, or other direct identifiers. All uploaded data is processed in memory and is not retained after the session ends. A Business Associate Agreement is not required for de-identified data uploads under Phase 1 retrospective validation. <strong style="color:#b6f5d9">No-commitment analysis available:</strong> Accepting hospital de-identified datasets for no-commitment retrospective analysis. Upload CSV → receive results + interpretation. No EHR integration, no IT lift, no cost to evaluate.</div>
+  </div>
 
+  <div class="card">
+    <h2>Upload CSV File</h2>
+    <div class="upload-zone" id="dropZone">
+      <input type="file" id="csvFile" accept=".csv" onchange="handleFileSelect(this)">
+      <div class="upload-icon" onclick="document.getElementById('csvFile').click()" style="cursor:pointer">&#x1F4C4;</div>
+      <div class="upload-label" onclick="document.getElementById('csvFile').click()" style="cursor:pointer">Click to select — or drag and drop anywhere on this page</div>
+      <div class="upload-sub">Maximum file size: 50 MB &nbsp;·&nbsp; CSV format required</div>
+    </div>
+    <div id="fileInfo" style="margin-bottom:12px;font-size:14px;color:#9adfff;display:none"></div>
+    <div class="progress" id="progressBar"><div class="progress-fill" id="progressFill"></div></div>
+    <div id="uploadStatus"></div>
+    <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap">
+      <button class="btn primary" id="uploadBtn" onclick="uploadFile()" disabled>Run Validation Analysis</button>
+      <a class="btn secondary" href="/retro-schema">Download Schema Template</a>
+    </div>
+  </div>
+
+  <div id="resultsSection" class="card">
+    <h2>Validation Results</h2>
+    <div id="resultsContent"></div>
+  </div>
+
+  <div class="card">
+    <h2>Required CSV Schema</h2>
+    <p>Your CSV must include these columns. Column names are case-insensitive. Extra columns are ignored.</p>
+    <table class="schema-table">
+      <thead><tr><th>Column</th><th>Required</th><th>Format</th><th>Description</th></tr></thead>
+      <tbody id="schemaTableBody"></tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>Previous Uploads This Session</h2>
+    <div id="uploadsTable"><p style="color:var(--muted)">No uploads yet this session.</p></div>
+  </div>
+</div>
+
+<script>
+  const SCHEMA = """ + json.dumps({k: v for k, v in CSV_SCHEMA_DESCRIPTION.items()}) + """;
+  const REQUIRED = """ + json.dumps(CSV_SCHEMA_REQUIRED) + """;
+
+  // Render schema table
+  (function() {
+    const tbody = document.getElementById('schemaTableBody');
+    Object.entries(SCHEMA).forEach(([col, desc]) => {
+      const req = REQUIRED.includes(col);
+      tbody.innerHTML += `<tr>
+        <td style="font-family:monospace;color:${req?'#b6f5d9':'#9adfff'}">${col}</td>
+        <td><span class="pill ${req?'green':'amber'}">${req?'Required':'Optional'}</span></td>
+        <td style="color:var(--muted)">${col.includes('timestamp')?'ISO 8601':col.includes('event')&&!col.includes('label')?'0 or 1':'Numeric'}</td>
+        <td style="color:var(--muted)">${desc}</td>
+      </tr>`;
+    });
+  })();
+
+  let selectedFile = null;
+
+  // ── Full-page drop target — catches files dropped anywhere on the page ──────
+  // This prevents the browser from navigating to the file AND catches drops
+  // that land outside the upload zone box.
+  const dropZone = document.getElementById('dropZone');
+
+  function _highlightZone(on) {
+    if (on) {
+      dropZone.classList.add('drag');
+      dropZone.style.borderColor = 'rgba(91,212,255,.9)';
+      dropZone.style.background  = 'rgba(91,212,255,.08)';
+    } else {
+      dropZone.classList.remove('drag');
+      dropZone.style.borderColor = '';
+      dropZone.style.background  = '';
+    }
+  }
+
+  // Block browser default for all drag events anywhere on page
+  document.addEventListener('dragenter', e => { e.preventDefault(); e.stopPropagation(); _highlightZone(true);  }, false);
+  document.addEventListener('dragover',  e => { e.preventDefault(); e.stopPropagation(); _highlightZone(true);  }, false);
+  document.addEventListener('dragleave', e => {
+    e.preventDefault(); e.stopPropagation();
+    // Only un-highlight if leaving the window entirely
+    if (!e.relatedTarget) _highlightZone(false);
+  }, false);
+  document.addEventListener('drop', e => {
+    e.preventDefault(); e.stopPropagation();
+    _highlightZone(false);
+    const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+    if (f) {
+      if (!f.name.toLowerCase().endsWith('.csv')) {
+        setStatus('Please select a CSV file (.csv extension required)', 'err');
+        return;
+      }
+      setFile(f);
+    }
+  }, false);
+
+  function handleFileSelect(input) { if (input.files[0]) setFile(input.files[0]); }
+
+  function setFile(f) {
+    selectedFile = f;
+    document.getElementById('fileInfo').style.display = 'block';
+    document.getElementById('fileInfo').textContent = `Selected: ${f.name}  (${(f.size/1024).toFixed(1)} KB)`;
+    document.getElementById('uploadBtn').disabled = false;
+    setStatus('File ready. Click Run Validation Analysis to begin.', 'ok');
+  }
+
+  function setStatus(msg, cls) {
+    const el = document.getElementById('uploadStatus');
+    el.textContent = msg; el.className = cls;
+  }
+
+  async function uploadFile() {
+    if (!selectedFile) return;
+    document.getElementById('uploadBtn').disabled = true;
+    const prog = document.getElementById('progressBar');
+    const fill = document.getElementById('progressFill');
+    prog.style.display = 'block';
+    fill.style.width = '10%';
+    setStatus('Reading file...', '');
+
+    try {
+      // For large files (>20MB), use multipart form upload
+      // For small/medium files, use JSON text upload
+      const fileSizeMB = selectedFile.size / (1024 * 1024);
+      let res;
+
+      if (fileSizeMB > 8) {
+        // Files over 8MB: chunk into 3MB pieces and send sequentially
+        fill.style.width = '15%';
+        setStatus(`Reading ${fileSizeMB.toFixed(0)} MB file...`, '');
+        const text = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = e => resolve(e.target.result);
+          reader.onerror = () => reject(new Error('Could not read file'));
+          reader.readAsText(selectedFile, 'UTF-8');
+        });
+        const CHUNK_SIZE = 3 * 1024 * 1024;
+        const totalChunks = Math.ceil(text.length / CHUNK_SIZE);
+        const sessionId = 'sess_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+        let finalData = null;
+        for (let i = 0; i < totalChunks; i++) {
+          const chunk = text.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE);
+          fill.style.width = Math.round(15 + (i / totalChunks) * 55) + '%';
+          setStatus(`Uploading chunk ${i+1} of ${totalChunks}...`, '');
+          const chunkRes = await fetch('/api/retro/upload-chunk', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              session_id: sessionId,
+              chunk_index: i,
+              total_chunks: totalChunks,
+              filename: selectedFile.name,
+              content: chunk,
+            }),
+          });
+          const ct = chunkRes.headers.get('content-type') || '';
+          if (!ct.includes('application/json')) {
+            const hint = await chunkRes.text().catch(() => '');
+            throw new Error(`Chunk ${i+1} failed (${chunkRes.status}): ${hint.slice(0,120)}`);
+          }
+          const chunkData = await chunkRes.json();
+          if (!chunkData.ok) throw new Error(chunkData.error || `Chunk ${i+1} failed`);
+          // Last chunk returns full analysis
+          if (chunkData.done !== false) { finalData = chunkData; break; }
+        }
+        // Last chunk triggers async assembly — poll for results
+        if (!finalData) throw new Error('Chunked upload did not complete');
+        fill.style.width = '75%';
+        setStatus('All chunks uploaded. Assembling and analyzing in background...', '');
+        // If inline analysis came back (small file assembled fast)
+        if (finalData.analysis_inline && finalData.summary) {
+          fill.style.width = '100%';
+          renderResults(finalData, finalData);
+          loadUploadHistory();
+          setStatus('Analysis complete.', 'ok');
+          document.getElementById('uploadBtn').disabled = false;
+          prog.style.display = 'none';
+          return;
+        }
+        // Async — poll until done
+        const pollId = finalData.upload_id;
+        if (!pollId) throw new Error('No upload_id returned from chunked upload');
+        fill.style.width = '80%';
+        let asyncResult = null;
+        for (let att = 0; att < 40; att++) {
+          await new Promise(r => setTimeout(r, 5000));
+          fill.style.width = Math.min(95, 80 + att) + '%';
+          setStatus(`Analyzing 260,000+ rows... (${(att+1)*5}s elapsed)`, '');
+          try {
+            const pr = await fetch('/api/retro/analyze/' + pollId);
+            const pj = await pr.json();
+            if (pj.pending || pj.status === 'running') continue;
+            if (!pj.ok) throw new Error(pj.error || 'Analysis failed');
+            asyncResult = pj; break;
+          } catch(pollErr) { continue; }
+        }
+        if (asyncResult) {
+          fill.style.width = '100%';
+          renderResults(finalData, asyncResult);
+          loadUploadHistory();
+          setStatus('Analysis complete.', 'ok');
+        } else {
+          setStatus('Analysis still running — check Previous Uploads below in ~30s.', '');
+          loadUploadHistory();
+        }
+        document.getElementById('uploadBtn').disabled = false;
+        prog.style.display = 'none';
+        return;
+      } else {
+        // Small/medium file: read as text and send as JSON
+        const text = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = e => resolve(e.target.result);
+          reader.onerror = () => reject(new Error('Could not read file'));
+          reader.readAsText(selectedFile, 'UTF-8');
+        });
+        fill.style.width = '30%';
+        setStatus(`Read ${(text.length / 1024).toFixed(0)} KB. Uploading...`, '');
+        const payload = { filename: selectedFile.name, content: text };
+        fill.style.width = '55%';
+        res = await fetch('/api/retro/upload-text', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+      }
+
+      fill.style.width = '80%';
+
+      // Safe JSON parse — show real error if server returned HTML
+      let data;
+      const contentType = res.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        const bodyText = await res.text();
+        const hint = bodyText.length < 300 ? bodyText : bodyText.slice(0, 200) + '...';
+        throw new Error(`Server returned non-JSON response (status ${res.status}). Hint: ${hint}`);
+      }
+      data = await res.json();
+      fill.style.width = '90%';
+
+      if (!data.ok) {
+        setStatus('Error: ' + data.error, 'err');
+        document.getElementById('uploadBtn').disabled = false;
+        prog.style.display = 'none';
+        return;
+      }
+
+      setStatus(`Parsed ${data.row_count.toLocaleString()} rows across ${data.patient_count} patients. Running analysis...`, 'ok');
+
+      // If upload response already contains analysis, use it directly
+      if (data.analysis_inline && data.summary) {
+        fill.style.width = '100%';
+        renderResults(data, data);
+        loadUploadHistory();
+        setStatus('Analysis complete.', 'ok');
+        document.getElementById('uploadBtn').disabled = false;
+        prog.style.display = 'none';
+        return;
+      }
+
+      const isLarge = data.async === true || data.large_file === true;
+      if (isLarge) {
+        fill.style.width = '70%';
+        setStatus(`Large dataset (${data.row_count.toLocaleString()} rows) — streaming analysis in progress...`, '');
+      }
+
+      // Poll for results — server handles internal retry for race conditions
+      // Checks every 6 seconds, up to 90 seconds total (15 attempts)
+      let analysis = null;
+      const maxAttempts = 15;
+      for (let attempt = 0; attempt < maxAttempts; attempt++) {
+        // Small datasets: analyze immediately. Large: wait 6s between polls.
+        if (attempt > 0 || isLarge) {
+          await new Promise(r => setTimeout(r, 6000));
+        }
+
+        let res2, r2;
+        try {
+          res2 = await fetch('/api/retro/analyze/' + data.upload_id);
+          if (!res2.headers.get('content-type')?.includes('application/json')) {
+            const hint = await res2.text().catch(() => '');
+            throw new Error(`Server returned non-JSON (HTTP ${res2.status}). ${hint.slice(0,120)}`);
+          }
+          r2 = await res2.json();
+        } catch(fetchErr) {
+          setStatus('Network error: ' + fetchErr.message, 'err');
+          document.getElementById('uploadBtn').disabled = false;
+          prog.style.display = 'none';
+          return;
+        }
+
+        if (r2.pending || r2.status === 'running') {
+          const pct = Math.min(95, 70 + attempt * 2);
+          fill.style.width = pct + '%';
+          const elapsed = (attempt + 1) * 6;
+          setStatus(`Streaming analysis in progress... (${elapsed}s)`, '');
+          continue;
+        }
+        if (!r2.ok) {
+          setStatus('Analysis error: ' + (r2.error || 'Unknown error'), 'err');
+          document.getElementById('uploadBtn').disabled = false;
+          prog.style.display = 'none';
+          return;
+        }
+        analysis = r2;
+        break;
+      }
+
+      if (!analysis) {
+        setStatus('Analysis is taking longer than expected for this large dataset. Check the Previous Uploads table and click Analyze when ready.', '');
+        loadUploadHistory();
+        document.getElementById('uploadBtn').disabled = false;
+        prog.style.display = 'none';
+        return;
+      }
+
+      renderResults(data, analysis);
+      loadUploadHistory();
+      setStatus('Analysis complete.', 'ok');
+
+    } catch(err) {
+      setStatus('Upload failed: ' + err.message, 'err');
+      console.error('Upload error:', err);
+    }
+    document.getElementById('uploadBtn').disabled = false;
+    prog.style.display = 'none';
+  }
+
+  function renderResults(upload, analysis) {
+    const s = analysis.summary;
+    const tc = analysis.threshold_comparison || [];
+    const section = document.getElementById('resultsSection');
+    section.style.display = 'block';
+
+    // Threshold comparison table rows
+    const threshRows = tc.map(t => `
+      <tr style="background:${t.threshold===6.0?'rgba(58,211,143,.05)':''}">
+        <td><strong style="color:${t.threshold===4.0?'#f4bd6a':t.threshold===5.0?'#9adfff':'#3ad38f'}">${t.threshold.toFixed(1)}</strong></td>
+        <td>${t.era_sensitivity_pct}%</td>
+        <td>${t.era_fpr_pct}%</td>
+        <td style="color:#3ad38f">${t.alert_reduction_pct}%</td>
+        <td>${t.era_total_alerts.toLocaleString()}</td>
+        <td style="font-size:11px;color:var(--muted)">${t.recommendation}</td>
+      </tr>`).join('');
+
+    document.getElementById('resultsContent').innerHTML = `
+      <div class="stat-grid">
+        <div class="stat"><div class="stat-k">Total Rows</div><div class="stat-v">${s.total_rows.toLocaleString()}</div></div>
+        <div class="stat"><div class="stat-k">Patients</div><div class="stat-v">${s.total_patients.toLocaleString()}</div></div>
+        <div class="stat"><div class="stat-k">Clinical Events</div><div class="stat-v">${s.total_events.toLocaleString()}</div></div>
+        <div class="stat"><div class="stat-k">Non-Event Readings</div><div class="stat-v">${s.total_nonevents.toLocaleString()}</div></div>
+      </div>
+
+      <div class="stat-grid">
+        <div class="stat"><div class="stat-k">Patient Detection (t=6.0)</div><div class="stat-v" style="color:#3ad38f">${s.era_patient_sensitivity_pct !== undefined ? s.era_patient_sensitivity_pct + "%" : s.era_sensitivity_pct + "%"}</div><div style="font-size:11px;color:var(--muted);margin-top:3px">% of patients-with-events flagged in ${s.event_window_hours || 4}-hr pre-event window</div></div>
+        <div class="stat"><div class="stat-k">Reading Sensitivity (t=6.0)</div><div class="stat-v" style="color:#9adfff">${s.era_sensitivity_pct}%</div><div style="font-size:11px;color:var(--muted);margin-top:3px">${s.event_window_hours || 4}-hr event window</div></div>
+        <div class="stat"><div class="stat-k">ERA False Positive Rate</div><div class="stat-v" style="color:#3ad38f">${s.era_fpr_pct}%</div><div style="font-size:11px;color:var(--muted);margin-top:3px">vs ${s.threshold_fpr_pct}% standard</div></div>
+        <div class="stat"><div class="stat-k">Threshold Sensitivity</div><div class="stat-v" style="color:#9fb4d6">${s.threshold_sensitivity_pct}%</div><div style="font-size:11px;color:var(--muted);margin-top:3px">Baseline</div></div>
+      </div>
+
+      <div class="stat-grid">
+        <div class="stat"><div class="stat-k">Alert Reduction (t=6.0)</div><div class="stat-v" style="color:#3ad38f">${s.alert_reduction_pct > 0 ? s.alert_reduction_pct + '%' : 'N/A'}</div></div>
+        <div class="stat"><div class="stat-k">Avg Risk at Event</div><div class="stat-v">${s.avg_risk_at_event}</div></div>
+        <div class="stat"><div class="stat-k">Avg Risk Non-Event</div><div class="stat-v">${s.avg_risk_at_nonevent}</div></div>
+        <div class="stat"><div class="stat-k">ERA Total Alerts (t=6.0)</div><div class="stat-v">${s.era_total_alerts.toLocaleString()}</div></div>
+      </div>
+
+      ${tc.length ? `
+      <h2 style="margin-top:18px;margin-bottom:10px;font-size:16px;font-weight:900">
+        Threshold Comparison — 4.0 vs 5.0 vs 6.0
+      </h2>
+      <div style="background:rgba(58,211,143,.04);border:1px solid rgba(58,211,143,.15);
+        border-radius:12px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:#b6f5d9;line-height:1.6">
+        <strong>How to read this table:</strong>
+        Lower threshold = higher patient detection and sensitivity, but higher false positive rate and more alerts.
+        Higher threshold = fewer alerts and lower false positives, but lower sensitivity.
+        Recommended: t=4.0 for ICU/high-acuity, t=5.0 for mixed units, t=6.0 for telemetry/alarm fatigue reduction.
+        Green row (6.0) is the current default. Patient detection is the primary metric for hospital conversations.
+      </div>
+      <div style="overflow-x:auto;margin-bottom:16px">
+      <table>
+        <thead>
+          <tr>
+            <th>Threshold</th>
+            <th>Patient Detection</th>
+            <th>Reading Sensitivity</th>
+            <th>False Positive Rate</th>
+            <th>Alert Reduction</th>
+            <th>Best For</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${threshRows}
+          <tr style="background:rgba(255,255,255,.03);border-top:2px solid rgba(255,255,255,.1)">
+            <td><strong style="color:#9fb4d6">Standard</strong></td>
+            <td style="color:#9fb4d6">${s.threshold_patient_sensitivity_pct !== undefined ? s.threshold_patient_sensitivity_pct + '%' : '—'}</td>
+            <td>${s.threshold_sensitivity_pct}%</td>
+            <td style="color:#ff667d">${s.threshold_fpr_pct}%</td>
+            <td style="color:#9fb4d6">—</td>
+            <td style="font-size:11px;color:var(--muted)">Baseline threshold-only alerting (no ERA)</td>
+          </tr>
+        </tbody>
+      </table></div>` : ''}
+
+      <div class="interp">${analysis.interpretation}</div>
+
+      ${analysis.patient_summary && analysis.patient_summary.length ? `
+      <h2 style="margin-top:16px;margin-bottom:10px">Patient Summary (top ${analysis.patient_summary.length} by peak risk)</h2>
+      <div style="overflow-x:auto">
+      <table>
+        <thead><tr><th>Patient ID</th><th>Readings</th><th>Events</th><th>ERA Alerts</th><th>Peak Risk</th></tr></thead>
+        <tbody>
+          ${analysis.patient_summary.map(p => `<tr>
+            <td>${p.patient_id}</td>
+            <td>${p.readings}</td>
+            <td><span class="pill ${p.events>0?'amber':'green'}">${p.events}</span></td>
+            <td>${p.era_alerts}</td>
+            <td><span class="pill ${p.peak_risk>=8.5?'red':p.peak_risk>=6.2?'amber':'green'}">${p.peak_risk.toFixed(1)}</span></td>
+          </tr>`).join('')}
+        </tbody>
+      </table></div>` : ''}
+
+      <!-- Consistency box -->
+      <div style="margin:16px 0;padding:14px 16px;border-radius:14px;background:rgba(122,162,255,.07);border:1px solid rgba(122,162,255,.18);font-size:13px;color:#dce9ff;line-height:1.65">
+        <strong style="color:#9adfff">Consistency across scales:</strong> These results are consistent with validation runs across 500, 1,000, 2,000, 5,000, and 10,000 patient synthetic datasets. ERA sensitivity 18.8–23.4% at t=6.0, false positive rate 4.2–5.1%, alert reduction 81.9–84.2%. Results most stable at 2,000–10,000 patients. MIMIC-IV real de-identified ICU validation planned Q2 2026, subject to data-access approval.
+      </div>
+      <!-- Next steps CTA -->
+      <div style="margin:12px 0;padding:12px 16px;border-radius:12px;background:rgba(58,211,143,.06);border:1px solid rgba(58,211,143,.15);font-size:13px;color:#b6f5d9;line-height:1.6">
+        <strong>What to do next:</strong> Export these results and share with your clinical champion. If results are compelling, request a pilot agreement and governance packet from <a href="mailto:info@earlyriskalertai.com" style="color:#9adfff">info@earlyriskalertai.com</a>. Independent clinical review of all results is required before drawing conclusions about prospective performance.
+      </div>
+      <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap">
+        <a class="btn secondary" href="/api/retro/export/${analysis.upload_id}">Export Results CSV</a>
+        <button class="btn secondary" onclick="copyResultsEmail(analysis_${analysis.upload_id.replace('-','_')})">Copy for Email</button>
+        <a class="btn secondary" href="/api/retro/list">View All Uploads</a>
+        <a class="btn secondary" href="/model-card" target="_blank">Full Model Card</a>
+        <a class="btn secondary" href="/pilot-onboarding" target="_blank">Pilot Checklist</a>
+      </div>
+    `;
+    // Store analysis for copy button
+    window._lastAnalysis = analysis;
+    section.scrollIntoView({behavior:'smooth'});
+  }
+
+  function copyResultsEmail() {
+    const a = window._lastAnalysis;
+    if (!a || !a.summary) { alert("No results to copy. Run an analysis first."); return; }
+    const s = a.summary;
+    const tc = (a.threshold_comparison || []);
+    const t4 = tc.find(t => t.threshold === 4.0) || {};
+    const t5 = tc.find(t => t.threshold === 5.0) || {};
+    const t6 = tc.find(t => t.threshold === 6.0) || {};
+    const text = [
+      "Early Risk Alert AI — Retrospective Validation Results",
+      "=".repeat(50),
+      "",
+      `Dataset: ${s.total_rows.toLocaleString()} readings · ${s.total_patients.toLocaleString()} patients · ${s.total_events.toLocaleString()} clinical events`,
+      "",
+      "PRIMARY RESULTS (threshold 6.0 — default):",
+      `  ERA Sensitivity:      ${s.era_sensitivity_pct}%`,
+      `  ERA False Positive Rate: ${s.era_fpr_pct}%`,
+      `  Alert Reduction:      ${s.alert_reduction_pct}%`,
+      `  Standard Threshold FPR: ${s.threshold_fpr_pct}%`,
+      "",
+      "THRESHOLD COMPARISON:",
+      `  t=4.0 (ICU):     ${t4.era_sensitivity_pct || "-"}% sens · ${t4.era_fpr_pct || "-"}% FPR · ${t4.alert_reduction_pct || "-"}% alert reduction`,
+      `  t=5.0 (Mixed):   ${t5.era_sensitivity_pct || "-"}% sens · ${t5.era_fpr_pct || "-"}% FPR · ${t5.alert_reduction_pct || "-"}% alert reduction`,
+      `  t=6.0 (Default): ${t6.era_sensitivity_pct || "-"}% sens · ${t6.era_fpr_pct || "-"}% FPR · ${t6.alert_reduction_pct || "-"}% alert reduction`,
+      `  Standard only:   ${s.threshold_sensitivity_pct}% sens · ${s.threshold_fpr_pct}% FPR`,
+      "",
+      "INTERPRETATION:",
+      a.interpretation || "",
+      "",
+      "NOTE: Synthetic retrospective validation only. Independent clinical review required.",
+      "Contact: info@earlyriskalertai.com · Model card: /model-card",
+    ].join("\\n");
+    navigator.clipboard.writeText(text)
+      .then(() => alert("Results copied to clipboard. Paste into your email."))
+      .catch(() => { const ta = document.createElement("textarea"); ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand("copy"); document.body.removeChild(ta); alert("Results copied to clipboard."); });
+  }
+
+  async function loadUploadHistory() {
+    try {
+      const res = await fetch('/api/retro/list');
+      const data = await res.json();
+      const el = document.getElementById('uploadsTable');
+      if (!data.uploads || !data.uploads.length) {
+        el.innerHTML = '<p style="color:var(--muted)">No uploads yet this session.</p>';
+        return;
+      }
+      el.innerHTML = `<div style="overflow-x:auto"><table>
+        <thead><tr><th>File</th><th>Uploaded</th><th>Rows</th><th>Patients</th><th>Events</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody>
+          ${data.uploads.map(u => `<tr>
+            <td>${u.filename}</td>
+            <td style="font-size:12px;color:var(--muted)">${u.uploaded_at.substring(0,19).replace('T',' ')}</td>
+            <td>${u.row_count}</td>
+            <td>${u.patient_count||'—'}</td>
+            <td>${u.event_count||'—'}</td>
+            <td><span class="pill ${u.status==='analyzed'?'green':'blue'}">${u.status}</span></td>
+            <td style="display:flex;gap:6px">
+              <a href="/api/retro/analyze/${u.upload_id}" class="btn secondary" style="padding:5px 10px;font-size:12px">Analyze</a>
+              <a href="/api/retro/export/${u.upload_id}" class="btn secondary" style="padding:5px 10px;font-size:12px">Export</a>
+            </td>
+          </tr>`).join('')}
+        </tbody>
+      </table></div>`;
+    } catch(e) { /* silent */ }
+  }
+
+  loadUploadHistory();
+</script>
+</body>
+</html>"""
 
     @app.get("/retro-upload")
     @_login_required
@@ -4650,26 +5201,16 @@ def create_app() -> Flask:
     @app.post("/api/retro/upload")
     @_login_required
     def retro_upload_api():
-        """Guaranteed stable upload for live hospital CSV/.gz + MIMIC output"""
+        """Legacy multipart form upload — kept for API compatibility."""
         if "file" not in request.files:
-            return jsonify({"ok": False, "error": "No file received"}), 400
+            return jsonify({"ok": False, "error": "No file uploaded. Include a CSV file in the 'file' field."}), 400
         f = request.files["file"]
-        if not f.filename:
-            return jsonify({"ok": False, "error": "Invalid file"}), 400
-        filename = f.filename.lower()
-        if not (filename.endswith(".csv") or filename.endswith(".gz")):
-            return jsonify({"ok": False, "error": "Only .csv or .gz files allowed"}), 400
-        try:
-            raw = f.read()
-            if len(raw) > 100 * 1024 * 1024:
-                return jsonify({"ok": False, "error": "File too large (max 100 MB)"}), 400
-            if filename.endswith(".gz"):
-                import gzip
-                raw = gzip.decompress(raw)
-            return _process_retro_upload(raw, f.filename)
-        except Exception as e:
-            print(f"[RETRO UPLOAD CRITICAL ERROR] {type(e).__name__}: {e}")
-            return jsonify({"ok": False, "error": f"Upload failed: {str(e)}"}), 500
+        if not f.filename or not f.filename.lower().endswith(".csv"):
+            return jsonify({"ok": False, "error": "File must be a CSV (.csv extension required)."}), 400
+        raw = f.read()
+        if len(raw) > 100 * 1024 * 1024:
+            return jsonify({"ok": False, "error": "File exceeds 100 MB limit. For datasets larger than 50 MB, contact info@earlyriskalertai.com."}), 400
+        return _process_retro_upload(raw, f.filename)
 
     @app.post("/api/retro/upload-chunk")
     @_login_required
@@ -4814,24 +5355,12 @@ def create_app() -> Flask:
                     RETRO_STATE["processing"][uid] = {
                         "status": "error", "message": err_msg,
                     }
-                    # Write error result BEFORE deleting status file
-                    try:
-                        result_file.write_text(
-                            json.dumps({"ok": False, "error": err_msg,
-                                        "hint": "If uploading MIMIC data, use /api/mimic/extract to convert to ERA format first."}),
-                            encoding="utf-8"
-                        )
-                    except Exception:
-                        pass
-                    # Always delete status file so poll stops returning "running"
-                    try:
-                        sfile.unlink(missing_ok=True)
-                    except Exception:
-                        pass
-                    try:
-                        apath.unlink(missing_ok=True)
-                    except Exception:
-                        pass
+                    result_file.write_text(
+                        json.dumps({"ok": False, "error": err_msg}),
+                        encoding="utf-8"
+                    )
+                    sfile.unlink(missing_ok=True)
+                    apath.unlink(missing_ok=True)
 
             import threading
             threading.Thread(target=_bg_stream_analyze, daemon=True).start()
@@ -4867,8 +5396,8 @@ def create_app() -> Flask:
             content  = payload.get("content", "")
             if not content:
                 return jsonify({"ok": False, "error": "No CSV content received."}), 400
-            if not filename.lower().endswith(".csv") and not filename.lower().endswith(".gz"):
-                return jsonify({"ok": False, "error": "File must be a CSV or CSV.GZ file."}), 400
+            if not filename.lower().endswith(".csv"):
+                return jsonify({"ok": False, "error": "File must be a CSV (.csv extension required)."}), 400
             raw = content.encode("utf-8")
             if len(raw) > 100 * 1024 * 1024:
                 return jsonify({"ok": False, "error": "Content exceeds 100 MB limit."}), 400
@@ -5007,22 +5536,15 @@ def create_app() -> Flask:
             retro_dir = _data_dir() / "retro"
             result_file = retro_dir / f"result_{upload_id}.json"
             status_file = retro_dir / f"status_{upload_id}.json"
-            # ALWAYS check result file first — it may exist even if status file does too
             if result_file.exists():
                 try:
                     data = json.loads(result_file.read_text(encoding="utf-8"))
                     if data.get("ok"):
                         RETRO_STATE["analysis"][upload_id] = data
-                    # Clean up status file if it still exists
-                    if status_file.exists():
-                        try:
-                            status_file.unlink(missing_ok=True)
-                        except Exception:
-                            pass
                     return jsonify(data)
                 except Exception:
                     pass
-            # Only return "running" if result file not found AND status file exists
+            # Check if background job is running (status file exists)
             if status_file.exists():
                 return jsonify({
                     "ok": False, "pending": True, "status": "running",
@@ -5333,3 +5855,4 @@ def create_app() -> Flask:
         return Response(generate(), mimetype="text/event-stream")
 
     return app
+
