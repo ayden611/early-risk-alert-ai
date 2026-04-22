@@ -5385,6 +5385,7 @@ def create_app() -> Flask:
             return jsonify({"ok": False, "errors": errors}), 400
 
         f_dte = request.files.get("datetimeevents")
+        datetimeevents_uploaded = bool(f_dte)
         if f_dte:
             try:
                 raw = f_dte.read()
@@ -5425,6 +5426,9 @@ def create_app() -> Flask:
 
         validation = _validate_mimic_extract(csv_text)
         stats["validation"] = validation
+        stats["min_vitals_used"] = min_vitals
+        stats["datetimeevents_uploaded"] = datetimeevents_uploaded
+        stats["recognized_event_itemids"] = sorted(list(MIMIC_EVENT_ITEMIDS.keys()))
         if not validation.get("ok"):
             return jsonify({
                 "ok": False,
@@ -5434,7 +5438,18 @@ def create_app() -> Flask:
             }), 422
 
         filename = f"era_mimic_convert_{_utc_now_iso()[:10]}.csv"
-        return _process_retro_upload(csv_text.encode("utf-8"), filename)
+        retro_resp = _process_retro_upload(csv_text.encode("utf-8"), filename)
+
+        try:
+            payload = retro_resp.get_json(silent=True) if hasattr(retro_resp, "get_json") else None
+            if isinstance(payload, dict):
+                payload["mimic_extract_stats"] = stats
+                payload["source_note"] = "Mode B — Raw MIMIC / raw export converted to ERA format, then analyzed"
+                return jsonify(payload), getattr(retro_resp, "status_code", 200)
+        except Exception:
+            pass
+
+        return retro_resp
 
 
     @app.route("/api/mimic/extract", methods=["GET", "POST"])

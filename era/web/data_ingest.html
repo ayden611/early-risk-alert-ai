@@ -184,10 +184,28 @@
     const patients = data.patient_summary || [];
     const interp = data.interpretation || '';
     const source = data.source_note || '';
+    const extractStats = data.mimic_extract_stats || null;
     const hasEvents = Number(summary.total_events || 0) > 0;
 
     let html = '';
     if (source) html += '<div class="note" style="margin-bottom:12px">' + escapeHtml(source) + '</div>';
+    if (extractStats) {
+      let units = '';
+      if (extractStats.unit_distribution && typeof extractStats.unit_distribution === 'object') {
+        units = Object.entries(extractStats.unit_distribution).map(function(kv){
+          return escapeHtml(kv[0]) + ': ' + escapeHtml(fmtNum(kv[1]));
+        }).join(' · ');
+      }
+      html += '<div class="note" style="margin-bottom:12px">'
+        + '<b>Converted dataset summary</b><br>'
+        + 'datetimeevents uploaded: ' + escapeHtml(extractStats.datetimeevents_uploaded ? 'Yes' : 'No') + '<br>'
+        + 'event-labeled readings flagged: ' + escapeHtml(fmtNum(extractStats.total_events_flagged || 0)) + '<br>'
+        + 'patients with events: ' + escapeHtml(fmtNum(extractStats.patients_with_events || 0)) + '<br>'
+        + 'rows skipped by minimum-vitals filter: ' + escapeHtml(fmtNum(extractStats.rows_skipped_min_vitals || 0)) + '<br>'
+        + 'minimum vitals used: ' + escapeHtml(fmtNum(extractStats.min_vitals_used || 0))
+        + (units ? '<br>unit distribution: ' + units : '')
+        + '</div>';
+    }
     if (!hasEvents) {
       html += '<div class="note" style="margin-bottom:12px">No labeled clinical events were present in this dataset, so patient detection and reading sensitivity are shown as N/A. This run is still useful for conversion testing and non-event false-positive behavior.</div>';
     }
