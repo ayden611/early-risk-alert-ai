@@ -184,17 +184,21 @@
     const patients = data.patient_summary || [];
     const interp = data.interpretation || '';
     const source = data.source_note || '';
+    const hasEvents = Number(summary.total_events || 0) > 0;
 
     let html = '';
     if (source) html += '<div class="note" style="margin-bottom:12px">' + escapeHtml(source) + '</div>';
+    if (!hasEvents) {
+      html += '<div class="note" style="margin-bottom:12px">No labeled clinical events were present in this dataset, so patient detection and reading sensitivity are shown as N/A. This run is still useful for conversion testing and non-event false-positive behavior.</div>';
+    }
 
     html += '<div class="stats">';
     html += '<div class="stat"><div class="stat-k">Total Rows</div><div class="stat-v">' + fmtNum(summary.total_rows) + '</div></div>';
     html += '<div class="stat"><div class="stat-k">Patients</div><div class="stat-v">' + fmtNum(summary.total_patients) + '</div></div>';
     html += '<div class="stat"><div class="stat-k">Clinical Events</div><div class="stat-v">' + fmtNum(summary.total_events) + '</div></div>';
     html += '<div class="stat"><div class="stat-k">Non-Event Readings</div><div class="stat-v">' + fmtNum(summary.total_nonevents) + '</div></div>';
-    html += '<div class="stat"><div class="stat-k">Patient Detection (T=6.0)</div><div class="stat-v">' + fmtPct(summary.era_patient_sensitivity_pct ?? summary.era_sensitivity_pct) + '</div></div>';
-    html += '<div class="stat"><div class="stat-k">Reading Sensitivity (T=6.0)</div><div class="stat-v">' + fmtPct(summary.era_sensitivity_pct) + '</div></div>';
+    html += '<div class="stat"><div class="stat-k">Patient Detection (T=6.0)</div><div class="stat-v">' + (hasEvents ? fmtPct(summary.era_patient_sensitivity_pct ?? summary.era_sensitivity_pct) : 'N/A') + '</div></div>';
+    html += '<div class="stat"><div class="stat-k">Reading Sensitivity (T=6.0)</div><div class="stat-v">' + (hasEvents ? fmtPct(summary.era_sensitivity_pct) : 'N/A') + '</div></div>';
     html += '<div class="stat"><div class="stat-k">ERA False Positive Rate</div><div class="stat-v">' + fmtPct(summary.era_fpr_pct) + '</div></div>';
     html += '<div class="stat"><div class="stat-k">Review Burden Reduction</div><div class="stat-v">' + fmtPct(summary.alert_reduction_pct) + '</div></div>';
     html += '</div>';
@@ -202,7 +206,7 @@
     if (comparison.length){
       html += '<div class="table-wrap"><table><thead><tr><th>Threshold</th><th>Patient Detection</th><th>Reading Sensitivity</th><th>False Positive Rate</th><th>Review Burden Reduction</th><th>Best For</th></tr></thead><tbody>';
       comparison.forEach(function(row){
-        html += '<tr><td>' + escapeHtml(row.threshold) + '</td><td>' + escapeHtml(fmtPct(row.era_patient_sensitivity_pct ?? '')) + '</td><td>' + escapeHtml(fmtPct(row.era_sensitivity_pct)) + '</td><td>' + escapeHtml(fmtPct(row.era_fpr_pct)) + '</td><td>' + escapeHtml(fmtPct(row.alert_reduction_pct)) + '</td><td>' + escapeHtml(row.recommendation || '') + '</td></tr>';
+        html += '<tr><td>' + escapeHtml(row.threshold) + '</td><td>' + escapeHtml(hasEvents ? fmtPct(row.era_patient_sensitivity_pct ?? '') : 'N/A') + '</td><td>' + escapeHtml(hasEvents ? fmtPct(row.era_sensitivity_pct) : 'N/A') + '</td><td>' + escapeHtml(fmtPct(row.era_fpr_pct)) + '</td><td>' + escapeHtml(fmtPct(row.alert_reduction_pct)) + '</td><td>' + escapeHtml(row.recommendation || '') + '</td></tr>';
       });
       html += '</tbody></table></div>';
     }
