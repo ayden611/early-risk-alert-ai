@@ -112,8 +112,8 @@
 </div>
 
 <script>
-  const SCHEMA = """ + json.dumps({k: v for k, v in CSV_SCHEMA_DESCRIPTION.items()}) + """;
-  const REQUIRED = """ + json.dumps(CSV_SCHEMA_REQUIRED) + """;
+  const SCHEMA = {};
+  const REQUIRED = [];
 
   // Render schema table
   (function() {
