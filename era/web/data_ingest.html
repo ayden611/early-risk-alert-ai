@@ -491,10 +491,19 @@
       if (dte) fd.append('datetimeevents', dte);
       fd.append('top_n', $('resolverTopN').value || '25');
 
-      const resp = await fetch('/api/mimic/resolve-ditems', { method:'POST', body:fd });
-      const data = await resp.json();
+      const resolverUrl = new URL('/api/mimic/resolve-ditems', window.location.origin).toString();
+      const resp = await fetch(resolverUrl, { method:'POST', body:fd });
 
-      if (!data.ok) throw new Error(data.error || 'Resolver failed');
+      const ct = resp.headers.get('content-type') || '';
+      let data = null;
+      if (ct.includes('application/json')) {
+        data = await resp.json();
+      } else {
+        const txt = await resp.text();
+        throw new Error('Resolver endpoint returned non-JSON response (status ' + resp.status + ').');
+      }
+
+      if (!resp.ok || !data.ok) throw new Error((data && data.error) ? data.error : ('Resolver failed with status ' + resp.status));
 
       renderDitemsResolver(data);
       setStatus('resolverStatus', 'Item IDs resolved successfully.', 'ok');
