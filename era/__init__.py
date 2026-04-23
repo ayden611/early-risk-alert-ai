@@ -2333,6 +2333,38 @@ def _parse_mimic_datetimeevents(text):
             result[pid].add(etime)
     return result
 
+def _mimic_datetimeevents_diagnostics(text, icustays):
+    """Count raw recognized datetimeevents rows and how many match uploaded ICU stays."""
+    diag = {
+        "raw_recognized_datetimeevents_rows": 0,
+        "raw_event_rows_matched_to_uploaded_icu_stays": 0,
+    }
+    reader = csv.DictReader(io.StringIO(text))
+    if not reader.fieldnames:
+        return diag
+
+    event_ids = set(MIMIC_EVENT_ITEMIDS.keys())
+    icu_subjects = set(icustays.keys())
+
+    for row in reader:
+        try:
+            iid = int(row.get("itemid", 0))
+        except (ValueError, TypeError):
+            continue
+        if iid not in event_ids:
+            continue
+
+        pid   = str(row.get("subject_id","")).strip()
+        etime = str(row.get("charttime", row.get("storetime",""))).strip()
+        if not (pid and etime):
+            continue
+
+        diag["raw_recognized_datetimeevents_rows"] += 1
+        if pid in icu_subjects:
+            diag["raw_event_rows_matched_to_uploaded_icu_stays"] += 1
+
+    return diag
+
 def _build_era_csv_from_mimic(vitals, icustays, events, min_vitals=3, event_window_hours=6):
     """
     Pivot MIMIC data to ERA-compatible CSV.
@@ -5409,6 +5441,10 @@ def create_app() -> Flask:
         icustays = _parse_mimic_icustays(icustays_text)
         del icustays_text
 
+        datetime_diag = _mimic_datetimeevents_diagnostics(datetimeevents_text, icustays) if datetimeevents_text else {
+            "raw_recognized_datetimeevents_rows": 0,
+            "raw_event_rows_matched_to_uploaded_icu_stays": 0,
+        }
         events = _parse_mimic_datetimeevents(datetimeevents_text) if datetimeevents_text else {}
         if datetimeevents_text:
             del datetimeevents_text
@@ -5429,6 +5465,9 @@ def create_app() -> Flask:
         stats["min_vitals_used"] = min_vitals
         stats["datetimeevents_uploaded"] = datetimeevents_uploaded
         stats["recognized_event_itemids"] = sorted(list(MIMIC_EVENT_ITEMIDS.keys()))
+        stats["raw_recognized_datetimeevents_rows"] = datetime_diag.get("raw_recognized_datetimeevents_rows", 0)
+        stats["raw_event_rows_matched_to_uploaded_icu_stays"] = datetime_diag.get("raw_event_rows_matched_to_uploaded_icu_stays", 0)
+        stats["matched_event_rows_surviving_min_vitals_filter"] = stats.get("total_events_flagged", 0)
         if not validation.get("ok"):
             return jsonify({
                 "ok": False,

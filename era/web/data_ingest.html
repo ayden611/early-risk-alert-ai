@@ -199,8 +199,10 @@
       html += '<div class="note" style="margin-bottom:12px">'
         + '<b>Converted dataset summary</b><br>'
         + 'datetimeevents uploaded: ' + escapeHtml(extractStats.datetimeevents_uploaded ? 'Yes' : 'No') + '<br>'
-        + 'event-labeled readings flagged: ' + escapeHtml(fmtNum(extractStats.total_events_flagged || 0)) + '<br>'
-        + 'patients with events: ' + escapeHtml(fmtNum(extractStats.patients_with_events || 0)) + '<br>'
+        + 'raw recognized datetimeevents rows found: ' + escapeHtml(fmtNum(extractStats.raw_recognized_datetimeevents_rows || 0)) + '<br>'
+        + 'raw event rows matched to uploaded ICU stays: ' + escapeHtml(fmtNum(extractStats.raw_event_rows_matched_to_uploaded_icu_stays || 0)) + '<br>'
+        + 'matched event rows surviving minimum-vitals filter: ' + escapeHtml(fmtNum(extractStats.matched_event_rows_surviving_min_vitals_filter || extractStats.total_events_flagged || 0)) + '<br>'
+        + 'patients with events after matching: ' + escapeHtml(fmtNum(extractStats.patients_with_events || 0)) + '<br>'
         + 'rows skipped by minimum-vitals filter: ' + escapeHtml(fmtNum(extractStats.rows_skipped_min_vitals || 0)) + '<br>'
         + 'minimum vitals used: ' + escapeHtml(fmtNum(extractStats.min_vitals_used || 0))
         + (units ? '<br>unit distribution: ' + units : '')
