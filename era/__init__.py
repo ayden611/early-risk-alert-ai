@@ -2377,6 +2377,29 @@ def _mimic_datetimeevents_itemid_inspector(text, top_n=25):
     if not reader.fieldnames:
         return diag
 
+
+def _parse_mimic_ditems(text):
+    """Parse MIMIC d_items -> {itemid -> metadata}"""
+    reader = csv.DictReader(io.StringIO(text))
+    if not reader.fieldnames:
+        return {}
+    result = {}
+    for row in reader:
+        raw_iid = str(row.get("itemid", "")).strip()
+        if not raw_iid:
+            continue
+        try:
+            iid = int(raw_iid)
+        except (ValueError, TypeError):
+            continue
+        result[iid] = {
+            "label": str(row.get("label", "")).strip(),
+            "abbreviation": str(row.get("abbreviation", "")).strip(),
+            "category": str(row.get("category", "")).strip(),
+            "linksto": str(row.get("linksto", "")).strip(),
+        }
+    return result
+
     counts = {}
     recognized = set(MIMIC_EVENT_ITEMIDS.keys())
     recognized_present = set()
@@ -5534,6 +5557,94 @@ def create_app() -> Flask:
 
         return retro_resp
 
+
+
+    @app.post("/api/mimic/resolve-ditems")
+    @_login_required
+    def mimic_resolve_ditems():
+        def _read_uploaded_text(file_storage):
+            raw = file_storage.read()
+            if file_storage.filename.lower().endswith(".gz"):
+                import gzip as _gz
+                raw = _gz.decompress(raw)
+            return raw.decode("utf-8-sig")
+
+        f_di = request.files.get("d_items")
+        if not f_di:
+            return jsonify({"ok": False, "error": "Please upload d_items.csv or d_items.csv.gz"}), 400
+
+        try:
+            ditems_text = _read_uploaded_text(f_di)
+        except Exception as e:
+            return jsonify({"ok": False, "error": f"Could not read d_items: {str(e)}"}), 400
+
+        ditems = _parse_mimic_ditems(ditems_text)
+        try:
+            top_n = int(request.form.get("top_n", 25))
+        except Exception:
+            top_n = 25
+
+        f_dt = request.files.get("datetimeevents")
+        datetimeevents_uploaded = bool(f_dt)
+        inspector = {
+            "rows_with_itemid": 0,
+            "top_itemids": [],
+            "recognized_itemids_present": [],
+        }
+
+        if f_dt:
+            try:
+                dt_text = _read_uploaded_text(f_dt)
+                inspector = _mimic_datetimeevents_itemid_inspector(dt_text, top_n=top_n)
+            except Exception as e:
+                return jsonify({"ok": False, "error": f"Could not read datetimeevents: {str(e)}"}), 400
+
+        itemids = []
+        if inspector.get("top_itemids"):
+            itemids = [int(x["itemid"]) for x in inspector["top_itemids"]]
+        else:
+            manual = str(request.form.get("itemids", "")).strip()
+            if manual:
+                for part in re.split(r"[\s,]+", manual):
+                    if not part:
+                        continue
+                    try:
+                        itemids.append(int(part))
+                    except Exception:
+                        pass
+            else:
+                itemids = sorted(list(MIMIC_EVENT_ITEMIDS.keys()))
+
+        recognized_set = set(MIMIC_EVENT_ITEMIDS.keys())
+        resolved = []
+        for iid in itemids:
+            meta = ditems.get(int(iid), {})
+            count = 0
+            recognized_present = False
+            for row in inspector.get("top_itemids", []):
+                if int(row.get("itemid", -1)) == int(iid):
+                    count = row.get("count", 0)
+                    recognized_present = bool(row.get("recognized"))
+                    break
+
+            resolved.append({
+                "itemid": int(iid),
+                "count": count,
+                "recognized_by_current_map": int(iid) in recognized_set,
+                "recognized_present_in_uploaded_datetimeevents": recognized_present,
+                "label": meta.get("label", ""),
+                "abbreviation": meta.get("abbreviation", ""),
+                "category": meta.get("category", ""),
+                "linksto": meta.get("linksto", ""),
+            })
+
+        return jsonify({
+            "ok": True,
+            "datetimeevents_uploaded": datetimeevents_uploaded,
+            "inspector": inspector,
+            "resolved_itemids": resolved,
+            "configured_event_itemids": sorted(list(recognized_set)),
+        })
 
     @app.route("/api/mimic/extract", methods=["GET", "POST"])
     @_login_required

@@ -155,6 +155,35 @@
     </div>
   </div>
 
+  <div class="card" id="resolverCard">
+    <div class="kicker">Mode C</div>
+    <h2>d_items Item ID Resolver</h2>
+    <p>Upload d_items.csv.gz and optionally datetimeevents.csv.gz to translate MIMIC itemids into labels before updating your event map.</p>
+
+    <div class="field">
+      <label>d_items.csv or d_items.csv.gz</label>
+      <input type="file" id="ditemsFile" accept=".csv,.gz,text/csv,application/gzip,application/x-gzip">
+    </div>
+
+    <div class="field">
+      <label>Optional datetimeevents.csv or datetimeevents.csv.gz</label>
+      <input type="file" id="resolverDatetimeevents" accept=".csv,.gz,text/csv,application/gzip,application/x-gzip">
+    </div>
+
+    <div class="field" style="max-width:220px">
+      <label>Top itemids to resolve</label>
+      <input type="number" id="resolverTopN" value="25" min="1" max="100">
+    </div>
+
+    <div class="btns">
+      <button class="btn secondary" id="resolveDitemsBtn" onclick="runDitemsResolver()">Resolve MIMIC Item IDs</button>
+    </div>
+
+    <div class="status" id="resolverStatus"></div>
+    <div class="note">Use this while chartevents is downloading. It helps you understand what the datetimeevents itemids in your cohort actually mean.</div>
+    <div id="resolverBody" style="margin-top:14px;display:none"></div>
+  </div>
+
   <div class="card results" id="resultsCard">
     <div class="kicker">Retrospective validation</div>
     <h2>Validation Results</h2>
@@ -397,6 +426,86 @@
       $('mimicDownloadBtn').disabled = false;
     }
   }
+
+  function renderDitemsResolver(data){
+    const body = $('resolverBody');
+    const insp = data.inspector || {};
+    const rows = data.resolved_itemids || [];
+    const recognizedPresent = Array.isArray(insp.recognized_itemids_present) && insp.recognized_itemids_present.length
+      ? insp.recognized_itemids_present.join(', ')
+      : 'None';
+
+    let topItems = 'None';
+    if (Array.isArray(insp.top_itemids) && insp.top_itemids.length) {
+      topItems = insp.top_itemids.map(function(x){
+        return String(x.itemid) + ' (' + fmtNum(x.count) + ')' + (x.recognized ? ' [recognized]' : '');
+      }).join(' · ');
+    }
+
+    let html = '';
+    html += '<div class="note" style="margin-bottom:12px">'
+      + '<b>d_items resolution summary</b><br>'
+      + 'datetimeevents uploaded: ' + escapeHtml(data.datetimeevents_uploaded ? 'Yes' : 'No') + '<br>'
+      + 'rows with itemid present: ' + escapeHtml(fmtNum(insp.rows_with_itemid || 0)) + '<br>'
+      + 'recognized event itemids present in uploaded datetimeevents: ' + escapeHtml(recognizedPresent) + '<br>'
+      + 'top datetimeevents itemids: ' + escapeHtml(topItems)
+      + '</div>';
+
+    html += '<div class="table-wrap"><table><thead><tr>'
+      + '<th>Item ID</th><th>Count</th><th>In Current Event Map</th><th>Label</th><th>Abbreviation</th><th>Category</th><th>Linksto</th>'
+      + '</tr></thead><tbody>';
+
+    rows.forEach(function(r){
+      html += '<tr>'
+        + '<td>' + escapeHtml(String(r.itemid || '')) + '</td>'
+        + '<td>' + escapeHtml(fmtNum(r.count || 0)) + '</td>'
+        + '<td>' + escapeHtml(r.recognized_by_current_map ? 'Yes' : 'No') + '</td>'
+        + '<td>' + escapeHtml(r.label || '') + '</td>'
+        + '<td>' + escapeHtml(r.abbreviation || '') + '</td>'
+        + '<td>' + escapeHtml(r.category || '') + '</td>'
+        + '<td>' + escapeHtml(r.linksto || '') + '</td>'
+        + '</tr>';
+    });
+
+    html += '</tbody></table></div>';
+    body.innerHTML = html;
+    body.style.display = 'block';
+    window.scrollTo({top: $('resolverCard').offsetTop - 20, behavior: 'smooth'});
+  }
+
+  async function runDitemsResolver(){
+    const ditems = $('ditemsFile').files[0];
+    const dte = $('resolverDatetimeevents').files[0];
+
+    if (!ditems){
+      setStatus('resolverStatus', 'Please select d_items.csv or d_items.csv.gz.', 'err');
+      return;
+    }
+
+    $('resolveDitemsBtn').disabled = true;
+    setStatus('resolverStatus', 'Resolving MIMIC item IDs...', '');
+
+    try {
+      const fd = new FormData();
+      fd.append('d_items', ditems);
+      if (dte) fd.append('datetimeevents', dte);
+      fd.append('top_n', $('resolverTopN').value || '25');
+
+      const resp = await fetch('/api/mimic/resolve-ditems', { method:'POST', body:fd });
+      const data = await resp.json();
+
+      if (!data.ok) throw new Error(data.error || 'Resolver failed');
+
+      renderDitemsResolver(data);
+      setStatus('resolverStatus', 'Item IDs resolved successfully.', 'ok');
+    } catch (err) {
+      setStatus('resolverStatus', 'Resolver failed: ' + err.message, 'err');
+    } finally {
+      $('resolveDitemsBtn').disabled = false;
+    }
+  }
+
+
 </script>
 </body>
 </html>
