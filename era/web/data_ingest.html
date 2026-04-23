@@ -207,6 +207,23 @@
         + 'minimum vitals used: ' + escapeHtml(fmtNum(extractStats.min_vitals_used || 0))
         + (units ? '<br>unit distribution: ' + units : '')
         + '</div>';
+
+      if (extractStats.datetimeevents_itemid_inspector) {
+        const insp = extractStats.datetimeevents_itemid_inspector;
+        const topItems = Array.isArray(insp.top_itemids) ? insp.top_itemids.map(function(x){
+          return String(x.itemid) + ' (' + fmtNum(x.count) + ')' + (x.recognized ? ' [recognized]' : '');
+        }).join(' · ') : '';
+        const recognizedPresent = Array.isArray(insp.recognized_itemids_present) && insp.recognized_itemids_present.length
+          ? insp.recognized_itemids_present.join(', ')
+          : 'None';
+
+        html += '<div class="note" style="margin-bottom:12px">'
+          + '<b>Datetimeevents itemid inspector</b><br>'
+          + 'rows with itemid present: ' + escapeHtml(fmtNum(insp.rows_with_itemid || 0)) + '<br>'
+          + 'recognized event itemids present in uploaded file: ' + escapeHtml(recognizedPresent) + '<br>'
+          + 'top datetimeevents itemids in uploaded file: ' + escapeHtml(topItems || 'None')
+          + '</div>';
+      }
     }
     if (!hasEvents) {
       html += '<div class="note" style="margin-bottom:12px">No labeled clinical events were present in this dataset, so patient detection and reading sensitivity are shown as N/A. This run is still useful for conversion testing and non-event false-positive behavior.</div>';

@@ -2365,6 +2365,44 @@ def _mimic_datetimeevents_diagnostics(text, icustays):
 
     return diag
 
+
+def _mimic_datetimeevents_itemid_inspector(text, top_n=25):
+    """Inspect which datetimeevents itemids are actually present in the uploaded file."""
+    diag = {
+        "rows_with_itemid": 0,
+        "top_itemids": [],
+        "recognized_itemids_present": [],
+    }
+    reader = csv.DictReader(io.StringIO(text))
+    if not reader.fieldnames:
+        return diag
+
+    counts = {}
+    recognized = set(MIMIC_EVENT_ITEMIDS.keys())
+    recognized_present = set()
+
+    for row in reader:
+        raw_iid = str(row.get("itemid", "")).strip()
+        if not raw_iid:
+            continue
+        try:
+            iid = int(raw_iid)
+        except (ValueError, TypeError):
+            continue
+
+        diag["rows_with_itemid"] += 1
+        counts[iid] = counts.get(iid, 0) + 1
+        if iid in recognized:
+            recognized_present.add(iid)
+
+    top = sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))[:top_n]
+    diag["top_itemids"] = [
+        {"itemid": iid, "count": count, "recognized": iid in recognized}
+        for iid, count in top
+    ]
+    diag["recognized_itemids_present"] = sorted(list(recognized_present))
+    return diag
+
 def _build_era_csv_from_mimic(vitals, icustays, events, min_vitals=3, event_window_hours=6):
     """
     Pivot MIMIC data to ERA-compatible CSV.
@@ -5445,6 +5483,11 @@ def create_app() -> Flask:
             "raw_recognized_datetimeevents_rows": 0,
             "raw_event_rows_matched_to_uploaded_icu_stays": 0,
         }
+        datetime_itemid_diag = _mimic_datetimeevents_itemid_inspector(datetimeevents_text) if datetimeevents_text else {
+            "rows_with_itemid": 0,
+            "top_itemids": [],
+            "recognized_itemids_present": [],
+        }
         events = _parse_mimic_datetimeevents(datetimeevents_text) if datetimeevents_text else {}
         if datetimeevents_text:
             del datetimeevents_text
@@ -5468,6 +5511,7 @@ def create_app() -> Flask:
         stats["raw_recognized_datetimeevents_rows"] = datetime_diag.get("raw_recognized_datetimeevents_rows", 0)
         stats["raw_event_rows_matched_to_uploaded_icu_stays"] = datetime_diag.get("raw_event_rows_matched_to_uploaded_icu_stays", 0)
         stats["matched_event_rows_surviving_min_vitals_filter"] = stats.get("total_events_flagged", 0)
+        stats["datetimeevents_itemid_inspector"] = datetime_itemid_diag
         if not validation.get("ok"):
             return jsonify({
                 "ok": False,
