@@ -3307,8 +3307,17 @@ def _process_retro_upload(raw: bytes, filename: str):
                           f"Results typically ready in 15–30 seconds.",
             "started_at": _utc_now_iso(),
         }
+        # Write status file to disk immediately so ANY worker can find this upload_id on poll
+        _status_file = retro_dir / f"status_{upload_id}.json"
+        _status_file.write_text(
+            __import__("json").dumps({"status": "running", "upload_id": upload_id}),
+            encoding="utf-8"
+        )
         import threading
-        def _bg_analyze(rt=raw_text, uid=upload_id):
+        def _bg_analyze(rt=raw_text, uid=upload_id, rdir=retro_dir):
+            import json as _json
+            _result_file = rdir / f"result_{uid}.json"
+            _sfile = rdir / f"status_{uid}.json"
             try:
                 analysis = _run_retro_analysis(records=[], raw_text=rt)
                 analysis["upload_id"]   = uid
@@ -3322,11 +3331,28 @@ def _process_retro_upload(raw: bytes, filename: str):
                     "message":      "Analysis complete.",
                     "completed_at": _utc_now_iso(),
                 }
+                # Write result to disk so any worker can return it on poll
+                _result_file.write_text(
+                    _json.dumps({"ok": True, "upload_id": uid, **analysis}, ensure_ascii=False),
+                    encoding="utf-8"
+                )
+                _sfile.unlink(missing_ok=True)
             except Exception as e:
                 RETRO_STATE["processing"][uid] = {
                     "status":  "error",
                     "message": str(e),
                 }
+                try:
+                    _result_file.write_text(
+                        _json.dumps({"ok": False, "error": str(e)}),
+                        encoding="utf-8"
+                    )
+                except Exception:
+                    pass
+                try:
+                    _sfile.unlink(missing_ok=True)
+                except Exception:
+                    pass
         threading.Thread(target=_bg_analyze, daemon=True).start()
         return jsonify({
             "ok":       True,
