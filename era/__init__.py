@@ -5226,7 +5226,74 @@ def create_app() -> Flask:
         if not raw:
             return jsonify({"ok": False, "error": "Uploaded file is empty."}), 400
 
-        return _process_retro_upload(raw, filename)
+        upload_result = _process_retro_upload(raw, filename)
+
+        resp = upload_result
+        status_code = 200
+
+        if isinstance(upload_result, tuple):
+            if len(upload_result) >= 1:
+                resp = upload_result[0]
+            if len(upload_result) >= 2 and isinstance(upload_result[1], int):
+                status_code = upload_result[1]
+
+        payload = None
+        if hasattr(resp, "get_json"):
+            try:
+                payload = resp.get_json(silent=True)
+            except Exception:
+                payload = None
+
+        # If the upload helper already returned final analysis JSON, pass it through.
+        if isinstance(payload, dict) and (
+            "summary" in payload or
+            "thresholds" in payload or
+            "patient_summary" in payload or
+            "results" in payload
+        ):
+            return upload_result
+
+        if not isinstance(payload, dict) or not payload.get("ok"):
+            return upload_result
+
+        upload_id = payload.get("upload_id")
+        if not upload_id:
+            return upload_result
+
+        # Find the existing analyze route and call it directly in the same authenticated request context.
+        analyze_rule = None
+        try:
+            for rule in app.url_map.iter_rules():
+                if "/api/retro/analyze/" in str(rule.rule):
+                    analyze_rule = rule
+                    break
+        except Exception:
+            analyze_rule = None
+
+        if not analyze_rule:
+            return jsonify({
+                "ok": False,
+                "error": "Upload succeeded but analyze route was not found.",
+                "upload_id": upload_id
+            }), 500
+
+        analyze_view = app.view_functions.get(analyze_rule.endpoint)
+        if not analyze_view:
+            return jsonify({
+                "ok": False,
+                "error": "Upload succeeded but analyze view was not found.",
+                "upload_id": upload_id
+            }), 500
+
+        try:
+            return analyze_view(upload_id)
+        except Exception as e:
+            return jsonify({
+                "ok": False,
+                "error": f"Upload succeeded but analyze step failed: {str(e)}",
+                "upload_id": upload_id
+            }), 500
+
 
 
     @app.post("/api/retro/upload")
