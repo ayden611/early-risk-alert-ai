@@ -563,11 +563,51 @@
         throw new Error((data && data.error) ? data.error : ('Upload/analyze failed with status ' + resp.status));
       }
 
-      if (typeof renderResults === 'function') {
-        renderResults(data);
+      // Inline result: render immediately
+      if (data.summary || data.thresholds || data.patient_summary) {
+        if (typeof renderResults === 'function') {
+          renderResults(data);
+        }
+        _setModeAStatus(card, 'Analysis complete.', 'ok');
+        return;
       }
 
-      _setModeAStatus(card, 'Analysis complete.', 'ok');
+      // Async result: poll until analysis is ready
+      const uploadId = data.upload_id;
+      if (!uploadId) {
+        throw new Error('Upload succeeded but no upload_id returned.');
+      }
+
+      _setModeAStatus(card, 'Upload complete. Analyzing...', '');
+
+      for (let attempt = 0; attempt < 60; attempt++) {
+        await new Promise(r => setTimeout(r, 5000));
+
+        const poll = await fetch('/api/retro/analyze/' + encodeURIComponent(uploadId));
+        const pollCt = poll.headers.get('content-type') || '';
+        if (!pollCt.includes('application/json')) {
+          throw new Error('Polling returned non-JSON response (status ' + poll.status + ').');
+        }
+
+        const pj = await poll.json();
+
+        if (poll.status === 202 || pj.pending || pj.status === 'running') {
+          _setModeAStatus(card, 'Analysis in progress... (' + ((attempt + 1) * 5) + 's)', '');
+          continue;
+        }
+
+        if (!poll.ok || !pj.ok) {
+          throw new Error((pj && pj.error) ? pj.error : 'Analysis failed.');
+        }
+
+        if (typeof renderResults === 'function') {
+          renderResults(pj);
+        }
+        _setModeAStatus(card, 'Analysis complete.', 'ok');
+        return;
+      }
+
+      throw new Error('Analysis timed out after 5 minutes.');
     } catch (err) {
       _setModeAStatus(card, 'Upload failed: ' + err.message, 'err');
     } finally {
