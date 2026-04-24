@@ -515,6 +515,77 @@
   }
 
 
+
+  function _setModeAStatus(card, message, cls){
+    const statusEl =
+      (card && card.querySelector('.status')) ||
+      document.getElementById('status') ||
+      document.getElementById('uploadStatus');
+
+    if (!statusEl) return;
+    statusEl.textContent = message || '';
+    statusEl.className = 'status' + (cls ? ' ' + cls : '');
+  }
+
+  async function uploadAndAnalyzeFile(btn){
+    const card = (btn && btn.closest('.card')) || document;
+    const fileInput =
+      (card && card.querySelector('input[type="file"]')) ||
+      document.querySelector('#retroFile, #fileInput, input[type="file"]');
+
+    const file = fileInput && fileInput.files ? fileInput.files[0] : null;
+
+    if (!file){
+      _setModeAStatus(card, 'Please choose a .csv or .csv.gz file.', 'err');
+      return;
+    }
+
+    if (btn) btn.disabled = true;
+    _setModeAStatus(card, 'Uploading and analyzing file...', '');
+
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+
+      const resp = await fetch('/api/retro/upload-and-analyze', {
+        method: 'POST',
+        body: fd
+      });
+
+      const ct = resp.headers.get('content-type') || '';
+      if (!ct.includes('application/json')) {
+        throw new Error('Server returned non-JSON response (status ' + resp.status + ').');
+      }
+
+      const data = await resp.json();
+
+      if (!resp.ok || !data.ok) {
+        throw new Error((data && data.error) ? data.error : ('Upload/analyze failed with status ' + resp.status));
+      }
+
+      if (typeof renderResults === 'function') {
+        renderResults(data);
+      }
+
+      _setModeAStatus(card, 'Analysis complete.', 'ok');
+    } catch (err) {
+      _setModeAStatus(card, 'Upload failed: ' + err.message, 'err');
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    const modeAButton = Array.from(document.querySelectorAll('button')).find(function(b){
+      return /Run Validation Analysis/i.test((b.textContent || '').trim());
+    });
+
+    if (modeAButton) {
+      modeAButton.onclick = function(){ uploadAndAnalyzeFile(this); };
+    }
+  });
+
+
 </script>
 </body>
 </html>

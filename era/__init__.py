@@ -5206,6 +5206,29 @@ def create_app() -> Flask:
             download_name="era_retro_validation_schema_template.csv"
         )
 
+
+    @app.post("/api/retro/upload-and-analyze")
+    @_login_required
+    def retro_upload_and_analyze():
+        f = request.files.get("file")
+        if not f or not getattr(f, "filename", ""):
+            return jsonify({"ok": False, "error": "Please choose a .csv or .csv.gz file."}), 400
+
+        filename = str(f.filename or "").strip()
+        if not (filename.lower().endswith(".csv") or filename.lower().endswith(".csv.gz")):
+            return jsonify({"ok": False, "error": "File must be a .csv or .csv.gz file."}), 400
+
+        try:
+            raw = f.read()
+        except Exception as e:
+            return jsonify({"ok": False, "error": f"Could not read upload: {str(e)}"}), 400
+
+        if not raw:
+            return jsonify({"ok": False, "error": "Uploaded file is empty."}), 400
+
+        return _process_retro_upload(raw, filename)
+
+
     @app.post("/api/retro/upload")
     @_login_required
     def retro_upload_api():
