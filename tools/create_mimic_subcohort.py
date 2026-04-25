@@ -5,7 +5,6 @@ import argparse
 import csv
 import hashlib
 import json
-from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -23,13 +22,19 @@ def bucket_for_case(case_value):
     return int(digest[:12], 16) % 100
 
 
+def truthy(v):
+    s = str(v or "").strip().lower()
+    return s not in {"", "0", "0.0", "false", "no", "none", "nan", "null"}
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--source-csv", required=True)
-    ap.add_argument("--out-csv", default="data/validation/local_private/subcohorts/mimic_subcohort_b_hash_33_65.csv")
-    ap.add_argument("--manifest-json", default="data/validation/local_private/subcohorts/mimic_subcohort_b_manifest.json")
-    ap.add_argument("--bucket-start", type=int, default=33)
-    ap.add_argument("--bucket-end", type=int, default=65)
+    ap.add_argument("--out-csv", required=True)
+    ap.add_argument("--manifest-json", required=True)
+    ap.add_argument("--bucket-start", type=int, required=True)
+    ap.add_argument("--bucket-end", type=int, required=True)
+    ap.add_argument("--subset-name", default="subcohort")
     args = ap.parse_args()
 
     src = Path(args.source_csv)
@@ -54,8 +59,8 @@ def main():
         raise SystemExit(f"ERROR: could not find case identifier column. Found: {headers}")
 
     selected = []
-    cases = set()
-    all_cases = set()
+    selected_cases = set()
+    source_cases = set()
     event_rows = 0
 
     for row in rows:
@@ -63,17 +68,15 @@ def main():
         if not case_value:
             continue
 
-        all_cases.add(case_value)
+        source_cases.add(case_value)
         bucket = bucket_for_case(case_value)
 
         if args.bucket_start <= bucket <= args.bucket_end:
             selected.append(row)
-            cases.add(case_value)
+            selected_cases.add(case_value)
 
-            if event_col:
-                v = str(row.get(event_col, "")).strip().lower()
-                if v not in {"", "0", "0.0", "false", "no", "none", "nan", "null"}:
-                    event_rows += 1
+            if event_col and truthy(row.get(event_col)):
+                event_rows += 1
 
     if not selected:
         raise SystemExit("ERROR: selected subcohort has no rows.")
@@ -86,14 +89,14 @@ def main():
     manifest = {
         "ok": True,
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
-        "purpose": "Local-only deterministic patient/case-level MIMIC subcohort for DUA-safe aggregate validation.",
-        "subset_name": "subcohort_b_hash_33_65",
+        "purpose": "Local-only deterministic case-level subcohort for DUA-safe aggregate validation.",
+        "subset_name": args.subset_name,
         "bucket_start": args.bucket_start,
         "bucket_end": args.bucket_end,
         "source_rows": len(rows),
-        "source_case_count": len(all_cases),
+        "source_case_count": len(source_cases),
         "selected_rows": len(selected),
-        "selected_case_count": len(cases),
+        "selected_case_count": len(selected_cases),
         "selected_event_labeled_rows": event_rows,
         "local_subset_file": str(out_csv),
         "public_policy": "Local-only row-level subset. Do not commit or publish this CSV."
@@ -103,8 +106,9 @@ def main():
 
     print("WROTE local subcohort CSV:", out_csv)
     print("WROTE local manifest:", manifest_path)
+    print("Subset name:", args.subset_name)
     print("Selected rows:", len(selected))
-    print("Selected cases:", len(cases))
+    print("Selected cases:", len(selected_cases))
     print("Selected event-labeled rows:", event_rows)
 
 
