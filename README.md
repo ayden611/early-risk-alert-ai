@@ -313,3 +313,37 @@ The wrapper generates local/private outputs, sanitizes public artifacts, and kee
 Decision support only. Retrospective analysis only. Not intended to diagnose, direct treatment, replace clinician judgment, or independently trigger escalation.
 <!-- ERA_MIMIC_DUA_PUBLIC_SAFETY_V1_END -->
 
+
+<!-- ERA_REAL_ENGINE_PUBLIC_WORDING_V2_START -->
+## Real-Engine DUA-Safe Validation Framing
+
+The current public validation pages use the latest DUA-safe real-engine retrospective validation run.
+
+### Conservative t=6.0 Review Queue
+
+- Alert reduction: 94.3%
+- ERA FPR: 4.2%
+- Event-cluster detection: 15.3%
+- Median lead time among detected event clusters: 4.0 hours
+- ERA alerts per patient-day: 0.6467
+- Standard threshold alerts per patient-day: 11.2743
+
+t=6.0 is intentionally selective and should be framed as a conservative telemetry / stepdown review queue optimized for alert-burden reduction and low false positives.
+
+### High-Acuity t=4.0 Review Queue
+
+- Alert reduction: 80.3%
+- ERA FPR: 14.4%
+- Event-cluster detection: 37.7%
+- Median lead time: 4.0 hours
+- ERA alerts per patient-day: 2.2154
+
+t=4.0 is better for ICU / high-acuity review when the goal is higher detection with more alert volume.
+
+### Pilot-Safe Claim
+
+Retrospective analysis on de-identified MIMIC data showed ERA can support configurable review-prioritization workflows with substantially reduced alert burden and retrospective lead-time context.
+
+Decision support only. Retrospective analysis only. Not intended to diagnose, direct treatment, replace clinician judgment, or independently trigger escalation.
+<!-- ERA_REAL_ENGINE_PUBLIC_WORDING_V2_END -->
+

@@ -7,66 +7,82 @@
     "total_rows": 456453,
     "total_patients": 1705,
     "total_events": 21396,
-    "event_window_hours": 6,
+    "event_window_hours": 6.0,
     "thresholds_tested": [
       4.0,
       5.0,
       6.0
     ],
-    "data_status": "De-identified retrospective data only"
+    "data_status": "De-identified retrospective data. Public outputs are aggregate and DUA-sanitized.",
+    "event_clusters": 1658,
+    "event_definition_note": "Latest real-engine run reports clustered event episodes, not raw event rows."
   },
-  "headline": "Retrospective analysis on de-identified MIMIC data showed ERA can reduce alert burden while maintaining configurable patient-level detection in a 6-hour pre-event window.",
+  "headline": "Retrospective analysis on de-identified MIMIC data showed ERA can support configurable review-prioritization workflows with substantially reduced alert burden and retrospective lead-time context.",
   "default_threshold": {
     "threshold": 6.0,
-    "intended_context": "Telemetry / stepdown / conservative review queue",
-    "era_patient_sensitivity_pct": 36.6,
-    "era_reading_sensitivity_pct": 7.8,
-    "era_fpr_pct": 4.5,
-    "alert_reduction_pct": 81.0,
-    "threshold_patient_sensitivity_pct": 76.6,
-    "threshold_reading_sensitivity_pct": 28.9,
-    "threshold_fpr_pct": 24.3,
-    "era_total_alerts": 21251,
-    "threshold_total_alerts": 111933
+    "intended_context": "Conservative telemetry / stepdown review queue",
+    "framing": "Lowest alert burden, most selective; intentionally optimized for low false positives and alert-burden reduction.",
+    "era_patient_sensitivity_pct": 15.3,
+    "era_event_cluster_detection_pct": 15.3,
+    "era_reading_sensitivity_pct": 5.1,
+    "era_fpr_pct": 4.2,
+    "alert_reduction_pct": 94.3,
+    "threshold_reading_sensitivity_pct": 70.6,
+    "threshold_fpr_pct": 73.4,
+    "era_total_alerts": 19215,
+    "threshold_total_alerts": 334965,
+    "median_lead_time_hours": 4.0,
+    "era_alerts_per_patient_day": 0.6467,
+    "standard_alerts_per_patient_day": 11.2743
   },
   "threshold_profiles": [
     {
       "threshold": 4.0,
       "unit_profile": "ICU / high-acuity",
       "framing": "Higher detection, more alerts",
-      "era_patient_sensitivity_pct": 57.2,
-      "era_reading_sensitivity_pct": 15.6,
-      "era_fpr_pct": 12.4,
-      "alert_reduction_pct": 48.8,
-      "era_total_alerts": 57330
+      "era_patient_sensitivity_pct": 37.9,
+      "era_event_cluster_detection_pct": 37.7,
+      "era_reading_sensitivity_pct": 15.0,
+      "era_fpr_pct": 14.4,
+      "alert_reduction_pct": 80.3,
+      "era_alerts_per_patient_day": 2.2154,
+      "standard_alerts_per_patient_day": 11.2743,
+      "median_lead_time_hours": 4.0
     },
     {
       "threshold": 5.0,
       "unit_profile": "Mixed units",
       "framing": "Balanced detection and alert burden",
-      "era_patient_sensitivity_pct": 46.1,
-      "era_reading_sensitivity_pct": 11.0,
-      "era_fpr_pct": 7.4,
-      "alert_reduction_pct": 69.1,
-      "era_total_alerts": 34587
+      "era_patient_sensitivity_pct": 24.6,
+      "era_event_cluster_detection_pct": 24.4,
+      "era_reading_sensitivity_pct": 8.9,
+      "era_fpr_pct": 8.0,
+      "alert_reduction_pct": 89.1,
+      "era_alerts_per_patient_day": 1.2308,
+      "standard_alerts_per_patient_day": 11.2743,
+      "median_lead_time_hours": 4.0
     },
     {
       "threshold": 6.0,
       "unit_profile": "Telemetry / stepdown",
       "framing": "Lowest alert burden, most selective",
-      "era_patient_sensitivity_pct": 36.6,
-      "era_reading_sensitivity_pct": 7.8,
-      "era_fpr_pct": 4.5,
-      "alert_reduction_pct": 81.0,
-      "era_total_alerts": 21251
+      "era_patient_sensitivity_pct": 15.3,
+      "era_event_cluster_detection_pct": 15.3,
+      "era_reading_sensitivity_pct": 5.1,
+      "era_fpr_pct": 4.2,
+      "alert_reduction_pct": 94.3,
+      "era_alerts_per_patient_day": 0.6467,
+      "standard_alerts_per_patient_day": 11.2743,
+      "median_lead_time_hours": 4.0
     }
   ],
   "next_validation_metrics": {
     "median_lead_time_before_event_hours": 4.0,
     "alerts_per_patient_day": 0.6467,
-    "alerts_per_event_patient": 11.6525,
-    "status": "Lead-time metrics computed from row-level retrospective file.",
-    "note": "These metrics require row-level timestamps, event indicators, patient IDs, and alert flags or risk scores."
+    "alerts_per_event_patient": null,
+    "status": "Updated from latest DUA-safe real-engine retrospective validation run.",
+    "note": "These metrics require row-level timestamps, event indicators, patient IDs, and alert flags or risk scores.",
+    "standard_alerts_per_patient_day": 11.2743
   },
   "score_saturation_display_plan": {
     "problem": "Peak risk values can cluster at the upper cap, which may make high-risk patients look too similar.",
@@ -79,7 +95,7 @@
     ],
     "principle": "Do not rely on raw score alone. Foreground prioritization, trend, reason codes, and review context."
   },
-  "approved_claim": "Retrospective analysis on de-identified MIMIC data showed ERA can reduce alert burden while maintaining configurable patient-level detection in a 6-hour pre-event window.",
+  "approved_claim": "Retrospective analysis on de-identified MIMIC data showed ERA can support configurable review-prioritization workflows with substantially reduced alert burden and retrospective lead-time context.",
   "claims_to_avoid": [
     "ERA predicts deterioration.",
     "ERA detects crises early.",
@@ -324,7 +340,7 @@
       "clinical_note": "Lead time is calculated from the first ERA alert inside the configured pre-event window to the documented event timestamp. This is retrospective, de-identified analysis and requires independent clinical review."
     }
   },
-  "lead_time_headline": "Among detected event clusters, ERA flags appeared a median of 4.0 hours before documented event timestamps within the 6-hour pre-event window.",
+  "lead_time_headline": "Among detected event clusters, the median time from first ERA flag to documented event timestamp was approximately 4.0 hours within the 6-hour pre-event window.",
   "lead_time_calculation_mode": "derived_vitals_proxy_score",
   "lead_time_note": "This CSV did not contain era_alert or risk_score columns, so the script used a transparent vitals-based proxy score.",
   "explainability_display_upgrade": {
@@ -362,7 +378,7 @@
     "era_alerts_per_patient_day_official_alert_volume": 0.72,
     "standard_threshold_alerts_per_patient_day_approx": 3.77,
     "method_note": "Standard threshold-only alerts per patient-day is approximated from standard threshold total alerts divided by total patient-days from the row-level retrospective lead-time analysis.",
-    "pilot_safe_summary": "ERA generated approximately 0.6467 alerts per patient-day versus approximately 11.2743 alerts per patient-day under standard threshold-only alerting, for an alert reduction of 94.3%.",
+    "pilot_safe_summary": "ERA generated approximately 0.6467 alerts per patient-day versus approximately 11.2743 alerts per patient-day under standard threshold-only alerting.",
     "era_alerts_per_patient_day_exact": 0.6467,
     "standard_threshold_alerts_per_patient_day_exact": 11.2743,
     "alert_reduction_pct_exact": 94.3
@@ -669,7 +685,7 @@
   },
   "mimic_dua_public_safety": {
     "status": "Applied",
-    "applied_at_utc": "2026-04-25T14:05:37.859444+00:00",
+    "applied_at_utc": "2026-04-25T14:38:11.956050+00:00",
     "public_policy": "Only aggregate metrics, sanitized case examples, validation methodology, and code are public-facing. Row-level MIMIC-derived exports remain local-only.",
     "removed_from_public_outputs": [
       "raw MIMIC files",
@@ -693,5 +709,28 @@
       "code used to produce results"
     ],
     "notice": "Decision support only. Retrospective analysis only. Not intended to diagnose, direct treatment, replace clinician judgment, or independently trigger escalation."
+  },
+  "real_engine_dua_safe_public_wording_v2": {
+    "status": "Implemented",
+    "implemented_at_utc": "2026-04-25T14:38:11.813769+00:00",
+    "source": "Latest DUA-safe real-engine retrospective validation run summary",
+    "hero_mode": "Conservative t=6.0",
+    "hero_metric": "94.3% alert reduction",
+    "hero_statement": "At conservative threshold t=6.0, ERA generated approximately 94.3% fewer alerts than standard threshold-only alerting while maintaining a low 4.2% false-positive rate.",
+    "lead_time_statement": "Among detected event clusters, the median time from first ERA flag to documented event timestamp was approximately 4.0 hours within the 6-hour pre-event window.",
+    "operational_burden_statement": "ERA generated approximately 0.6467 alerts per patient-day versus approximately 11.2743 alerts per patient-day under standard threshold-only alerting.",
+    "threshold_story": {
+      "t4": "High-acuity / ICU review mode: higher detection with more alerts, while still reducing alert burden versus standard threshold-only alerting.",
+      "t5": "Balanced review mode: intermediate detection and alert burden.",
+      "t6": "Conservative telemetry / stepdown review mode: intentionally selective, optimized for alert-burden reduction and low false positives."
+    },
+    "public_framing": "Retrospective analysis on de-identified MIMIC data showed ERA can support configurable review-prioritization workflows with substantially reduced alert burden and retrospective lead-time context.",
+    "avoid_overclaim": [
+      "Do not say ERA predicts deterioration.",
+      "Do not say ERA prevents adverse events.",
+      "Do not say ERA replaces standard monitoring.",
+      "Do not say ERA outperforms clinicians.",
+      "Do not describe retrospective lead time as prospective proof."
+    ]
   }
 }

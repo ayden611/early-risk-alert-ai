@@ -149,9 +149,245 @@
     }
     /* ERA_EVIDENCE_PACKET_FINAL_POLISH_V3_END */
 
-  </style>
+  
+    /* ERA_REAL_ENGINE_PUBLIC_WORDING_V2_CSS_START */
+    .era-real-engine-hero{
+      border:1px solid rgba(143,240,179,.34);
+      background:
+        radial-gradient(circle at 18% 0%, rgba(143,240,179,.15), transparent 34%),
+        linear-gradient(180deg, rgba(16,24,39,.96), rgba(8,13,23,.94));
+      border-radius:30px;
+      padding:28px;
+      margin:18px 0 24px;
+      box-shadow:0 28px 90px rgba(0,0,0,.36);
+    }
+    .era-real-engine-eyebrow{
+      color:#8ff0b3;
+      font-size:12px;
+      letter-spacing:.16em;
+      text-transform:uppercase;
+      font-weight:1000;
+    }
+    .era-real-engine-title{
+      margin:10px 0;
+      font-size:clamp(36px,5vw,66px);
+      line-height:.92;
+      letter-spacing:-.06em;
+      color:#f8fafc;
+      font-weight:1000;
+    }
+    .era-real-engine-sub{
+      color:#b8c5dc;
+      font-size:16px;
+      line-height:1.6;
+      max-width:1000px;
+      margin:0;
+    }
+    .era-real-engine-grid{
+      display:grid;
+      grid-template-columns:1.4fr 1fr 1fr 1fr;
+      gap:14px;
+      margin-top:18px;
+    }
+    .era-real-engine-card{
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.045);
+      border-radius:22px;
+      padding:18px;
+      min-height:132px;
+    }
+    .era-real-engine-card.hero{
+      background:linear-gradient(180deg, rgba(143,240,179,.20), rgba(255,255,255,.04));
+      border-color:rgba(143,240,179,.42);
+    }
+    .era-real-engine-k{
+      color:#9fc4ff;
+      font-size:11px;
+      letter-spacing:.13em;
+      text-transform:uppercase;
+      font-weight:1000;
+    }
+    .era-real-engine-v{
+      font-size:34px;
+      font-weight:1000;
+      letter-spacing:-.05em;
+      margin-top:8px;
+      color:#8ff0b3;
+    }
+    .era-real-engine-card.hero .era-real-engine-v{
+      font-size:64px;
+      line-height:.9;
+    }
+    .era-real-engine-note{
+      color:#b8c5dc;
+      font-size:12px;
+      line-height:1.45;
+      margin-top:10px;
+      font-weight:700;
+    }
+    .era-real-engine-panels{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:16px;
+      margin-top:16px;
+    }
+    .era-real-engine-panel{
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.035);
+      border-radius:22px;
+      padding:18px;
+    }
+    .era-real-engine-panel h3{
+      margin:0 0 10px;
+      font-size:20px;
+      color:#f8fafc;
+    }
+    .era-real-engine-panel p{
+      color:#b8c5dc;
+      line-height:1.55;
+      margin:0;
+    }
+    .era-real-engine-table-wrap{
+      overflow-x:auto;
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:18px;
+      margin-top:12px;
+    }
+    .era-real-engine-table-wrap table{
+      width:100%;
+      min-width:860px;
+      border-collapse:collapse;
+    }
+    .era-real-engine-table-wrap th,
+    .era-real-engine-table-wrap td{
+      padding:12px;
+      border-bottom:1px solid rgba(255,255,255,.10);
+      text-align:left;
+    }
+    .era-real-engine-table-wrap th{
+      color:#dce8ff;
+      background:rgba(255,255,255,.05);
+      font-size:11px;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+    }
+    .era-real-engine-table-wrap td{
+      color:#b8c5dc;
+      font-size:13px;
+      font-weight:800;
+    }
+    .era-real-engine-pill{
+      display:inline-flex;
+      padding:6px 10px;
+      border-radius:999px;
+      background:rgba(138,180,255,.12);
+      color:#dce8ff;
+      font-weight:1000;
+      font-size:12px;
+    }
+    .era-real-engine-dua{
+      margin-top:16px;
+      border:1px solid rgba(255,209,102,.35);
+      background:rgba(255,209,102,.08);
+      color:#ffe5ad;
+      padding:13px 14px;
+      border-radius:16px;
+      font-weight:800;
+      line-height:1.5;
+    }
+    .era-legacy-validation-hide{
+      display:none!important;
+    }
+    @media(max-width:900px){
+      .era-real-engine-grid,.era-real-engine-panels{grid-template-columns:1fr}
+      .era-real-engine-card.hero .era-real-engine-v{font-size:48px}
+    }
+    /* ERA_REAL_ENGINE_PUBLIC_WORDING_V2_CSS_END */
+
+</style>
 </head>
 <body>
+
+<!-- ERA_REAL_ENGINE_PUBLIC_WORDING_V2_START -->
+<div class="wrap" style="padding-top:0;">
+  <section class="era-real-engine-hero">
+    <div class="era-real-engine-eyebrow">Real-Engine DUA-Safe Retrospective Run</div>
+    <h1 class="era-real-engine-title">94.3% fewer operational alerts</h1>
+    <p class="era-real-engine-sub">
+      Latest DUA-safe real-engine validation run: at conservative threshold t=6.0, ERA generated substantially fewer alerts
+      than standard threshold-only alerting while maintaining low false-positive burden and retrospective lead-time context.
+    </p>
+
+    <div class="era-real-engine-grid">
+      <div class="era-real-engine-card hero">
+        <div class="era-real-engine-k">Conservative t=6.0 alert reduction</div>
+        <div class="era-real-engine-v" id="eraRealAlertReduction">94.3%</div>
+        <div class="era-real-engine-note">Intentionally selective telemetry / stepdown review queue.</div>
+      </div>
+      <div class="era-real-engine-card">
+        <div class="era-real-engine-k">ERA FPR</div>
+        <div class="era-real-engine-v" id="eraRealFpr">4.2%</div>
+        <div class="era-real-engine-note">Low false-positive rate at t=6.0.</div>
+      </div>
+      <div class="era-real-engine-card">
+        <div class="era-real-engine-k">Median lead time</div>
+        <div class="era-real-engine-v" id="eraRealLead">4 hrs</div>
+        <div class="era-real-engine-note">Among detected event clusters within the 6-hour pre-event window.</div>
+      </div>
+      <div class="era-real-engine-card">
+        <div class="era-real-engine-k">Event-cluster detection</div>
+        <div class="era-real-engine-v" id="eraRealDetection" style="color:#8ab4ff">15.3%</div>
+        <div class="era-real-engine-note">Conservative t=6.0 mode prioritizes selectivity over sensitivity.</div>
+      </div>
+    </div>
+
+    <div class="era-real-engine-panels">
+      <div class="era-real-engine-panel">
+        <h3>Why t=6.0 matters</h3>
+        <p>
+          t=6.0 is intentionally selective. It is best framed as a conservative telemetry / stepdown review queue
+          optimized for alert-burden reduction, low false positives, and focused command-center review.
+        </p>
+      </div>
+      <div class="era-real-engine-panel">
+        <h3>Why t=4.0 still matters</h3>
+        <p>
+          t=4.0 is the high-acuity / ICU operating point. It increases detection while still reducing alert burden
+          versus standard threshold-only alerting.
+        </p>
+      </div>
+    </div>
+
+    <div class="era-real-engine-panel" style="margin-top:16px;">
+      <h3>Threshold operating-point story</h3>
+      <div class="era-real-engine-table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Threshold</th>
+              <th>Suggested setting</th>
+              <th>Framing</th>
+              <th>Alert reduction</th>
+              <th>FPR</th>
+              <th>Detection</th>
+              <th>ERA alerts / patient-day</th>
+            </tr>
+          </thead>
+          <tbody id="eraRealThresholdRows">
+            <tr><td>Loading...</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="era-real-engine-dua">
+      Public evidence is DUA-safe: aggregate metrics and sanitized Case-001 style examples only.
+      Row-level MIMIC-derived exports, real identifiers, and exact patient-linked timestamps remain local-only.
+    </div>
+  </section>
+</div>
+<!-- ERA_REAL_ENGINE_PUBLIC_WORDING_V2_END -->
+
 
 <!-- ERA_MIMIC_DUA_PUBLIC_NOTICE_V1 -->
 <div class="wrap" style="padding-top:0;">
@@ -186,9 +422,9 @@
     <section class="evidence-hero-focus">
       <h2>Primary Evidence Story</h2>
       <p>
-        ERA is framed as a selective clinical review-prioritization layer: 81% alert reduction,
+        ERA is framed as a selective clinical review-prioritization layer: 94.3% alert reduction at t=6.0,
         4-hour median first-flag timing among detected event clusters, 4.5% ERA FPR,
-        and 36.6% patient-level detection at conservative threshold t=6.0.
+        and 15.3% event-cluster detection at t=6.0 at conservative threshold t=6.0.
       </p>
       <div class="evidence-table-note">
         Lead time is retrospective and applies to detected event clusters inside the configured 6-hour pre-event window.
@@ -297,7 +533,7 @@
       </div>
       <div class="card">
         <h2>Approved Framing</h2>
-        <p>Retrospective analysis on de-identified MIMIC data showed ERA can reduce alert burden while maintaining configurable patient-level detection in a 6-hour pre-event window.</p>
+        <p>Retrospective analysis on de-identified MIMIC data showed ERA can reduce alert burden while maintaining configurable event-cluster detection in a 6-hour pre-event window.</p>
         <h3>Claims To Avoid</h3>
         <ul id="avoidClaims"></ul>
       </div>
@@ -380,5 +616,105 @@
     });
 })();
 </script>
+
+<script>
+/* ERA_REAL_ENGINE_PUBLIC_WORDING_V2_SCRIPT_START */
+(function(){
+  if (window.__eraRealEnginePublicWordingV2) return;
+  window.__eraRealEnginePublicWordingV2 = true;
+
+  function pct(v){
+    if (v === null || v === undefined || v === '') return '—';
+    return String(v).replace('.0','') + '%';
+  }
+
+  function val(v){
+    if (v === null || v === undefined || v === '') return '—';
+    return String(v);
+  }
+
+  function esc(v){
+    return String(v === null || v === undefined ? '' : v)
+      .replace(/&/g,'&amp;')
+      .replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;');
+  }
+
+  function hideLegacyBlocks(){
+    var selectors = [
+      '.era-v3-showcase',
+      '.era-simplified-callout',
+      '#validationExecutiveSummaryV2'
+    ];
+
+    selectors.forEach(function(sel){
+      document.querySelectorAll(sel).forEach(function(el){
+        if (!el.closest('.era-real-engine-hero')) {
+          el.classList.add('era-legacy-validation-hide');
+        }
+      });
+    });
+
+    Array.from(document.querySelectorAll('h1,h2,h3')).forEach(function(h){
+      var t = h.textContent.toLowerCase();
+      if (
+        (t.includes('81%') || t.includes('hospital-facing validation summary') || t.includes('executive takeaway')) &&
+        !h.closest('.era-real-engine-hero')
+      ) {
+        var box = h.closest('.card') || h.closest('.section') || h.closest('.wrap') || h.parentElement;
+        if (box && !box.closest('.era-real-engine-hero')) box.classList.add('era-legacy-validation-hide');
+      }
+    });
+  }
+
+  function hydrate(){
+    fetch('/api/validation/milestone', {cache:'no-store'})
+      .then(function(r){ return r.json(); })
+      .then(function(data){
+        var d = data.default_threshold || {};
+        var profiles = data.threshold_profiles || [];
+        var metrics = data.next_validation_metrics || {};
+
+        var ar = document.getElementById('eraRealAlertReduction');
+        var fpr = document.getElementById('eraRealFpr');
+        var lead = document.getElementById('eraRealLead');
+        var det = document.getElementById('eraRealDetection');
+
+        if (ar) ar.textContent = pct(d.alert_reduction_pct);
+        if (fpr) fpr.textContent = pct(d.era_fpr_pct);
+        if (lead) lead.textContent = val(d.median_lead_time_hours || metrics.median_lead_time_before_event_hours) + ' hrs';
+        if (det) det.textContent = pct(d.era_event_cluster_detection_pct || d.era_patient_sensitivity_pct);
+
+        var rows = document.getElementById('eraRealThresholdRows');
+        if (rows) {
+          rows.innerHTML = profiles.map(function(p){
+            return '<tr>' +
+              '<td><span class="era-real-engine-pill">t=' + esc(p.threshold) + '</span></td>' +
+              '<td>' + esc(p.unit_profile || 'Configurable') + '</td>' +
+              '<td>' + esc(p.framing || 'Configurable operating point') + '</td>' +
+              '<td>' + pct(p.alert_reduction_pct) + '</td>' +
+              '<td>' + pct(p.era_fpr_pct) + '</td>' +
+              '<td>' + pct(p.era_event_cluster_detection_pct || p.era_patient_sensitivity_pct) + '</td>' +
+              '<td>' + esc(p.era_alerts_per_patient_day || '—') + '</td>' +
+            '</tr>';
+          }).join('');
+        }
+
+        setTimeout(hideLegacyBlocks, 150);
+      })
+      .catch(function(err){
+        console.error('Real-engine public wording failed to load:', err);
+      });
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    hydrate();
+    setTimeout(hideLegacyBlocks, 600);
+    setTimeout(hideLegacyBlocks, 1600);
+  });
+})();
+/* ERA_REAL_ENGINE_PUBLIC_WORDING_V2_SCRIPT_END */
+</script>
+
 </body>
 </html>

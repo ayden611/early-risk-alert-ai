@@ -674,7 +674,7 @@ COMMAND_CENTER_HTML = r"""
           <div class="hero-kicker">Pilot operating layer</div>
           <h1 id="heroTitle">Early Risk Alert AI — Explainable Rules-Based Command-Center Platform</h1>
           <p id="heroCopy">
-            <strong style="color:#eef4ff">Rules-based prioritization with explainable deltas — not black-box AI.</strong> Retrospective MIMIC validation showed <strong style="color:#3ad38f">81% alert reduction</strong>, <strong style="color:#3ad38f">4.5% ERA false-positive rate</strong>, and <strong style="color:#7aa2ff">36.6% patient-level detection</strong> at the conservative t=6.0 threshold. Lead-time analysis showed a median <strong style="color:#3ad38f">4.0-hour</strong> first-flag timing among detected event clusters within the 6-hour pre-event window.
+            <strong style="color:#eef4ff">Rules-based prioritization with explainable deltas — not black-box AI.</strong> Retrospective MIMIC validation showed <strong style="color:#3ad38f">94.3% alert reduction at t=6.0</strong>, <strong style="color:#3ad38f">4.5% ERA false-positive rate</strong>, and <strong style="color:#7aa2ff">15.3% event-cluster detection at t=6.0</strong> at the conservative t=6.0 threshold. Lead-time analysis showed a median <strong style="color:#3ad38f">4.0-hour</strong> first-flag timing among detected event clusters within the 6-hour pre-event window.
           <br><span style="font-size:14px;color:#9fb4d6;margin-top:8px;display:block">FHIR R4 and HL7 integration remain on the product roadmap. The current pilot entry point is retrospective validation via de-identified CSV, which requires no EHR integration and can begin within days of data availability.</span>
           </p>
 
@@ -734,7 +734,7 @@ COMMAND_CENTER_HTML = r"""
         <div class="section-head">
           <div>
             <h2 class="section-title">Hospital Command Wall</h2>
-            <div class="section-sub">Explainable rules-based prioritization — not black-box AI. Retrospective MIMIC validation showed 81% alert reduction, 4.5% ERA false-positive rate, and 36.6% patient-level detection at the conservative t=6.0 threshold. Lead-time analysis showed a median 4.0-hour first-flag timing among detected event clusters within the 6-hour pre-event window. Structured patient summaries, delta trend context, workflow handling, and persistent audit visibility remain decision-support only.</div>
+            <div class="section-sub">Explainable rules-based prioritization — not black-box AI. Retrospective MIMIC validation showed 94.3% alert reduction at t=6.0, 4.5% ERA false-positive rate, and 15.3% event-cluster detection at t=6.0 at the conservative t=6.0 threshold. Lead-time analysis showed a median 4.0-hour first-flag timing among detected event clusters within the 6-hour pre-event window. Structured patient summaries, delta trend context, workflow handling, and persistent audit visibility remain decision-support only.</div>
           </div>
           <div class="mini-pills">
             <div class="status-pill live" id="wallStatus">Live</div>
@@ -3022,7 +3022,7 @@ function renderRouteStatusModule(){
               <div class="mini-card" style="min-height:auto;padding:12px;">
                 <div class="mini-k">Alert Reduction</div>
                 <div class="mini-v" style="color:#3ad38f">${pct(d.alert_reduction_pct)}</div>
-                <div class="mini-copy">Conservative t=6.0 threshold vs standard threshold-only alerting.</div>
+                <div class="mini-copy">Conservative t=6.0 review queue; intentionally selective for low alert burden.</div>
               </div>
               <div class="mini-card" style="min-height:auto;padding:12px;">
                 <div class="mini-k">Median Lead Time</div>
@@ -3035,9 +3035,9 @@ function renderRouteStatusModule(){
                 <div class="mini-copy">Compared with ${pct(d.threshold_fpr_pct)} for standard threshold alerting.</div>
               </div>
               <div class="mini-card" style="min-height:auto;padding:12px;">
-                <div class="mini-k">Patient Detection</div>
+                <div class="mini-k">Event-Cluster Detection</div>
                 <div class="mini-v" style="color:#7aa2ff">${pct(d.era_patient_sensitivity_pct)}</div>
-                <div class="mini-copy">Patient-level detection at t=6.0 in the 6-hour pre-event window.</div>
+                <div class="mini-copy">Event-cluster detection at conservative t=6.0 in the 6-hour pre-event window.</div>
               </div>
             </div>
 
@@ -3110,8 +3110,8 @@ function renderRouteStatusModule(){
             </div>
 
             <div class="note-box" style="margin-top:12px;">
-              <strong>Decision-support framing:</strong>
-              Retrospective analysis on de-identified MIMIC data showed ERA can reduce alert burden while maintaining configurable patient-level detection in a 6-hour pre-event window. Independent clinical review required.
+              <strong>Operating-point framing:</strong> t=6.0 is intentionally selective for telemetry / stepdown review. t=4.0 is the high-acuity operating point when higher detection is preferred with more alerts.<br><br><strong>Decision-support framing:</strong>
+              Retrospective analysis on de-identified MIMIC data showed ERA can reduce alert burden while maintaining configurable event-cluster detection in a 6-hour pre-event window. Independent clinical review required.
             </div>
 
             <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">

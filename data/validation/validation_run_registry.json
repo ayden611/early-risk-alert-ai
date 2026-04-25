@@ -41,7 +41,7 @@
   "updated_at_utc": "2026-04-25T14:05:37.406090+00:00",
   "mimic_dua_public_safety": {
     "status": "Applied",
-    "applied_at_utc": "2026-04-25T14:05:37.861905+00:00",
+    "applied_at_utc": "2026-04-25T14:38:11.959727+00:00",
     "public_policy": "Only aggregate metrics, sanitized case examples, validation methodology, and code are public-facing. Row-level MIMIC-derived exports remain local-only.",
     "removed_from_public_outputs": [
       "raw MIMIC files",
