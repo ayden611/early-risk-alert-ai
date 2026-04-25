@@ -1,6 +1,6 @@
 {
   "ok": true,
-  "generated_at_utc": "2026-04-25T18:04:48.382309+00:00",
+  "generated_at_utc": "2026-04-25T18:20:16.734096+00:00",
   "purpose": "DUA-safe aggregate driver / signal-family subgroup validation.",
   "thresholds_tested": [
     4.0,
@@ -12,7 +12,7 @@
   "runs": [
     {
       "ok": true,
-      "generated_at_utc": "2026-04-25T18:05:06.412660+00:00",
+      "generated_at_utc": "2026-04-25T18:20:34.560756+00:00",
       "threshold": 4.0,
       "event_window_hours": 6.0,
       "event_gap_hours": 6.0,
@@ -120,7 +120,7 @@
     },
     {
       "ok": true,
-      "generated_at_utc": "2026-04-25T18:05:24.261823+00:00",
+      "generated_at_utc": "2026-04-25T18:20:52.261794+00:00",
       "threshold": 5.0,
       "event_window_hours": 6.0,
       "event_gap_hours": 6.0,
@@ -209,7 +209,7 @@
     },
     {
       "ok": true,
-      "generated_at_utc": "2026-04-25T18:05:41.939660+00:00",
+      "generated_at_utc": "2026-04-25T18:21:10.018335+00:00",
       "threshold": 6.0,
       "event_window_hours": 6.0,
       "event_gap_hours": 6.0,
@@ -299,7 +299,7 @@
   "public_policy": "Aggregate metrics only. No row-level MIMIC data, no MIMIC IDs, no exact patient-linked timestamps.",
   "pilot_safe_claim": "Retrospective analysis on de-identified MIMIC data showed ERA can provide explainable prioritization context through aggregate signal-family driver summaries.",
   "notice": "Decision support only. Retrospective analysis only. Not intended to diagnose, direct treatment, replace clinician judgment, or independently trigger escalation.",
-  "updated_at_utc": "2026-04-25T18:05:41.941010+00:00",
+  "updated_at_utc": "2026-04-25T18:21:10.019685+00:00",
   "report_file": "docs/validation/driver_subgroup_summary.md",
   "interpretation_guidance": {
     "main_question": "Which signal families drive ERA prioritization across configurable thresholds?",

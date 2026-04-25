@@ -2,11 +2,11 @@
 
 ## Run Summary
 
-- Run ID: `era_mimic_20260425_180533_t6_0`
+- Run ID: `era_mimic_20260425_182102_t6_0`
 - Dataset: MIMIC-IV de-identified retrospective validation subset
 - Source file: `/Users/andreasmith/Desktop/mimic_strict_event_labeled_era_cohort.csv`
 - Enriched CSV: `data/validation/latest_era_validation_export.csv`
-- Generated: 2026-04-25T18:05:35.910916+00:00
+- Generated: 2026-04-25T18:21:03.966167+00:00
 - Threshold: 6.0
 - Rows: 456,453
 - Patients: 1,705

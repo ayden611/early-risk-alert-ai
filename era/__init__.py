@@ -6616,6 +6616,9 @@ def create_app() -> Flask:
     # ERA_EVENT_CLUSTER_ROBUSTNESS_ROUTES_V1_END
 
 
+    
+
+
     # ERA_DRIVER_SUBGROUP_ROUTES_V1_START
     @app.get("/api/validation/driver-subgroups")
     def era_validation_driver_subgroups_api():

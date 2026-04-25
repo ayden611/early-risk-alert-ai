@@ -456,8 +456,8 @@
   },
   "real_era_validation_export": {
     "status": "Generated",
-    "latest_run_id": "era_mimic_20260425_180533_t6_0",
-    "generated_at_utc": "2026-04-25T18:05:35.910916+00:00",
+    "latest_run_id": "era_mimic_20260425_182102_t6_0",
+    "generated_at_utc": "2026-04-25T18:21:03.966167+00:00",
     "enriched_csv": "local-only-not-public",
     "summary_file": "local-only-not-public",
     "columns_added": [
@@ -679,11 +679,11 @@
   "validation_run_registry": {
     "status": "Available",
     "registry_file": "data/validation/validation_run_registry.json",
-    "latest_run_id": "era_mimic_20260425_180533_t6_0"
+    "latest_run_id": "era_mimic_20260425_182102_t6_0"
   },
   "mimic_dua_public_safety": {
     "status": "Applied",
-    "applied_at_utc": "2026-04-25T18:05:42.300889+00:00",
+    "applied_at_utc": "2026-04-25T18:21:10.376296+00:00",
     "public_policy": "Only aggregate metrics, sanitized case examples, validation methodology, and code are public-facing. Row-level MIMIC-derived exports remain local-only.",
     "removed_from_public_outputs": [
       "raw MIMIC files",
@@ -1106,7 +1106,7 @@
   },
   "latest_progress_update": {
     "status": "Driver / signal-family subgroup validation completed",
-    "updated_at_utc": "2026-04-25T18:05:42.192141+00:00",
+    "updated_at_utc": "2026-04-25T18:21:10.270411+00:00",
     "summary": "DUA-safe aggregate driver-family subgroup testing completed across thresholds t=4.0, t=5.0, and t=6.0.",
     "public_takeaway": "ERA explainability can now be reviewed using aggregate signal-family driver summaries without exposing row-level MIMIC-derived data."
   },
@@ -1358,7 +1358,7 @@
   },
   "driver_subgroup_validation": {
     "status": "Completed",
-    "updated_at_utc": "2026-04-25T18:05:42.192001+00:00",
+    "updated_at_utc": "2026-04-25T18:21:10.270280+00:00",
     "summary_file": "local-only-not-public",
     "report_file": "docs/validation/driver_subgroup_summary.md",
     "thresholds_tested": [
@@ -1372,7 +1372,7 @@
     "runs": [
       {
         "ok": true,
-        "generated_at_utc": "2026-04-25T18:05:06.412660+00:00",
+        "generated_at_utc": "2026-04-25T18:20:34.560756+00:00",
         "threshold": 4.0,
         "event_window_hours": 6.0,
         "event_gap_hours": 6.0,
@@ -1480,7 +1480,7 @@
       },
       {
         "ok": true,
-        "generated_at_utc": "2026-04-25T18:05:24.261823+00:00",
+        "generated_at_utc": "2026-04-25T18:20:52.261794+00:00",
         "threshold": 5.0,
         "event_window_hours": 6.0,
         "event_gap_hours": 6.0,
@@ -1569,7 +1569,7 @@
       },
       {
         "ok": true,
-        "generated_at_utc": "2026-04-25T18:05:41.939660+00:00",
+        "generated_at_utc": "2026-04-25T18:21:10.018335+00:00",
         "threshold": 6.0,
         "event_window_hours": 6.0,
         "event_gap_hours": 6.0,

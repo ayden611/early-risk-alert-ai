@@ -1,6 +1,60 @@
 {
   "runs": [
     {
+      "run_id": "era_mimic_20260425_182102_t6_0",
+      "dataset": "MIMIC-IV de-identified retrospective validation subset",
+      "rows": 456453,
+      "patients": 1705,
+      "events": 1658,
+      "threshold": 6.0,
+      "alert_reduction_pct": 94.3,
+      "fpr_pct": 4.2,
+      "patient_detection_pct": 15.3,
+      "median_lead_time_hours": 4.0,
+      "era_alerts_per_patient_day": 0.6467,
+      "standard_alerts_per_patient_day": 11.2743,
+      "date_generated": "2026-04-25T18:21:03.966167+00:00",
+      "validation_status": "Generated for retrospective validation review",
+      "summary_file": "local-only-not-public",
+      "enriched_csv": "local-only-not-public"
+    },
+    {
+      "run_id": "era_mimic_20260425_182044_t5_0",
+      "dataset": "MIMIC-IV de-identified retrospective validation subset",
+      "rows": 456453,
+      "patients": 1705,
+      "events": 1658,
+      "threshold": 5.0,
+      "alert_reduction_pct": 89.1,
+      "fpr_pct": 8.0,
+      "patient_detection_pct": 24.6,
+      "median_lead_time_hours": 4.0,
+      "era_alerts_per_patient_day": 1.2308,
+      "standard_alerts_per_patient_day": 11.2743,
+      "date_generated": "2026-04-25T18:20:46.160920+00:00",
+      "validation_status": "Generated for retrospective validation review",
+      "summary_file": "local-only-not-public",
+      "enriched_csv": "local-only-not-public"
+    },
+    {
+      "run_id": "era_mimic_20260425_182026_t4_0",
+      "dataset": "MIMIC-IV de-identified retrospective validation subset",
+      "rows": 456453,
+      "patients": 1705,
+      "events": 1658,
+      "threshold": 4.0,
+      "alert_reduction_pct": 80.3,
+      "fpr_pct": 14.4,
+      "patient_detection_pct": 37.9,
+      "median_lead_time_hours": 4.0,
+      "era_alerts_per_patient_day": 2.2154,
+      "standard_alerts_per_patient_day": 11.2743,
+      "date_generated": "2026-04-25T18:20:28.371254+00:00",
+      "validation_status": "Generated for retrospective validation review",
+      "summary_file": "local-only-not-public",
+      "enriched_csv": "local-only-not-public"
+    },
+    {
       "run_id": "era_mimic_20260425_180533_t6_0",
       "dataset": "MIMIC-IV de-identified retrospective validation subset",
       "rows": 456453,
@@ -487,11 +541,11 @@
       "enriched_csv": "local-only-not-public"
     }
   ],
-  "latest_run_id": "era_mimic_20260425_180533_t6_0",
-  "updated_at_utc": "2026-04-25T18:05:35.910916+00:00",
+  "latest_run_id": "era_mimic_20260425_182102_t6_0",
+  "updated_at_utc": "2026-04-25T18:21:03.966167+00:00",
   "mimic_dua_public_safety": {
     "status": "Applied",
-    "applied_at_utc": "2026-04-25T18:05:42.303990+00:00",
+    "applied_at_utc": "2026-04-25T18:21:10.379314+00:00",
     "public_policy": "Only aggregate metrics, sanitized case examples, validation methodology, and code are public-facing. Row-level MIMIC-derived exports remain local-only.",
     "removed_from_public_outputs": [
       "raw MIMIC files",

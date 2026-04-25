@@ -1,10 +1,10 @@
 {
   "ok": true,
-  "run_id": "era_mimic_20260425_180533_t6_0",
+  "run_id": "era_mimic_20260425_182102_t6_0",
   "dataset": "MIMIC-IV de-identified retrospective validation subset",
   "source_file": "local-only-not-public",
   "enriched_csv": "local-only-not-public",
-  "generated_at_utc": "2026-04-25T18:05:35.910916+00:00",
+  "generated_at_utc": "2026-04-25T18:21:03.966167+00:00",
   "validation_status": "Generated for retrospective validation review",
   "threshold": 6.0,
   "window_hours": 6.0,
@@ -844,7 +844,7 @@
   "pilot_safe_note": "Retrospective analysis only. Decision support only. Not intended to diagnose, direct treatment, replace clinician judgment, or independently trigger escalation.",
   "mimic_dua_public_safety": {
     "status": "Applied",
-    "applied_at_utc": "2026-04-25T18:05:42.302806+00:00",
+    "applied_at_utc": "2026-04-25T18:21:10.378150+00:00",
     "public_policy": "Only aggregate metrics, sanitized case examples, validation methodology, and code are public-facing. Row-level MIMIC-derived exports remain local-only.",
     "removed_from_public_outputs": [
       "raw MIMIC files",
