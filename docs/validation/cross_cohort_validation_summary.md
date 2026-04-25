@@ -1,5 +1,13 @@
 # DUA-Safe Cross-Cohort Validation Comparison
 
+<!-- ERA_CROSS_COHORT_RANGE_HEADLINE_V1_START -->
+
+## Cross-Cohort Range Finding
+
+**Across the full validation cohort and two deterministic patient-level subcohorts (577–1,705 cases each), the conservative t=6.0 ERA setting showed consistent low-burden review-queue performance, with 94.0% to 94.9% alert reduction, 3.7% to 4.4% ERA FPR, 14.1% to 16.0% event-cluster detection, and a stable 4.0 hours median lead-time context across all cohorts.**
+
+<!-- ERA_CROSS_COHORT_RANGE_HEADLINE_V1_END -->
+
 ## Purpose
 
 This report compares ERA validation behavior across the full validation cohort and different deterministic patient/case-level subcohorts.
