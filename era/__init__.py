@@ -5312,12 +5312,45 @@ def create_app() -> Flask:
             }), 500
 
         try:
-            return analyze_view(upload_id)
+            analyze_resp = analyze_view(upload_id)
+        
+            # If analysis is async/running, preserve upload_id so the browser can poll.
+            status_code = None
+            resp_obj = analyze_resp
+        
+            if isinstance(analyze_resp, tuple):
+                resp_obj = analyze_resp[0]
+                if len(analyze_resp) > 1:
+                    status_code = analyze_resp[1]
+        
+            if status_code is None:
+                status_code = getattr(resp_obj, 'status_code', 200)
+        
+            try:
+                status_int = int(status_code)
+            except Exception:
+                status_int = 200
+        
+            if status_int == 202:
+                payload = {}
+                try:
+                    if hasattr(resp_obj, 'get_json'):
+                        payload = resp_obj.get_json(silent=True) or {}
+                except Exception:
+                    payload = {}
+        
+                payload.setdefault('ok', True)
+                payload.setdefault('accepted', True)
+                payload.setdefault('status', 'running')
+                payload['upload_id'] = upload_id
+                return jsonify(payload), 202
+        
+            return analyze_resp
         except Exception as e:
             return jsonify({
-                "ok": False,
-                "error": f"Upload succeeded but analyze step failed: {str(e)}",
-                "upload_id": upload_id
+                'ok': False,
+                'error': f'Upload succeeded but analyze step failed: {str(e)}',
+                'upload_id': upload_id
             }), 500
 
 
