@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Validation Intelligence — Early Risk Alert AI</title>
+  <title>Pilot Evidence Packet — Early Risk Alert AI</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
 :root {
@@ -352,21 +352,21 @@ tr:last-child td { border-bottom: 0; }
 <body>
   <main class="page">
     <nav class="nav">
-      <div class="brand">Early Risk Alert AI · Validation Intelligence</div>
+      <div class="brand">Early Risk Alert AI · Pilot Evidence Packet</div>
       <div class="navlinks">
-        <a href="/command-center">Command Center</a>
-        <a href="/validation-evidence">Evidence Packet</a>
+        <a href="/validation-intelligence">Validation Intelligence</a>
         <a href="/validation-runs">Validation Runs</a>
-        <a href="/data-ingest">Data Ingest</a>
+        <a href="/command-center">Command Center</a>
+        <a class="btn primary" href="javascript:window.print()">Print / Save PDF</a>
       </div>
     </nav>
 
     <section class="hero">
-      <div class="kicker">MIMIC Retrospective Validation · DUA-Safe Public Summary</div>
-      <h1>Configurable alert-burden reduction with stable lead-time context.</h1>
+      <div class="kicker">Printable Hospital / Investor / Advisor Evidence Packet</div>
+      <h1>DUA-safe validation evidence in one place.</h1>
       <p class="lede">
-        Retrospective analysis on de-identified MIMIC data showed ERA can reduce alert burden while maintaining configurable event-cluster detection across threshold settings.
-        The current public story emphasizes the conservative t=6.0 operating point while preserving t=4.0 as the higher-detection high-acuity setting.
+        This packet summarizes the latest MIMIC retrospective validation evidence using aggregate metrics only.
+        It is designed for pilot-readiness review, advisor review, hospital conversations, and diligence discussions.
       </p>
       <div class="disclaimer">
         Decision support only. Retrospective analysis only. Not intended to diagnose, direct treatment, replace clinician judgment, or independently trigger escalation.
@@ -375,30 +375,30 @@ tr:last-child td { border-bottom: 0; }
       <div class="hero-metrics">
         
       <div class="metric-card">
-        <div class="metric-label">Conservative Alert Reduction</div>
+        <div class="metric-label">Alert Reduction</div>
         <div class="metric-value">94.3%</div>
-        <div class="metric-sub">t=6.0 telemetry / stepdown setting</div>
+        <div class="metric-sub">conservative t=6.0 operating point</div>
       </div>
     
         
       <div class="metric-card">
         <div class="metric-label">Median Lead Time</div>
         <div class="metric-value">4 hrs</div>
-        <div class="metric-sub">stable lead-time headline from DUA-safe testing</div>
+        <div class="metric-sub">among detected review context</div>
       </div>
     
         
       <div class="metric-card">
         <div class="metric-label">ERA FPR</div>
         <div class="metric-value">4.2%</div>
-        <div class="metric-sub">low false-positive burden at t=6.0</div>
+        <div class="metric-sub">conservative threshold</div>
       </div>
     
         
       <div class="metric-card">
-        <div class="metric-label">Higher-Detection Option</div>
-        <div class="metric-value">80.3%</div>
-        <div class="metric-sub">alert reduction at t=4.0 ICU / high-acuity</div>
+        <div class="metric-label">t=4.0 High-Acuity</div>
+        <div class="metric-value">37.9%</div>
+        <div class="metric-sub">higher-detection option</div>
       </div>
     
       </div>
@@ -406,11 +406,22 @@ tr:last-child td { border-bottom: 0; }
 
     <section class="grid">
       <div class="card full">
-        <h2>Threshold Matrix Is the Main Story</h2>
+        <h2>Evidence Downloads</h2>
         <p class="muted">
-          ERA is intentionally configurable. Lower thresholds increase detection and review volume. Higher thresholds reduce alert burden and FPR.
-          This supports different deployment modes for ICU, mixed units, telemetry, or stepdown review queues.
+          Public downloads are aggregate or sanitized only. Row-level MIMIC-derived files, raw MIMIC CSVs, real MIMIC IDs, and exact patient-linked timestamps remain local-only.
         </p>
+        <div class="download-grid">
+          <a class="download-card" href="/api/validation/milestone"><strong>Milestone JSON</strong><span>Current validation milestone summary</span></a>
+          <a class="download-card" href="/api/validation/runs"><strong>Validation Runs JSON</strong><span>Registry of DUA-safe runs</span></a>
+          <a class="download-card" href="/validation-evidence/cohort-split-stability.json"><strong>Cohort Split Stability</strong><span>Patient-level fold stability summary</span></a>
+          <a class="download-card" href="/validation-evidence/data-quality-audit.json"><strong>Data Quality Audit</strong><span>Schema, timestamp, and alignment checks</span></a>
+          <a class="download-card" href="/validation-evidence/score-saturation-queue.json"><strong>Score Saturation Queue Audit</strong><span>Queue burden and display rationale</span></a>
+          <a class="download-card" href="/validation-evidence/driver-subgroups.json"><strong>Driver Explainability</strong><span>Aggregate driver-family distribution</span></a>
+        </div>
+      </div>
+
+      <div class="card full">
+        <h2>Primary Threshold Matrix</h2>
         <table>
           <thead>
             <tr>
@@ -421,7 +432,7 @@ tr:last-child td { border-bottom: 0; }
               <th>ERA FPR</th>
               <th>Detection</th>
               <th>Median Lead Time</th>
-              <th>ERA Alerts / Patient-Day</th>
+              <th>Alerts / Patient-Day</th>
             </tr>
           </thead>
           <tbody>
@@ -466,12 +477,11 @@ tr:last-child td { border-bottom: 0; }
       </div>
 
       <div class="card">
-        <h2>Robustness Evidence</h2>
-        <div class="callout">
-          The validation package now includes sensitivity testing, event-cluster robustness, cohort split stability, data-quality checks, and score-saturation queue analysis.
-        </div>
-        <div style="margin-top:14px;">
-          
+        <h2>Quality-Control Foundation</h2>
+        <p class="muted">
+          The evidence packet now includes data-quality, temporal-alignment, event-window, event-cluster, cohort split, and score saturation audits.
+        </p>
+        
           <div class="status-row">
             <div>
               <strong>Threshold matrix</strong>
@@ -528,126 +538,30 @@ tr:last-child td { border-bottom: 0; }
             <b class="ok">Complete</b>
           </div>
         
-        </div>
       </div>
 
       <div class="card">
-        <h2>How to Read the Evidence</h2>
+        <h2>Public DUA-Safe Boundary</h2>
         <p class="muted">
-          The strongest public-facing claim is not that ERA replaces standard monitoring. The safer and stronger claim is that ERA creates a configurable review queue that can reduce alert burden and provide explainable prioritization context.
+          Safe public evidence includes aggregate metrics, sanitized examples, methodology, code, threshold tables, alert reduction, FPR, detection, lead-time summaries, and governance framing.
         </p>
         <p class="muted">
-          Use t=6.0 for the conservative low-burden story. Use t=4.0 for high-acuity review where more sensitivity is acceptable.
+          Do not publish raw MIMIC CSV files, row-level enriched CSV files, real MIMIC IDs, exact timestamps tied to cases, or patient-level rows.
         </p>
       </div>
 
       <div class="card full">
-        <h2>Cohort Split Stability</h2>
-        <p class="muted">
-          Patient-level split testing helps show whether the operating-point story is directionally stable across cohort partitions, instead of relying only on the full dataset.
+        <h2>Command Center Display Rationale</h2>
+        <p class="callout">
+          The live UI should emphasize Priority Tier, Queue Rank, Primary Driver, Trend Direction, Risk Score, and Lead-Time / First Threshold Crossing context.
         </p>
-        
-      <table>
-        <thead>
-          <tr>
-            <th>Threshold</th>
-            <th>Mean Alert Reduction</th>
-            <th>Mean FPR</th>
-            <th>Mean Detection</th>
-            <th>Mean Lead Time</th>
-            <th>Mean Alerts / Patient-Day</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><strong>t=4.0</strong></td>
-            <td>80.33%</td>
-            <td>14.4%</td>
-            <td>37.7%</td>
-            <td>4 hrs</td>
-            <td>2.23</td>
-          </tr>
-        
-          <tr>
-            <td><strong>t=5.0</strong></td>
-            <td>89.07%</td>
-            <td>8%</td>
-            <td>24.47%</td>
-            <td>4 hrs</td>
-            <td>1.24</td>
-          </tr>
-        
-          <tr>
-            <td><strong>t=6.0</strong></td>
-            <td>94.27%</td>
-            <td>4.2%</td>
-            <td>15.27%</td>
-            <td>3.92 hrs</td>
-            <td>0.65</td>
-          </tr>
-        </tbody>
-      </table>
-    
-      </div>
-
-      <div class="card full">
-        <h2>Score Saturation + Review Queue Context</h2>
         <p class="muted">
-          This section supports the Command Center design decision to show queue rank, priority tier, primary driver, trend direction, and lead-time context instead of relying on raw score alone.
+          This supports the score-saturation fix: even when raw scores cluster high, the command center can still differentiate patients using context-rich prioritization.
         </p>
-        
-      <table>
-        <thead>
-          <tr>
-            <th>Threshold</th>
-            <th>Setting</th>
-            <th>Alert Rows</th>
-            <th>Score ≥9</th>
-            <th>Score ≥9.9</th>
-            <th>Median Queue</th>
-            <th>P95 Queue</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><strong>t=4</strong></td>
-            <td>ICU / high-acuity</td>
-            <td>65821</td>
-            <td>3.53%</td>
-            <td>1.66%</td>
-            <td>1</td>
-            <td>1</td>
-          </tr>
-        
-          <tr>
-            <td><strong>t=5</strong></td>
-            <td>Mixed units / balanced</td>
-            <td>36568</td>
-            <td>6.36%</td>
-            <td>2.99%</td>
-            <td>1</td>
-            <td>1</td>
-          </tr>
-        
-          <tr>
-            <td><strong>t=6</strong></td>
-            <td>Telemetry / stepdown conservative</td>
-            <td>19215</td>
-            <td>12.11%</td>
-            <td>5.68%</td>
-            <td>1</td>
-            <td>1</td>
-          </tr>
-        </tbody>
-      </table>
-    
       </div>
 
       <div class="card full">
         <h2>Driver Explainability Distribution</h2>
-        <p class="muted">
-          Driver-family summaries are shown as aggregate explainability distributions only. They are not event-causation claims and are not used as pre-event driver attribution.
-        </p>
         
       <table>
         <thead>
@@ -694,15 +608,17 @@ tr:last-child td { border-bottom: 0; }
       </div>
 
       <div class="card full">
-        <h2>Pilot-Safe Claims</h2>
+        <h2>Approved Framing</h2>
         <p class="callout">
           Retrospective analysis on de-identified MIMIC data showed ERA can reduce alert burden while maintaining configurable event-cluster detection and explainable review context across threshold settings.
         </p>
-        <p class="muted"><strong>Avoid:</strong> “predicts deterioration,” “prevents adverse events,” “outperforms standard monitoring,” “replaces clinician judgment,” or “independently triggers escalation.”</p>
+        <p class="muted">
+          Keep claims conservative. Do not state that ERA diagnoses, predicts deterioration, prevents adverse events, replaces monitoring, replaces clinician judgment, or independently triggers escalation.
+        </p>
       </div>
     </section>
 
-    <p class="footer">Generated 2026-04-25T18:56:09.772524+00:00 · Aggregate DUA-safe public summary only.</p>
+    <p class="footer">Generated 2026-04-25T18:56:09.772657+00:00 · Aggregate DUA-safe evidence packet only.</p>
   </main>
 </body>
 </html>
