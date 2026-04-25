@@ -400,5 +400,24 @@
       "Claims to avoid",
       "Limitations"
     ]
+  },
+  "final_polish_bundle": {
+    "status": "Implemented",
+    "implemented_at_utc": "2026-04-25T12:07:57.024462+00:00",
+    "tasks_completed": [
+      "Evidence Packet polish",
+      "Command Center patient-card explainability",
+      "Validation page simplification",
+      "Export options",
+      "README / pilot docs route update"
+    ],
+    "routes_added_or_confirmed": [
+      "/validation-evidence/download.json",
+      "/validation-evidence/examples.csv",
+      "/validation-evidence/download.md",
+      "/validation-evidence",
+      "/validation-intelligence",
+      "/command-center"
+    ]
   }
 }

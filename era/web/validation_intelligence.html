@@ -52,7 +52,56 @@
     .claim { color:#e9f3ff; line-height:1.55; font-size:16px; font-weight:800; }
     .avoid li { color:#ffb3bb; }
     @media (max-width:900px){ .grid,.two{grid-template-columns:1fr;} h1{font-size:38px;} }
-  </style>
+  
+    /* ERA_VALIDATION_SIMPLIFY_V2_START */
+    .era-simplified-callout{
+      border:1px solid rgba(143,240,179,.28);
+      background:linear-gradient(180deg,rgba(143,240,179,.10),rgba(255,255,255,.03));
+      border-radius:22px;
+      padding:18px;
+      margin-top:18px;
+    }
+    .era-simplified-callout h2{margin:0 0 10px;font-size:24px}
+    .era-simplified-grid{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:12px;
+      margin-top:14px;
+    }
+    .era-simplified-stat{
+      border:1px solid rgba(255,255,255,.10);
+      border-radius:18px;
+      padding:14px;
+      background:rgba(255,255,255,.04);
+    }
+    .era-simplified-stat .k{
+      font-size:11px;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      color:#9fc4ff;
+      font-weight:950;
+    }
+    .era-simplified-stat .v{
+      font-size:28px;
+      font-weight:1000;
+      margin-top:6px;
+    }
+    .era-driver-collapsed table{display:none}
+    .era-driver-toggle{
+      margin-top:10px;
+      display:inline-flex;
+      padding:9px 12px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.05);
+      color:#f8fafc;
+      font-weight:900;
+      cursor:pointer;
+    }
+    @media(max-width:900px){.era-simplified-grid{grid-template-columns:1fr}}
+    /* ERA_VALIDATION_SIMPLIFY_V2_END */
+
+</style>
 </head>
 <body>
   <div class="wrap">
@@ -81,6 +130,28 @@
 
     
 <!-- ERA_VALIDATION_POLISH_V2_START -->
+
+<!-- ERA_VALIDATION_SIMPLIFIED_HERO_V2_START -->
+<div class="wrap" style="padding-top:0;">
+  <div class="era-simplified-callout">
+    <div class="eyebrow">Executive Takeaway</div>
+    <h2>81% fewer unnecessary alerts while preserving configurable patient-level detection</h2>
+    <p class="sub" style="font-size:15px;">
+      At the conservative t=6.0 operating point, ERA is framed as a selective review-prioritization layer:
+      lower alert burden, lower false-positive rate, and retrospective timing context inside a 6-hour pre-event window.
+    </p>
+    <div class="era-simplified-grid">
+      <div class="era-simplified-stat"><div class="k">Alert reduction</div><div class="v good">81%</div></div>
+      <div class="era-simplified-stat"><div class="k">Median first-flag timing</div><div class="v good">4 hrs</div></div>
+      <div class="era-simplified-stat"><div class="k">ERA FPR</div><div class="v good">4.5%</div></div>
+    </div>
+    <div class="notice" style="margin-top:14px;">
+      Lead time is retrospective: among detected event clusters, the median time from first ERA flag to documented event timestamp was approximately 4.0 hours within the 6-hour pre-event window.
+    </div>
+  </div>
+</div>
+<!-- ERA_VALIDATION_SIMPLIFIED_HERO_V2_END -->
+
 <div class="section card" id="validationExecutiveSummaryV2">
   <div class="eyebrow">Validation Intelligence</div>
   <h2>Hospital-Facing Validation Summary</h2>
@@ -522,5 +593,48 @@ fetch('/api/validation/milestone', {cache:'no-store'})
 <!-- ERA_EXPLAINABILITY_DISPLAY_V1_END -->
 
 <script>console.log("Pilot Evidence Export available at /validation-evidence");</script>
+
+<script>
+/* ERA_VALIDATION_SIMPLIFY_SCRIPT_V2_START */
+(function(){
+  function cleanDrivers(){
+    document.body.innerHTML = document.body.innerHTML.replaceAll('no dominant driver', 'Composite multi-signal pattern');
+    document.body.innerHTML = document.body.innerHTML.replaceAll('No dominant driver', 'Composite multi-signal pattern');
+  }
+
+  function collapseDriverTable(){
+    var headings = Array.from(document.querySelectorAll('h2,h3'));
+    var driverHeading = headings.find(function(h){ return h.textContent.trim().toLowerCase().includes('top contributing drivers'); });
+    if (!driverHeading) return;
+    var card = driverHeading.closest('.card');
+    if (!card || card.dataset.eraDriverCollapse === '1') return;
+    card.dataset.eraDriverCollapse = '1';
+    card.classList.add('era-driver-collapsed');
+
+    var note = document.createElement('p');
+    note.className = 'sub';
+    note.style.fontSize = '13px';
+    note.textContent = 'Detailed driver counts are available for informatics review. The headline story remains alert reduction, lead time, false-positive control, and representative review examples.';
+    driverHeading.insertAdjacentElement('afterend', note);
+
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'era-driver-toggle';
+    btn.textContent = 'Show detailed driver counts';
+    btn.onclick = function(){
+      card.classList.toggle('era-driver-collapsed');
+      btn.textContent = card.classList.contains('era-driver-collapsed') ? 'Show detailed driver counts' : 'Hide detailed driver counts';
+    };
+    note.insertAdjacentElement('afterend', btn);
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    cleanDrivers();
+    setTimeout(collapseDriverTable, 800);
+  });
+})();
+/* ERA_VALIDATION_SIMPLIFY_SCRIPT_V2_END */
+</script>
+
 </body>
 </html>

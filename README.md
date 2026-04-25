@@ -165,3 +165,27 @@ flowchart LR
   AL --> A
 
 - Open-source Python libraries such as NumPy and scikit-learn
+
+
+<!-- ERA_VALIDATION_ROUTES_V2_START -->
+## Validation Intelligence and Pilot Evidence Routes
+
+The platform includes a pilot-safe retrospective validation and evidence workflow:
+
+| Route | Purpose |
+|---|---|
+| `/command-center` | Live command-center demo with validation intelligence and patient-card explainability context |
+| `/validation-intelligence` | Hospital-facing validation showcase |
+| `/validation-evidence` | Printable Pilot Evidence Packet |
+| `/validation-evidence/download.md` | Downloadable Markdown evidence packet |
+| `/validation-evidence/download.json` | Downloadable validation JSON |
+| `/validation-evidence/examples.csv` | Representative detected review examples CSV |
+| `/api/validation/evidence` | JSON evidence API |
+| `/api/validation/milestone` | Validation milestone API |
+| `/data-ingest` | De-identified retrospective CSV upload and validation workflow |
+
+Pilot-safe framing: retrospective analysis on de-identified MIMIC data showed ERA can reduce alert burden while maintaining configurable patient-level detection in a 6-hour pre-event window.
+
+Decision support only. Not intended to diagnose, direct treatment, replace clinician judgment, or independently trigger escalation.
+<!-- ERA_VALIDATION_ROUTES_V2_END -->
+

@@ -6361,6 +6361,95 @@ def create_app() -> Flask:
         )
     # ERA_PILOT_EVIDENCE_EXPORT_ROUTES_V1_END
 
+
+    # ERA_EXPORT_DOWNLOAD_ROUTES_V2_START
+    # Additional validation evidence export routes.
+    @app.get("/validation-evidence/download.json")
+    def era_validation_evidence_download_json():
+        import json
+        from pathlib import Path
+        from flask import Response
+
+        root_dir = Path(__file__).resolve().parent.parent
+        p = root_dir / "data" / "validation" / "mimic_validation_milestone_2026_04.json"
+
+        if not p.exists():
+            return Response("Validation JSON not found.", status=404, mimetype="text/plain")
+
+        body = p.read_text(encoding="utf-8")
+        return Response(
+            body,
+            mimetype="application/json",
+            headers={
+                "Content-Disposition": "attachment; filename=early-risk-alert-ai-validation-evidence.json"
+            }
+        )
+
+    @app.get("/validation-evidence/examples.csv")
+    def era_validation_evidence_examples_csv():
+        import json
+        import csv
+        import io
+        from pathlib import Path
+        from flask import Response
+
+        root_dir = Path(__file__).resolve().parent.parent
+        p = root_dir / "data" / "validation" / "mimic_validation_milestone_2026_04.json"
+
+        if not p.exists():
+            return Response("Validation evidence not found.", status=404, mimetype="text/plain")
+
+        data = json.loads(p.read_text(encoding="utf-8"))
+        lead = (
+            data.get("computed_validation_metrics", {})
+            .get("lead_time_before_event", {})
+        )
+        examples = lead.get("detected_examples", [])
+
+        output = io.StringIO()
+        writer = csv.DictWriter(output, fieldnames=[
+            "rank",
+            "patient_id",
+            "lead_hours",
+            "priority_tier",
+            "primary_driver",
+            "score",
+            "event_time",
+            "first_alert_time"
+        ])
+        writer.writeheader()
+
+        sorted_examples = sorted(
+            examples,
+            key=lambda x: float(x.get("score") or 0),
+            reverse=True
+        )
+
+        for idx, ex in enumerate(sorted_examples, start=1):
+            driver = ex.get("primary_driver") or "Review context"
+            if str(driver).lower() == "no dominant driver":
+                driver = "Composite multi-signal pattern"
+
+            writer.writerow({
+                "rank": idx,
+                "patient_id": ex.get("patient_id", ""),
+                "lead_hours": ex.get("lead_hours", ""),
+                "priority_tier": ex.get("priority_tier", ""),
+                "primary_driver": driver,
+                "score": ex.get("score", ""),
+                "event_time": ex.get("event_time", ""),
+                "first_alert_time": ex.get("first_alert_time", "")
+            })
+
+        return Response(
+            output.getvalue(),
+            mimetype="text/csv",
+            headers={
+                "Content-Disposition": "attachment; filename=early-risk-alert-ai-representative-examples.csv"
+            }
+        )
+    # ERA_EXPORT_DOWNLOAD_ROUTES_V2_END
+
     return app
 
 

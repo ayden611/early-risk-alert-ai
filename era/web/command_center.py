@@ -546,6 +546,70 @@ COMMAND_CENTER_HTML = r"""
       .bar-row{grid-template-columns:1fr}
       .bar-value{text-align:left}
     }
+  
+    /* ERA_COMMAND_PATIENT_EXPLAINABILITY_V2_START */
+    .era-priority-context-grid{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:10px;
+    }
+    .era-priority-context-card{
+      border:1px solid rgba(255,255,255,.06);
+      border-radius:16px;
+      background:rgba(255,255,255,.03);
+      padding:12px;
+    }
+    .era-priority-context-card .context-k{
+      font-size:10px;
+      font-weight:1000;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+      color:#9adfff;
+      margin-bottom:6px;
+    }
+    .era-priority-context-card .context-v{
+      font-size:15px;
+      font-weight:1000;
+      color:#eef4ff;
+      line-height:1.35;
+    }
+    .era-card-context{
+      position:relative;
+      z-index:2;
+      margin-top:12px;
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:8px;
+    }
+    .era-context-chip{
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:999px;
+      padding:7px 9px;
+      background:rgba(255,255,255,.04);
+      font-size:11px;
+      font-weight:950;
+      color:#dce9ff;
+      line-height:1.2;
+    }
+    .era-context-chip.critical{background:rgba(255,102,125,.14);border-color:rgba(255,102,125,.32);color:#ffd0d6}
+    .era-context-chip.elevated{background:rgba(244,189,106,.14);border-color:rgba(244,189,106,.32);color:#ffe5b8}
+    .era-context-chip.watch{background:rgba(122,162,255,.14);border-color:rgba(122,162,255,.32);color:#dce7ff}
+    .era-context-chip.low{background:rgba(58,211,143,.12);border-color:rgba(58,211,143,.26);color:#bff6dc}
+    .era-help-note{
+      margin-top:10px;
+      border:1px solid rgba(138,180,255,.25);
+      background:rgba(138,180,255,.08);
+      border-radius:14px;
+      padding:10px;
+      font-size:12px;
+      color:#dce9ff;
+      line-height:1.5;
+    }
+    @media(max-width:700px){
+      .era-priority-context-grid,.era-card-context{grid-template-columns:1fr}
+    }
+    /* ERA_COMMAND_PATIENT_EXPLAINABILITY_V2_END */
+
   </style>
 </head>
 <body>
@@ -1127,6 +1191,34 @@ COMMAND_CENTER_HTML = r"""
         <div class="drawer-v" id="drawerRisk">--</div>
       </div>
     </div>
+
+
+    <!-- ERA_DRAWER_PRIORITY_CONTEXT_V2_START -->
+    <div class="drawer-block">
+      <div class="drawer-k">Priority Context</div>
+      <div class="era-priority-context-grid">
+        <div class="era-priority-context-card">
+          <div class="context-k">Priority Tier</div>
+          <div class="context-v" id="drawerPriorityTier">--</div>
+        </div>
+        <div class="era-priority-context-card">
+          <div class="context-k">Queue Rank</div>
+          <div class="context-v" id="drawerQueueRank">--</div>
+        </div>
+        <div class="era-priority-context-card">
+          <div class="context-k">Primary Driver</div>
+          <div class="context-v" id="drawerPrimaryDriver">--</div>
+        </div>
+        <div class="era-priority-context-card">
+          <div class="context-k">Trend Direction</div>
+          <div class="context-v" id="drawerTrendDirection">--</div>
+        </div>
+      </div>
+      <div class="era-help-note">
+        How to read this: ERA displays a review-priority tier, queue rank, primary signal context, and trend direction so high-score patients can be distinguished without relying on raw score alone.
+      </div>
+    </div>
+    <!-- ERA_DRAWER_PRIORITY_CONTEXT_V2_END -->
 
     <div class="drawer-block">
       <div class="drawer-k">Supportive Review Note</div>
@@ -3025,6 +3117,7 @@ function renderRouteStatusModule(){
             <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
               <a class="btn secondary small" href="/validation-intelligence">Open Full Validation Intelligence</a>
               <a class="btn secondary small" href="/validation-evidence">Evidence Packet</a>
+              <a class="btn secondary small" href="/validation-evidence/examples.csv">Examples CSV</a>
               <a class="btn secondary small" href="/data-ingest">Run New Retrospective Analysis</a>
               <a class="btn secondary small" href="/pilot-docs">Pilot Docs</a>
             </div>
@@ -3214,6 +3307,178 @@ function renderRouteStatusModule(){
     }
 
     boot();
+  
+    // ERA_COMMAND_PATIENT_EXPLAINABILITY_V2_START
+    function eraReviewScore(patient){
+      return safeNumber(patient && patient.risk_score, 0);
+    }
+
+    function eraPriorityTier(patient){
+      const score = eraReviewScore(patient);
+      const status = String((patient && patient.status) || "").toLowerCase();
+      if (status.includes("critical") || score >= 85 || score >= 8.5) return "Critical";
+      if (status.includes("high") || status.includes("escalated") || score >= 70 || score >= 7) return "Elevated";
+      if (status.includes("moderate") || score >= 45 || score >= 4.5) return "Watch";
+      return "Low";
+    }
+
+    function eraTierClass(tier){
+      const t = String(tier || "").toLowerCase();
+      if (t.includes("critical")) return "critical";
+      if (t.includes("elevated")) return "elevated";
+      if (t.includes("watch")) return "watch";
+      return "low";
+    }
+
+    function eraPrimaryDriver(patient){
+      if (!patient) return "Review context";
+      const reasons = Array.isArray(patient.reasons) ? patient.reasons.join(" ") : "";
+      const text = [
+        patient.alert_message,
+        patient.recommended_action,
+        patient.story,
+        patient.title,
+        reasons
+      ].filter(Boolean).join(" ").toLowerCase();
+
+      const spo2 = safeNumber(patient.spo2);
+      const hr = safeNumber(patient.heart_rate);
+      const sbp = safeNumber(patient.bp_systolic);
+      const rr = safeNumber(patient.respiratory_rate);
+      const temp = safeNumber(patient.temperature_f);
+
+      if (text.includes("spo2") || text.includes("oxygen") || (spo2 && spo2 < 93)) return "SpO₂ decline";
+      if (text.includes("respiratory") || text.includes("rr") || (rr && (rr < 12 || rr > 20))) return "RR instability";
+      if (text.includes("heart") || text.includes("hr") || (hr && (hr >= 110 || hr <= 55))) return "HR instability";
+      if (text.includes("blood pressure") || text.includes("bp") || (sbp && (sbp >= 150 || sbp < 100))) return "BP trend concern";
+      if (text.includes("temp") || (temp && (temp < 97.6 || temp > 100.4))) return "Temperature trend";
+      return "Composite multi-signal pattern";
+    }
+
+    function eraTrendDirection(patient){
+      if (!patient) return "Stable";
+      const text = [
+        patient.alert_message,
+        patient.recommended_action,
+        patient.story,
+        patient.title
+      ].filter(Boolean).join(" ").toLowerCase();
+
+      if (text.includes("worsen") || text.includes("rising") || text.includes("decline") || text.includes("drop") || text.includes("elevated")) return "Worsening";
+      if (text.includes("improv") || text.includes("resolved") || text.includes("recover")) return "Improving";
+      const score = eraReviewScore(patient);
+      if (score >= 7 || score >= 70) return "Worsening";
+      return "Stable";
+    }
+
+    function eraQueueRank(patient){
+      if (!patient || !Array.isArray(activePatients)) return "--";
+      const sorted = activePatients.slice().sort((a,b) => eraReviewScore(b) - eraReviewScore(a));
+      const idx = sorted.findIndex(p => String(p.patient_id) === String(patient.patient_id));
+      return idx >= 0 ? "#" + (idx + 1) : "--";
+    }
+
+    function eraFindSelectedPatient(){
+      if (!Array.isArray(activePatients) || !activePatients.length) return null;
+      if (selectedPatientId){
+        const found = activePatients.find(p => String(p.patient_id) === String(selectedPatientId));
+        if (found) return found;
+      }
+      const drawerTitle = document.getElementById("drawerPatientName");
+      const txt = drawerTitle ? drawerTitle.textContent : "";
+      return activePatients.find(p => txt.includes(p.patient_id) || txt.includes(p.name)) || activePatients[0];
+    }
+
+    function eraUpdateDrawerPriorityContext(){
+      const patient = eraFindSelectedPatient();
+      if (!patient) return;
+
+      const tier = eraPriorityTier(patient);
+      const rank = eraQueueRank(patient);
+      const driver = eraPrimaryDriver(patient);
+      const trend = eraTrendDirection(patient);
+
+      const tierEl = document.getElementById("drawerPriorityTier");
+      const rankEl = document.getElementById("drawerQueueRank");
+      const driverEl = document.getElementById("drawerPrimaryDriver");
+      const trendEl = document.getElementById("drawerTrendDirection");
+
+      if (tierEl) tierEl.textContent = tier;
+      if (rankEl) rankEl.textContent = rank;
+      if (driverEl) driverEl.textContent = driver;
+      if (trendEl) trendEl.textContent = trend;
+
+      const explain = document.getElementById("drawerExplainability");
+      if (explain && patient){
+        const base = explain.textContent && explain.textContent !== "--" ? explain.textContent : explainabilityForPatient(patient);
+        if (!base.includes("Priority tier:")){
+          explain.textContent = base + " Priority tier: " + tier + ". Queue rank: " + rank + ". Primary driver: " + driver + ". Trend direction: " + trend + ".";
+        }
+      }
+    }
+
+    function eraDecoratePatientCards(){
+      const wall = document.getElementById("wall");
+      if (!wall || !Array.isArray(activePatients) || !activePatients.length) return;
+
+      const monitors = Array.from(wall.querySelectorAll(".monitor"));
+      if (!monitors.length) return;
+
+      activePatients.forEach(patient => {
+        const id = String(patient.patient_id || "");
+        const name = String(patient.name || "");
+        const card = monitors.find(m => m.textContent.includes(id) || (name && m.textContent.includes(name)));
+        if (!card) return;
+
+        let box = card.querySelector(".era-card-context");
+        if (!box){
+          box = document.createElement("div");
+          box.className = "era-card-context";
+          const story = card.querySelector(".monitor-story") || card.querySelector(".monitor-actions") || card;
+          if (story && story.parentNode){
+            story.parentNode.insertBefore(box, story.nextSibling);
+          } else {
+            card.appendChild(box);
+          }
+        }
+
+        const tier = eraPriorityTier(patient);
+        const cls = eraTierClass(tier);
+        box.innerHTML = `
+          <div class="era-context-chip ${cls}">Tier: ${tier}</div>
+          <div class="era-context-chip">Rank: ${eraQueueRank(patient)}</div>
+          <div class="era-context-chip">Driver: ${eraPrimaryDriver(patient)}</div>
+          <div class="era-context-chip">Trend: ${eraTrendDirection(patient)}</div>
+        `;
+      });
+    }
+
+    function eraInstallPatientExplainabilityUpgrade(){
+      try{
+        const originalOpen = typeof openPatientDrawer === "function" ? openPatientDrawer : null;
+        if (originalOpen && !originalOpen.__eraWrapped){
+          const wrapped = function(){
+            const out = originalOpen.apply(this, arguments);
+            setTimeout(eraUpdateDrawerPriorityContext, 80);
+            setTimeout(eraDecoratePatientCards, 120);
+            return out;
+          };
+          wrapped.__eraWrapped = true;
+          openPatientDrawer = wrapped;
+        }
+      }catch(err){
+        console.warn("ERA drawer wrapper skipped", err);
+      }
+
+      setTimeout(eraDecoratePatientCards, 400);
+      setTimeout(eraUpdateDrawerPriorityContext, 500);
+    }
+
+    document.addEventListener("DOMContentLoaded", eraInstallPatientExplainabilityUpgrade);
+    setInterval(eraDecoratePatientCards, 5000);
+    setInterval(eraUpdateDrawerPriorityContext, 5000);
+    // ERA_COMMAND_PATIENT_EXPLAINABILITY_V2_END
+
   </script>
 </body>
 </html>

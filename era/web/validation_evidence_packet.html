@@ -76,6 +76,46 @@
       .notice{color:#111;background:#fff3cd;border-color:#e6c56a}
       .wrap{max-width:none;padding:18px}
     }
+  
+    /* ERA_EVIDENCE_PACKET_POLISH_V2_START */
+    .print-cover{
+      border:1px solid rgba(143,240,179,.28);
+      background:linear-gradient(180deg,rgba(143,240,179,.08),rgba(255,255,255,.03));
+    }
+    .table-scroll{
+      width:100%;
+      overflow-x:auto;
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.08);
+    }
+    .table-scroll table{
+      min-width:760px;
+      border:0;
+    }
+    .packet-reading-grid{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:14px;
+      margin-top:14px;
+    }
+    .packet-reading-card{
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.04);
+      border-radius:18px;
+      padding:14px;
+    }
+    .packet-reading-card strong{color:#f8fafc}
+    @media(max-width:900px){.packet-reading-grid{grid-template-columns:1fr}}
+    @media print{
+      .table-scroll{overflow:visible;border:0}
+      .table-scroll table{min-width:0}
+      .card,.hero{break-inside:avoid}
+      h1{font-size:34px}
+      h2{font-size:20px}
+      .metric{min-height:80px}
+    }
+    /* ERA_EVIDENCE_PACKET_POLISH_V2_END */
+
   </style>
 </head>
 <body>
@@ -89,6 +129,8 @@
       <div class="actions">
         <button class="btn primary" onclick="window.print()">Print / Save PDF</button>
         <a class="btn" href="/validation-evidence/download.md">Download Markdown</a>
+        <a class="btn" href="/validation-evidence/download.json">Download JSON</a>
+        <a class="btn" href="/validation-evidence/examples.csv">Examples CSV</a>
         <a class="btn" href="/validation-intelligence">Validation Intelligence</a>
         <a class="btn" href="/command-center">Command Center</a>
       </div>
@@ -107,12 +149,38 @@
       </div>
     </section>
 
+    
+    <!-- ERA_EVIDENCE_HOW_TO_READ_V2_START -->
+    <section class="section card print-cover">
+      <h2>How To Read This Packet</h2>
+      <p>
+        This packet summarizes retrospective validation evidence for pilot-readiness review. It should be read as
+        workflow-support evidence, not as a prospective clinical-performance claim.
+      </p>
+      <div class="packet-reading-grid">
+        <div class="packet-reading-card">
+          <strong>1. Start with alert burden.</strong>
+          <p>ERA is positioned as a selective review-prioritization layer that reduces unnecessary review interruptions.</p>
+        </div>
+        <div class="packet-reading-card">
+          <strong>2. Read lead time carefully.</strong>
+          <p>Lead time is measured only among detected event clusters inside the configured 6-hour pre-event window.</p>
+        </div>
+        <div class="packet-reading-card">
+          <strong>3. Use thresholds by setting.</strong>
+          <p>Lower thresholds support higher-acuity review; higher thresholds support more conservative telemetry/stepdown review.</p>
+        </div>
+      </div>
+    </section>
+    <!-- ERA_EVIDENCE_HOW_TO_READ_V2_END -->
+
+
     <section class="section two">
       <div class="card">
         <h2>Dataset Summary</h2>
-        <table>
+        <div class="table-scroll"><table>
           <tbody id="datasetRows"></tbody>
-        </table>
+        </table></div>
       </div>
       <div class="card">
         <h2>Operational Alert Burden</h2>
@@ -123,7 +191,7 @@
 
     <section class="section card">
       <h2>Threshold Profiles</h2>
-      <table>
+      <div class="table-scroll"><table>
         <thead>
           <tr>
             <th>Threshold</th>
@@ -135,13 +203,13 @@
           </tr>
         </thead>
         <tbody id="thresholdRows"></tbody>
-      </table>
+      </table></div>
     </section>
 
     <section class="section card">
       <h2>Representative Detected Review Examples</h2>
       <p>These examples show how ERA can present queue rank, lead time, priority tier, primary driver, and score together.</p>
-      <table>
+      <div class="table-scroll"><table>
         <thead>
           <tr>
             <th>Rank</th>
@@ -153,7 +221,7 @@
           </tr>
         </thead>
         <tbody id="exampleRows"></tbody>
-      </table>
+      </table></div>
     </section>
 
     <section class="section two">
