@@ -670,21 +670,20 @@
 
 </script>
 
-<!-- ERA_SAFE_MODE_A_UPLOAD_BINDER_V1_START -->
+
+
+
+<!-- ERA_SAFE_MODE_A_UPLOAD_BINDER_V2_START -->
 <script>
 (function () {
   function ready(fn) {
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', fn);
-    } else {
-      fn();
-    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
+    else fn();
   }
 
   function findRunButton() {
     var btn = document.getElementById('uploadBtn');
     if (btn) return btn;
-
     var buttons = Array.prototype.slice.call(document.querySelectorAll('button, input[type="button"], input[type="submit"]'));
     for (var i = 0; i < buttons.length; i++) {
       var t = (buttons[i].innerText || buttons[i].value || '').trim().toLowerCase();
@@ -696,25 +695,19 @@
   function findFileInput(btn) {
     var scope = btn.closest('form, section, .card, .panel, .mode-card, div') || document;
     var inputs = Array.prototype.slice.call(scope.querySelectorAll('input[type="file"]'));
-    if (inputs.length) return inputs[0];
-    return document.querySelector('input[type="file"]');
+    return inputs[0] || document.querySelector('input[type="file"]');
   }
 
   function ensureStatus(btn) {
-    var existing = document.getElementById('eraModeAStatusHotfix');
-    if (existing) return existing;
-
-    var box = document.createElement('div');
+    var box = document.getElementById('eraModeAStatusHotfix');
+    if (box) return box;
+    box = document.createElement('div');
     box.id = 'eraModeAStatusHotfix';
     box.style.marginTop = '10px';
     box.style.fontWeight = '800';
     box.style.fontSize = '13px';
-
-    if (btn.parentNode) {
-      btn.parentNode.insertBefore(box, btn.nextSibling);
-    } else {
-      document.body.appendChild(box);
-    }
+    if (btn.parentNode) btn.parentNode.insertBefore(box, btn.nextSibling);
+    else document.body.appendChild(box);
     return box;
   }
 
@@ -727,11 +720,61 @@
   }
 
   async function jsonSafe(resp) {
-    try {
-      return await resp.json();
-    } catch (e) {
-      return { ok: false, error: 'Server returned non-JSON response with status ' + resp.status };
+    try { return await resp.json(); }
+    catch (e) { return { ok: false, error: 'Server returned non-JSON response with status ' + resp.status }; }
+  }
+
+  function extractUploadId(obj, depth) {
+    if (!obj || depth > 5) return null;
+
+    if (typeof obj === 'string') return null;
+
+    if (Array.isArray(obj)) {
+      for (var i = 0; i < obj.length; i++) {
+        var fromArr = extractUploadId(obj[i], depth + 1);
+        if (fromArr) return fromArr;
+      }
+      return null;
     }
+
+    if (typeof obj === 'object') {
+      var keys = ['upload_id', 'uploadId', 'uploadID', 'id', 'uuid', 'job_id', 'jobId', 'task_id', 'taskId'];
+      for (var k = 0; k < keys.length; k++) {
+        if (obj[keys[k]] !== undefined && obj[keys[k]] !== null && String(obj[keys[k]]).trim() !== '') {
+          return String(obj[keys[k]]);
+        }
+      }
+
+      var preferred = ['upload', 'result', 'data', 'record', 'item', 'latest', 'file'];
+      for (var p = 0; p < preferred.length; p++) {
+        if (obj[preferred[p]]) {
+          var nested = extractUploadId(obj[preferred[p]], depth + 1);
+          if (nested) return nested;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  async function findLatestUploadIdFromList(btn) {
+    for (var attempt = 0; attempt < 8; attempt++) {
+      setStatus(btn, 'Upload accepted. Looking up upload record...', '');
+
+      var resp = await fetch('/api/retro/list', {
+        method: 'GET',
+        cache: 'no-store',
+        credentials: 'same-origin'
+      });
+
+      var data = await jsonSafe(resp);
+      var id = extractUploadId(data, 0);
+      if (id) return id;
+
+      await new Promise(function (resolve) { setTimeout(resolve, 1500); });
+    }
+
+    return null;
   }
 
   function showResults(upload, analysis) {
@@ -787,7 +830,7 @@
   ready(function () {
     var btn = findRunButton();
     if (!btn) {
-      console.warn('ERA upload hotfix: Run Validation Analysis button not found.');
+      console.warn('ERA upload hotfix V2: Run Validation Analysis button not found.');
       return;
     }
 
@@ -820,7 +863,7 @@
         });
 
         var data = await jsonSafe(resp);
-        var uploadId = data.upload_id || data.uploadId || data.id;
+        var uploadId = extractUploadId(data, 0);
 
         if (
           resp.status === 202 ||
@@ -830,7 +873,11 @@
           data.status === 'queued'
         ) {
           if (!uploadId) {
-            throw new Error('Upload accepted, but no upload_id was returned.');
+            uploadId = await findLatestUploadIdFromList(btn);
+          }
+
+          if (!uploadId) {
+            throw new Error('Upload accepted, but no upload_id could be found in the response or upload list.');
           }
 
           setStatus(btn, 'Upload accepted. Analysis is running...', '');
@@ -858,18 +905,18 @@
         setStatus(btn, 'Analysis complete.', 'ok');
 
       } catch (err) {
-        console.error('ERA upload hotfix error:', err);
+        console.error('ERA upload hotfix V2 error:', err);
         setStatus(btn, 'Upload failed: ' + err.message, 'err');
       } finally {
         btn.disabled = false;
       }
     }, true);
 
-    console.log('ERA upload hotfix: Run Validation Analysis button rebound.');
+    console.log('ERA upload hotfix V2: Run Validation Analysis button rebound with upload_id fallback.');
   });
 })();
 </script>
-<!-- ERA_SAFE_MODE_A_UPLOAD_BINDER_V1_END -->
+<!-- ERA_SAFE_MODE_A_UPLOAD_BINDER_V2_END -->
 
 </body>
 </html>
