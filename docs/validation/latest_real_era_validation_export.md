@@ -2,19 +2,19 @@
 
 ## Run Summary
 
-- Run ID: `era_mimic_20260425_151057_t6_0`
+- Run ID: `era_mimic_20260425_173136_t6_0`
 - Dataset: MIMIC-IV de-identified retrospective validation subset
 - Source file: `/Users/andreasmith/Desktop/mimic_strict_event_labeled_era_cohort.csv`
 - Enriched CSV: `data/validation/latest_era_validation_export.csv`
-- Generated: 2026-04-25T15:10:59.820836+00:00
+- Generated: 2026-04-25T17:31:38.562471+00:00
 - Threshold: 6.0
 - Rows: 456,453
 - Patients: 1,705
 - Events: 1,658
 - Alert reduction: 94.3%
 - ERA FPR: 4.2%
-- Patient detection: 15.3%
-- Median lead time: 4.0 hours
+- Patient detection: 22.6%
+- Median lead time: 7.0 hours
 - ERA alerts per patient-day: 0.6467
 - Standard threshold alerts per patient-day: 11.2743
 
