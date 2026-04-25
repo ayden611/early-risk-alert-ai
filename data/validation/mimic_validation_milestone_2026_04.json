@@ -376,10 +376,10 @@
     "era_alerts_per_patient_day_official_alert_volume": 0.72,
     "standard_threshold_alerts_per_patient_day_approx": 3.77,
     "method_note": "Standard threshold-only alerts per patient-day is approximated from standard threshold total alerts divided by total patient-days from the row-level retrospective lead-time analysis.",
-    "pilot_safe_summary": "ERA generated approximately 0.6467 alerts per patient-day versus approximately 11.2743 alerts per patient-day under standard threshold-only alerting, for an alert reduction of 94.3%.",
-    "era_alerts_per_patient_day_exact": 0.6467,
-    "standard_threshold_alerts_per_patient_day_exact": 11.2743,
-    "alert_reduction_pct_exact": 94.3
+    "pilot_safe_summary": "ERA generated approximately 0.4862 alerts per patient-day versus approximately 8.164 alerts per patient-day under standard threshold-only alerting, for an alert reduction of 94.0%.",
+    "era_alerts_per_patient_day_exact": 0.4862,
+    "standard_threshold_alerts_per_patient_day_exact": 8.164,
+    "alert_reduction_pct_exact": 94.0
   },
   "polished_validation_summary_v2": {
     "status": "Implemented",
@@ -456,8 +456,8 @@
   },
   "real_era_validation_export": {
     "status": "Generated",
-    "latest_run_id": "era_mimic_20260425_185242_t6_0",
-    "generated_at_utc": "2026-04-25T18:52:44.829289+00:00",
+    "latest_run_id": "era_mimic_20260425_194719_t6_0",
+    "generated_at_utc": "2026-04-25T19:47:19.864777+00:00",
     "enriched_csv": "local-only-not-public",
     "summary_file": "local-only-not-public",
     "columns_added": [
@@ -472,47 +472,29 @@
     ],
     "selected_threshold_metrics": {
       "threshold": 6.0,
-      "rows": 456453,
-      "patients": 1705,
-      "events": 1658,
-      "event_patients": 1649,
-      "era_total_alerts": 19215,
-      "standard_total_alerts": 334965,
-      "alert_reduction_pct": 94.3,
-      "era_fpr_pct": 4.2,
-      "standard_fpr_pct": 73.4,
-      "era_patient_detection_pct": 15.3,
-      "era_event_cluster_detection_pct": 15.3,
-      "era_reading_sensitivity_pct": 5.1,
-      "standard_reading_sensitivity_pct": 70.6,
+      "rows": 159692,
+      "patients": 577,
+      "events": 564,
+      "event_patients": 557,
+      "era_total_alerts": 7021,
+      "standard_total_alerts": 117890,
+      "alert_reduction_pct": 94.0,
+      "era_fpr_pct": 4.4,
+      "standard_fpr_pct": 73.9,
+      "era_patient_detection_pct": 16.2,
+      "era_event_cluster_detection_pct": 16.0,
+      "era_reading_sensitivity_pct": 5.4,
+      "standard_reading_sensitivity_pct": 72.2,
       "median_lead_time_hours": 4.0,
-      "pct_detected_events_flagged_over_1h": 95.7,
-      "pct_detected_events_flagged_over_2h": 83.4,
-      "pct_detected_events_flagged_over_3h": 71.1,
-      "total_patient_days": 29710.513,
-      "era_alerts_per_patient_day": 0.6467,
-      "standard_alerts_per_patient_day": 11.2743,
+      "pct_detected_events_flagged_over_1h": 95.6,
+      "pct_detected_events_flagged_over_2h": 81.1,
+      "pct_detected_events_flagged_over_3h": 73.3,
+      "total_patient_days": 14440.24,
+      "era_alerts_per_patient_day": 0.4862,
+      "standard_alerts_per_patient_day": 8.164,
       "detected_examples": [
         {
           "case_id": "Case-021",
-          "lead_hours": 3.0,
-          "priority_tier": "Critical",
-          "primary_driver": "SpO2 decline",
-          "trend_direction": "Worsening",
-          "score": 9.9,
-          "queue_rank": 1
-        },
-        {
-          "case_id": "Case-022",
-          "lead_hours": 4.0,
-          "priority_tier": "Critical",
-          "primary_driver": "SpO2 below 90",
-          "trend_direction": "Worsening",
-          "score": 9.9,
-          "queue_rank": 1
-        },
-        {
-          "case_id": "Case-023",
           "lead_hours": 6.0,
           "priority_tier": "Critical",
           "primary_driver": "SpO2 below 90",
@@ -521,8 +503,17 @@
           "queue_rank": 1
         },
         {
-          "case_id": "Case-024",
-          "lead_hours": 5.0,
+          "case_id": "Case-022",
+          "lead_hours": 6.0,
+          "priority_tier": "Critical",
+          "primary_driver": "SpO2 decline",
+          "trend_direction": "Worsening",
+          "score": 9.9,
+          "queue_rank": 1
+        },
+        {
+          "case_id": "Case-023",
+          "lead_hours": 2.0,
           "priority_tier": "Critical",
           "primary_driver": "severe SpO2 decline",
           "trend_direction": "Worsening",
@@ -530,7 +521,7 @@
           "queue_rank": 1
         },
         {
-          "case_id": "Case-025",
+          "case_id": "Case-024",
           "lead_hours": 6.0,
           "priority_tier": "Critical",
           "primary_driver": "SpO2 decline",
@@ -539,7 +530,25 @@
           "queue_rank": 1
         },
         {
+          "case_id": "Case-025",
+          "lead_hours": 1.0,
+          "priority_tier": "Critical",
+          "primary_driver": "SpO2 below 90",
+          "trend_direction": "Worsening",
+          "score": 9.5,
+          "queue_rank": 1
+        },
+        {
           "case_id": "Case-026",
+          "lead_hours": 6.0,
+          "priority_tier": "Critical",
+          "primary_driver": "SpO2 decline",
+          "trend_direction": "Worsening",
+          "score": 9.5,
+          "queue_rank": 1
+        },
+        {
+          "case_id": "Case-027",
           "lead_hours": 5.0,
           "priority_tier": "Critical",
           "primary_driver": "borderline SpO2",
@@ -548,17 +557,8 @@
           "queue_rank": 1
         },
         {
-          "case_id": "Case-027",
-          "lead_hours": 3.0,
-          "priority_tier": "Critical",
-          "primary_driver": "SpO2 decline",
-          "trend_direction": "Worsening",
-          "score": 9.0,
-          "queue_rank": 1
-        },
-        {
           "case_id": "Case-028",
-          "lead_hours": 5.0,
+          "lead_hours": 6.0,
           "priority_tier": "Critical",
           "primary_driver": "severe SpO2 decline",
           "trend_direction": "Worsening",
@@ -567,24 +567,15 @@
         },
         {
           "case_id": "Case-029",
-          "lead_hours": 4.0,
+          "lead_hours": 0.5,
           "priority_tier": "Critical",
-          "primary_driver": "SpO2 decline",
+          "primary_driver": "severe SpO2 decline",
           "trend_direction": "Worsening",
           "score": 9.0,
           "queue_rank": 1
         },
         {
           "case_id": "Case-030",
-          "lead_hours": 2.5,
-          "priority_tier": "Critical",
-          "primary_driver": "borderline SpO2",
-          "trend_direction": "Worsening",
-          "score": 9.0,
-          "queue_rank": 1
-        },
-        {
-          "case_id": "Case-031",
           "lead_hours": 6.0,
           "priority_tier": "Critical",
           "primary_driver": "severe SpO2 decline",
@@ -593,7 +584,7 @@
           "queue_rank": 1
         },
         {
-          "case_id": "Case-032",
+          "case_id": "Case-031",
           "lead_hours": 3.3,
           "priority_tier": "Critical",
           "primary_driver": "SpO2 decline",
@@ -602,10 +593,19 @@
           "queue_rank": 1
         },
         {
-          "case_id": "Case-033",
+          "case_id": "Case-032",
           "lead_hours": 6.0,
           "priority_tier": "Critical",
           "primary_driver": "SpO2 decline",
+          "trend_direction": "Worsening",
+          "score": 8.5,
+          "queue_rank": 1
+        },
+        {
+          "case_id": "Case-033",
+          "lead_hours": 4.0,
+          "priority_tier": "Critical",
+          "primary_driver": "borderline SpO2",
           "trend_direction": "Worsening",
           "score": 8.5,
           "queue_rank": 1
@@ -616,47 +616,11 @@
           "priority_tier": "Critical",
           "primary_driver": "SpO2 decline",
           "trend_direction": "Worsening",
-          "score": 8.5,
-          "queue_rank": 1
-        },
-        {
-          "case_id": "Case-035",
-          "lead_hours": 6.0,
-          "priority_tier": "Critical",
-          "primary_driver": "SpO2 decline",
-          "trend_direction": "Worsening",
           "score": 8.0,
           "queue_rank": 1
         },
         {
-          "case_id": "Case-036",
-          "lead_hours": 5.0,
-          "priority_tier": "Critical",
-          "primary_driver": "HR elevation/depression",
-          "trend_direction": "Worsening",
-          "score": 7.5,
-          "queue_rank": 1
-        },
-        {
-          "case_id": "Case-037",
-          "lead_hours": 2.0,
-          "priority_tier": "Critical",
-          "primary_driver": "borderline SpO2",
-          "trend_direction": "Worsening",
-          "score": 7.5,
-          "queue_rank": 1
-        },
-        {
-          "case_id": "Case-038",
-          "lead_hours": 3.5,
-          "priority_tier": "Critical",
-          "primary_driver": "SpO2 decline",
-          "trend_direction": "Worsening",
-          "score": 7.5,
-          "queue_rank": 1
-        },
-        {
-          "case_id": "Case-039",
+          "case_id": "Case-035",
           "lead_hours": 4.0,
           "priority_tier": "Critical",
           "primary_driver": "SpO2 below 90",
@@ -665,12 +629,48 @@
           "queue_rank": 1
         },
         {
-          "case_id": "Case-040",
+          "case_id": "Case-036",
           "lead_hours": 3.0,
           "priority_tier": "Critical",
           "primary_driver": "SpO2 decline",
           "trend_direction": "Worsening",
           "score": 7.5,
+          "queue_rank": 1
+        },
+        {
+          "case_id": "Case-037",
+          "lead_hours": 3.0,
+          "priority_tier": "Critical",
+          "primary_driver": "SpO2 decline",
+          "trend_direction": "Worsening",
+          "score": 7.5,
+          "queue_rank": 1
+        },
+        {
+          "case_id": "Case-038",
+          "lead_hours": 4.5,
+          "priority_tier": "Critical",
+          "primary_driver": "severe BP instability",
+          "trend_direction": "Worsening",
+          "score": 7.0,
+          "queue_rank": 1
+        },
+        {
+          "case_id": "Case-039",
+          "lead_hours": 6.0,
+          "priority_tier": "Critical",
+          "primary_driver": "HR elevation/depression",
+          "trend_direction": "Worsening",
+          "score": 7.0,
+          "queue_rank": 1
+        },
+        {
+          "case_id": "Case-040",
+          "lead_hours": 1.0,
+          "priority_tier": "Critical",
+          "primary_driver": "severe BP instability",
+          "trend_direction": "Worsening",
+          "score": 7.0,
           "queue_rank": 1
         }
       ]
@@ -679,11 +679,11 @@
   "validation_run_registry": {
     "status": "Available",
     "registry_file": "data/validation/validation_run_registry.json",
-    "latest_run_id": "era_mimic_20260425_185242_t6_0"
+    "latest_run_id": "era_mimic_20260425_194719_t6_0"
   },
   "mimic_dua_public_safety": {
     "status": "Applied",
-    "applied_at_utc": "2026-04-25T18:52:50.642129+00:00",
+    "applied_at_utc": "2026-04-25T19:47:20.198800+00:00",
     "public_policy": "Only aggregate metrics, sanitized case examples, validation methodology, and code are public-facing. Row-level MIMIC-derived exports remain local-only.",
     "removed_from_public_outputs": [
       "raw MIMIC files",
@@ -1105,10 +1105,10 @@
     "caution": "Retrospective timing behavior should not be described as prospective proof."
   },
   "latest_progress_update": {
-    "status": "Score saturation and review-queue burden audit completed",
-    "updated_at_utc": "2026-04-25T18:52:50.537687+00:00",
-    "summary": "DUA-safe aggregate audit completed for risk score distribution, high-score saturation, review-queue burden, and command-center display implications.",
-    "public_takeaway": "The validation package now supports the command-center decision to show priority tier, queue rank, driver, trend, and lead-time context instead of relying on raw score alone."
+    "status": "New MIMIC subcohort validation completed",
+    "updated_at_utc": "2026-04-25T19:47:20.094200+00:00",
+    "summary": "DUA-safe aggregate validation completed on a different deterministic patient/case-level subcohort across t=4.0, t=5.0, and t=6.0.",
+    "public_takeaway": "ERA operating-point behavior can now be reviewed on a separate subcohort, not only the full validation cohort."
   },
   "event_cluster_robustness": {
     "status": "Completed",
@@ -1531,5 +1531,102 @@
       "pilot_safe_note": "Raw score saturation should be interpreted as a reason to show richer prioritization context, not as a standalone clinical conclusion."
     },
     "pilot_safe_note": "Score saturation is handled through queue rank, priority tier, primary driver, trend direction, and lead-time context."
+  },
+  "subcohort_validation_b": {
+    "status": "Completed",
+    "updated_at_utc": "2026-04-25T19:47:20.094195+00:00",
+    "summary_file": "local-only-not-public",
+    "report_file": "docs/validation/subcohort_validation_summary.md",
+    "subset_name": "subcohort_b_hash_33_65",
+    "thresholds_tested": [
+      4.0,
+      5.0,
+      6.0
+    ],
+    "event_window_hours": 6,
+    "event_gap_hours": 6,
+    "public_policy": "Aggregate metrics only; row-level MIMIC-derived subset remains local-only.",
+    "runs": [
+      {
+        "run_id": "subcohort_b_t4_0_2026_04_25",
+        "subset_name": "subcohort_b_hash_33_65",
+        "subset_type": "deterministic case-level hash subset",
+        "threshold": 4.0,
+        "suggested_setting": "ICU / high-acuity",
+        "event_window_hours": 6,
+        "event_gap_hours": 6,
+        "rows": 159692,
+        "case_count": 577,
+        "event_count": 564,
+        "event_cluster_count": null,
+        "alert_reduction_pct": 80.2,
+        "era_fpr_pct": 14.6,
+        "standard_fpr_pct": 73.9,
+        "detection_pct": 39.2,
+        "median_lead_time_hours": 4.0,
+        "era_alerts_per_patient_day": 1.6197,
+        "standard_alerts_per_patient_day": 8.164,
+        "date_generated": "2026-04-25T19:47:11.543081+00:00",
+        "validation_status": "DUA-safe aggregate subcohort validation run"
+      },
+      {
+        "run_id": "subcohort_b_t5_0_2026_04_25",
+        "subset_name": "subcohort_b_hash_33_65",
+        "subset_type": "deterministic case-level hash subset",
+        "threshold": 5.0,
+        "suggested_setting": "Mixed units / balanced",
+        "event_window_hours": 6,
+        "event_gap_hours": 6,
+        "rows": 159692,
+        "case_count": 577,
+        "event_count": 564,
+        "event_cluster_count": null,
+        "alert_reduction_pct": 88.8,
+        "era_fpr_pct": 8.2,
+        "standard_fpr_pct": 73.9,
+        "detection_pct": 25.5,
+        "median_lead_time_hours": 4.0,
+        "era_alerts_per_patient_day": 0.9121,
+        "standard_alerts_per_patient_day": 8.164,
+        "date_generated": "2026-04-25T19:47:15.699444+00:00",
+        "validation_status": "DUA-safe aggregate subcohort validation run"
+      },
+      {
+        "run_id": "subcohort_b_t6_0_2026_04_25",
+        "subset_name": "subcohort_b_hash_33_65",
+        "subset_type": "deterministic case-level hash subset",
+        "threshold": 6.0,
+        "suggested_setting": "Telemetry / stepdown conservative",
+        "event_window_hours": 6,
+        "event_gap_hours": 6,
+        "rows": 159692,
+        "case_count": 577,
+        "event_count": 564,
+        "event_cluster_count": null,
+        "alert_reduction_pct": 94.0,
+        "era_fpr_pct": 4.4,
+        "standard_fpr_pct": 73.9,
+        "detection_pct": 16.0,
+        "median_lead_time_hours": 4.0,
+        "era_alerts_per_patient_day": 0.4862,
+        "standard_alerts_per_patient_day": 8.164,
+        "date_generated": "2026-04-25T19:47:19.864777+00:00",
+        "validation_status": "DUA-safe aggregate subcohort validation run"
+      }
+    ],
+    "interpretation_guidance": {
+      "main_question": "Does the ERA threshold story remain directionally consistent on a different deterministic subcohort?",
+      "comparison": {
+        "t4_detection_pct": 39.2,
+        "t4_alert_reduction_pct": 80.2,
+        "t6_detection_pct": 16.0,
+        "t6_alert_reduction_pct": 94.0,
+        "t6_era_fpr_pct": 4.4,
+        "t6_median_lead_time_hours": 4.0,
+        "directional_pattern": "t=4.0 should be interpreted as higher-detection/high-acuity; t=6.0 as conservative low-burden review queue."
+      },
+      "caution": "This is retrospective subcohort testing, not prospective validation."
+    },
+    "pilot_safe_note": "Decision support only. Retrospective analysis only."
   }
 }

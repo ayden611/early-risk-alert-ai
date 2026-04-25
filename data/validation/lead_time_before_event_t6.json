@@ -1,233 +1,25 @@
 {
   "ok": true,
-  "source_file": "/Users/andreasmith/Desktop/mimic_strict_event_labeled_era_cohort.csv",
-  "calculation_mode": "derived_vitals_proxy_score",
-  "important_note": "This CSV did not contain era_alert or risk_score columns, so the script used a transparent vitals-based proxy score.",
-  "threshold": 6.0,
-  "event_window_hours": 6.0,
-  "event_gap_hours": 6.0,
-  "total_rows": 456453,
-  "total_patients": 1705,
-  "total_alerts": 19215,
-  "total_event_patients": 1649,
-  "detected_event_patients": 253,
-  "patient_level_detection_pct": 15.3,
-  "total_event_clusters": 1658,
-  "detected_event_clusters": 253,
-  "event_cluster_detection_pct": 15.3,
-  "median_lead_time_before_event_hours": 4.0,
-  "median_patient_level_lead_time_hours": 4.0,
-  "pct_detected_events_flagged_over_1h": 95.7,
-  "pct_detected_events_flagged_over_2h": 83.4,
-  "pct_detected_events_flagged_over_3h": 71.1,
-  "pct_detected_patients_flagged_over_1h": 95.7,
-  "pct_detected_patients_flagged_over_2h": 83.4,
-  "pct_detected_patients_flagged_over_3h": 71.1,
-  "total_patient_days": 29710.513,
-  "alerts_per_patient_day": 0.6467,
-  "alerts_per_event_patient": 11.6525,
-  "priority_tier_counts": {
-    "Low": 390632,
-    "Watch": 46606,
-    "Critical": 9768,
-    "Elevated": 9447
-  },
-  "primary_driver_counts_top": {
-    "no dominant driver": 111480,
-    "RR instability": 60490,
-    "RR elevation": 45383,
-    "borderline SpO2": 40995,
-    "BP trend concern": 38708,
-    "SpO2 decline": 33256,
-    "HR elevation/depression": 31567,
-    "severe RR instability": 23135,
-    "HR instability": 15230,
-    "severe BP instability": 8979,
-    "BP instability": 8940,
-    "severe HR instability": 7905
-  },
-  "detected_examples": [
-    {
-      "patient_id": "MIMIC-10047824",
-      "event_time": "2145-09-21T21:00:00",
-      "first_alert_time": "2145-09-21T19:00:00",
-      "lead_hours": 2.0,
-      "score": 6.5,
-      "priority_tier": "Elevated",
-      "primary_driver": "borderline SpO2"
-    },
-    {
-      "patient_id": "MIMIC-10137856",
-      "event_time": "2186-05-17T17:00:00",
-      "first_alert_time": "2186-05-17T11:45:00",
-      "lead_hours": 5.25,
-      "score": 7.0,
-      "priority_tier": "Critical",
-      "primary_driver": "SpO2 below 90"
-    },
-    {
-      "patient_id": "MIMIC-10194776",
-      "event_time": "2148-06-24T15:00:00",
-      "first_alert_time": "2148-06-24T10:00:00",
-      "lead_hours": 5.0,
-      "score": 7.5,
-      "priority_tier": "Critical",
-      "primary_driver": "HR elevation/depression"
-    },
-    {
-      "patient_id": "MIMIC-10233597",
-      "event_time": "2187-12-14T15:00:00",
-      "first_alert_time": "2187-12-14T12:00:00",
-      "lead_hours": 3.0,
-      "score": 6.5,
-      "priority_tier": "Elevated",
-      "primary_driver": "SpO2 decline"
-    },
-    {
-      "patient_id": "MIMIC-10268877",
-      "event_time": "2181-03-07T02:20:00",
-      "first_alert_time": "2181-03-06T22:00:00",
-      "lead_hours": 4.3333,
-      "score": 6.0,
-      "priority_tier": "Elevated",
-      "primary_driver": "borderline SpO2"
-    },
-    {
-      "patient_id": "MIMIC-10354450",
-      "event_time": "2163-09-02T18:00:00",
-      "first_alert_time": "2163-09-02T16:00:00",
-      "lead_hours": 2.0,
-      "score": 7.5,
-      "priority_tier": "Critical",
-      "primary_driver": "borderline SpO2"
-    },
-    {
-      "patient_id": "MIMIC-10380296",
-      "event_time": "2144-04-28T05:00:00",
-      "first_alert_time": "2144-04-28T00:00:00",
-      "lead_hours": 5.0,
-      "score": 9.0,
-      "priority_tier": "Critical",
-      "primary_driver": "borderline SpO2"
-    },
-    {
-      "patient_id": "MIMIC-10415643",
-      "event_time": "2169-03-13T15:20:00",
-      "first_alert_time": "2169-03-13T12:00:00",
-      "lead_hours": 3.3333,
-      "score": 8.5,
-      "priority_tier": "Critical",
-      "primary_driver": "SpO2 decline"
-    },
-    {
-      "patient_id": "MIMIC-10458324",
-      "event_time": "2178-07-19T21:00:00",
-      "first_alert_time": "2178-07-19T20:00:00",
-      "lead_hours": 1.0,
-      "score": 6.0,
-      "priority_tier": "Elevated",
-      "primary_driver": "SpO2 decline"
-    },
-    {
-      "patient_id": "MIMIC-10483660",
-      "event_time": "2171-04-20T05:00:00",
-      "first_alert_time": "2171-04-20T00:30:00",
-      "lead_hours": 4.5,
-      "score": 7.0,
-      "priority_tier": "Critical",
-      "primary_driver": "severe BP instability"
-    },
-    {
-      "patient_id": "MIMIC-10486632",
-      "event_time": "2141-01-01T05:00:00",
-      "first_alert_time": "2141-01-01T02:00:00",
-      "lead_hours": 3.0,
-      "score": 9.0,
-      "priority_tier": "Critical",
-      "primary_driver": "SpO2 decline"
-    },
-    {
-      "patient_id": "MIMIC-10501066",
-      "event_time": "2122-11-26T11:30:00",
-      "first_alert_time": "2122-11-26T08:00:00",
-      "lead_hours": 3.5,
-      "score": 7.5,
-      "priority_tier": "Critical",
-      "primary_driver": "SpO2 decline"
-    },
-    {
-      "patient_id": "MIMIC-10554112",
-      "event_time": "2152-06-29T08:00:00",
-      "first_alert_time": "2152-06-29T05:00:00",
-      "lead_hours": 3.0,
-      "score": 9.9,
-      "priority_tier": "Critical",
-      "primary_driver": "SpO2 decline"
-    },
-    {
-      "patient_id": "MIMIC-10636904",
-      "event_time": "2112-05-19T05:00:00",
-      "first_alert_time": "2112-05-19T00:00:00",
-      "lead_hours": 5.0,
-      "score": 9.0,
-      "priority_tier": "Critical",
-      "primary_driver": "severe SpO2 decline"
-    },
-    {
-      "patient_id": "MIMIC-10675480",
-      "event_time": "2166-01-10T12:00:00",
-      "first_alert_time": "2166-01-10T08:00:00",
-      "lead_hours": 4.0,
-      "score": 6.5,
-      "priority_tier": "Elevated",
-      "primary_driver": "SpO2 below 90"
-    },
-    {
-      "patient_id": "MIMIC-10679181",
-      "event_time": "2168-02-01T04:00:00",
-      "first_alert_time": "2168-02-01T01:00:00",
-      "lead_hours": 3.0,
-      "score": 6.5,
-      "priority_tier": "Elevated",
-      "primary_driver": "SpO2 decline"
-    },
-    {
-      "patient_id": "MIMIC-10756520",
-      "event_time": "2165-06-01T12:00:00",
-      "first_alert_time": "2165-06-01T08:00:00",
-      "lead_hours": 4.0,
-      "score": 9.9,
-      "priority_tier": "Critical",
-      "primary_driver": "SpO2 below 90"
-    },
-    {
-      "patient_id": "MIMIC-10780631",
-      "event_time": "2111-01-02T06:00:00",
-      "first_alert_time": "2111-01-02T00:00:00",
-      "lead_hours": 6.0,
-      "score": 8.0,
-      "priority_tier": "Critical",
-      "primary_driver": "SpO2 decline"
-    },
-    {
-      "patient_id": "MIMIC-10865559",
-      "event_time": "2187-03-09T19:00:00",
-      "first_alert_time": "2187-03-09T16:00:00",
-      "lead_hours": 3.0,
-      "score": 6.5,
-      "priority_tier": "Elevated",
-      "primary_driver": "BP instability"
-    },
-    {
-      "patient_id": "MIMIC-10873797",
-      "event_time": "2138-08-11T11:15:00",
-      "first_alert_time": "2138-08-11T08:00:00",
-      "lead_hours": 3.25,
-      "score": 6.5,
-      "priority_tier": "Elevated",
-      "primary_driver": "SpO2 decline"
-    }
-  ],
-  "headline": "Among detected event clusters, ERA flags appeared a median of 4.0 hours before documented event timestamps within the 6-hour pre-event window.",
-  "clinical_note": "Lead time is calculated from the first ERA alert inside the configured pre-event window to the documented event timestamp. This is retrospective, de-identified analysis and requires independent clinical review."
+  "generated_at_utc": "2026-04-25T19:47:05.208948+00:00",
+  "status": "Superseded for DUA-safe public evidence",
+  "purpose": "Legacy lead-time output replaced because older versions could contain row-level or identifier-linked timing fields.",
+  "public_replacement": "lead_time_window_sensitivity_summary.json",
+  "public_policy": "Aggregate metrics only. No row-level MIMIC-derived data, no real identifiers, no exact case-linked timestamps.",
+  "pilot_safe_claim": "Retrospective DUA-safe analysis supports aggregate lead-time sensitivity summaries only.",
+  "notice": "Decision support only. Retrospective analysis only. Not intended to diagnose, direct treatment, replace clinician judgment, or independently trigger escalation.",
+  "replacement_available": true,
+  "replacement_summary_keys": [
+    "ok",
+    "generated_at_utc",
+    "purpose",
+    "public_policy",
+    "windows_tested_hours",
+    "thresholds_tested",
+    "runs",
+    "pilot_safe_claim",
+    "notice",
+    "updated_at_utc",
+    "report_file",
+    "interpretation_guidance"
+  ]
 }
