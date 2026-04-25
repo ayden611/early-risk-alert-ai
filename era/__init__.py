@@ -6501,6 +6501,44 @@ def create_app() -> Flask:
         )
     # ERA_VALIDATION_RUN_REGISTRY_ROUTES_V1_END
 
+
+    # ERA_THRESHOLD_MATRIX_ROUTES_V1_START
+    @app.get("/api/validation/threshold-matrix")
+    def era_validation_threshold_matrix_api():
+        import json
+        from pathlib import Path
+        from flask import jsonify
+
+        root_dir = Path(__file__).resolve().parent.parent
+        p = root_dir / "data" / "validation" / "threshold_matrix_summary.json"
+
+        if not p.exists():
+            return jsonify({"ok": False, "error": "Threshold matrix summary not found."}), 404
+
+        data = json.loads(p.read_text(encoding="utf-8"))
+        data["ok"] = True
+        return jsonify(data)
+
+    @app.get("/validation-evidence/threshold-matrix.json")
+    def era_validation_threshold_matrix_download_json():
+        from pathlib import Path
+        from flask import Response
+
+        root_dir = Path(__file__).resolve().parent.parent
+        p = root_dir / "data" / "validation" / "threshold_matrix_summary.json"
+
+        if not p.exists():
+            return Response("Threshold matrix summary not found.", status=404, mimetype="text/plain")
+
+        return Response(
+            p.read_text(encoding="utf-8"),
+            mimetype="application/json",
+            headers={
+                "Content-Disposition": "attachment; filename=early-risk-alert-ai-threshold-matrix-summary.json"
+            }
+        )
+    # ERA_THRESHOLD_MATRIX_ROUTES_V1_END
+
     return app
 
 

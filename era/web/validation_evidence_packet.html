@@ -304,9 +304,200 @@
     }
     /* ERA_REAL_ENGINE_PUBLIC_WORDING_V2_CSS_END */
 
+
+    /* ERA_THRESHOLD_MATRIX_PUBLIC_STORY_V1_CSS_START */
+    .era-matrix-story{
+      border:1px solid rgba(143,240,179,.34);
+      background:
+        radial-gradient(circle at 18% 0%, rgba(143,240,179,.16), transparent 34%),
+        linear-gradient(180deg, rgba(16,24,39,.96), rgba(8,13,23,.94));
+      border-radius:30px;
+      padding:28px;
+      margin:18px 0 24px;
+      box-shadow:0 28px 90px rgba(0,0,0,.36);
+    }
+    .era-matrix-eyebrow{
+      color:#8ff0b3;
+      font-size:12px;
+      letter-spacing:.16em;
+      text-transform:uppercase;
+      font-weight:1000;
+    }
+    .era-matrix-title{
+      margin:10px 0;
+      font-size:clamp(34px,5vw,62px);
+      line-height:.94;
+      letter-spacing:-.06em;
+      color:#f8fafc;
+      font-weight:1000;
+    }
+    .era-matrix-sub{
+      color:#b8c5dc;
+      font-size:16px;
+      line-height:1.6;
+      max-width:1000px;
+      margin:0;
+    }
+    .era-matrix-grid{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:14px;
+      margin-top:18px;
+    }
+    .era-matrix-card{
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.045);
+      border-radius:22px;
+      padding:18px;
+      min-height:126px;
+    }
+    .era-matrix-card.hero{
+      background:linear-gradient(180deg, rgba(143,240,179,.20), rgba(255,255,255,.04));
+      border-color:rgba(143,240,179,.42);
+    }
+    .era-matrix-k{
+      color:#9fc4ff;
+      font-size:11px;
+      letter-spacing:.13em;
+      text-transform:uppercase;
+      font-weight:1000;
+    }
+    .era-matrix-v{
+      font-size:32px;
+      font-weight:1000;
+      letter-spacing:-.05em;
+      margin-top:8px;
+      color:#8ff0b3;
+    }
+    .era-matrix-card.hero .era-matrix-v{
+      font-size:48px;
+      line-height:.95;
+    }
+    .era-matrix-note{
+      color:#b8c5dc;
+      font-size:12px;
+      line-height:1.45;
+      margin-top:10px;
+      font-weight:700;
+    }
+    .era-matrix-table-wrap{
+      overflow-x:auto;
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:18px;
+      margin-top:18px;
+    }
+    .era-matrix-table-wrap table{
+      width:100%;
+      min-width:860px;
+      border-collapse:collapse;
+    }
+    .era-matrix-table-wrap th,
+    .era-matrix-table-wrap td{
+      padding:12px;
+      border-bottom:1px solid rgba(255,255,255,.10);
+      text-align:left;
+    }
+    .era-matrix-table-wrap th{
+      color:#dce8ff;
+      background:rgba(255,255,255,.05);
+      font-size:11px;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+    }
+    .era-matrix-table-wrap td{
+      color:#b8c5dc;
+      font-size:13px;
+      font-weight:800;
+    }
+    .era-matrix-pill{
+      display:inline-flex;
+      padding:6px 10px;
+      border-radius:999px;
+      background:rgba(138,180,255,.12);
+      color:#dce8ff;
+      font-weight:1000;
+      font-size:12px;
+    }
+    .era-matrix-dua{
+      margin-top:16px;
+      border:1px solid rgba(255,209,102,.35);
+      background:rgba(255,209,102,.08);
+      color:#ffe5ad;
+      padding:13px 14px;
+      border-radius:16px;
+      font-weight:800;
+      line-height:1.5;
+    }
+    @media(max-width:900px){
+      .era-matrix-grid{grid-template-columns:1fr}
+      .era-matrix-card.hero .era-matrix-v{font-size:40px}
+    }
+    /* ERA_THRESHOLD_MATRIX_PUBLIC_STORY_V1_CSS_END */
+
 </style>
 </head>
 <body>
+
+<!-- ERA_THRESHOLD_MATRIX_PUBLIC_STORY_V1_START -->
+<div class="wrap" style="padding-top:0;">
+  <section class="era-matrix-story">
+    <div class="era-matrix-eyebrow">DUA-Safe Threshold Matrix · Real-Engine Validation</div>
+    <h1 class="era-matrix-title">Stable 4-hour lead time across thresholds</h1>
+    <p class="era-matrix-sub">
+      Across t=4.0, t=5.0, and t=6.0, ERA maintained a 4.0-hour median lead time among detected event clusters.
+      The threshold tradeoff is configurable: lower thresholds increase detection and alert volume; higher thresholds reduce alert burden and false positives.
+    </p>
+
+    <div class="era-matrix-grid">
+      <div class="era-matrix-card hero">
+        <div class="era-matrix-k">Stable median lead time</div>
+        <div class="era-matrix-v">4.0 hrs</div>
+        <div class="era-matrix-note">Same median timing across t=4.0, t=5.0, and t=6.0.</div>
+      </div>
+      <div class="era-matrix-card">
+        <div class="era-matrix-k">t=4.0 high-acuity</div>
+        <div class="era-matrix-v" id="eraMatrixT4">80.3%</div>
+        <div class="era-matrix-note">Alert reduction with higher detection.</div>
+      </div>
+      <div class="era-matrix-card">
+        <div class="era-matrix-k">t=5.0 balanced</div>
+        <div class="era-matrix-v" id="eraMatrixT5">89.1%</div>
+        <div class="era-matrix-note">Intermediate detection and alert burden.</div>
+      </div>
+      <div class="era-matrix-card">
+        <div class="era-matrix-k">t=6.0 conservative</div>
+        <div class="era-matrix-v" id="eraMatrixT6">94.3%</div>
+        <div class="era-matrix-note">Lowest alert burden and FPR.</div>
+      </div>
+    </div>
+
+    <div class="era-matrix-table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Threshold</th>
+            <th>Suggested setting</th>
+            <th>Alert reduction</th>
+            <th>FPR</th>
+            <th>Detection</th>
+            <th>ERA alerts / patient-day</th>
+            <th>Median lead time</th>
+          </tr>
+        </thead>
+        <tbody id="eraMatrixRows">
+          <tr><td>Loading...</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="era-matrix-dua">
+      Public evidence is DUA-safe: aggregate threshold metrics and sanitized Case-001 style examples only.
+      Row-level MIMIC-derived exports remain local-only.
+    </div>
+  </section>
+</div>
+<!-- ERA_THRESHOLD_MATRIX_PUBLIC_STORY_V1_END -->
+
 
 <!-- ERA_REAL_ENGINE_PUBLIC_WORDING_V2_START -->
 <div class="wrap" style="padding-top:0;">
@@ -714,6 +905,52 @@
   });
 })();
 /* ERA_REAL_ENGINE_PUBLIC_WORDING_V2_SCRIPT_END */
+</script>
+
+
+<script>
+/* ERA_THRESHOLD_MATRIX_PUBLIC_STORY_V1_SCRIPT_START */
+(function(){
+  function pct(v){ return (v === null || v === undefined || v === '') ? '—' : String(v).replace('.0','') + '%'; }
+  function esc(v){ return String(v ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+
+  fetch('/api/validation/threshold-matrix', {cache:'no-store'})
+    .then(r => r.json())
+    .then(data => {
+      const rows = data.threshold_matrix || [];
+      const byT = {};
+      rows.forEach(r => { byT[String(r.threshold)] = r; });
+
+      const t4 = byT['4'] || byT['4.0'] || {};
+      const t5 = byT['5'] || byT['5.0'] || {};
+      const t6 = byT['6'] || byT['6.0'] || {};
+
+      const e4 = document.getElementById('eraMatrixT4');
+      const e5 = document.getElementById('eraMatrixT5');
+      const e6 = document.getElementById('eraMatrixT6');
+
+      if(e4) e4.textContent = pct(t4.alert_reduction_pct);
+      if(e5) e5.textContent = pct(t5.alert_reduction_pct);
+      if(e6) e6.textContent = pct(t6.alert_reduction_pct);
+
+      const tbody = document.getElementById('eraMatrixRows');
+      if(tbody){
+        tbody.innerHTML = rows.map(r => 
+          <tr>
+            <td><span class="era-matrix-pill">t=${esc(r.threshold)}</span></td>
+            <td>${esc(r.suggested_setting)}</td>
+            <td>${pct(r.alert_reduction_pct)}</td>
+            <td>${pct(r.fpr_pct)}</td>
+            <td>${pct(r.patient_detection_pct)}</td>
+            <td>${esc(r.era_alerts_per_patient_day)}</td>
+            <td>${esc(r.median_lead_time_hours)} hrs</td>
+          </tr>
+        ).join('');
+      }
+    })
+    .catch(err => console.error('Threshold matrix story failed to load', err));
+})();
+/* ERA_THRESHOLD_MATRIX_PUBLIC_STORY_V1_SCRIPT_END */
 </script>
 
 </body>

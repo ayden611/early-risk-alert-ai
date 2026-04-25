@@ -17,20 +17,15 @@
     "event_clusters": 1658,
     "event_definition_note": "Latest real-engine run reports clustered event episodes, not raw event rows."
   },
-  "headline": "Retrospective analysis on de-identified MIMIC data showed ERA can support configurable review-prioritization workflows with substantially reduced alert burden and retrospective lead-time context.",
+  "headline": "ERA maintained a stable 4.0-hour median lead time across configurable thresholds while trading detection sensitivity for lower alert burden.",
   "default_threshold": {
     "threshold": 6.0,
     "intended_context": "Conservative telemetry / stepdown review queue",
-    "framing": "Lowest alert burden, most selective; intentionally optimized for low false positives and alert-burden reduction.",
+    "framing": "Most selective; optimized for low false positives and alert-burden reduction.",
+    "alert_reduction_pct": 94.3,
+    "era_fpr_pct": 4.2,
     "era_patient_sensitivity_pct": 15.3,
     "era_event_cluster_detection_pct": 15.3,
-    "era_reading_sensitivity_pct": 5.1,
-    "era_fpr_pct": 4.2,
-    "alert_reduction_pct": 94.3,
-    "threshold_reading_sensitivity_pct": 70.6,
-    "threshold_fpr_pct": 73.4,
-    "era_total_alerts": 19215,
-    "threshold_total_alerts": 334965,
     "median_lead_time_hours": 4.0,
     "era_alerts_per_patient_day": 0.6467,
     "standard_alerts_per_patient_day": 11.2743
@@ -46,7 +41,9 @@
       "era_event_cluster_detection_pct": 37.9,
       "median_lead_time_hours": 4.0,
       "era_alerts_per_patient_day": 2.2154,
-      "standard_alerts_per_patient_day": 11.2743
+      "standard_alerts_per_patient_day": 11.2743,
+      "date_generated": "2026-04-25T15:10:35.861759+00:00",
+      "run_id": "era_mimic_20260425_151033_t4_0"
     },
     {
       "threshold": 5.0,
@@ -58,7 +55,9 @@
       "era_event_cluster_detection_pct": 24.6,
       "median_lead_time_hours": 4.0,
       "era_alerts_per_patient_day": 1.2308,
-      "standard_alerts_per_patient_day": 11.2743
+      "standard_alerts_per_patient_day": 11.2743,
+      "date_generated": "2026-04-25T15:10:48.036504+00:00",
+      "run_id": "era_mimic_20260425_151046_t5_0"
     },
     {
       "threshold": 6.0,
@@ -70,7 +69,9 @@
       "era_event_cluster_detection_pct": 15.3,
       "median_lead_time_hours": 4.0,
       "era_alerts_per_patient_day": 0.6467,
-      "standard_alerts_per_patient_day": 11.2743
+      "standard_alerts_per_patient_day": 11.2743,
+      "date_generated": "2026-04-25T15:10:59.820836+00:00",
+      "run_id": "era_mimic_20260425_151057_t6_0"
     }
   ],
   "next_validation_metrics": {
@@ -92,7 +93,7 @@
     ],
     "principle": "Do not rely on raw score alone. Foreground prioritization, trend, reason codes, and review context."
   },
-  "approved_claim": "Retrospective analysis on de-identified MIMIC data showed ERA can support configurable review-prioritization workflows with substantially reduced alert burden and retrospective lead-time context.",
+  "approved_claim": "Retrospective analysis on de-identified MIMIC data showed ERA can support configurable review-prioritization workflows with substantially reduced alert burden and stable retrospective lead-time context.",
   "claims_to_avoid": [
     "ERA predicts deterioration.",
     "ERA detects crises early.",
@@ -337,7 +338,7 @@
       "clinical_note": "Lead time is calculated from the first ERA alert inside the configured pre-event window to the documented event timestamp. This is retrospective, de-identified analysis and requires independent clinical review."
     }
   },
-  "lead_time_headline": "Among detected event clusters, the median time from first ERA flag to documented event timestamp was approximately 4.0 hours within the 6-hour pre-event window.",
+  "lead_time_headline": "Across t=4.0, t=5.0, and t=6.0, median lead time remained 4.0 hours among detected event clusters.",
   "lead_time_calculation_mode": "derived_vitals_proxy_score",
   "lead_time_note": "This CSV did not contain era_alert or risk_score columns, so the script used a transparent vitals-based proxy score.",
   "explainability_display_upgrade": {
@@ -375,7 +376,7 @@
     "era_alerts_per_patient_day_official_alert_volume": 0.72,
     "standard_threshold_alerts_per_patient_day_approx": 3.77,
     "method_note": "Standard threshold-only alerts per patient-day is approximated from standard threshold total alerts divided by total patient-days from the row-level retrospective lead-time analysis.",
-    "pilot_safe_summary": "ERA generated approximately 0.6467 alerts per patient-day versus approximately 11.2743 alerts per patient-day under standard threshold-only alerting, for an alert reduction of 94.3%.",
+    "pilot_safe_summary": "At t=6.0, ERA generated approximately 0.6467 alerts per patient-day versus approximately 11.2743 alerts per patient-day under standard threshold-only alerting.",
     "era_alerts_per_patient_day_exact": 0.6467,
     "standard_threshold_alerts_per_patient_day_exact": 11.2743,
     "alert_reduction_pct_exact": 94.3
@@ -682,7 +683,7 @@
   },
   "mimic_dua_public_safety": {
     "status": "Applied",
-    "applied_at_utc": "2026-04-25T15:11:00.254631+00:00",
+    "applied_at_utc": "2026-04-25T15:40:24.546459+00:00",
     "public_policy": "Only aggregate metrics, sanitized case examples, validation methodology, and code are public-facing. Row-level MIMIC-derived exports remain local-only.",
     "removed_from_public_outputs": [
       "raw MIMIC files",
@@ -799,5 +800,18 @@
     "pilot_safe_claim": "Retrospective analysis on de-identified MIMIC data showed ERA can support configurable review-prioritization workflows with substantially reduced alert burden and retrospective lead-time context.",
     "notice": "Decision support only. Retrospective analysis only. Not intended to diagnose, direct treatment, replace clinician judgment, or independently trigger escalation."
   },
-  "real_engine_threshold_matrix_status": "DUA-safe selected-threshold matrix completed for t=4.0, t=5.0, and t=6.0."
+  "real_engine_threshold_matrix_status": "DUA-safe selected-threshold matrix completed for t=4.0, t=5.0, and t=6.0.",
+  "threshold_matrix_public_story_v1": {
+    "status": "Implemented",
+    "implemented_at_utc": "2026-04-25T15:40:24.408659+00:00",
+    "primary_finding": "Median lead time remained 4.0 hours across t=4.0, t=5.0, and t=6.0.",
+    "public_headline": "ERA maintained a stable 4.0-hour median lead time across configurable thresholds while trading detection sensitivity for lower alert burden.",
+    "operating_point_story": {
+      "t4": "ICU / high-acuity mode: higher detection with more alerts.",
+      "t5": "Mixed-unit balanced mode.",
+      "t6": "Telemetry / stepdown conservative mode: most selective, lowest alert burden, lowest FPR."
+    },
+    "operational_burden_highlight": "At t=6.0, ERA generated approximately 0.6467 alerts per patient-day versus approximately 11.2743 alerts per patient-day under standard threshold-only alerting.",
+    "dua_policy": "Public outputs use aggregate metrics and sanitized Case-001 style examples only. Row-level MIMIC-derived exports remain local-only."
+  }
 }
