@@ -559,6 +559,48 @@
 
       const data = await resp.json();
 
+      const uploadId = data && (data.upload_id || data.uploadId || data.id);
+
+      // A 202 response means the upload was accepted and analysis is running asynchronously.
+      if (resp.status === 202 || data.status === 'running' || data.status === 'queued' || data.accepted === true) {
+        if (!uploadId) {
+          throw new Error('Upload accepted, but no upload_id was returned.');
+        }
+
+        _setModeAStatus(card, 'Upload accepted. Analysis is running...', '');
+
+        for (let attempt = 0; attempt < 30; attempt++) {
+          const pr = await fetch('/api/retro/analyze/' + encodeURIComponent(uploadId));
+          const pj = await pr.json();
+
+          if (pj && (pj.running || pj.status === 'running' || pj.status === 'queued')) {
+            _setModeAStatus(card, 'Analysis running... ' + ((attempt + 1) * 2) + 's', '');
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            continue;
+          }
+
+          if (!pr.ok || !pj.ok) {
+            throw new Error((pj && pj.error) ? pj.error : ('Analyze failed with status ' + pr.status));
+          }
+
+          if (typeof renderResults === 'function') {
+            renderResults({
+              upload_id: uploadId,
+              row_count: (pj.summary && pj.summary.total_rows) || pj.row_count || 0,
+              patient_count: (pj.summary && pj.summary.total_patients) || pj.patient_count || 0
+            }, pj);
+          }
+
+          _setModeAStatus(card, 'Analysis complete.', 'ok');
+          if (typeof loadUploadHistory === 'function') {
+            loadUploadHistory();
+          }
+          return;
+        }
+
+        throw new Error('Analysis is still running. Try again in 30 seconds.');
+      }
+
       if (!resp.ok || !data.ok) {
         throw new Error((data && data.error) ? data.error : ('Upload/analyze failed with status ' + resp.status));
       }
