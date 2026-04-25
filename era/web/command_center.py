@@ -2890,6 +2890,7 @@ function renderRouteStatusModule(){
 
           const d = data.default_threshold || {};
           const metrics = data.next_validation_metrics || {};
+          const comparison = data.operational_alert_burden_comparison || {};
           const lead = data.computed_validation_metrics && data.computed_validation_metrics.lead_time_before_event
             ? data.computed_validation_metrics.lead_time_before_event
             : {};
@@ -2912,7 +2913,7 @@ function renderRouteStatusModule(){
 
           function cleanDriver(v){
             if (!v) return "Review context";
-            if (String(v).toLowerCase() === "no dominant driver") return "Combined monitored context";
+            if (String(v).toLowerCase() === "no dominant driver") return "Composite multi-signal pattern";
             return v;
           }
 
@@ -2950,6 +2951,11 @@ function renderRouteStatusModule(){
             <div class="note-box" style="margin-bottom:12px;">
               <strong style="color:#eef4ff">Command-center validation headline:</strong>
               ${safeText(data.lead_time_headline || "Retrospective validation supports configurable review prioritization with reduced alert burden.")}
+            </div>
+
+            <div class="note-box" style="margin-bottom:12px;">
+              <strong>Operational alert burden:</strong>
+              ERA displayed approximately ${metrics.alerts_per_patient_day || "—"} alerts per patient-day versus approximately ${comparison.standard_threshold_alerts_per_patient_day_approx || "—"} alerts per patient-day under standard threshold-only alerting.
             </div>
 
             <div style="overflow-x:auto;margin-top:10px">

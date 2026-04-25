@@ -79,6 +79,145 @@
       </div>
     </div>
 
+    
+<!-- ERA_VALIDATION_POLISH_V2_START -->
+<div class="section card" id="validationExecutiveSummaryV2">
+  <div class="eyebrow">Validation Intelligence</div>
+  <h2>Hospital-Facing Validation Summary</h2>
+  <p class="sub" style="font-size:15px;">
+    Retrospective analysis on de-identified MIMIC data showed ERA can reduce alert burden while maintaining
+    configurable patient-level detection in a 6-hour pre-event window.
+  </p>
+
+  <div class="notice" style="margin-top:14px;">
+    Decision support only. Not intended to diagnose, direct treatment, replace clinician judgment, or independently trigger escalation.
+  </div>
+
+  <div class="grid" style="grid-template-columns:repeat(4,1fr);margin-top:18px;">
+    <div class="card">
+      <div class="label">Alert reduction</div>
+      <div class="value good" id="v2AlertReduction">81%</div>
+      <div class="sub" style="font-size:12px;margin-top:8px;">Conservative t=6.0 review queue.</div>
+    </div>
+    <div class="card">
+      <div class="label">Median lead time</div>
+      <div class="value good" id="v2LeadTime">4 hrs</div>
+      <div class="sub" style="font-size:12px;margin-top:8px;">Among detected event clusters.</div>
+    </div>
+    <div class="card">
+      <div class="label">ERA FPR</div>
+      <div class="value good" id="v2Fpr">4.5%</div>
+      <div class="sub" style="font-size:12px;margin-top:8px;">Compared with standard threshold-only alerting.</div>
+    </div>
+    <div class="card">
+      <div class="label">Patient detection</div>
+      <div class="value blue" id="v2Detection">36.6%</div>
+      <div class="sub" style="font-size:12px;margin-top:8px;">Patient-level, t=6.0, 6-hour window.</div>
+    </div>
+  </div>
+
+  <div class="two" style="margin-top:16px;">
+    <div class="card">
+      <h2 style="font-size:20px;">Plain-Language Lead-Time Framing</h2>
+      <p class="claim" id="v2LeadPlain">
+        Among detected event clusters, the median time from first ERA flag to documented event timestamp was 4.0 hours within the 6-hour pre-event window.
+      </p>
+      <p class="sub" style="font-size:13px;">
+        This should be described as retrospective timing analysis, not proof of prospective clinical performance.
+      </p>
+    </div>
+
+    <div class="card">
+      <h2 style="font-size:20px;">Operational Alert Burden</h2>
+      <p class="claim" id="v2AlertBurden">
+        ERA displayed approximately 0.65 alerts per patient-day versus approximately 3.77 alerts per patient-day under standard threshold-only alerting.
+      </p>
+      <p class="sub" style="font-size:13px;">
+        This gives the alerts-per-patient-day number a practical comparison for hospital operations and alarm-fatigue conversations.
+      </p>
+    </div>
+  </div>
+
+  <div class="section" style="margin-top:16px;">
+    <h2 style="font-size:22px;">Recommended Threshold Framing</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Threshold</th>
+          <th>Suggested setting</th>
+          <th>Framing</th>
+          <th>Patient detection</th>
+          <th>FPR</th>
+          <th>Alert reduction</th>
+        </tr>
+      </thead>
+      <tbody id="v2ThresholdRows">
+        <tr><td>Loading...</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section" style="margin-top:16px;">
+    <h2 style="font-size:22px;">Primary Driver Note</h2>
+    <div class="notice" style="border-color:rgba(138,180,255,.28);color:#dce9ff;background:rgba(138,180,255,.08);">
+      <strong>Composite multi-signal pattern</strong> means multiple monitored signals contributed to prioritization,
+      but no single signal crossed the dominant-driver threshold. This prevents the old “Composite multi-signal pattern” label from sounding unexplained.
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  function pct(v){
+    if (v === null || v === undefined || v === '') return '—';
+    return String(v).replace('.0','') + '%';
+  }
+
+  function val(v, fallback){
+    return (v === null || v === undefined || v === '') ? fallback : v;
+  }
+
+  fetch('/api/validation/milestone', {cache:'no-store'})
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      var d = data.default_threshold || {};
+      var metrics = data.next_validation_metrics || {};
+      var comparison = data.operational_alert_burden_comparison || {};
+      var profiles = data.threshold_profiles || [];
+
+      var leadText = (data.polished_validation_summary_v2 && data.polished_validation_summary_v2.lead_time_plain_language)
+        ? data.polished_validation_summary_v2.lead_time_plain_language
+        : (data.lead_time_headline || 'Lead-time metric pending.');
+
+      document.getElementById('v2AlertReduction').textContent = pct(d.alert_reduction_pct);
+      document.getElementById('v2LeadTime').textContent = val(metrics.median_lead_time_before_event_hours, '—') + ' hrs';
+      document.getElementById('v2Fpr').textContent = pct(d.era_fpr_pct);
+      document.getElementById('v2Detection').textContent = pct(d.era_patient_sensitivity_pct);
+      document.getElementById('v2LeadPlain').textContent = leadText;
+
+      if (comparison.pilot_safe_summary) {
+        document.getElementById('v2AlertBurden').textContent = comparison.pilot_safe_summary;
+      }
+
+      document.getElementById('v2ThresholdRows').innerHTML = profiles.map(function(p){
+        return '<tr>' +
+          '<td><span class="pill">t=' + p.threshold + '</span></td>' +
+          '<td>' + (p.unit_profile || 'Configurable') + '</td>' +
+          '<td>' + (p.framing || 'Configurable operating point') + '</td>' +
+          '<td>' + pct(p.era_patient_sensitivity_pct) + '</td>' +
+          '<td>' + pct(p.era_fpr_pct) + '</td>' +
+          '<td>' + pct(p.alert_reduction_pct) + '</td>' +
+        '</tr>';
+      }).join('');
+    })
+    .catch(function(err){
+      console.error('Validation Polish V2 failed to load:', err);
+    });
+})();
+</script>
+<!-- ERA_VALIDATION_POLISH_V2_END -->
+
+
     <div class="section two">
       <div class="card">
         <h2>Default Threshold — t=6.0</h2>
@@ -113,7 +252,7 @@
 
     <div class="section two">
       <div class="card">
-        <h2>Score Saturation Presentation Fix</h2>
+        <h2>Prioritization Context</h2>
         <p class="claim">Do not rely on raw 9.9 peak score alone. Use prioritization context.</p>
         <ul id="scorePlan"></ul>
       </div>
@@ -274,7 +413,7 @@ fetch('/api/validation/milestone', {cache:'no-store'})
 
   <div class="section two">
     <div class="card">
-      <h2>Hospital-Safe Display Language</h2>
+      <h2>Clinical Review Language</h2>
       <p class="claim">
         ERA prioritizes monitored review context by combining threshold behavior,
         trend signals, primary drivers, and timing information.
@@ -288,7 +427,7 @@ fetch('/api/validation/milestone', {cache:'no-store'})
     </div>
 
     <div class="card">
-      <h2>Score Saturation Fix</h2>
+      <h2>How ERA Distinguishes High-Priority Patients</h2>
       <p class="claim">
         Even when multiple patients reach a high score, the command center can distinguish them using:
       </p>

@@ -354,5 +354,29 @@
       "Proven early detection",
       "Autonomous escalation"
     ]
+  },
+  "operational_alert_burden_comparison": {
+    "status": "Added for Validation Intelligence Polish V2",
+    "computed_at_utc": "2026-04-25T06:58:18.677243+00:00",
+    "era_alerts_per_patient_day_displayed": 0.6467,
+    "era_alerts_per_patient_day_official_alert_volume": 0.72,
+    "standard_threshold_alerts_per_patient_day_approx": 3.77,
+    "method_note": "Standard threshold-only alerts per patient-day is approximated from standard threshold total alerts divided by total patient-days from the row-level retrospective lead-time analysis.",
+    "pilot_safe_summary": "ERA displayed approximately 0.6467 alerts per patient-day versus approximately 3.77 alerts per patient-day under standard threshold-only alerting."
+  },
+  "polished_validation_summary_v2": {
+    "status": "Implemented",
+    "purpose": "Make Validation Intelligence read like a hospital-facing validation showcase instead of internal developer notes.",
+    "hero_statement": "Retrospective analysis on de-identified MIMIC data showed ERA can reduce alert burden while maintaining configurable patient-level detection in a 6-hour pre-event window.",
+    "lead_time_plain_language": "Among detected event clusters, the median time from first ERA flag to documented event timestamp was 4.0 hours within the 6-hour pre-event window.",
+    "driver_note": "Composite multi-signal pattern rows are cases where multiple monitored signals contributed to prioritization without one single dominant driver.",
+    "display_priority": [
+      "81% alert reduction",
+      "4.0-hour median first-flag timing among detected event clusters",
+      "4.5% ERA false-positive rate",
+      "36.6% patient-level detection at conservative t=6.0",
+      "Threshold profiles for ICU, mixed units, and telemetry/stepdown",
+      "Representative review examples with lead time and primary driver"
+    ]
   }
 }
