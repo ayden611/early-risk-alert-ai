@@ -141,6 +141,25 @@ fetch('/api/validation/milestone', {cache:'no-store'})
     document.getElementById('patientDetection').textContent = data.default_threshold.era_patient_sensitivity_pct + '%';
     document.getElementById('fpr').textContent = data.default_threshold.era_fpr_pct + '%';
 
+    var metrics = data.next_validation_metrics || {};
+    function metricValue(v, suffix) {
+      if (v === null || v === undefined || v === '') return 'Pending';
+      return String(v) + (suffix || '');
+    }
+
+    var leadHeadline = data.lead_time_headline || '';
+    var leadLine = leadHeadline
+      ? '<li><strong>Lead-time headline:</strong> ' + leadHeadline + '</li>'
+      : '<li><strong>Lead-time headline:</strong> Pending row-level calculation</li>';
+
+    document.getElementById('nextMetrics').innerHTML = [
+      leadLine,
+      '<li><strong>Median lead time before event:</strong> ' + metricValue(metrics.median_lead_time_before_event_hours, ' hours') + '</li>',
+      '<li><strong>Alerts per patient-day:</strong> ' + metricValue(metrics.alerts_per_patient_day, '') + '</li>',
+      '<li><strong>Alerts per event patient:</strong> ' + metricValue(metrics.alerts_per_event_patient, '') + '</li>'
+    ].join('');
+
+
     document.getElementById('thresholdRows').innerHTML = data.threshold_profiles.map(p => `
       <tr>
         <td><span class="pill">t=${p.threshold.toFixed(1)}</span></td>
