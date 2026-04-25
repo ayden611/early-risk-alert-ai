@@ -378,5 +378,27 @@
       "Threshold profiles for ICU, mixed units, and telemetry/stepdown",
       "Representative review examples with lead time and primary driver"
     ]
+  },
+  "pilot_evidence_export": {
+    "status": "Implemented",
+    "implemented_at_utc": "2026-04-25T07:16:01.631278+00:00",
+    "routes": [
+      "/validation-evidence",
+      "/validation-evidence/download.md",
+      "/api/validation/evidence"
+    ],
+    "purpose": "Printable and downloadable validation summary for hospitals, investors, advisors, and pilot review.",
+    "included_sections": [
+      "Pilot-safe headline",
+      "Key results",
+      "Lead-time framing",
+      "Alerts per patient-day comparison",
+      "Threshold profiles",
+      "Representative detected review examples",
+      "Explainability notes",
+      "Approved claims",
+      "Claims to avoid",
+      "Limitations"
+    ]
   }
 }

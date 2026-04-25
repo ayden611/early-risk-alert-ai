@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Early Risk Alert AI — Pilot Evidence Packet</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root{
+      --bg:#070a12; --panel:#101827; --text:#f8fafc; --muted:#a8b3c7;
+      --line:rgba(255,255,255,.12); --blue:#8ab4ff; --green:#8ff0b3;
+      --amber:#ffd166; --red:#ff6b7a;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      background:
+        radial-gradient(circle at 15% 0%, rgba(138,180,255,.18), transparent 34%),
+        radial-gradient(circle at 85% 10%, rgba(143,240,179,.10), transparent 30%),
+        var(--bg);
+      color:var(--text);
+      font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    }
+    .wrap{max-width:1120px;margin:0 auto;padding:28px 20px 60px}
+    .top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+    .brand{font-size:12px;letter-spacing:.16em;text-transform:uppercase;font-weight:950;color:#dce8ff}
+    h1{font-size:clamp(34px,5vw,58px);line-height:.96;margin:10px 0 10px;letter-spacing:-.05em}
+    h2{font-size:24px;margin:0 0 12px}
+    h3{font-size:18px;margin:18px 0 10px}
+    p{color:var(--muted);line-height:1.62}
+    .hero,.card{
+      border:1px solid var(--line);
+      background:linear-gradient(180deg,rgba(16,24,39,.9),rgba(10,16,28,.88));
+      border-radius:24px;
+      padding:22px;
+      box-shadow:0 20px 70px rgba(0,0,0,.32);
+    }
+    .notice{
+      margin-top:14px;
+      border:1px solid rgba(255,209,102,.35);
+      background:rgba(255,209,102,.08);
+      color:#ffe5ad;
+      padding:13px 14px;
+      border-radius:16px;
+      font-weight:800;
+    }
+    .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:16px}
+    .metric{
+      border:1px solid var(--line);
+      border-radius:18px;
+      background:rgba(255,255,255,.04);
+      padding:16px;
+      min-height:112px;
+    }
+    .k{font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:950;color:#9fc4ff}
+    .v{font-size:32px;font-weight:1000;margin-top:8px;letter-spacing:-.04em}
+    .good{color:var(--green)} .blue{color:var(--blue)} .warn{color:var(--amber)}
+    .section{margin-top:18px}
+    table{width:100%;border-collapse:collapse;overflow:hidden;border-radius:14px}
+    th,td{border-bottom:1px solid var(--line);padding:12px;text-align:left;color:var(--muted);font-size:14px}
+    th{color:#dce8ff;background:rgba(255,255,255,.05);font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+    td strong{color:#f8fafc}
+    .pill{display:inline-flex;border-radius:999px;padding:6px 10px;background:rgba(138,180,255,.12);color:#dce8ff;font-weight:900;font-size:12px}
+    .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+    .btn{display:inline-flex;align-items:center;justify-content:center;padding:11px 14px;border-radius:14px;border:1px solid var(--line);color:#f8fafc;text-decoration:none;font-weight:900;background:rgba(255,255,255,.04);cursor:pointer}
+    .btn.primary{background:linear-gradient(135deg,#8ab4ff,#8ff0b3);color:#07101c;border:0}
+    ul{color:var(--muted);line-height:1.65}
+    .two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    .footer{color:var(--muted);text-align:center;margin-top:20px;font-size:13px}
+    @media(max-width:900px){.grid,.two{grid-template-columns:1fr} h1{font-size:38px}}
+    @media print{
+      body{background:white;color:#111}
+      .actions,.top a{display:none!important}
+      .hero,.card{box-shadow:none;background:white;color:#111;border:1px solid #ddd}
+      p,td,ul,.footer{color:#333}
+      th{color:#111;background:#eee}
+      .notice{color:#111;background:#fff3cd;border-color:#e6c56a}
+      .wrap{max-width:none;padding:18px}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div>
+        <div class="brand">Early Risk Alert AI · Pilot Evidence Export</div>
+        <h1>Pilot Evidence Packet</h1>
+        <p>Printable validation summary for hospital, investor, advisor, and pilot-readiness review.</p>
+      </div>
+      <div class="actions">
+        <button class="btn primary" onclick="window.print()">Print / Save PDF</button>
+        <a class="btn" href="/validation-evidence/download.md">Download Markdown</a>
+        <a class="btn" href="/validation-intelligence">Validation Intelligence</a>
+        <a class="btn" href="/command-center">Command Center</a>
+      </div>
+    </div>
+
+    <section class="hero">
+      <h2>MIMIC Retrospective Validation Milestone</h2>
+      <p id="headline">Loading validation evidence...</p>
+      <div class="notice">Decision support only. Not intended to diagnose, direct treatment, replace clinician judgment, or independently trigger escalation.</div>
+
+      <div class="grid">
+        <div class="metric"><div class="k">Alert reduction</div><div class="v good" id="alertReduction">—</div></div>
+        <div class="metric"><div class="k">Median lead time</div><div class="v good" id="leadTime">—</div></div>
+        <div class="metric"><div class="k">ERA FPR</div><div class="v good" id="fpr">—</div></div>
+        <div class="metric"><div class="k">Patient detection</div><div class="v blue" id="detection">—</div></div>
+      </div>
+    </section>
+
+    <section class="section two">
+      <div class="card">
+        <h2>Dataset Summary</h2>
+        <table>
+          <tbody id="datasetRows"></tbody>
+        </table>
+      </div>
+      <div class="card">
+        <h2>Operational Alert Burden</h2>
+        <p id="alertBurden">Loading...</p>
+        <p>This comparison helps hospitals evaluate workflow impact and potential alarm-fatigue reduction.</p>
+      </div>
+    </section>
+
+    <section class="section card">
+      <h2>Threshold Profiles</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Threshold</th>
+            <th>Suggested setting</th>
+            <th>Framing</th>
+            <th>Detection</th>
+            <th>FPR</th>
+            <th>Alert reduction</th>
+          </tr>
+        </thead>
+        <tbody id="thresholdRows"></tbody>
+      </table>
+    </section>
+
+    <section class="section card">
+      <h2>Representative Detected Review Examples</h2>
+      <p>These examples show how ERA can present queue rank, lead time, priority tier, primary driver, and score together.</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>Patient ID</th>
+            <th>Lead time</th>
+            <th>Tier</th>
+            <th>Primary driver</th>
+            <th>Score</th>
+          </tr>
+        </thead>
+        <tbody id="exampleRows"></tbody>
+      </table>
+    </section>
+
+    <section class="section two">
+      <div class="card">
+        <h2>How To Read This</h2>
+        <ul>
+          <li><strong>Alert reduction</strong> describes fewer unnecessary review interruptions versus standard threshold-only alerting.</li>
+          <li><strong>Lead time</strong> is retrospective timing from first ERA flag to documented event timestamp among detected event clusters.</li>
+          <li><strong>Priority tier</strong> converts raw score into a command-center review category.</li>
+          <li><strong>Primary driver</strong> gives reviewers a clinical signal context, not a diagnosis.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h2>Approved Framing</h2>
+        <p>Retrospective analysis on de-identified MIMIC data showed ERA can reduce alert burden while maintaining configurable patient-level detection in a 6-hour pre-event window.</p>
+        <h3>Claims To Avoid</h3>
+        <ul id="avoidClaims"></ul>
+      </div>
+    </section>
+
+    <section class="section card">
+      <h2>Limitations</h2>
+      <ul>
+        <li>Retrospective analysis only.</li>
+        <li>De-identified data only.</li>
+        <li>Independent clinical review required.</li>
+        <li>Does not establish prospective clinical performance.</li>
+        <li>Decision support only; not intended to diagnose, direct treatment, replace clinician judgment, or independently trigger escalation.</li>
+      </ul>
+    </section>
+
+    <div class="footer">Early Risk Alert AI LLC · Pilot Evidence Packet · Generated from Validation Intelligence milestone data</div>
+  </div>
+
+<script>
+(function(){
+  function pct(v){ if(v===null||v===undefined||v==='') return '—'; return String(v).replace('.0','') + '%'; }
+  function fmt(v){ if(v===null||v===undefined||v==='') return '—'; return Number(v).toLocaleString(); }
+  function esc(v){ return String(v ?? '').replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+  function lead(v){ const n=Number(v); if(!Number.isFinite(n)) return '—'; return (Math.round(n*10)/10).toString() + ' hrs'; }
+  function driver(v){ if(!v) return 'Review context'; return String(v).toLowerCase()==='no dominant driver' ? 'Composite multi-signal pattern' : v; }
+
+  fetch('/api/validation/evidence', {cache:'no-store'})
+    .then(r => r.json())
+    .then(data => {
+      const d = data.default_threshold || {};
+      const ds = data.dataset || {};
+      const metrics = data.next_validation_metrics || {};
+      const leadData = data.computed_validation_metrics && data.computed_validation_metrics.lead_time_before_event ? data.computed_validation_metrics.lead_time_before_event : {};
+      const comparison = data.operational_alert_burden_comparison || {};
+      const examples = (leadData.detected_examples || []).slice(0,8).sort((a,b)=>Number(b.score||0)-Number(a.score||0));
+
+      document.getElementById('headline').textContent = data.approved_claim || data.headline || 'Retrospective validation summary.';
+      document.getElementById('alertReduction').textContent = pct(d.alert_reduction_pct);
+      document.getElementById('leadTime').textContent = lead(metrics.median_lead_time_before_event_hours);
+      document.getElementById('fpr').textContent = pct(d.era_fpr_pct);
+      document.getElementById('detection').textContent = pct(d.era_patient_sensitivity_pct);
+      document.getElementById('alertBurden').textContent = comparison.pilot_safe_summary || 'Operational alert-burden comparison pending.';
+
+      document.getElementById('datasetRows').innerHTML = [
+        ['Rows analyzed', fmt(ds.total_rows)],
+        ['Patients', fmt(ds.total_patients)],
+        ['Clinical events', fmt(ds.total_events)],
+        ['Event window', (ds.event_window_hours || 6) + ' hours'],
+        ['Thresholds tested', (ds.thresholds_tested || [4,5,6]).join(', ')]
+      ].map(x => '<tr><th>'+esc(x[0])+'</th><td>'+esc(x[1])+'</td></tr>').join('');
+
+      document.getElementById('thresholdRows').innerHTML = (data.threshold_profiles || []).map(p => `
+        <tr>
+          <td><span class="pill">t=${esc(p.threshold)}</span></td>
+          <td>${esc(p.unit_profile)}</td>
+          <td>${esc(p.framing)}</td>
+          <td>${pct(p.era_patient_sensitivity_pct)}</td>
+          <td>${pct(p.era_fpr_pct)}</td>
+          <td>${pct(p.alert_reduction_pct)}</td>
+        </tr>
+      `).join('');
+
+      document.getElementById('exampleRows').innerHTML = examples.map((x, idx) => `
+        <tr>
+          <td><strong>#${idx+1}</strong></td>
+          <td>${esc(x.patient_id)}</td>
+          <td>${lead(x.lead_hours)}</td>
+          <td>${esc(x.priority_tier)}</td>
+          <td>${esc(driver(x.primary_driver))}</td>
+          <td>${esc(x.score)}</td>
+        </tr>
+      `).join('');
+
+      document.getElementById('avoidClaims').innerHTML = (data.claims_to_avoid || []).map(x => '<li>'+esc(x)+'</li>').join('');
+    })
+    .catch(err => {
+      document.getElementById('headline').textContent = 'Evidence packet could not load.';
+      console.error(err);
+    });
+})();
+</script>
+</body>
+</html>

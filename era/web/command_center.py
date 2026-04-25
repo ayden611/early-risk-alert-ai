@@ -563,6 +563,7 @@ COMMAND_CENTER_HTML = r"""
         <a href="/executive-walkthrough">Executive Walkthrough</a>
         <a href="/admin/review">Admin Review</a>
         <a href="/pilot-docs">Pilot Docs</a>
+        <a href="/validation-evidence">Evidence Packet</a>
         <a href="/validation-intelligence">Validation Intelligence</a>
         <a href="/logout">Logout</a>
       </div>
@@ -3023,6 +3024,7 @@ function renderRouteStatusModule(){
 
             <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
               <a class="btn secondary small" href="/validation-intelligence">Open Full Validation Intelligence</a>
+              <a class="btn secondary small" href="/validation-evidence">Evidence Packet</a>
               <a class="btn secondary small" href="/data-ingest">Run New Retrospective Analysis</a>
               <a class="btn secondary small" href="/pilot-docs">Pilot Docs</a>
             </div>

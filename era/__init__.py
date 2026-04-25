@@ -6310,6 +6310,57 @@ def create_app() -> Flask:
         return send_from_directory(str(web_dir), "validation_intelligence.html")
     # ERA_VALIDATION_INTELLIGENCE_ROUTES_V1_IN_CREATE_APP_END
 
+
+    # ERA_PILOT_EVIDENCE_EXPORT_ROUTES_V1_START
+    # Printable/downloadable Pilot Evidence Export routes.
+    @app.get("/api/validation/evidence")
+    def era_validation_evidence_api():
+        import json
+        from pathlib import Path
+        from flask import jsonify
+
+        root_dir = Path(__file__).resolve().parent.parent
+        p = root_dir / "data" / "validation" / "mimic_validation_milestone_2026_04.json"
+
+        if not p.exists():
+            return jsonify({
+                "ok": False,
+                "error": "Validation evidence milestone not found."
+            }), 404
+
+        data = json.loads(p.read_text(encoding="utf-8"))
+        data["ok"] = True
+        return jsonify(data)
+
+    @app.get("/validation-evidence")
+    def era_validation_evidence_page():
+        from pathlib import Path
+        from flask import send_from_directory
+
+        web_dir = Path(__file__).resolve().parent / "web"
+        return send_from_directory(str(web_dir), "validation_evidence_packet.html")
+
+    @app.get("/validation-evidence/download.md")
+    def era_validation_evidence_download_md():
+        from pathlib import Path
+        from flask import Response
+
+        root_dir = Path(__file__).resolve().parent.parent
+        p = root_dir / "docs" / "validation" / "pilot_evidence_packet.md"
+
+        if not p.exists():
+            return Response("Pilot evidence packet not found.", status=404, mimetype="text/plain")
+
+        body = p.read_text(encoding="utf-8")
+        return Response(
+            body,
+            mimetype="text/markdown",
+            headers={
+                "Content-Disposition": "attachment; filename=early-risk-alert-ai-pilot-evidence-packet.md"
+            }
+        )
+    # ERA_PILOT_EVIDENCE_EXPORT_ROUTES_V1_END
+
     return app
 
 
