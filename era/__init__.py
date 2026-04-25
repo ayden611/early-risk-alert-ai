@@ -6263,3 +6263,48 @@ def create_app() -> Flask:
         return Response(generate(), mimetype="text/event-stream")
 
     return app
+
+# ERA_VALIDATION_INTELLIGENCE_ROUTES_V1_START
+# Validation Intelligence routes for pilot-safe MIMIC retrospective milestone.
+try:
+    _era_validation_login_required = login_required
+except NameError:
+    def _era_validation_login_required(fn):
+        return fn
+
+@app.get("/api/validation/milestone")
+@_era_validation_login_required
+def era_validation_milestone_api():
+    from pathlib import Path
+    import json
+    from flask import jsonify
+
+    p = Path("data/validation/mimic_validation_milestone_2026_04.json")
+    if not p.exists():
+        return jsonify({
+            "ok": False,
+            "error": "Validation milestone file not found."
+        }), 404
+
+    data = json.loads(p.read_text(encoding="utf-8"))
+    data["ok"] = True
+    return jsonify(data)
+
+@app.get("/validation-intelligence")
+@_era_validation_login_required
+def era_validation_intelligence_page():
+    from pathlib import Path
+    from flask import send_from_directory
+
+    web_dir = Path(__file__).resolve().parent / "web"
+    return send_from_directory(str(web_dir), "validation_intelligence.html")
+
+@app.get("/validation-summary")
+@_era_validation_login_required
+def era_validation_summary_page():
+    from pathlib import Path
+    from flask import send_from_directory
+
+    web_dir = Path(__file__).resolve().parent / "web"
+    return send_from_directory(str(web_dir), "validation_intelligence.html")
+# ERA_VALIDATION_INTELLIGENCE_ROUTES_V1_END

@@ -1,0 +1,92 @@
+{
+  "milestone_id": "mimic-retrospective-validation-2026-04",
+  "title": "MIMIC Retrospective Validation Run \u2014 April 2026",
+  "locked_at_utc": "2026-04-25T05:41:26.035168+00:00",
+  "dataset": {
+    "name": "MIMIC-IV de-identified retrospective validation subset",
+    "total_rows": 456453,
+    "total_patients": 1705,
+    "total_events": 21396,
+    "event_window_hours": 6,
+    "thresholds_tested": [
+      4.0,
+      5.0,
+      6.0
+    ],
+    "data_status": "De-identified retrospective data only"
+  },
+  "headline": "Retrospective analysis on de-identified MIMIC data showed ERA can reduce alert burden while maintaining configurable patient-level detection in a 6-hour pre-event window.",
+  "default_threshold": {
+    "threshold": 6.0,
+    "intended_context": "Telemetry / stepdown / conservative review queue",
+    "era_patient_sensitivity_pct": 36.6,
+    "era_reading_sensitivity_pct": 7.8,
+    "era_fpr_pct": 4.5,
+    "alert_reduction_pct": 81.0,
+    "threshold_patient_sensitivity_pct": 76.6,
+    "threshold_reading_sensitivity_pct": 28.9,
+    "threshold_fpr_pct": 24.3,
+    "era_total_alerts": 21251,
+    "threshold_total_alerts": 111933
+  },
+  "threshold_profiles": [
+    {
+      "threshold": 4.0,
+      "unit_profile": "ICU / high-acuity",
+      "framing": "Higher detection, more alerts",
+      "era_patient_sensitivity_pct": 57.2,
+      "era_reading_sensitivity_pct": 15.6,
+      "era_fpr_pct": 12.4,
+      "alert_reduction_pct": 48.8,
+      "era_total_alerts": 57330
+    },
+    {
+      "threshold": 5.0,
+      "unit_profile": "Mixed units",
+      "framing": "Balanced detection and alert burden",
+      "era_patient_sensitivity_pct": 46.1,
+      "era_reading_sensitivity_pct": 11.0,
+      "era_fpr_pct": 7.4,
+      "alert_reduction_pct": 69.1,
+      "era_total_alerts": 34587
+    },
+    {
+      "threshold": 6.0,
+      "unit_profile": "Telemetry / stepdown",
+      "framing": "Lowest alert burden, most selective",
+      "era_patient_sensitivity_pct": 36.6,
+      "era_reading_sensitivity_pct": 7.8,
+      "era_fpr_pct": 4.5,
+      "alert_reduction_pct": 81.0,
+      "era_total_alerts": 21251
+    }
+  ],
+  "next_validation_metrics": {
+    "median_lead_time_before_event_hours": null,
+    "alerts_per_patient_day": null,
+    "alerts_per_event_patient": null,
+    "status": "Pending row-level timestamp calculation",
+    "note": "These metrics require row-level timestamps, event indicators, patient IDs, and alert flags or risk scores."
+  },
+  "score_saturation_display_plan": {
+    "problem": "Peak risk values can cluster at the upper cap, which may make high-risk patients look too similar.",
+    "presentation_fix": [
+      "Priority Tier: Low / Watch / Elevated / Critical",
+      "Rank in Current Review Queue: #1, #2, #3",
+      "Primary Driver: SpO2 decline / HR instability / BP trend / RR elevation",
+      "Trend: Worsening / Stable / Improving",
+      "First Crossed Threshold: hours before current review"
+    ],
+    "principle": "Do not rely on raw score alone. Foreground prioritization, trend, reason codes, and review context."
+  },
+  "approved_claim": "Retrospective analysis on de-identified MIMIC data showed ERA can reduce alert burden while maintaining configurable patient-level detection in a 6-hour pre-event window.",
+  "claims_to_avoid": [
+    "ERA predicts deterioration.",
+    "ERA detects crises early.",
+    "ERA prevents adverse events.",
+    "ERA outperforms standard monitoring.",
+    "ERA replaces clinician judgment.",
+    "ERA independently triggers escalation."
+  ],
+  "decision_support_notice": "Decision support only. Not intended to diagnose, direct treatment, replace clinician judgment, or independently trigger escalation."
+}
