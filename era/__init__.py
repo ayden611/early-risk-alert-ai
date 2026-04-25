@@ -6694,6 +6694,44 @@ def create_app() -> Flask:
         )
     # ERA_DATA_QUALITY_AUDIT_ROUTES_V1_END
 
+
+    # ERA_COHORT_SPLIT_STABILITY_ROUTES_V1_START
+    @app.get("/api/validation/cohort-split-stability")
+    def era_validation_cohort_split_stability_api():
+        import json
+        from pathlib import Path
+        from flask import jsonify
+
+        root_dir = Path(__file__).resolve().parent.parent
+        p = root_dir / "data" / "validation" / "cohort_split_stability_summary.json"
+
+        if not p.exists():
+            return jsonify({"ok": False, "error": "Cohort split stability summary not found."}), 404
+
+        data = json.loads(p.read_text(encoding="utf-8"))
+        data["ok"] = True
+        return jsonify(data)
+
+    @app.get("/validation-evidence/cohort-split-stability.json")
+    def era_validation_cohort_split_stability_download_json():
+        from pathlib import Path
+        from flask import Response
+
+        root_dir = Path(__file__).resolve().parent.parent
+        p = root_dir / "data" / "validation" / "cohort_split_stability_summary.json"
+
+        if not p.exists():
+            return Response("Cohort split stability summary not found.", status=404, mimetype="text/plain")
+
+        return Response(
+            p.read_text(encoding="utf-8"),
+            mimetype="application/json",
+            headers={
+                "Content-Disposition": "attachment; filename=early-risk-alert-ai-cohort-split-stability-summary.json"
+            }
+        )
+    # ERA_COHORT_SPLIT_STABILITY_ROUTES_V1_END
+
     return app
 
 

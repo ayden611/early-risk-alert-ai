@@ -1,6 +1,6 @@
 {
   "ok": true,
-  "generated_at_utc": "2026-04-25T18:34:24.451442+00:00",
+  "generated_at_utc": "2026-04-25T18:42:25.290681+00:00",
   "policy": "Sanitized public representative examples only. No MIMIC patient IDs, subject IDs, hospital admission IDs, stay IDs, or exact patient-linked timestamps.",
   "examples": [
     {

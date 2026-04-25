@@ -1,0 +1,323 @@
+{
+  "ok": true,
+  "generated_at_utc": "2026-04-25T18:41:49.554053+00:00",
+  "purpose": "DUA-safe aggregate patient-level cohort split stability test.",
+  "folds": 3,
+  "thresholds_tested": [
+    4.0,
+    5.0,
+    6.0
+  ],
+  "event_window_hours": 6,
+  "event_gap_hours": 6,
+  "runs": [
+    {
+      "fold": 1,
+      "fold_label": "Fold 1 of 3",
+      "threshold": 4.0,
+      "suggested_setting": "ICU / high-acuity",
+      "event_window_hours": 6,
+      "event_gap_hours": 6,
+      "rows": 147301,
+      "cases": 585,
+      "events": 565,
+      "event_patients": 562,
+      "alert_reduction_pct": 80.5,
+      "era_fpr_pct": 14.3,
+      "standard_fpr_pct": 73.4,
+      "patient_detection_pct": 38.3,
+      "event_cluster_detection_pct": 38.1,
+      "median_lead_time_hours": 4.0,
+      "era_alerts_per_patient_day": 2.4591,
+      "standard_alerts_per_patient_day": 12.6169,
+      "date_generated": "2026-04-25T18:41:53.165331+00:00",
+      "validation_status": "DUA-safe aggregate patient-level cohort split run"
+    },
+    {
+      "fold": 1,
+      "fold_label": "Fold 1 of 3",
+      "threshold": 5.0,
+      "suggested_setting": "Mixed units / balanced",
+      "event_window_hours": 6,
+      "event_gap_hours": 6,
+      "rows": 147301,
+      "cases": 585,
+      "events": 565,
+      "event_patients": 562,
+      "alert_reduction_pct": 89.0,
+      "era_fpr_pct": 8.0,
+      "standard_fpr_pct": 73.4,
+      "patient_detection_pct": 24.2,
+      "event_cluster_detection_pct": 24.1,
+      "median_lead_time_hours": 4.0,
+      "era_alerts_per_patient_day": 1.3816,
+      "standard_alerts_per_patient_day": 12.6169,
+      "date_generated": "2026-04-25T18:41:57.040042+00:00",
+      "validation_status": "DUA-safe aggregate patient-level cohort split run"
+    },
+    {
+      "fold": 1,
+      "fold_label": "Fold 1 of 3",
+      "threshold": 6.0,
+      "suggested_setting": "Telemetry / stepdown conservative",
+      "event_window_hours": 6,
+      "event_gap_hours": 6,
+      "rows": 147301,
+      "cases": 585,
+      "events": 565,
+      "event_patients": 562,
+      "alert_reduction_pct": 94.2,
+      "era_fpr_pct": 4.2,
+      "standard_fpr_pct": 73.4,
+      "patient_detection_pct": 15.7,
+      "event_cluster_detection_pct": 15.6,
+      "median_lead_time_hours": 4.0,
+      "era_alerts_per_patient_day": 0.7299,
+      "standard_alerts_per_patient_day": 12.6169,
+      "date_generated": "2026-04-25T18:42:00.896281+00:00",
+      "validation_status": "DUA-safe aggregate patient-level cohort split run"
+    },
+    {
+      "fold": 2,
+      "fold_label": "Fold 2 of 3",
+      "threshold": 4.0,
+      "suggested_setting": "ICU / high-acuity",
+      "event_window_hours": 6,
+      "event_gap_hours": 6,
+      "rows": 150586,
+      "cases": 545,
+      "events": 532,
+      "event_patients": 528,
+      "alert_reduction_pct": 80.1,
+      "era_fpr_pct": 14.8,
+      "standard_fpr_pct": 74.7,
+      "patient_detection_pct": 37.7,
+      "event_cluster_detection_pct": 37.4,
+      "median_lead_time_hours": 4.0,
+      "era_alerts_per_patient_day": 2.0353,
+      "standard_alerts_per_patient_day": 10.2431,
+      "date_generated": "2026-04-25T18:42:04.879243+00:00",
+      "validation_status": "DUA-safe aggregate patient-level cohort split run"
+    },
+    {
+      "fold": 2,
+      "fold_label": "Fold 2 of 3",
+      "threshold": 5.0,
+      "suggested_setting": "Mixed units / balanced",
+      "event_window_hours": 6,
+      "event_gap_hours": 6,
+      "rows": 150586,
+      "cases": 545,
+      "events": 532,
+      "event_patients": 528,
+      "alert_reduction_pct": 88.9,
+      "era_fpr_pct": 8.3,
+      "standard_fpr_pct": 74.7,
+      "patient_detection_pct": 25.4,
+      "event_cluster_detection_pct": 25.2,
+      "median_lead_time_hours": 4.0,
+      "era_alerts_per_patient_day": 1.1393,
+      "standard_alerts_per_patient_day": 10.2431,
+      "date_generated": "2026-04-25T18:42:08.639551+00:00",
+      "validation_status": "DUA-safe aggregate patient-level cohort split run"
+    },
+    {
+      "fold": 2,
+      "fold_label": "Fold 2 of 3",
+      "threshold": 6.0,
+      "suggested_setting": "Telemetry / stepdown conservative",
+      "event_window_hours": 6,
+      "event_gap_hours": 6,
+      "rows": 150586,
+      "cases": 545,
+      "events": 532,
+      "event_patients": 528,
+      "alert_reduction_pct": 94.1,
+      "era_fpr_pct": 4.4,
+      "standard_fpr_pct": 74.7,
+      "patient_detection_pct": 15.9,
+      "event_cluster_detection_pct": 15.8,
+      "median_lead_time_hours": 3.75,
+      "era_alerts_per_patient_day": 0.6043,
+      "standard_alerts_per_patient_day": 10.2431,
+      "date_generated": "2026-04-25T18:42:12.604126+00:00",
+      "validation_status": "DUA-safe aggregate patient-level cohort split run"
+    },
+    {
+      "fold": 3,
+      "fold_label": "Fold 3 of 3",
+      "threshold": 4.0,
+      "suggested_setting": "ICU / high-acuity",
+      "event_window_hours": 6,
+      "event_gap_hours": 6,
+      "rows": 158566,
+      "cases": 575,
+      "events": 561,
+      "event_patients": 559,
+      "alert_reduction_pct": 80.4,
+      "era_fpr_pct": 14.1,
+      "standard_fpr_pct": 72.3,
+      "patient_detection_pct": 37.7,
+      "event_cluster_detection_pct": 37.6,
+      "median_lead_time_hours": 4.0,
+      "era_alerts_per_patient_day": 2.2047,
+      "standard_alerts_per_patient_day": 11.257,
+      "date_generated": "2026-04-25T18:42:16.670567+00:00",
+      "validation_status": "DUA-safe aggregate patient-level cohort split run"
+    },
+    {
+      "fold": 3,
+      "fold_label": "Fold 3 of 3",
+      "threshold": 5.0,
+      "suggested_setting": "Mixed units / balanced",
+      "event_window_hours": 6,
+      "event_gap_hours": 6,
+      "rows": 158566,
+      "cases": 575,
+      "events": 561,
+      "event_patients": 559,
+      "alert_reduction_pct": 89.3,
+      "era_fpr_pct": 7.7,
+      "standard_fpr_pct": 72.3,
+      "patient_detection_pct": 24.2,
+      "event_cluster_detection_pct": 24.1,
+      "median_lead_time_hours": 4.0,
+      "era_alerts_per_patient_day": 1.2027,
+      "standard_alerts_per_patient_day": 11.257,
+      "date_generated": "2026-04-25T18:42:20.856799+00:00",
+      "validation_status": "DUA-safe aggregate patient-level cohort split run"
+    },
+    {
+      "fold": 3,
+      "fold_label": "Fold 3 of 3",
+      "threshold": 6.0,
+      "suggested_setting": "Telemetry / stepdown conservative",
+      "event_window_hours": 6,
+      "event_gap_hours": 6,
+      "rows": 158566,
+      "cases": 575,
+      "events": 561,
+      "event_patients": 559,
+      "alert_reduction_pct": 94.5,
+      "era_fpr_pct": 4.0,
+      "standard_fpr_pct": 72.3,
+      "patient_detection_pct": 14.5,
+      "event_cluster_detection_pct": 14.4,
+      "median_lead_time_hours": 4.0,
+      "era_alerts_per_patient_day": 0.6226,
+      "standard_alerts_per_patient_day": 11.257,
+      "date_generated": "2026-04-25T18:42:24.960702+00:00",
+      "validation_status": "DUA-safe aggregate patient-level cohort split run"
+    }
+  ],
+  "public_policy": "Aggregate metrics only. Fold CSVs remain local-only. No row-level MIMIC data, no MIMIC IDs, no exact patient-linked timestamps.",
+  "pilot_safe_claim": "Retrospective DUA-safe cohort split testing showed ERA operating-point trends can be reviewed across patient-level folds.",
+  "notice": "Decision support only. Retrospective analysis only. Not intended to diagnose, direct treatment, replace clinician judgment, or independently trigger escalation.",
+  "updated_at_utc": "2026-04-25T18:42:25.180594+00:00",
+  "threshold_stability_summary": {
+    "4.0": {
+      "folds": 3,
+      "alert_reduction_pct_mean": 80.333,
+      "alert_reduction_pct_sd": 0.208,
+      "alert_reduction_pct_range": [
+        80.1,
+        80.5
+      ],
+      "era_fpr_pct_mean": 14.4,
+      "era_fpr_pct_sd": 0.361,
+      "era_fpr_pct_range": [
+        14.1,
+        14.8
+      ],
+      "detection_pct_mean": 37.7,
+      "detection_pct_sd": 0.361,
+      "detection_pct_range": [
+        37.4,
+        38.1
+      ],
+      "median_lead_time_hours_mean": 4.0,
+      "median_lead_time_hours_sd": 0.0,
+      "median_lead_time_hours_range": [
+        4.0,
+        4.0
+      ],
+      "era_alerts_per_patient_day_mean": 2.233,
+      "era_alerts_per_patient_day_sd": 0.213,
+      "era_alerts_per_patient_day_range": [
+        2.0353,
+        2.4591
+      ]
+    },
+    "5.0": {
+      "folds": 3,
+      "alert_reduction_pct_mean": 89.067,
+      "alert_reduction_pct_sd": 0.208,
+      "alert_reduction_pct_range": [
+        88.9,
+        89.3
+      ],
+      "era_fpr_pct_mean": 8.0,
+      "era_fpr_pct_sd": 0.3,
+      "era_fpr_pct_range": [
+        7.7,
+        8.3
+      ],
+      "detection_pct_mean": 24.467,
+      "detection_pct_sd": 0.635,
+      "detection_pct_range": [
+        24.1,
+        25.2
+      ],
+      "median_lead_time_hours_mean": 4.0,
+      "median_lead_time_hours_sd": 0.0,
+      "median_lead_time_hours_range": [
+        4.0,
+        4.0
+      ],
+      "era_alerts_per_patient_day_mean": 1.241,
+      "era_alerts_per_patient_day_sd": 0.126,
+      "era_alerts_per_patient_day_range": [
+        1.1393,
+        1.3816
+      ]
+    },
+    "6.0": {
+      "folds": 3,
+      "alert_reduction_pct_mean": 94.267,
+      "alert_reduction_pct_sd": 0.208,
+      "alert_reduction_pct_range": [
+        94.1,
+        94.5
+      ],
+      "era_fpr_pct_mean": 4.2,
+      "era_fpr_pct_sd": 0.2,
+      "era_fpr_pct_range": [
+        4.0,
+        4.4
+      ],
+      "detection_pct_mean": 15.267,
+      "detection_pct_sd": 0.757,
+      "detection_pct_range": [
+        14.4,
+        15.8
+      ],
+      "median_lead_time_hours_mean": 3.917,
+      "median_lead_time_hours_sd": 0.144,
+      "median_lead_time_hours_range": [
+        3.75,
+        4.0
+      ],
+      "era_alerts_per_patient_day_mean": 0.652,
+      "era_alerts_per_patient_day_sd": 0.068,
+      "era_alerts_per_patient_day_range": [
+        0.6043,
+        0.7299
+      ]
+    }
+  },
+  "interpretation_guidance": {
+    "main_question": "Are ERA validation trends stable across patient-level cohort splits?",
+    "hospital_review_use": "Supports discussion of whether results are broadly consistent across patient/case-level folds rather than being dominated by one part of the dataset.",
+    "caution": "This is retrospective split stability testing, not prospective clinical validation."
+  }
+}
