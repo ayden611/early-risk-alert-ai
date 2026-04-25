@@ -6615,6 +6615,44 @@ def create_app() -> Flask:
         )
     # ERA_EVENT_CLUSTER_ROBUSTNESS_ROUTES_V1_END
 
+
+    # ERA_DRIVER_SUBGROUP_ROUTES_V1_START
+    @app.get("/api/validation/driver-subgroups")
+    def era_validation_driver_subgroups_api():
+        import json
+        from pathlib import Path
+        from flask import jsonify
+
+        root_dir = Path(__file__).resolve().parent.parent
+        p = root_dir / "data" / "validation" / "driver_subgroup_summary.json"
+
+        if not p.exists():
+            return jsonify({"ok": False, "error": "Driver subgroup summary not found."}), 404
+
+        data = json.loads(p.read_text(encoding="utf-8"))
+        data["ok"] = True
+        return jsonify(data)
+
+    @app.get("/validation-evidence/driver-subgroups.json")
+    def era_validation_driver_subgroups_download_json():
+        from pathlib import Path
+        from flask import Response
+
+        root_dir = Path(__file__).resolve().parent.parent
+        p = root_dir / "data" / "validation" / "driver_subgroup_summary.json"
+
+        if not p.exists():
+            return Response("Driver subgroup summary not found.", status=404, mimetype="text/plain")
+
+        return Response(
+            p.read_text(encoding="utf-8"),
+            mimetype="application/json",
+            headers={
+                "Content-Disposition": "attachment; filename=early-risk-alert-ai-driver-subgroup-summary.json"
+            }
+        )
+    # ERA_DRIVER_SUBGROUP_ROUTES_V1_END
+
     return app
 
 

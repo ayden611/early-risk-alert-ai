@@ -456,8 +456,8 @@
   },
   "real_era_validation_export": {
     "status": "Generated",
-    "latest_run_id": "era_mimic_20260425_175425_t6_0",
-    "generated_at_utc": "2026-04-25T17:54:27.161053+00:00",
+    "latest_run_id": "era_mimic_20260425_180533_t6_0",
+    "generated_at_utc": "2026-04-25T18:05:35.910916+00:00",
     "enriched_csv": "local-only-not-public",
     "summary_file": "local-only-not-public",
     "columns_added": [
@@ -679,11 +679,11 @@
   "validation_run_registry": {
     "status": "Available",
     "registry_file": "data/validation/validation_run_registry.json",
-    "latest_run_id": "era_mimic_20260425_175425_t6_0"
+    "latest_run_id": "era_mimic_20260425_180533_t6_0"
   },
   "mimic_dua_public_safety": {
     "status": "Applied",
-    "applied_at_utc": "2026-04-25T17:54:27.718847+00:00",
+    "applied_at_utc": "2026-04-25T18:05:42.300889+00:00",
     "public_policy": "Only aggregate metrics, sanitized case examples, validation methodology, and code are public-facing. Row-level MIMIC-derived exports remain local-only.",
     "removed_from_public_outputs": [
       "raw MIMIC files",
@@ -1105,10 +1105,10 @@
     "caution": "Retrospective timing behavior should not be described as prospective proof."
   },
   "latest_progress_update": {
-    "status": "Event-cluster definition robustness completed",
-    "updated_at_utc": "2026-04-25T17:54:27.615987+00:00",
-    "summary": "DUA-safe aggregate event-cluster robustness testing completed across 3h, 6h, and 12h event-gap assumptions at thresholds t=4.0, t=5.0, and t=6.0.",
-    "public_takeaway": "ERA validation trends can now be reviewed across multiple event-cluster definitions instead of relying on one event-clustering assumption."
+    "status": "Driver / signal-family subgroup validation completed",
+    "updated_at_utc": "2026-04-25T18:05:42.192141+00:00",
+    "summary": "DUA-safe aggregate driver-family subgroup testing completed across thresholds t=4.0, t=5.0, and t=6.0.",
+    "public_takeaway": "ERA explainability can now be reviewed using aggregate signal-family driver summaries without exposing row-level MIMIC-derived data."
   },
   "event_cluster_robustness": {
     "status": "Completed",
@@ -1352,6 +1352,308 @@
         "standard_alerts_per_patient_day": 11.2743,
         "date_generated": "2026-04-25T17:54:27.161053+00:00",
         "validation_status": "DUA-safe aggregate event-cluster robustness run"
+      }
+    ],
+    "pilot_safe_note": "Decision support only. Retrospective analysis only."
+  },
+  "driver_subgroup_validation": {
+    "status": "Completed",
+    "updated_at_utc": "2026-04-25T18:05:42.192001+00:00",
+    "summary_file": "local-only-not-public",
+    "report_file": "docs/validation/driver_subgroup_summary.md",
+    "thresholds_tested": [
+      4.0,
+      5.0,
+      6.0
+    ],
+    "event_window_hours": 6,
+    "event_gap_hours": 6,
+    "public_policy": "Aggregate metrics only; row-level MIMIC-derived data remains local-only.",
+    "runs": [
+      {
+        "ok": true,
+        "generated_at_utc": "2026-04-25T18:05:06.412660+00:00",
+        "threshold": 4.0,
+        "event_window_hours": 6.0,
+        "event_gap_hours": 6.0,
+        "rows": 456453,
+        "total_era_alert_rows": 65821,
+        "total_event_clusters": 2298,
+        "detected_event_clusters": 0,
+        "driver_family_summaries": [
+          {
+            "driver_family": "SpO2 / oxygenation",
+            "era_alert_rows": 41058,
+            "share_of_era_alerts_pct": 62.4,
+            "event_window_alert_rows": 0,
+            "event_window_alert_share_pct": 0.0,
+            "detected_event_clusters_as_first_driver": 0,
+            "share_of_detected_clusters_pct": null,
+            "median_lead_time_hours": null,
+            "critical_alert_rows": 8304,
+            "elevated_alert_rows": 6687,
+            "watch_alert_rows": 26067,
+            "median_risk_score": 5.5,
+            "max_risk_score": 9.9,
+            "trend_distribution": {
+              "Worsening": 40908,
+              "Elevated": 150
+            }
+          },
+          {
+            "driver_family": "Heart rate",
+            "era_alert_rows": 15337,
+            "share_of_era_alerts_pct": 23.3,
+            "event_window_alert_rows": 0,
+            "event_window_alert_share_pct": 0.0,
+            "detected_event_clusters_as_first_driver": 0,
+            "share_of_detected_clusters_pct": null,
+            "median_lead_time_hours": null,
+            "critical_alert_rows": 1294,
+            "elevated_alert_rows": 2110,
+            "watch_alert_rows": 11933,
+            "median_risk_score": 5.0,
+            "max_risk_score": 9.9,
+            "trend_distribution": {
+              "Worsening": 15331,
+              "Elevated": 6
+            }
+          },
+          {
+            "driver_family": "Blood pressure",
+            "era_alert_rows": 7460,
+            "share_of_era_alerts_pct": 11.3,
+            "event_window_alert_rows": 0,
+            "event_window_alert_share_pct": 0.0,
+            "detected_event_clusters_as_first_driver": 0,
+            "share_of_detected_clusters_pct": null,
+            "median_lead_time_hours": null,
+            "critical_alert_rows": 170,
+            "elevated_alert_rows": 633,
+            "watch_alert_rows": 6657,
+            "median_risk_score": 4.5,
+            "max_risk_score": 9.0,
+            "trend_distribution": {
+              "Worsening": 7460
+            }
+          },
+          {
+            "driver_family": "Respiratory rate",
+            "era_alert_rows": 1964,
+            "share_of_era_alerts_pct": 3.0,
+            "event_window_alert_rows": 0,
+            "event_window_alert_share_pct": 0.0,
+            "detected_event_clusters_as_first_driver": 0,
+            "share_of_detected_clusters_pct": null,
+            "median_lead_time_hours": null,
+            "critical_alert_rows": 0,
+            "elevated_alert_rows": 17,
+            "watch_alert_rows": 1947,
+            "median_risk_score": 4.5,
+            "max_risk_score": 6.5,
+            "trend_distribution": {
+              "Worsening": 1964
+            }
+          },
+          {
+            "driver_family": "Temperature",
+            "era_alert_rows": 2,
+            "share_of_era_alerts_pct": 0.0,
+            "event_window_alert_rows": 0,
+            "event_window_alert_share_pct": 0.0,
+            "detected_event_clusters_as_first_driver": 0,
+            "share_of_detected_clusters_pct": null,
+            "median_lead_time_hours": null,
+            "critical_alert_rows": 0,
+            "elevated_alert_rows": 0,
+            "watch_alert_rows": 2,
+            "median_risk_score": 4.5,
+            "max_risk_score": 4.5,
+            "trend_distribution": {
+              "Worsening": 2
+            }
+          }
+        ],
+        "public_policy": "Aggregate metrics only. No row-level MIMIC data, no MIMIC IDs, no exact patient-linked timestamps.",
+        "pilot_safe_claim": "Retrospective analysis on de-identified MIMIC data showed ERA can provide explainable prioritization context by grouping alerts into aggregate signal-family drivers.",
+        "notice": "Decision support only. Retrospective analysis only. Not intended to diagnose, direct treatment, replace clinician judgment, or independently trigger escalation."
+      },
+      {
+        "ok": true,
+        "generated_at_utc": "2026-04-25T18:05:24.261823+00:00",
+        "threshold": 5.0,
+        "event_window_hours": 6.0,
+        "event_gap_hours": 6.0,
+        "rows": 456453,
+        "total_era_alert_rows": 36568,
+        "total_event_clusters": 2298,
+        "detected_event_clusters": 0,
+        "driver_family_summaries": [
+          {
+            "driver_family": "SpO2 / oxygenation",
+            "era_alert_rows": 25709,
+            "share_of_era_alerts_pct": 70.3,
+            "event_window_alert_rows": 0,
+            "event_window_alert_share_pct": 0.0,
+            "detected_event_clusters_as_first_driver": 0,
+            "share_of_detected_clusters_pct": null,
+            "median_lead_time_hours": null,
+            "critical_alert_rows": 8304,
+            "elevated_alert_rows": 6687,
+            "watch_alert_rows": 10718,
+            "median_risk_score": 6.5,
+            "max_risk_score": 9.9,
+            "trend_distribution": {
+              "Worsening": 25687,
+              "Elevated": 22
+            }
+          },
+          {
+            "driver_family": "Heart rate",
+            "era_alert_rows": 7783,
+            "share_of_era_alerts_pct": 21.3,
+            "event_window_alert_rows": 0,
+            "event_window_alert_share_pct": 0.0,
+            "detected_event_clusters_as_first_driver": 0,
+            "share_of_detected_clusters_pct": null,
+            "median_lead_time_hours": null,
+            "critical_alert_rows": 1294,
+            "elevated_alert_rows": 2110,
+            "watch_alert_rows": 4379,
+            "median_risk_score": 5.5,
+            "max_risk_score": 9.9,
+            "trend_distribution": {
+              "Worsening": 7783
+            }
+          },
+          {
+            "driver_family": "Blood pressure",
+            "era_alert_rows": 2840,
+            "share_of_era_alerts_pct": 7.8,
+            "event_window_alert_rows": 0,
+            "event_window_alert_share_pct": 0.0,
+            "detected_event_clusters_as_first_driver": 0,
+            "share_of_detected_clusters_pct": null,
+            "median_lead_time_hours": null,
+            "critical_alert_rows": 170,
+            "elevated_alert_rows": 633,
+            "watch_alert_rows": 2037,
+            "median_risk_score": 5.5,
+            "max_risk_score": 9.0,
+            "trend_distribution": {
+              "Worsening": 2840
+            }
+          },
+          {
+            "driver_family": "Respiratory rate",
+            "era_alert_rows": 236,
+            "share_of_era_alerts_pct": 0.6,
+            "event_window_alert_rows": 0,
+            "event_window_alert_share_pct": 0.0,
+            "detected_event_clusters_as_first_driver": 0,
+            "share_of_detected_clusters_pct": null,
+            "median_lead_time_hours": null,
+            "critical_alert_rows": 0,
+            "elevated_alert_rows": 17,
+            "watch_alert_rows": 219,
+            "median_risk_score": 5.5,
+            "max_risk_score": 6.5,
+            "trend_distribution": {
+              "Worsening": 236
+            }
+          }
+        ],
+        "public_policy": "Aggregate metrics only. No row-level MIMIC data, no MIMIC IDs, no exact patient-linked timestamps.",
+        "pilot_safe_claim": "Retrospective analysis on de-identified MIMIC data showed ERA can provide explainable prioritization context by grouping alerts into aggregate signal-family drivers.",
+        "notice": "Decision support only. Retrospective analysis only. Not intended to diagnose, direct treatment, replace clinician judgment, or independently trigger escalation."
+      },
+      {
+        "ok": true,
+        "generated_at_utc": "2026-04-25T18:05:41.939660+00:00",
+        "threshold": 6.0,
+        "event_window_hours": 6.0,
+        "event_gap_hours": 6.0,
+        "rows": 456453,
+        "total_era_alert_rows": 19215,
+        "total_event_clusters": 2298,
+        "detected_event_clusters": 0,
+        "driver_family_summaries": [
+          {
+            "driver_family": "SpO2 / oxygenation",
+            "era_alert_rows": 14991,
+            "share_of_era_alerts_pct": 78.0,
+            "event_window_alert_rows": 0,
+            "event_window_alert_share_pct": 0.0,
+            "detected_event_clusters_as_first_driver": 0,
+            "share_of_detected_clusters_pct": null,
+            "median_lead_time_hours": null,
+            "critical_alert_rows": 8304,
+            "elevated_alert_rows": 6687,
+            "watch_alert_rows": 0,
+            "median_risk_score": 7.0,
+            "max_risk_score": 9.9,
+            "trend_distribution": {
+              "Worsening": 14991
+            }
+          },
+          {
+            "driver_family": "Heart rate",
+            "era_alert_rows": 3404,
+            "share_of_era_alerts_pct": 17.7,
+            "event_window_alert_rows": 0,
+            "event_window_alert_share_pct": 0.0,
+            "detected_event_clusters_as_first_driver": 0,
+            "share_of_detected_clusters_pct": null,
+            "median_lead_time_hours": null,
+            "critical_alert_rows": 1294,
+            "elevated_alert_rows": 2110,
+            "watch_alert_rows": 0,
+            "median_risk_score": 6.5,
+            "max_risk_score": 9.9,
+            "trend_distribution": {
+              "Worsening": 3404
+            }
+          },
+          {
+            "driver_family": "Blood pressure",
+            "era_alert_rows": 803,
+            "share_of_era_alerts_pct": 4.2,
+            "event_window_alert_rows": 0,
+            "event_window_alert_share_pct": 0.0,
+            "detected_event_clusters_as_first_driver": 0,
+            "share_of_detected_clusters_pct": null,
+            "median_lead_time_hours": null,
+            "critical_alert_rows": 170,
+            "elevated_alert_rows": 633,
+            "watch_alert_rows": 0,
+            "median_risk_score": 6.0,
+            "max_risk_score": 9.0,
+            "trend_distribution": {
+              "Worsening": 803
+            }
+          },
+          {
+            "driver_family": "Respiratory rate",
+            "era_alert_rows": 17,
+            "share_of_era_alerts_pct": 0.1,
+            "event_window_alert_rows": 0,
+            "event_window_alert_share_pct": 0.0,
+            "detected_event_clusters_as_first_driver": 0,
+            "share_of_detected_clusters_pct": null,
+            "median_lead_time_hours": null,
+            "critical_alert_rows": 0,
+            "elevated_alert_rows": 17,
+            "watch_alert_rows": 0,
+            "median_risk_score": 6.0,
+            "max_risk_score": 6.5,
+            "trend_distribution": {
+              "Worsening": 17
+            }
+          }
+        ],
+        "public_policy": "Aggregate metrics only. No row-level MIMIC data, no MIMIC IDs, no exact patient-linked timestamps.",
+        "pilot_safe_claim": "Retrospective analysis on de-identified MIMIC data showed ERA can provide explainable prioritization context by grouping alerts into aggregate signal-family drivers.",
+        "notice": "Decision support only. Retrospective analysis only. Not intended to diagnose, direct treatment, replace clinician judgment, or independently trigger escalation."
       }
     ],
     "pilot_safe_note": "Decision support only. Retrospective analysis only."
