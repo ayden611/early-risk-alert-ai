@@ -1,0 +1,283 @@
+{
+  "ok": true,
+  "generated_at_utc": "2026-04-25T20:06:57.194852+00:00",
+  "purpose": "DUA-safe aggregate cross-cohort validation comparison.",
+  "cohorts_compared": [
+    "Full validation cohort",
+    "Subcohort B",
+    "Subcohort C"
+  ],
+  "thresholds_compared": [
+    4.0,
+    5.0,
+    6.0
+  ],
+  "runs": [
+    {
+      "source": "threshold_matrix_summary",
+      "cohort": "Full validation cohort",
+      "threshold": 4.0,
+      "suggested_setting": "ICU / high-acuity",
+      "rows": 456453,
+      "cases": 1705,
+      "events": 1658,
+      "event_clusters": null,
+      "alert_reduction_pct": 80.3,
+      "era_fpr_pct": 14.4,
+      "detection_pct": 37.9,
+      "median_lead_time_hours": 4.0,
+      "era_alerts_per_patient_day": 2.2154,
+      "standard_alerts_per_patient_day": 11.2743,
+      "validation_status": "Generated for retrospective validation review"
+    },
+    {
+      "source": "threshold_matrix_summary",
+      "cohort": "Full validation cohort",
+      "threshold": 5.0,
+      "suggested_setting": "Mixed units",
+      "rows": 456453,
+      "cases": 1705,
+      "events": 1658,
+      "event_clusters": null,
+      "alert_reduction_pct": 89.1,
+      "era_fpr_pct": 8.0,
+      "detection_pct": 24.6,
+      "median_lead_time_hours": 4.0,
+      "era_alerts_per_patient_day": 1.2308,
+      "standard_alerts_per_patient_day": 11.2743,
+      "validation_status": "Generated for retrospective validation review"
+    },
+    {
+      "source": "threshold_matrix_summary",
+      "cohort": "Full validation cohort",
+      "threshold": 6.0,
+      "suggested_setting": "Telemetry / stepdown",
+      "rows": 456453,
+      "cases": 1705,
+      "events": 1658,
+      "event_clusters": null,
+      "alert_reduction_pct": 94.3,
+      "era_fpr_pct": 4.2,
+      "detection_pct": 15.3,
+      "median_lead_time_hours": 4.0,
+      "era_alerts_per_patient_day": 0.6467,
+      "standard_alerts_per_patient_day": 11.2743,
+      "validation_status": "Generated for retrospective validation review"
+    },
+    {
+      "source": "subcohort_b_validation_summary",
+      "cohort": "Subcohort B",
+      "threshold": 4.0,
+      "suggested_setting": "ICU / high-acuity",
+      "rows": 159692,
+      "cases": 577,
+      "events": 564,
+      "event_clusters": null,
+      "alert_reduction_pct": 80.2,
+      "era_fpr_pct": 14.6,
+      "detection_pct": 39.2,
+      "median_lead_time_hours": 4.0,
+      "era_alerts_per_patient_day": 1.6197,
+      "standard_alerts_per_patient_day": 8.164,
+      "validation_status": "DUA-safe aggregate subcohort validation run"
+    },
+    {
+      "source": "subcohort_b_validation_summary",
+      "cohort": "Subcohort B",
+      "threshold": 5.0,
+      "suggested_setting": "Mixed units / balanced",
+      "rows": 159692,
+      "cases": 577,
+      "events": 564,
+      "event_clusters": null,
+      "alert_reduction_pct": 88.8,
+      "era_fpr_pct": 8.2,
+      "detection_pct": 25.5,
+      "median_lead_time_hours": 4.0,
+      "era_alerts_per_patient_day": 0.9121,
+      "standard_alerts_per_patient_day": 8.164,
+      "validation_status": "DUA-safe aggregate subcohort validation run"
+    },
+    {
+      "source": "subcohort_b_validation_summary",
+      "cohort": "Subcohort B",
+      "threshold": 6.0,
+      "suggested_setting": "Telemetry / stepdown conservative",
+      "rows": 159692,
+      "cases": 577,
+      "events": 564,
+      "event_clusters": null,
+      "alert_reduction_pct": 94.0,
+      "era_fpr_pct": 4.4,
+      "detection_pct": 16.0,
+      "median_lead_time_hours": 4.0,
+      "era_alerts_per_patient_day": 0.4862,
+      "standard_alerts_per_patient_day": 8.164,
+      "validation_status": "DUA-safe aggregate subcohort validation run"
+    },
+    {
+      "source": "subcohort_c_validation_summary",
+      "cohort": "Subcohort C",
+      "threshold": 4.0,
+      "suggested_setting": "ICU / high-acuity",
+      "rows": 159397,
+      "cases": 621,
+      "events": 602,
+      "event_clusters": null,
+      "alert_reduction_pct": 81.3,
+      "era_fpr_pct": 13.6,
+      "detection_pct": 36.4,
+      "median_lead_time_hours": 4.0,
+      "era_alerts_per_patient_day": 2.4812,
+      "standard_alerts_per_patient_day": 13.2665,
+      "validation_status": "DUA-safe aggregate subcohort validation run"
+    },
+    {
+      "source": "subcohort_c_validation_summary",
+      "cohort": "Subcohort C",
+      "threshold": 5.0,
+      "suggested_setting": "Mixed units / balanced",
+      "rows": 159397,
+      "cases": 621,
+      "events": 602,
+      "event_clusters": null,
+      "alert_reduction_pct": 89.9,
+      "era_fpr_pct": 7.4,
+      "detection_pct": 23.1,
+      "median_lead_time_hours": 4.0,
+      "era_alerts_per_patient_day": 1.3453,
+      "standard_alerts_per_patient_day": 13.2665,
+      "validation_status": "DUA-safe aggregate subcohort validation run"
+    },
+    {
+      "source": "subcohort_c_validation_summary",
+      "cohort": "Subcohort C",
+      "threshold": 6.0,
+      "suggested_setting": "Telemetry / stepdown conservative",
+      "rows": 159397,
+      "cases": 621,
+      "events": 602,
+      "event_clusters": null,
+      "alert_reduction_pct": 94.9,
+      "era_fpr_pct": 3.7,
+      "detection_pct": 14.1,
+      "median_lead_time_hours": 4.0,
+      "era_alerts_per_patient_day": 0.6777,
+      "standard_alerts_per_patient_day": 13.2665,
+      "validation_status": "DUA-safe aggregate subcohort validation run"
+    }
+  ],
+  "threshold_summary": {
+    "4.0": {
+      "cohorts_compared": 3,
+      "alert_reduction_pct_mean": 80.6,
+      "alert_reduction_pct_sd": 0.608,
+      "alert_reduction_pct_range": [
+        80.2,
+        81.3
+      ],
+      "era_fpr_pct_mean": 14.2,
+      "era_fpr_pct_sd": 0.529,
+      "era_fpr_pct_range": [
+        13.6,
+        14.6
+      ],
+      "detection_pct_mean": 37.833,
+      "detection_pct_sd": 1.401,
+      "detection_pct_range": [
+        36.4,
+        39.2
+      ],
+      "median_lead_time_hours_mean": 4.0,
+      "median_lead_time_hours_sd": 0.0,
+      "median_lead_time_hours_range": [
+        4.0,
+        4.0
+      ],
+      "era_alerts_per_patient_day_mean": 2.105,
+      "era_alerts_per_patient_day_sd": 0.441,
+      "era_alerts_per_patient_day_range": [
+        1.62,
+        2.481
+      ]
+    },
+    "5.0": {
+      "cohorts_compared": 3,
+      "alert_reduction_pct_mean": 89.267,
+      "alert_reduction_pct_sd": 0.569,
+      "alert_reduction_pct_range": [
+        88.8,
+        89.9
+      ],
+      "era_fpr_pct_mean": 7.867,
+      "era_fpr_pct_sd": 0.416,
+      "era_fpr_pct_range": [
+        7.4,
+        8.2
+      ],
+      "detection_pct_mean": 24.4,
+      "detection_pct_sd": 1.212,
+      "detection_pct_range": [
+        23.1,
+        25.5
+      ],
+      "median_lead_time_hours_mean": 4.0,
+      "median_lead_time_hours_sd": 0.0,
+      "median_lead_time_hours_range": [
+        4.0,
+        4.0
+      ],
+      "era_alerts_per_patient_day_mean": 1.163,
+      "era_alerts_per_patient_day_sd": 0.224,
+      "era_alerts_per_patient_day_range": [
+        0.912,
+        1.345
+      ]
+    },
+    "6.0": {
+      "cohorts_compared": 3,
+      "alert_reduction_pct_mean": 94.4,
+      "alert_reduction_pct_sd": 0.458,
+      "alert_reduction_pct_range": [
+        94.0,
+        94.9
+      ],
+      "era_fpr_pct_mean": 4.1,
+      "era_fpr_pct_sd": 0.361,
+      "era_fpr_pct_range": [
+        3.7,
+        4.4
+      ],
+      "detection_pct_mean": 15.133,
+      "detection_pct_sd": 0.961,
+      "detection_pct_range": [
+        14.1,
+        16.0
+      ],
+      "median_lead_time_hours_mean": 4.0,
+      "median_lead_time_hours_sd": 0.0,
+      "median_lead_time_hours_range": [
+        4.0,
+        4.0
+      ],
+      "era_alerts_per_patient_day_mean": 0.604,
+      "era_alerts_per_patient_day_sd": 0.103,
+      "era_alerts_per_patient_day_range": [
+        0.486,
+        0.678
+      ]
+    }
+  },
+  "interpretation_guidance": {
+    "main_question": "Does the ERA operating-point story remain directionally consistent across the full cohort and different deterministic subcohorts?",
+    "expected_pattern": {
+      "t=4.0": "Higher detection / higher review burden; suitable for high-acuity review.",
+      "t=5.0": "Balanced operating point.",
+      "t=6.0": "Most selective / lowest alert burden and FPR; suitable for conservative telemetry or stepdown review queue."
+    },
+    "caution": "This is retrospective aggregate validation only, not prospective clinical validation."
+  },
+  "public_policy": "Aggregate metrics only. No row-level MIMIC-derived data, no real identifiers, no exact case-linked timestamps.",
+  "pilot_safe_claim": "Retrospective DUA-safe cross-cohort comparison supports review of ERA operating-point behavior across the full validation cohort and different deterministic case-level subcohorts.",
+  "notice": "Decision support only. Retrospective analysis only. Not intended to diagnose, direct treatment, replace clinician judgment, or independently trigger escalation."
+}

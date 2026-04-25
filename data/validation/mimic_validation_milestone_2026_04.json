@@ -683,7 +683,7 @@
   },
   "mimic_dua_public_safety": {
     "status": "Applied",
-    "applied_at_utc": "2026-04-25T19:59:46.395862+00:00",
+    "applied_at_utc": "2026-04-25T20:06:57.314278+00:00",
     "public_policy": "Only aggregate metrics, sanitized case examples, validation methodology, and code are public-facing. Row-level MIMIC-derived exports remain local-only.",
     "removed_from_public_outputs": [
       "raw MIMIC files",
@@ -1105,10 +1105,10 @@
     "caution": "Retrospective timing behavior should not be described as prospective proof."
   },
   "latest_progress_update": {
-    "status": "Second MIMIC subcohort validation completed",
-    "updated_at_utc": "2026-04-25T19:59:46.464363+00:00",
-    "summary": "DUA-safe aggregate validation completed on Subcohort C across t=4.0, t=5.0, and t=6.0.",
-    "public_takeaway": "ERA operating-point behavior can now be reviewed across the full cohort and two different deterministic subcohorts."
+    "status": "Cross-cohort validation comparison completed",
+    "updated_at_utc": "2026-04-25T20:06:57.195886+00:00",
+    "summary": "DUA-safe aggregate comparison completed across the full validation cohort and deterministic subcohorts.",
+    "public_takeaway": "ERA operating-point behavior can now be reviewed across multiple cohort slices instead of one validation cohort alone."
   },
   "event_cluster_robustness": {
     "status": "Completed",
@@ -1632,7 +1632,7 @@
   "subcohort_validation_c": {
     "status": "Completed",
     "updated_at_utc": "2026-04-25T19:59:46.464353+00:00",
-    "summary_file": "data/validation/subcohort_c_validation_summary.json",
+    "summary_file": "local-only-not-public",
     "report_file": "docs/validation/subcohort_c_validation_summary.md",
     "subset_name": "subcohort_c_hash_66_99",
     "thresholds_tested": [
@@ -1725,5 +1725,124 @@
       "caution": "This is retrospective subcohort testing, not prospective validation."
     },
     "pilot_safe_note": "Decision support only. Retrospective analysis only."
+  },
+  "cross_cohort_validation_comparison": {
+    "status": "Completed",
+    "updated_at_utc": "2026-04-25T20:06:57.195882+00:00",
+    "summary_file": "local-only-not-public",
+    "report_file": "docs/validation/cross_cohort_validation_summary.md",
+    "cohorts_compared": [
+      "Full validation cohort",
+      "Subcohort B",
+      "Subcohort C"
+    ],
+    "thresholds_compared": [
+      4.0,
+      5.0,
+      6.0
+    ],
+    "threshold_summary": {
+      "4.0": {
+        "cohorts_compared": 3,
+        "alert_reduction_pct_mean": 80.6,
+        "alert_reduction_pct_sd": 0.608,
+        "alert_reduction_pct_range": [
+          80.2,
+          81.3
+        ],
+        "era_fpr_pct_mean": 14.2,
+        "era_fpr_pct_sd": 0.529,
+        "era_fpr_pct_range": [
+          13.6,
+          14.6
+        ],
+        "detection_pct_mean": 37.833,
+        "detection_pct_sd": 1.401,
+        "detection_pct_range": [
+          36.4,
+          39.2
+        ],
+        "median_lead_time_hours_mean": 4.0,
+        "median_lead_time_hours_sd": 0.0,
+        "median_lead_time_hours_range": [
+          4.0,
+          4.0
+        ],
+        "era_alerts_per_patient_day_mean": 2.105,
+        "era_alerts_per_patient_day_sd": 0.441,
+        "era_alerts_per_patient_day_range": [
+          1.62,
+          2.481
+        ]
+      },
+      "5.0": {
+        "cohorts_compared": 3,
+        "alert_reduction_pct_mean": 89.267,
+        "alert_reduction_pct_sd": 0.569,
+        "alert_reduction_pct_range": [
+          88.8,
+          89.9
+        ],
+        "era_fpr_pct_mean": 7.867,
+        "era_fpr_pct_sd": 0.416,
+        "era_fpr_pct_range": [
+          7.4,
+          8.2
+        ],
+        "detection_pct_mean": 24.4,
+        "detection_pct_sd": 1.212,
+        "detection_pct_range": [
+          23.1,
+          25.5
+        ],
+        "median_lead_time_hours_mean": 4.0,
+        "median_lead_time_hours_sd": 0.0,
+        "median_lead_time_hours_range": [
+          4.0,
+          4.0
+        ],
+        "era_alerts_per_patient_day_mean": 1.163,
+        "era_alerts_per_patient_day_sd": 0.224,
+        "era_alerts_per_patient_day_range": [
+          0.912,
+          1.345
+        ]
+      },
+      "6.0": {
+        "cohorts_compared": 3,
+        "alert_reduction_pct_mean": 94.4,
+        "alert_reduction_pct_sd": 0.458,
+        "alert_reduction_pct_range": [
+          94.0,
+          94.9
+        ],
+        "era_fpr_pct_mean": 4.1,
+        "era_fpr_pct_sd": 0.361,
+        "era_fpr_pct_range": [
+          3.7,
+          4.4
+        ],
+        "detection_pct_mean": 15.133,
+        "detection_pct_sd": 0.961,
+        "detection_pct_range": [
+          14.1,
+          16.0
+        ],
+        "median_lead_time_hours_mean": 4.0,
+        "median_lead_time_hours_sd": 0.0,
+        "median_lead_time_hours_range": [
+          4.0,
+          4.0
+        ],
+        "era_alerts_per_patient_day_mean": 0.604,
+        "era_alerts_per_patient_day_sd": 0.103,
+        "era_alerts_per_patient_day_range": [
+          0.486,
+          0.678
+        ]
+      }
+    },
+    "public_policy": "Aggregate metrics only. No row-level MIMIC-derived data, no real identifiers, no exact case-linked timestamps.",
+    "pilot_safe_note": "Decision support only. Retrospective aggregate validation only."
   }
 }

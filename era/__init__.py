@@ -6808,6 +6808,44 @@ def create_app() -> Flask:
         )
     # ERA_SUBCOHORT_VALIDATION_ROUTES_V1_END
 
+
+    # ERA_CROSS_COHORT_VALIDATION_ROUTES_V1_START
+    @app.get("/api/validation/cross-cohort-validation")
+    def era_validation_cross_cohort_validation_api():
+        import json
+        from pathlib import Path
+        from flask import jsonify
+
+        root_dir = Path(__file__).resolve().parent.parent
+        p = root_dir / "data" / "validation" / "cross_cohort_validation_summary.json"
+
+        if not p.exists():
+            return jsonify({"ok": False, "error": "Cross-cohort validation summary not found."}), 404
+
+        data = json.loads(p.read_text(encoding="utf-8"))
+        data["ok"] = True
+        return jsonify(data)
+
+    @app.get("/validation-evidence/cross-cohort-validation.json")
+    def era_validation_cross_cohort_validation_download_json():
+        from pathlib import Path
+        from flask import Response
+
+        root_dir = Path(__file__).resolve().parent.parent
+        p = root_dir / "data" / "validation" / "cross_cohort_validation_summary.json"
+
+        if not p.exists():
+            return Response("Cross-cohort validation summary not found.", status=404, mimetype="text/plain")
+
+        return Response(
+            p.read_text(encoding="utf-8"),
+            mimetype="application/json",
+            headers={
+                "Content-Disposition": "attachment; filename=early-risk-alert-ai-cross-cohort-validation-summary.json"
+            }
+        )
+    # ERA_CROSS_COHORT_VALIDATION_ROUTES_V1_END
+
     return app
 
 
