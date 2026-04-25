@@ -669,5 +669,207 @@
 
 
 </script>
+
+<!-- ERA_SAFE_MODE_A_UPLOAD_BINDER_V1_START -->
+<script>
+(function () {
+  function ready(fn) {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', fn);
+    } else {
+      fn();
+    }
+  }
+
+  function findRunButton() {
+    var btn = document.getElementById('uploadBtn');
+    if (btn) return btn;
+
+    var buttons = Array.prototype.slice.call(document.querySelectorAll('button, input[type="button"], input[type="submit"]'));
+    for (var i = 0; i < buttons.length; i++) {
+      var t = (buttons[i].innerText || buttons[i].value || '').trim().toLowerCase();
+      if (t.indexOf('run validation analysis') !== -1) return buttons[i];
+    }
+    return null;
+  }
+
+  function findFileInput(btn) {
+    var scope = btn.closest('form, section, .card, .panel, .mode-card, div') || document;
+    var inputs = Array.prototype.slice.call(scope.querySelectorAll('input[type="file"]'));
+    if (inputs.length) return inputs[0];
+    return document.querySelector('input[type="file"]');
+  }
+
+  function ensureStatus(btn) {
+    var existing = document.getElementById('eraModeAStatusHotfix');
+    if (existing) return existing;
+
+    var box = document.createElement('div');
+    box.id = 'eraModeAStatusHotfix';
+    box.style.marginTop = '10px';
+    box.style.fontWeight = '800';
+    box.style.fontSize = '13px';
+
+    if (btn.parentNode) {
+      btn.parentNode.insertBefore(box, btn.nextSibling);
+    } else {
+      document.body.appendChild(box);
+    }
+    return box;
+  }
+
+  function setStatus(btn, msg, kind) {
+    var box = ensureStatus(btn);
+    box.textContent = msg;
+    if (kind === 'err') box.style.color = '#ff6b7a';
+    else if (kind === 'ok') box.style.color = '#8ff0b3';
+    else box.style.color = '#f8fafc';
+  }
+
+  async function jsonSafe(resp) {
+    try {
+      return await resp.json();
+    } catch (e) {
+      return { ok: false, error: 'Server returned non-JSON response with status ' + resp.status };
+    }
+  }
+
+  function showResults(upload, analysis) {
+    if (typeof window.renderResults === 'function') {
+      try {
+        window.renderResults(upload, analysis);
+        return;
+      } catch (e) {
+        console.error('renderResults failed, using fallback display:', e);
+      }
+    }
+
+    var section = document.getElementById('resultsSection') || document.getElementById('results') || document.createElement('div');
+    if (!section.parentNode) document.body.appendChild(section);
+    section.style.display = 'block';
+    section.style.whiteSpace = 'pre-wrap';
+    section.style.marginTop = '14px';
+    section.textContent = JSON.stringify(analysis, null, 2);
+  }
+
+  async function pollAnalyze(btn, uploadId) {
+    for (var attempt = 0; attempt < 60; attempt++) {
+      var resp = await fetch('/api/retro/analyze/' + encodeURIComponent(uploadId), {
+        method: 'GET',
+        cache: 'no-store',
+        credentials: 'same-origin'
+      });
+
+      var data = await jsonSafe(resp);
+
+      if (
+        resp.status === 202 ||
+        data.running === true ||
+        data.pending === true ||
+        data.status === 'running' ||
+        data.status === 'queued'
+      ) {
+        setStatus(btn, 'Analysis running... ' + ((attempt + 1) * 2) + 's', '');
+        await new Promise(function (resolve) { setTimeout(resolve, 2000); });
+        continue;
+      }
+
+      if (!resp.ok || data.ok === false) {
+        throw new Error(data.error || ('Analyze failed with status ' + resp.status));
+      }
+
+      return data;
+    }
+
+    throw new Error('Analysis is still running. Try again in 30 seconds.');
+  }
+
+  ready(function () {
+    var btn = findRunButton();
+    if (!btn) {
+      console.warn('ERA upload hotfix: Run Validation Analysis button not found.');
+      return;
+    }
+
+    btn.disabled = false;
+    btn.removeAttribute('disabled');
+    if (btn.tagName.toLowerCase() === 'button') btn.type = 'button';
+
+    btn.addEventListener('click', async function (ev) {
+      ev.preventDefault();
+      ev.stopPropagation();
+      if (ev.stopImmediatePropagation) ev.stopImmediatePropagation();
+
+      var fileInput = findFileInput(btn);
+      if (!fileInput || !fileInput.files || !fileInput.files.length) {
+        setStatus(btn, 'Please choose a CSV or .gz file first.', 'err');
+        return;
+      }
+
+      btn.disabled = true;
+      setStatus(btn, 'Uploading file...', '');
+
+      try {
+        var fd = new FormData();
+        fd.append('file', fileInput.files[0], fileInput.files[0].name);
+
+        var resp = await fetch('/api/retro/upload-and-analyze', {
+          method: 'POST',
+          body: fd,
+          credentials: 'same-origin'
+        });
+
+        var data = await jsonSafe(resp);
+        var uploadId = data.upload_id || data.uploadId || data.id;
+
+        if (
+          resp.status === 202 ||
+          data.accepted === true ||
+          data.running === true ||
+          data.status === 'running' ||
+          data.status === 'queued'
+        ) {
+          if (!uploadId) {
+            throw new Error('Upload accepted, but no upload_id was returned.');
+          }
+
+          setStatus(btn, 'Upload accepted. Analysis is running...', '');
+          var analysis = await pollAnalyze(btn, uploadId);
+
+          showResults({
+            upload_id: uploadId,
+            row_count: (analysis.summary && analysis.summary.total_rows) || analysis.row_count || 0,
+            patient_count: (analysis.summary && analysis.summary.total_patients) || analysis.patient_count || 0
+          }, analysis);
+
+          if (typeof window.loadUploadHistory === 'function') {
+            try { window.loadUploadHistory(); } catch (e) {}
+          }
+
+          setStatus(btn, 'Analysis complete.', 'ok');
+          return;
+        }
+
+        if (!resp.ok || data.ok === false) {
+          throw new Error(data.error || ('Upload/analyze failed with status ' + resp.status));
+        }
+
+        showResults(data, data);
+        setStatus(btn, 'Analysis complete.', 'ok');
+
+      } catch (err) {
+        console.error('ERA upload hotfix error:', err);
+        setStatus(btn, 'Upload failed: ' + err.message, 'err');
+      } finally {
+        btn.disabled = false;
+      }
+    }, true);
+
+    console.log('ERA upload hotfix: Run Validation Analysis button rebound.');
+  });
+})();
+</script>
+<!-- ERA_SAFE_MODE_A_UPLOAD_BINDER_V1_END -->
+
 </body>
 </html>
