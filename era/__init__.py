@@ -6732,6 +6732,44 @@ def create_app() -> Flask:
         )
     # ERA_COHORT_SPLIT_STABILITY_ROUTES_V1_END
 
+
+    # ERA_SCORE_SATURATION_QUEUE_ROUTES_V1_START
+    @app.get("/api/validation/score-saturation-queue")
+    def era_validation_score_saturation_queue_api():
+        import json
+        from pathlib import Path
+        from flask import jsonify
+
+        root_dir = Path(__file__).resolve().parent.parent
+        p = root_dir / "data" / "validation" / "score_saturation_queue_audit_summary.json"
+
+        if not p.exists():
+            return jsonify({"ok": False, "error": "Score saturation queue audit summary not found."}), 404
+
+        data = json.loads(p.read_text(encoding="utf-8"))
+        data["ok"] = True
+        return jsonify(data)
+
+    @app.get("/validation-evidence/score-saturation-queue.json")
+    def era_validation_score_saturation_queue_download_json():
+        from pathlib import Path
+        from flask import Response
+
+        root_dir = Path(__file__).resolve().parent.parent
+        p = root_dir / "data" / "validation" / "score_saturation_queue_audit_summary.json"
+
+        if not p.exists():
+            return Response("Score saturation queue audit summary not found.", status=404, mimetype="text/plain")
+
+        return Response(
+            p.read_text(encoding="utf-8"),
+            mimetype="application/json",
+            headers={
+                "Content-Disposition": "attachment; filename=early-risk-alert-ai-score-saturation-queue-audit.json"
+            }
+        )
+    # ERA_SCORE_SATURATION_QUEUE_ROUTES_V1_END
+
     return app
 
 

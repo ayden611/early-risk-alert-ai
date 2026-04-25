@@ -1,0 +1,150 @@
+{
+  "ok": true,
+  "generated_at_utc": "2026-04-25T18:52:50.178834+00:00",
+  "purpose": "DUA-safe aggregate score saturation and review-queue burden audit.",
+  "rows": 456453,
+  "unique_cases": 1705,
+  "risk_score_coverage_pct": 100.0,
+  "score_summary": {
+    "median": 1.5,
+    "p90": 4.5,
+    "p95": 5.5,
+    "p99": 8.0,
+    "max": 9.9,
+    "score_bin_distribution": {
+      "<2": 261055,
+      "2\u20133.9": 129577,
+      "4\u20134.9": 29253,
+      "5\u20135.9": 17353,
+      "7\u20137.9": 4922,
+      "6\u20136.9": 9447,
+      "9+": 2326,
+      "8\u20138.9": 2520
+    },
+    "computed_tier_distribution": {
+      "Low": 390632,
+      "Watch": 29253,
+      "Elevated": 17353,
+      "Critical": 19215
+    }
+  },
+  "threshold_results": [
+    {
+      "threshold": 4.0,
+      "suggested_setting": "ICU / high-acuity",
+      "total_rows": 456453,
+      "alert_rows": 65821,
+      "alert_row_pct": 14.42,
+      "unique_cases_with_alerts": 1668,
+      "unique_case_alert_pct": 97.83,
+      "score_9_plus_rows": 2326,
+      "score_9_plus_pct_of_alert_rows": 3.53,
+      "score_9_9_plus_rows": 1092,
+      "score_9_9_plus_pct_of_alert_rows": 1.66,
+      "queue_timepoints": 63363,
+      "median_queue_size_per_timepoint": 1,
+      "p90_queue_size_per_timepoint": 1,
+      "p95_queue_size_per_timepoint": 1,
+      "max_queue_size_per_timepoint": 4,
+      "driver_family_distribution": {
+        "SpO2 / oxygenation": 41058,
+        "Blood pressure": 7460,
+        "Heart rate": 15337,
+        "Respiratory rate": 1964,
+        "Temperature": 2
+      },
+      "top_driver_share_pct": 62.38,
+      "tier_distribution": {
+        "Watch": 29253,
+        "Elevated": 17353,
+        "Critical": 19215
+      },
+      "trend_distribution": {
+        "Worsening": 65665,
+        "Elevated": 156
+      },
+      "interpretation": "Use queue rank, priority tier, primary driver, and trend context to avoid relying on raw score alone."
+    },
+    {
+      "threshold": 5.0,
+      "suggested_setting": "Mixed units / balanced",
+      "total_rows": 456453,
+      "alert_rows": 36568,
+      "alert_row_pct": 8.01,
+      "unique_cases_with_alerts": 1590,
+      "unique_case_alert_pct": 93.26,
+      "score_9_plus_rows": 2326,
+      "score_9_plus_pct_of_alert_rows": 6.36,
+      "score_9_9_plus_rows": 1092,
+      "score_9_9_plus_pct_of_alert_rows": 2.99,
+      "queue_timepoints": 35805,
+      "median_queue_size_per_timepoint": 1,
+      "p90_queue_size_per_timepoint": 1,
+      "p95_queue_size_per_timepoint": 1,
+      "max_queue_size_per_timepoint": 3,
+      "driver_family_distribution": {
+        "SpO2 / oxygenation": 25709,
+        "Blood pressure": 2840,
+        "Heart rate": 7783,
+        "Respiratory rate": 236
+      },
+      "top_driver_share_pct": 70.3,
+      "tier_distribution": {
+        "Elevated": 17353,
+        "Critical": 19215
+      },
+      "trend_distribution": {
+        "Worsening": 36546,
+        "Elevated": 22
+      },
+      "interpretation": "Use queue rank, priority tier, primary driver, and trend context to avoid relying on raw score alone."
+    },
+    {
+      "threshold": 6.0,
+      "suggested_setting": "Telemetry / stepdown conservative",
+      "total_rows": 456453,
+      "alert_rows": 19215,
+      "alert_row_pct": 4.21,
+      "unique_cases_with_alerts": 1429,
+      "unique_case_alert_pct": 83.81,
+      "score_9_plus_rows": 2326,
+      "score_9_plus_pct_of_alert_rows": 12.11,
+      "score_9_9_plus_rows": 1092,
+      "score_9_9_plus_pct_of_alert_rows": 5.68,
+      "queue_timepoints": 18995,
+      "median_queue_size_per_timepoint": 1,
+      "p90_queue_size_per_timepoint": 1,
+      "p95_queue_size_per_timepoint": 1,
+      "max_queue_size_per_timepoint": 3,
+      "driver_family_distribution": {
+        "SpO2 / oxygenation": 14991,
+        "Blood pressure": 803,
+        "Heart rate": 3404,
+        "Respiratory rate": 17
+      },
+      "top_driver_share_pct": 78.02,
+      "tier_distribution": {
+        "Critical": 19215
+      },
+      "trend_distribution": {
+        "Worsening": 19215
+      },
+      "interpretation": "Use queue rank, priority tier, primary driver, and trend context to avoid relying on raw score alone."
+    }
+  ],
+  "command_center_implication": {
+    "primary_point": "The command center should emphasize queue rank, priority tier, primary driver, trend direction, and lead-time context instead of raw score alone.",
+    "recommended_display_fields": [
+      "Queue Rank",
+      "Priority Tier",
+      "Risk Score",
+      "Primary Driver",
+      "Trend Direction",
+      "First Threshold Crossing / Lead-Time Context"
+    ],
+    "pilot_safe_note": "Raw score saturation should be interpreted as a reason to show richer prioritization context, not as a standalone clinical conclusion."
+  },
+  "public_policy": "Aggregate metrics only. No row-level MIMIC data, no MIMIC IDs, no exact patient-linked timestamps.",
+  "pilot_safe_claim": "A DUA-safe aggregate audit showed ERA review queues can be summarized by threshold, score distribution, priority tier, and driver-family context without exposing row-level data.",
+  "notice": "Decision support only. Retrospective analysis only. Not intended to diagnose, direct treatment, replace clinician judgment, or independently trigger escalation."
+}
