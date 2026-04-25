@@ -1,75 +1,70 @@
-# DUA-Safe Driver / Signal-Family Subgroup Validation
+# DUA-Safe Driver / Signal-Family Explainability Distribution
 
 ## Purpose
 
-This test summarizes which aggregate signal families are driving ERA alert prioritization.
+This report summarizes which aggregate signal families drive ERA alert prioritization.
 
-The goal is to strengthen explainability without exposing row-level MIMIC-derived data.
+This is an explainability distribution report, not a detected-event-cluster attribution report.
 
-Tested thresholds:
+## Why Event-Linked Driver Attribution Is Not Published
 
-- t=4.0 — ICU / high-acuity
-- t=5.0 — mixed-unit balanced
-- t=6.0 — telemetry / stepdown conservative
+A pre-event driver-family attribution check was attempted, but source event timestamps did not align with enriched ERA alert timestamps in the pre-event window. To avoid overclaiming, event-linked driver attribution is not published.
 
-Fixed validation assumptions:
+Lead-time evidence remains supported by the separate DUA-safe lead-time robustness and event-window sensitivity analyses.
 
-- Event window: 6 hours
-- Event-cluster gap: 6 hours
+## Results
 
-No row-level MIMIC-derived data, real MIMIC identifiers, or exact patient-linked timestamps are included.
-
-## Threshold t=4.0
+### Threshold t=4.0
 
 Rows analyzed: 456453  
 ERA alert rows: 65821  
-Event clusters: 2298  
-Detected event clusters: 0
+Event-linked attribution: Not published
 
-| Driver family | ERA alert rows | Share of ERA alerts | Event-window alert rows | Detected clusters as first driver | Share of detected clusters | Median lead time | Median risk |
-|---|---:|---:|---:|---:|---:|---:|---:|
-| SpO2 / oxygenation | 41058 | 62.4% | 0 | 0 | — | — | 5.5 |
-| Heart rate | 15337 | 23.3% | 0 | 0 | — | — | 5.0 |
-| Blood pressure | 7460 | 11.3% | 0 | 0 | — | — | 4.5 |
-| Respiratory rate | 1964 | 3.0% | 0 | 0 | — | — | 4.5 |
-| Temperature | 2 | 0.0% | 0 | 0 | — | — | 4.5 |
+| Driver family | ERA alert rows | Share of ERA alerts | Median risk | Max risk |
+|---|---:|---:|---:|---:|
+| SpO2 / oxygenation | 41058 | 62.4% | 5.5 | 9.9 |
+| Heart rate | 15337 | 23.3% | 5.0 | 9.9 |
+| Blood pressure | 7460 | 11.3% | 4.5 | 9.0 |
+| Respiratory rate | 1964 | 3.0% | 4.5 | 6.5 |
+| Temperature | 2 | 0.0% | 4.5 | 4.5 |
 
-## Threshold t=5.0
-
-Rows analyzed: 456453  
-ERA alert rows: 36568  
-Event clusters: 2298  
-Detected event clusters: 0
-
-| Driver family | ERA alert rows | Share of ERA alerts | Event-window alert rows | Detected clusters as first driver | Share of detected clusters | Median lead time | Median risk |
-|---|---:|---:|---:|---:|---:|---:|---:|
-| SpO2 / oxygenation | 25709 | 70.3% | 0 | 0 | — | — | 6.5 |
-| Heart rate | 7783 | 21.3% | 0 | 0 | — | — | 5.5 |
-| Blood pressure | 2840 | 7.8% | 0 | 0 | — | — | 5.5 |
-| Respiratory rate | 236 | 0.6% | 0 | 0 | — | — | 5.5 |
-
-## Threshold t=6.0
+### Threshold t=5.0
 
 Rows analyzed: 456453  
-ERA alert rows: 19215  
-Event clusters: 2298  
-Detected event clusters: 0
+ERA alert rows: 65821  
+Event-linked attribution: Not published
 
-| Driver family | ERA alert rows | Share of ERA alerts | Event-window alert rows | Detected clusters as first driver | Share of detected clusters | Median lead time | Median risk |
-|---|---:|---:|---:|---:|---:|---:|---:|
-| SpO2 / oxygenation | 14991 | 78.0% | 0 | 0 | — | — | 7.0 |
-| Heart rate | 3404 | 17.7% | 0 | 0 | — | — | 6.5 |
-| Blood pressure | 803 | 4.2% | 0 | 0 | — | — | 6.0 |
-| Respiratory rate | 17 | 0.1% | 0 | 0 | — | — | 6.0 |
+| Driver family | ERA alert rows | Share of ERA alerts | Median risk | Max risk |
+|---|---:|---:|---:|---:|
+| SpO2 / oxygenation | 41058 | 62.4% | 5.5 | 9.9 |
+| Heart rate | 15337 | 23.3% | 5.0 | 9.9 |
+| Blood pressure | 7460 | 11.3% | 4.5 | 9.0 |
+| Respiratory rate | 1964 | 3.0% | 4.5 | 6.5 |
+| Temperature | 2 | 0.0% | 4.5 | 4.5 |
 
-## Interpretation Guidance
+### Threshold t=6.0
 
-Use this report to answer:
+Rows analyzed: 456453  
+ERA alert rows: 65821  
+Event-linked attribution: Not published
 
-- Which signal families most often drive ERA alert prioritization.
-- Whether oxygenation, respiratory rate, blood pressure, heart rate, or composite multi-signal patterns dominate review context.
-- Whether detected event clusters are associated with interpretable driver families.
-- Whether explainability remains meaningful across configurable thresholds.
+| Driver family | ERA alert rows | Share of ERA alerts | Median risk | Max risk |
+|---|---:|---:|---:|---:|
+| SpO2 / oxygenation | 41058 | 62.4% | 5.5 | 9.9 |
+| Heart rate | 15337 | 23.3% | 5.0 | 9.9 |
+| Blood pressure | 7460 | 11.3% | 4.5 | 9.0 |
+| Respiratory rate | 1964 | 3.0% | 4.5 | 6.5 |
+| Temperature | 2 | 0.0% | 4.5 | 4.5 |
+
+## Pilot-Safe Interpretation
+
+Use this report to show aggregate explainability:
+
+- Which driver families contribute most to ERA alert prioritization
+- Whether alerts are primarily oxygenation-driven, HR-driven, BP-driven, respiratory-rate-driven, or composite
+- How explainability shifts across configurable thresholds
+
+Do not use this report to claim a driver family caused or predicted a clinical event.
 
 ## Pilot-Safe Claim
 
