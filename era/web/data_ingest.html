@@ -1153,9 +1153,9 @@
   window.__ERA_COMMAND_CENTER_EXPLAINABILITY_POLISH_V1__ = true;
 
   const ERA_EVIDENCE = {
-    alertReduction: "94.3%",
-    medianLead: "4.0h",
-    fpr: "4.2%",
+    alertReduction: "94.0%–94.9%",
+    medianLead: "4.0 hours",
+    fpr: "3.7%–4.4%",
     threshold: "t=6.0",
     highAcuity: "t=4.0",
     highAcuityReduction: "80.3%"
@@ -1506,6 +1506,200 @@
 })();
 </script>
 <!-- ERA_COMMAND_CENTER_EXPLAINABILITY_POLISH_V1_END -->
+
+
+
+<!-- ERA_CROSS_COHORT_RELEASE_COMMAND_CENTER_V1_START -->
+<style id="era-cross-cohort-release-command-center-css">
+  .era-release-lock-panel {
+    width: min(1180px, calc(100% - 28px));
+    margin: 16px auto;
+    border: 1px solid rgba(143,255,210,.36);
+    border-left: 5px solid #8fffd2;
+    border-radius: 24px;
+    background:
+      radial-gradient(circle at 10% 0%, rgba(143,255,210,.15), transparent 26rem),
+      linear-gradient(145deg, rgba(13,24,42,.96), rgba(6,11,21,.96));
+    box-shadow: 0 22px 65px rgba(0,0,0,.34);
+    color: #f7fbff;
+    padding: 18px;
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    position: relative;
+    z-index: 5;
+  }
+  .era-release-lock-kicker {
+    color: #8fffd2;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .14em;
+    font-weight: 950;
+    margin-bottom: 6px;
+  }
+  .era-release-lock-title {
+    margin: 0;
+    font-size: clamp(20px, 2.5vw, 32px);
+    line-height: 1.05;
+    letter-spacing: -.045em;
+    font-weight: 950;
+  }
+  .era-release-lock-copy {
+    margin: 10px 0 0;
+    color: #dbe8fb;
+    font-size: 14px;
+    line-height: 1.55;
+    max-width: 1050px;
+    font-weight: 750;
+  }
+  .era-release-lock-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-top: 14px;
+  }
+  .era-release-lock-metric {
+    border: 1px solid rgba(155,190,255,.22);
+    background: rgba(255,255,255,.055);
+    border-radius: 16px;
+    padding: 12px;
+    min-height: 92px;
+  }
+  .era-release-lock-metric span {
+    display: block;
+    color: #b8c6d8;
+    font-size: 10px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    font-weight: 900;
+  }
+  .era-release-lock-metric b {
+    display: block;
+    font-size: 26px;
+    line-height: 1;
+    margin-top: 9px;
+    letter-spacing: -.05em;
+    color: #f7fbff;
+  }
+  .era-release-lock-metric small {
+    display: block;
+    color: #b8c6d8;
+    margin-top: 6px;
+    font-size: 11px;
+  }
+  .era-release-lock-impact {
+    margin-top: 12px;
+    border: 1px solid rgba(255,215,138,.35);
+    background: rgba(255,215,138,.095);
+    color: #ffe2a5;
+    border-radius: 14px;
+    padding: 10px 12px;
+    font-size: 12px;
+    font-weight: 780;
+    line-height: 1.45;
+  }
+  .era-release-lock-links {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+  }
+  .era-release-lock-links a {
+    color: #f7fbff;
+    text-decoration: none;
+    border: 1px solid rgba(155,190,255,.24);
+    background: rgba(255,255,255,.06);
+    border-radius: 999px;
+    padding: 8px 11px;
+    font-size: 12px;
+    font-weight: 850;
+  }
+  @media(max-width:900px){
+    .era-release-lock-grid { grid-template-columns: 1fr 1fr; }
+  }
+  @media(max-width:560px){
+    .era-release-lock-grid { grid-template-columns: 1fr; }
+  }
+</style>
+
+<section id="era-cross-cohort-release-panel" class="era-release-lock-panel">
+  <div class="era-release-lock-kicker">Stable Cross-Cohort Validation Evidence Release</div>
+  <h2 class="era-release-lock-title">Command Center aligned to locked t=6.0 cross-cohort evidence.</h2>
+  <p class="era-release-lock-copy">Across the full validation cohort and two deterministic patient-level subcohorts (577–1,705 cases each), the conservative t=6.0 ERA setting showed consistent low-burden review-queue performance, with 94.0%–94.9% alert reduction, 3.7%–4.4% ERA FPR, 14.1%–16.0% event-cluster detection, and a stable 4.0 hours median lead-time context across all cohorts.</p>
+
+  <div class="era-release-lock-grid">
+    <div class="era-release-lock-metric">
+      <span>Alert Reduction Range</span>
+      <b>94.0%–94.9%</b>
+      <small>t=6.0 across 3 cohorts</small>
+    </div>
+    <div class="era-release-lock-metric">
+      <span>ERA FPR Range</span>
+      <b>3.7%–4.4%</b>
+      <small>conservative review queue</small>
+    </div>
+    <div class="era-release-lock-metric">
+      <span>Detection Range</span>
+      <b>14.1%–16.0%</b>
+      <small>event-cluster detection</small>
+    </div>
+    <div class="era-release-lock-metric">
+      <span>Median Lead-Time Context</span>
+      <b>4.0 hours</b>
+      <small>stable across cohorts</small>
+    </div>
+  </div>
+
+  <div class="era-release-lock-impact">
+    Operational impact framing: this release supports a lower-burden review queue and explainable prioritization workflow. Do not frame this as financial ROI, diagnosis, treatment direction, prevention, or autonomous escalation.
+  </div>
+
+  <div class="era-release-lock-links">
+    <a href="/validation-intelligence">Validation Intelligence</a>
+    <a href="/validation-evidence">Evidence Packet</a>
+    <a href="/api/validation/cross-cohort-validation">Cross-Cohort JSON</a>
+    <a href="/validation-runs">Validation Runs</a>
+  </div>
+</section>
+
+<script id="era-cross-cohort-release-command-center-js">
+(function(){
+  window.ERA_CROSS_COHORT_RELEASE = {
+    releaseId: "stable-cross-cohort-validation-release-2026-04-25",
+    alertReductionRange: "94.0%–94.9%",
+    fprRange: "3.7%–4.4%",
+    detectionRange: "14.1%–16.0%",
+    leadTimeRange: "4.0 hours",
+    casesRange: "577–1,705",
+    headline: "Across the full validation cohort and two deterministic patient-level subcohorts (577\u20131,705 cases each), the conservative t=6.0 ERA setting showed consistent low-burden review-queue performance, with 94.0%\u201394.9% alert reduction, 3.7%\u20134.4% ERA FPR, 14.1%\u201316.0% event-cluster detection, and a stable 4.0 hours median lead-time context across all cohorts."
+  };
+
+  function updateEvidenceText() {
+    const textNodes = [];
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    let node;
+    while ((node = walker.nextNode())) {
+      if (!node.nodeValue) continue;
+      const parent = node.parentElement;
+      if (!parent || parent.closest("#era-cross-cohort-release-panel")) continue;
+      textNodes.push(node);
+    }
+
+    textNodes.forEach((n) => {
+      let s = n.nodeValue;
+      s = s.replace(/94\.3%/g, "94.0%–94.9%");
+      s = s.replace(/4\.2%/g, "3.7%–4.4%");
+      s = s.replace(/4\.0h/g, "4.0 hours");
+      n.nodeValue = s;
+    });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", updateEvidenceText);
+  } else {
+    updateEvidenceText();
+  }
+})();
+</script>
+<!-- ERA_CROSS_COHORT_RELEASE_COMMAND_CENTER_V1_END -->
 
 </body>
 </html>

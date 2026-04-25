@@ -1,0 +1,37 @@
+{
+  "ok": true,
+  "release_id": "stable-cross-cohort-validation-release-2026-04-25",
+  "title": "Stable Cross-Cohort Validation Evidence Release \u2014 April 25, 2026",
+  "locked_at_utc": "2026-04-25T20:26:53.597918+00:00",
+  "release_type": "Stable validation evidence and Command Center alignment release",
+  "cross_cohort_headline": "Across the full validation cohort and two deterministic patient-level subcohorts (577\u20131,705 cases each), the conservative t=6.0 ERA setting showed consistent low-burden review-queue performance, with 94.0%\u201394.9% alert reduction, 3.7%\u20134.4% ERA FPR, 14.1%\u201316.0% event-cluster detection, and a stable 4.0 hours median lead-time context across all cohorts.",
+  "t6_cross_cohort_ranges": {
+    "cases_per_cohort": "577\u20131,705",
+    "alert_reduction": "94.0%\u201394.9%",
+    "era_fpr": "3.7%\u20134.4%",
+    "event_cluster_detection": "14.1%\u201316.0%",
+    "median_lead_time_context": "4.0 hours",
+    "era_alerts_per_patient_day": "0.5\u20130.7"
+  },
+  "public_routes": [
+    "/validation-intelligence",
+    "/validation-evidence",
+    "/validation-runs",
+    "/command-center",
+    "/api/validation/cross-cohort-validation",
+    "/validation-evidence/cross-cohort-validation.json"
+  ],
+  "updated_command_center_file": "era/web/data_ingest.html",
+  "public_policy": "Aggregate DUA-safe evidence only. Row-level MIMIC-derived data remains local-only.",
+  "pilot_safe_claim": "Retrospective DUA-safe cross-cohort comparison supports review of ERA operating-point behavior across the full validation cohort and different deterministic case-level subcohorts.",
+  "claim_guardrails": [
+    "Do not claim ERA predicts deterioration.",
+    "Do not claim ERA prevents adverse events.",
+    "Do not claim ERA diagnoses.",
+    "Do not claim ERA directs treatment.",
+    "Do not claim ERA replaces clinician judgment.",
+    "Do not claim ERA independently triggers escalation.",
+    "Do not claim financial ROI from retrospective validation evidence alone."
+  ],
+  "notice": "Decision support only. Retrospective aggregate analysis only."
+}

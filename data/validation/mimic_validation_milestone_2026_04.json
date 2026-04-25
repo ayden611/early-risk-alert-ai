@@ -1105,10 +1105,10 @@
     "caution": "Retrospective timing behavior should not be described as prospective proof."
   },
   "latest_progress_update": {
-    "status": "Cross-cohort validation comparison completed",
-    "updated_at_utc": "2026-04-25T20:06:57.195886+00:00",
-    "summary": "DUA-safe aggregate comparison completed across the full validation cohort and deterministic subcohorts.",
-    "public_takeaway": "ERA operating-point behavior can now be reviewed across multiple cohort slices instead of one validation cohort alone."
+    "status": "Stable cross-cohort validation release locked",
+    "updated_at_utc": "2026-04-25T20:26:53.599060+00:00",
+    "summary": "Cross-cohort evidence release locked and Command Center aligned to t=6.0 aggregate range story.",
+    "public_takeaway": "Across the full validation cohort and two deterministic patient-level subcohorts (577\u20131,705 cases each), the conservative t=6.0 ERA setting showed consistent low-burden review-queue performance, with 94.0%\u201394.9% alert reduction, 3.7%\u20134.4% ERA FPR, 14.1%\u201316.0% event-cluster detection, and a stable 4.0 hours median lead-time context across all cohorts."
   },
   "event_cluster_robustness": {
     "status": "Completed",
@@ -1844,5 +1844,24 @@
     },
     "public_policy": "Aggregate metrics only. No row-level MIMIC-derived data, no real identifiers, no exact case-linked timestamps.",
     "pilot_safe_note": "Decision support only. Retrospective aggregate validation only."
+  },
+  "stable_cross_cohort_validation_release": {
+    "status": "Locked",
+    "release_id": "stable-cross-cohort-validation-release-2026-04-25",
+    "locked_at_utc": "2026-04-25T20:26:53.599056+00:00",
+    "release_json": "data/validation/stable_cross_cohort_validation_release_2026_04_25.json",
+    "release_note": "docs/validation/stable_cross_cohort_validation_release_2026_04_25.md",
+    "cross_cohort_headline": "Across the full validation cohort and two deterministic patient-level subcohorts (577\u20131,705 cases each), the conservative t=6.0 ERA setting showed consistent low-burden review-queue performance, with 94.0%\u201394.9% alert reduction, 3.7%\u20134.4% ERA FPR, 14.1%\u201316.0% event-cluster detection, and a stable 4.0 hours median lead-time context across all cohorts.",
+    "t6_cross_cohort_ranges": {
+      "cases_per_cohort": "577\u20131,705",
+      "alert_reduction": "94.0%\u201394.9%",
+      "era_fpr": "3.7%\u20134.4%",
+      "event_cluster_detection": "14.1%\u201316.0%",
+      "median_lead_time_context": "4.0 hours",
+      "era_alerts_per_patient_day": "0.5\u20130.7"
+    },
+    "command_center_aligned": true,
+    "public_policy": "Aggregate DUA-safe evidence only. Row-level MIMIC-derived data remains local-only.",
+    "pilot_safe_note": "Decision support only. Retrospective aggregate analysis only."
   }
 }

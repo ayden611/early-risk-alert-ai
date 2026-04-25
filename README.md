@@ -375,3 +375,29 @@ Public outputs remain aggregate-only and DUA-safe. Row-level MIMIC-derived expor
 Decision support only. Retrospective analysis only. Not intended to diagnose, direct treatment, replace clinician judgment, or independently trigger escalation.
 <!-- ERA_LEAD_TIME_ROBUSTNESS_PROGRESS_V1_END -->
 
+
+<!-- ERA_CROSS_COHORT_RELEASE_README_V1_START -->
+## Stable Cross-Cohort Validation Evidence Release
+
+Release ID: `stable-cross-cohort-validation-release-2026-04-25`
+
+**Across the full validation cohort and two deterministic patient-level subcohorts (577–1,705 cases each), the conservative t=6.0 ERA setting showed consistent low-burden review-queue performance, with 94.0%–94.9% alert reduction, 3.7%–4.4% ERA FPR, 14.1%–16.0% event-cluster detection, and a stable 4.0 hours median lead-time context across all cohorts.**
+
+### Locked Public Routes
+
+| Route | Purpose |
+|---|---|
+| `/validation-intelligence` | Cross-cohort validation story |
+| `/validation-evidence` | Printable evidence packet |
+| `/validation-runs` | Validation run registry |
+| `/command-center` | Live command-center demo aligned to release evidence |
+| `/api/validation/cross-cohort-validation` | Aggregate cross-cohort validation JSON |
+| `/validation-evidence/cross-cohort-validation.json` | Downloadable aggregate cross-cohort evidence |
+
+### Public Evidence Boundary
+
+Aggregate DUA-safe evidence only. Row-level MIMIC-derived exports, raw restricted CSVs, real restricted identifiers, exact case-linked timestamps, and patient-level rows remain local-only.
+
+Decision support only. Retrospective aggregate analysis only.
+<!-- ERA_CROSS_COHORT_RELEASE_README_V1_END -->
+
