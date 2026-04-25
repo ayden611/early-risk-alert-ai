@@ -1,0 +1,69 @@
+{
+  "ok": true,
+  "generated_at_utc": "2026-04-25T15:11:00.216453+00:00",
+  "purpose": "DUA-safe aggregate threshold matrix for comparing selected ERA operating points.",
+  "public_policy": "Aggregate metrics only. No row-level MIMIC data, no MIMIC IDs, and no exact patient-linked timestamps.",
+  "threshold_matrix": [
+    {
+      "threshold": 4.0,
+      "suggested_setting": "ICU / high-acuity",
+      "framing": "Higher detection, more alerts; useful when higher sensitivity is preferred.",
+      "run_id": "era_mimic_20260425_151033_t4_0",
+      "rows": 456453,
+      "patients": 1705,
+      "events": 1658,
+      "alert_reduction_pct": 80.3,
+      "fpr_pct": 14.4,
+      "patient_detection_pct": 37.9,
+      "median_lead_time_hours": 4.0,
+      "era_alerts_per_patient_day": 2.2154,
+      "standard_alerts_per_patient_day": 11.2743,
+      "date_generated": "2026-04-25T15:10:35.861759+00:00",
+      "validation_status": "Generated for retrospective validation review",
+      "status": "available"
+    },
+    {
+      "threshold": 5.0,
+      "suggested_setting": "Mixed units",
+      "framing": "Balanced detection and alert burden.",
+      "run_id": "era_mimic_20260425_151046_t5_0",
+      "rows": 456453,
+      "patients": 1705,
+      "events": 1658,
+      "alert_reduction_pct": 89.1,
+      "fpr_pct": 8.0,
+      "patient_detection_pct": 24.6,
+      "median_lead_time_hours": 4.0,
+      "era_alerts_per_patient_day": 1.2308,
+      "standard_alerts_per_patient_day": 11.2743,
+      "date_generated": "2026-04-25T15:10:48.036504+00:00",
+      "validation_status": "Generated for retrospective validation review",
+      "status": "available"
+    },
+    {
+      "threshold": 6.0,
+      "suggested_setting": "Telemetry / stepdown",
+      "framing": "Most conservative; optimized for low false positives and alert-burden reduction.",
+      "run_id": "era_mimic_20260425_151057_t6_0",
+      "rows": 456453,
+      "patients": 1705,
+      "events": 1658,
+      "alert_reduction_pct": 94.3,
+      "fpr_pct": 4.2,
+      "patient_detection_pct": 15.3,
+      "median_lead_time_hours": 4.0,
+      "era_alerts_per_patient_day": 0.6467,
+      "standard_alerts_per_patient_day": 11.2743,
+      "date_generated": "2026-04-25T15:10:59.820836+00:00",
+      "validation_status": "Generated for retrospective validation review",
+      "status": "available"
+    }
+  ],
+  "recommended_story": {
+    "t4": "t=4.0 is the high-acuity / ICU operating point with higher detection and more alerts.",
+    "t5": "t=5.0 is the balanced mixed-unit operating point.",
+    "t6": "t=6.0 is the conservative telemetry / stepdown operating point optimized for low alert burden and low false positives."
+  },
+  "pilot_safe_claim": "Retrospective analysis on de-identified MIMIC data showed ERA can support configurable review-prioritization workflows with substantially reduced alert burden and retrospective lead-time context.",
+  "notice": "Decision support only. Retrospective analysis only. Not intended to diagnose, direct treatment, replace clinician judgment, or independently trigger escalation."
+}
