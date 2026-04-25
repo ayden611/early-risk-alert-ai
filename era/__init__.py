@@ -5286,6 +5286,17 @@ def create_app() -> Flask:
         if not upload_id:
             return upload_result
 
+        # Clean async response: upload succeeded; browser should poll the analyze endpoint.
+        # This avoids calling the analyze view directly from the upload route.
+        return jsonify({
+            "ok": True,
+            "accepted": True,
+            "status": "running",
+            "upload_id": upload_id,
+            "poll_url": f"/api/retro/analyze/{upload_id}"
+        }), 202
+
+        # Legacy direct-analyze block kept temporarily below for rollback/reference.
         # Find the existing analyze route and call it directly in the same authenticated request context.
         analyze_rule = None
         try:
