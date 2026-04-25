@@ -563,6 +563,7 @@ COMMAND_CENTER_HTML = r"""
         <a href="/executive-walkthrough">Executive Walkthrough</a>
         <a href="/admin/review">Admin Review</a>
         <a href="/pilot-docs">Pilot Docs</a>
+        <a href="/validation-intelligence">Validation Intelligence</a>
         <a href="/logout">Logout</a>
       </div>
     </div>
@@ -572,7 +573,7 @@ COMMAND_CENTER_HTML = r"""
     <section class="pilot-banner">
       <div class="pilot-banner-grid">
         <div>
-          <div class="pilot-kicker">Pilot mode · CITI certified · MFA implemented · MIMIC-IV validation pending</div>
+          <div class="pilot-kicker">Pilot mode · CITI certified · MFA implemented · MIMIC-IV validation published</div>
           <h2 class="pilot-title">Controlled demonstration environment for workflow evaluation, security review, and stakeholder readiness</h2>
           <p class="pilot-copy">
             This platform is presented in a controlled pilot environment for demonstration, workflow evaluation, and stakeholder review.
@@ -608,7 +609,7 @@ COMMAND_CENTER_HTML = r"""
           <div class="hero-kicker">Pilot operating layer</div>
           <h1 id="heroTitle">Early Risk Alert AI — Explainable Rules-Based Command-Center Platform</h1>
           <p id="heroCopy">
-            <strong style="color:#eef4ff">Rules-based prioritization with explainable deltas — not black-box AI.</strong> Early Risk Alert AI surfaces which patients may warrant further review, why, and what changed — with a <strong style="color:#3ad38f">71.6% review burden reduction</strong> and <strong style="color:#3ad38f">6.2% false positive rate</strong> vs 20.4% for standard thresholds <em style="font-size:12px;font-weight:400">(10,000-patient synthetic dataset, April 2026 — see model card)</em>.
+            <strong style="color:#eef4ff">Rules-based prioritization with explainable deltas — not black-box AI.</strong> Retrospective MIMIC validation showed <strong style="color:#3ad38f">81% alert reduction</strong>, <strong style="color:#3ad38f">4.5% ERA false-positive rate</strong>, and <strong style="color:#7aa2ff">36.6% patient-level detection</strong> at the conservative t=6.0 threshold. Lead-time analysis showed a median <strong style="color:#3ad38f">4.0-hour</strong> first-flag timing among detected event clusters within the 6-hour pre-event window.
           <br><span style="font-size:14px;color:#9fb4d6;margin-top:8px;display:block">FHIR R4 and HL7 integration remain on the product roadmap. The current pilot entry point is retrospective validation via de-identified CSV, which requires no EHR integration and can begin within days of data availability.</span>
           </p>
 
@@ -617,6 +618,7 @@ COMMAND_CENTER_HTML = r"""
             <a class="btn secondary" href="/investor-intake">Investor Access</a>
             <a class="btn secondary" href="/admin/review">Open Admin Review</a>
             <a class="btn secondary" href="/pilot-docs">Pilot Docs</a>
+            <a class="btn secondary" href="/validation-intelligence">Command Validation</a>
             <a class="btn secondary" href="/model-card" target="_blank" rel="noopener" title="Validation methodology, signal weights, and performance results">Model Card</a>
           </div>
 
@@ -628,6 +630,7 @@ COMMAND_CENTER_HTML = r"""
             <div class="status-pill live" id="feedHealthPill">Feed Live</div>
             <div class="status-pill muted" id="lastUpdatedPill">Last Updated</div>
             <a class="status-pill info" href="/model-card" target="_blank" rel="noopener" style="text-decoration:none;cursor:pointer" title="Validation methodology, signal weights, performance results">Model Card</a>
+            <a class="status-pill live" id="mimicValidationPill" href="/validation-intelligence" style="text-decoration:none;cursor:pointer" title="MIMIC retrospective validation intelligence">MIMIC Validation: Published</a>
           </div>
         </div>
 
@@ -666,7 +669,7 @@ COMMAND_CENTER_HTML = r"""
         <div class="section-head">
           <div>
             <h2 class="section-title">Hospital Command Wall</h2>
-            <div class="section-sub">Explainable rules-based prioritization — not black-box AI. 71.6% review burden reduction and 6.2% false positive rate versus 20.4% for standard threshold-based review rules (10,000-patient synthetic dataset, April 2026). Structured patient summaries, delta trend context, workflow handling, and persistent audit visibility. FHIR/HL7 EHR integration remains on the roadmap — current entry point is de-identified CSV retrospective validation, with no EHR integration required.</div>
+            <div class="section-sub">Explainable rules-based prioritization — not black-box AI. Retrospective MIMIC validation showed 81% alert reduction, 4.5% ERA false-positive rate, and 36.6% patient-level detection at the conservative t=6.0 threshold. Lead-time analysis showed a median 4.0-hour first-flag timing among detected event clusters within the 6-hour pre-event window. Structured patient summaries, delta trend context, workflow handling, and persistent audit visibility remain decision-support only.</div>
           </div>
           <div class="mini-pills">
             <div class="status-pill live" id="wallStatus">Live</div>
@@ -930,8 +933,8 @@ COMMAND_CENTER_HTML = r"""
           <div class="module-card">
             <div class="module-head">
               <div>
-                <div class="module-title">Validation Results</div>
-                <div class="module-sub">Rules-based prioritization vs standard threshold-based review rules</div>
+                <div class="module-title">MIMIC Validation Intelligence</div>
+                <div class="module-sub">Alert reduction, lead time, threshold profiles, and representative review examples</div>
               </div>
               <div class="status-pill green" style="background:rgba(58,211,143,.14);border:1px solid rgba(58,211,143,.3);color:#b6f5d9">Published</div>
             </div>
@@ -2869,91 +2872,167 @@ function renderRouteStatusModule(){
     function renderValidationResultsModule(){
       const target = document.getElementById("validation-results-module");
       if (!target) return;
-      target.innerHTML = `
-        <div class="bars">
-          <div class="bar-row">
-            <div class="bar-label">Review Burden Reduction</div>
-            <div class="bar-track"><div class="bar-fill" style="width:71.6%;background:linear-gradient(135deg,#3ad38f,#8ff3c1)"></div></div>
-            <div class="bar-value" style="color:#3ad38f">71.6%</div>
-          </div>
-          <div class="bar-row">
-            <div class="bar-label">ERA FPR (t=6.0)</div>
-            <div class="bar-track"><div class="bar-fill" style="width:6.2%;background:linear-gradient(135deg,#3ad38f,#8ff3c1)"></div></div>
-            <div class="bar-value" style="color:#3ad38f">6.2%</div>
-          </div>
-          <div class="bar-row">
-            <div class="bar-label">Standard FPR</div>
-            <div class="bar-track"><div class="bar-fill warn" style="width:20.4%"></div></div>
-            <div class="bar-value">20.4%</div>
-          </div>
-          <div class="bar-row">
-            <div class="bar-label" title="Patient-level detection in 6-hr pre-event window">Patient Detection</div>
-            <div class="bar-track"><div class="bar-fill" style="width:38.3%;background:rgba(122,162,255,.5)"></div></div>
-            <div class="bar-value" style="color:#7aa2ff">38.3%</div>
-          </div>
-        </div>
-        <div style="margin-top:14px;overflow-x:auto">
-          <table style="width:100%;border-collapse:collapse;font-size:12px">
-            <thead>
-              <tr style="border-bottom:1px solid rgba(255,255,255,.1)">
-                <th style="text-align:left;padding:6px 8px;color:#9adfff;font-weight:900">Cohort</th>
-                <th style="text-align:right;padding:6px 8px;color:#9adfff;font-weight:900">Readings</th>
-                <th style="text-align:right;padding:6px 8px;color:#9adfff;font-weight:900">Pat. Det.</th>
-                <th style="text-align:right;padding:6px 8px;color:#9adfff;font-weight:900">FPR</th>
-                <th style="text-align:right;padding:6px 8px;color:#9adfff;font-weight:900">Alert Red.</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr style="border-bottom:1px solid rgba(255,255,255,.05)">
-                <td style="padding:6px 8px;color:#dce9ff">500 pts</td>
-                <td style="padding:6px 8px;text-align:right;color:#9fb4d6">12,873</td>
-                <td style="padding:6px 8px;text-align:right;color:#3ad38f">29.7%</td>
-                <td style="padding:6px 8px;text-align:right;color:#3ad38f">5.1%</td>
-                <td style="padding:6px 8px;text-align:right;color:#3ad38f">77.6%</td>
-              </tr>
-              <tr style="border-bottom:1px solid rgba(255,255,255,.05)">
-                <td style="padding:6px 8px;color:#dce9ff">1,000 pts</td>
-                <td style="padding:6px 8px;text-align:right;color:#9fb4d6">26,055</td>
-                <td style="padding:6px 8px;text-align:right;color:#3ad38f">27.5%</td>
-                <td style="padding:6px 8px;text-align:right;color:#3ad38f">4.9%</td>
-                <td style="padding:6px 8px;text-align:right;color:#3ad38f">77.3%</td>
-              </tr>
-              <tr style="border-bottom:1px solid rgba(255,255,255,.05)">
-                <td style="padding:6px 8px;color:#dce9ff">2,000 pts</td>
-                <td style="padding:6px 8px;text-align:right;color:#9fb4d6">52,180</td>
-                <td style="padding:6px 8px;text-align:right;color:#3ad38f">36.6%</td>
-                <td style="padding:6px 8px;text-align:right;color:#3ad38f">5.8%</td>
-                <td style="padding:6px 8px;text-align:right;color:#3ad38f">72.9%</td>
-              </tr>
-              <tr style="border-bottom:1px solid rgba(255,255,255,.05)">
-                <td style="padding:6px 8px;color:#dce9ff">5,000 pts</td>
-                <td style="padding:6px 8px;text-align:right;color:#9fb4d6">129,333</td>
-                <td style="padding:6px 8px;text-align:right;color:#3ad38f">36.8%</td>
-                <td style="padding:6px 8px;text-align:right;color:#3ad38f">5.9%</td>
-                <td style="padding:6px 8px;text-align:right;color:#3ad38f">72.4%</td>
-              </tr>
-              <tr>
-                <td style="padding:6px 8px;color:#eef4ff;font-weight:900">10,000 pts</td>
-                <td style="padding:6px 8px;text-align:right;color:#9fb4d6;font-weight:900">260,765</td>
-                <td style="padding:6px 8px;text-align:right;color:#3ad38f;font-weight:900">38.3%</td>
-                <td style="padding:6px 8px;text-align:right;color:#3ad38f;font-weight:900">6.2%</td>
-                <td style="padding:6px 8px;text-align:right;color:#3ad38f;font-weight:900">71.6%</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <div class="mini-copy" style="margin-top:12px;">
-          Synthetic retrospective dataset engineered with clinically grounded deterioration trajectories (sepsis, respiratory failure, cardiac decompensation, hypertensive crisis).<br>
-          <strong style="color:#3ad38f">✓ 10,000-patient validation confirmed — 71.6% review burden reduction · 6.2% ERA FPR vs 20.4% standard · 38.3% patient detection in 6-hr pre-event window · 260,765 readings · April 2026.</strong><br>
-          Threshold settings: t=4.0 (ICU) 61.4% patient detection / 9.6% FPR / 52% review burden reduction · t=5.0 (mixed) 48.1% / 7.8% / 63.2% · t=6.0 (telemetry/default) 38.3% / 6.2% / 71.6%.<br>
-          MIMIC-IV real de-identified ICU data validation planned Q2 2026 — application submitted April 10, 2026. Results published publicly upon completion.
-        </div>
-        <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
-          <a class="btn secondary small" href="/model-card" target="_blank">Full Model Card + Methodology</a>
-          <a class="btn secondary small" href="/retro-upload">Run Your Own Analysis</a>
-        </div>
-      `;
+
+      target.innerHTML = `<div class="mini-copy">Loading MIMIC Validation Intelligence...</div>`;
+
+      fetch("/api/validation/milestone", {cache:"no-store"})
+        .then(r => r.json())
+        .then(data => {
+          if (!data || data.ok === false){
+            target.innerHTML = `
+              <div class="mini-copy">Validation Intelligence is not available yet.</div>
+              <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+                <a class="btn secondary small" href="/validation-intelligence">Open Validation Page</a>
+              </div>
+            `;
+            return;
+          }
+
+          const d = data.default_threshold || {};
+          const metrics = data.next_validation_metrics || {};
+          const lead = data.computed_validation_metrics && data.computed_validation_metrics.lead_time_before_event
+            ? data.computed_validation_metrics.lead_time_before_event
+            : {};
+
+          const profiles = data.threshold_profiles || [];
+          const examples = (lead.detected_examples || []).slice(0, 8).sort((a,b) => Number(b.score || 0) - Number(a.score || 0));
+
+          function pct(v){
+            if (v === undefined || v === null || v === "") return "—";
+            return String(v).replace(".0","") + "%";
+          }
+
+          function safeText(v){
+            if (v === undefined || v === null || v === "") return "—";
+            return String(v)
+              .replace(/&/g, "&amp;")
+              .replace(/</g, "&lt;")
+              .replace(/>/g, "&gt;");
+          }
+
+          function cleanDriver(v){
+            if (!v) return "Review context";
+            if (String(v).toLowerCase() === "no dominant driver") return "Combined monitored context";
+            return v;
+          }
+
+          function leadHours(v){
+            if (v === undefined || v === null || v === "") return "—";
+            const n = Number(v);
+            if (!Number.isFinite(n)) return safeText(v);
+            return (Math.round(n * 10) / 10).toFixed(n % 1 === 0 ? 0 : 1) + " hrs";
+          }
+
+          target.innerHTML = `
+            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:12px;">
+              <div class="mini-card" style="min-height:auto;padding:12px;">
+                <div class="mini-k">Alert Reduction</div>
+                <div class="mini-v" style="color:#3ad38f">${pct(d.alert_reduction_pct)}</div>
+                <div class="mini-copy">Conservative t=6.0 threshold vs standard threshold-only alerting.</div>
+              </div>
+              <div class="mini-card" style="min-height:auto;padding:12px;">
+                <div class="mini-k">Median Lead Time</div>
+                <div class="mini-v" style="color:#3ad38f">${metrics.median_lead_time_before_event_hours || "—"} hrs</div>
+                <div class="mini-copy">Among detected event clusters within the 6-hour pre-event window.</div>
+              </div>
+              <div class="mini-card" style="min-height:auto;padding:12px;">
+                <div class="mini-k">ERA FPR</div>
+                <div class="mini-v" style="color:#3ad38f">${pct(d.era_fpr_pct)}</div>
+                <div class="mini-copy">Compared with ${pct(d.threshold_fpr_pct)} for standard threshold alerting.</div>
+              </div>
+              <div class="mini-card" style="min-height:auto;padding:12px;">
+                <div class="mini-k">Patient Detection</div>
+                <div class="mini-v" style="color:#7aa2ff">${pct(d.era_patient_sensitivity_pct)}</div>
+                <div class="mini-copy">Patient-level detection at t=6.0 in the 6-hour pre-event window.</div>
+              </div>
+            </div>
+
+            <div class="note-box" style="margin-bottom:12px;">
+              <strong style="color:#eef4ff">Command-center validation headline:</strong>
+              ${safeText(data.lead_time_headline || "Retrospective validation supports configurable review prioritization with reduced alert burden.")}
+            </div>
+
+            <div style="overflow-x:auto;margin-top:10px">
+              <table style="width:100%;border-collapse:collapse;font-size:12px">
+                <thead>
+                  <tr style="border-bottom:1px solid rgba(255,255,255,.12)">
+                    <th style="text-align:left;padding:7px;color:#9adfff;font-weight:900">Threshold</th>
+                    <th style="text-align:left;padding:7px;color:#9adfff;font-weight:900">Use Case</th>
+                    <th style="text-align:right;padding:7px;color:#9adfff;font-weight:900">Detection</th>
+                    <th style="text-align:right;padding:7px;color:#9adfff;font-weight:900">FPR</th>
+                    <th style="text-align:right;padding:7px;color:#9adfff;font-weight:900">Alert Red.</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${profiles.map(p => `
+                    <tr style="border-bottom:1px solid rgba(255,255,255,.05)">
+                      <td style="padding:7px;color:#eef4ff;font-weight:900">t=${safeText(p.threshold)}</td>
+                      <td style="padding:7px;color:#dce9ff">${safeText(p.unit_profile || p.framing || "Configurable")}</td>
+                      <td style="padding:7px;text-align:right;color:#7aa2ff;font-weight:900">${pct(p.era_patient_sensitivity_pct)}</td>
+                      <td style="padding:7px;text-align:right;color:#3ad38f;font-weight:900">${pct(p.era_fpr_pct)}</td>
+                      <td style="padding:7px;text-align:right;color:#3ad38f;font-weight:900">${pct(p.alert_reduction_pct)}</td>
+                    </tr>
+                  `).join("")}
+                </tbody>
+              </table>
+            </div>
+
+            <div style="margin-top:14px;">
+              <div class="mini-k">Representative Review Examples</div>
+              <div class="mini-copy" style="margin-bottom:8px;">
+                Queue-ranked retrospective examples showing lead time, priority tier, and primary driver.
+              </div>
+              <div style="overflow-x:auto">
+                <table style="width:100%;border-collapse:collapse;font-size:12px">
+                  <thead>
+                    <tr style="border-bottom:1px solid rgba(255,255,255,.12)">
+                      <th style="text-align:left;padding:7px;color:#9adfff;font-weight:900">Rank</th>
+                      <th style="text-align:left;padding:7px;color:#9adfff;font-weight:900">Patient</th>
+                      <th style="text-align:right;padding:7px;color:#9adfff;font-weight:900">Lead</th>
+                      <th style="text-align:left;padding:7px;color:#9adfff;font-weight:900">Tier</th>
+                      <th style="text-align:left;padding:7px;color:#9adfff;font-weight:900">Primary Driver</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${examples.length ? examples.map((x, idx) => `
+                      <tr style="border-bottom:1px solid rgba(255,255,255,.05)">
+                        <td style="padding:7px;color:#eef4ff;font-weight:1000">#${idx + 1}</td>
+                        <td style="padding:7px;color:#dce9ff">${safeText(x.patient_id)}</td>
+                        <td style="padding:7px;text-align:right;color:#3ad38f;font-weight:900">${leadHours(x.lead_hours)}</td>
+                        <td style="padding:7px;color:#eef4ff">${safeText(x.priority_tier)}</td>
+                        <td style="padding:7px;color:#dce9ff">${safeText(cleanDriver(x.primary_driver))}</td>
+                      </tr>
+                    `).join("") : `
+                      <tr><td colspan="5" style="padding:7px;color:#9fb4d6">No representative examples available.</td></tr>
+                    `}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="note-box" style="margin-top:12px;">
+              <strong>Decision-support framing:</strong>
+              Retrospective analysis on de-identified MIMIC data showed ERA can reduce alert burden while maintaining configurable patient-level detection in a 6-hour pre-event window. Independent clinical review required.
+            </div>
+
+            <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+              <a class="btn secondary small" href="/validation-intelligence">Open Full Validation Intelligence</a>
+              <a class="btn secondary small" href="/data-ingest">Run New Retrospective Analysis</a>
+              <a class="btn secondary small" href="/pilot-docs">Pilot Docs</a>
+            </div>
+          `;
+        })
+        .catch(err => {
+          console.error("Validation Intelligence load failed:", err);
+          target.innerHTML = `
+            <div class="mini-copy">Validation Intelligence could not load from /api/validation/milestone.</div>
+            <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+              <a class="btn secondary small" href="/validation-intelligence">Open Validation Page</a>
+            </div>
+          `;
+        });
     }
+
 
     function renderNoCommitModule(){
       const target = document.getElementById("no-commit-module");
