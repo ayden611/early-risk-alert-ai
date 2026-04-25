@@ -180,5 +180,207 @@ fetch('/api/validation/milestone', {cache:'no-store'})
     console.error(err);
   });
 </script>
+
+<!-- ERA_EXPLAINABILITY_DISPLAY_V1_START -->
+<div class="wrap" style="padding-top:0;">
+  <div class="section card">
+    <div class="eyebrow">Explainability Display Upgrade</div>
+    <h2>Prioritization Context — Not Just Raw Score</h2>
+    <p class="sub" style="font-size:15px;">
+      This section reduces score saturation concerns by showing priority tier, queue rank,
+      primary driver, trend context, and lead-time examples instead of relying on raw peak risk alone.
+    </p>
+
+    <div class="grid" style="grid-template-columns:repeat(4,1fr); margin-top:18px;">
+      <div class="card">
+        <div class="label">Critical rows</div>
+        <div class="value" id="criticalRows">—</div>
+      </div>
+      <div class="card">
+        <div class="label">Elevated rows</div>
+        <div class="value" id="elevatedRows">—</div>
+      </div>
+      <div class="card">
+        <div class="label">Watch rows</div>
+        <div class="value" id="watchRows">—</div>
+      </div>
+      <div class="card">
+        <div class="label">Primary driver coverage</div>
+        <div class="value good" id="driverCoverage">—</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section two">
+    <div class="card">
+      <h2>Top Contributing Drivers</h2>
+      <p class="sub" style="font-size:14px;">
+        Shows what is causing prioritization so reviewers are not left asking why a score is high.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>Driver</th>
+            <th>Rows</th>
+          </tr>
+        </thead>
+        <tbody id="driverRows">
+          <tr><td>Loading...</td><td>—</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2>Priority Tier Distribution</h2>
+      <p class="sub" style="font-size:14px;">
+        Converts score saturation into clinically readable tiers for command-center review.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>Tier</th>
+            <th>Rows</th>
+          </tr>
+        </thead>
+        <tbody id="tierRows">
+          <tr><td>Loading...</td><td>—</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="section card">
+    <h2>Representative Detected Review Examples</h2>
+    <p class="sub" style="font-size:14px;">
+      These are retrospective examples where the display can show queue rank, lead time,
+      priority tier, primary driver, and score together.
+    </p>
+    <table>
+      <thead>
+        <tr>
+          <th>Queue rank</th>
+          <th>Patient</th>
+          <th>Lead time</th>
+          <th>Tier</th>
+          <th>Primary driver</th>
+          <th>Score</th>
+        </tr>
+      </thead>
+      <tbody id="exampleRows">
+        <tr><td>Loading...</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section two">
+    <div class="card">
+      <h2>Hospital-Safe Display Language</h2>
+      <p class="claim">
+        ERA prioritizes monitored review context by combining threshold behavior,
+        trend signals, primary drivers, and timing information.
+      </p>
+      <ul>
+        <li>Use: “Priority Tier” instead of “diagnosis.”</li>
+        <li>Use: “Primary Driver” instead of “cause.”</li>
+        <li>Use: “May warrant review” instead of “requires intervention.”</li>
+        <li>Use: “Retrospective timing analysis” instead of “proven early detection.”</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>Score Saturation Fix</h2>
+      <p class="claim">
+        Even when multiple patients reach a high score, the command center can distinguish them using:
+      </p>
+      <ul>
+        <li>Queue rank</li>
+        <li>Priority tier</li>
+        <li>Lead time before event</li>
+        <li>Primary driver</li>
+        <li>Trend direction</li>
+        <li>First threshold crossing time</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  function fmt(n) {
+    if (n === null || n === undefined || n === '') return '—';
+    return Number(n).toLocaleString();
+  }
+
+  function esc(v) {
+    return String(v === null || v === undefined ? '' : v)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function tierOrder(name) {
+    var order = { Critical: 1, Elevated: 2, Watch: 3, Low: 4 };
+    return order[name] || 99;
+  }
+
+  fetch('/api/validation/milestone', { cache: 'no-store' })
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+      var lead = data.computed_validation_metrics && data.computed_validation_metrics.lead_time_before_event
+        ? data.computed_validation_metrics.lead_time_before_event
+        : {};
+
+      var tiers = lead.priority_tier_counts || {};
+      var drivers = lead.primary_driver_counts_top || {};
+      var examples = lead.detected_examples || [];
+
+      document.getElementById('criticalRows').textContent = fmt(tiers.Critical || 0);
+      document.getElementById('elevatedRows').textContent = fmt(tiers.Elevated || 0);
+      document.getElementById('watchRows').textContent = fmt(tiers.Watch || 0);
+
+      var driverTotal = Object.keys(drivers).reduce(function (sum, k) {
+        return sum + Number(drivers[k] || 0);
+      }, 0);
+      document.getElementById('driverCoverage').textContent = fmt(driverTotal);
+
+      var tierKeys = Object.keys(tiers).sort(function (a, b) { return tierOrder(a) - tierOrder(b); });
+      document.getElementById('tierRows').innerHTML = tierKeys.length
+        ? tierKeys.map(function (k) {
+            return '<tr><td><span class="pill">' + esc(k) + '</span></td><td>' + fmt(tiers[k]) + '</td></tr>';
+          }).join('')
+        : '<tr><td>No tier data available</td><td>—</td></tr>';
+
+      var driverKeys = Object.keys(drivers);
+      document.getElementById('driverRows').innerHTML = driverKeys.length
+        ? driverKeys.slice(0, 10).map(function (k) {
+            return '<tr><td>' + esc(k) + '</td><td>' + fmt(drivers[k]) + '</td></tr>';
+          }).join('')
+        : '<tr><td>No driver data available</td><td>—</td></tr>';
+
+      examples = examples.slice(0, 10).sort(function (a, b) {
+        return Number(b.score || 0) - Number(a.score || 0);
+      });
+
+      document.getElementById('exampleRows').innerHTML = examples.length
+        ? examples.map(function (x, idx) {
+            return '<tr>' +
+              '<td><span class="pill">#' + (idx + 1) + '</span></td>' +
+              '<td>' + esc(x.patient_id) + '</td>' +
+              '<td>' + esc(x.lead_hours) + ' hrs</td>' +
+              '<td>' + esc(x.priority_tier) + '</td>' +
+              '<td>' + esc(x.primary_driver) + '</td>' +
+              '<td>' + esc(x.score) + '</td>' +
+            '</tr>';
+          }).join('')
+        : '<tr><td>No examples available</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>';
+    })
+    .catch(function (err) {
+      console.error('Explainability display could not load:', err);
+    });
+})();
+</script>
+<!-- ERA_EXPLAINABILITY_DISPLAY_V1_END -->
+
 </body>
 </html>

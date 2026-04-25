@@ -326,5 +326,33 @@
   },
   "lead_time_headline": "Among detected event clusters, ERA flags appeared a median of 4.0 hours before documented event timestamps within the 6-hour pre-event window.",
   "lead_time_calculation_mode": "derived_vitals_proxy_score",
-  "lead_time_note": "This CSV did not contain era_alert or risk_score columns, so the script used a transparent vitals-based proxy score."
+  "lead_time_note": "This CSV did not contain era_alert or risk_score columns, so the script used a transparent vitals-based proxy score.",
+  "explainability_display_upgrade": {
+    "status": "Implemented",
+    "implemented_at_utc": "2026-04-25T06:20:32.696011+00:00",
+    "purpose": "Reduce score saturation concerns by foregrounding clinical prioritization context instead of raw score alone.",
+    "display_elements": [
+      "Priority Tier",
+      "Queue Rank",
+      "Primary Driver",
+      "Lead Time Before Event",
+      "Detected Review Examples",
+      "Tier Distribution",
+      "Top Contributing Drivers"
+    ],
+    "pilot_safe_language": [
+      "Priority Tier",
+      "Primary Driver",
+      "May warrant review",
+      "Retrospective timing analysis",
+      "Decision support only"
+    ],
+    "avoid_language": [
+      "Diagnosis",
+      "Cause",
+      "Requires intervention",
+      "Proven early detection",
+      "Autonomous escalation"
+    ]
+  }
 }
