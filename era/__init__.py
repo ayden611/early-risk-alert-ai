@@ -6656,6 +6656,44 @@ def create_app() -> Flask:
         )
     # ERA_DRIVER_SUBGROUP_ROUTES_V1_END
 
+
+    # ERA_DATA_QUALITY_AUDIT_ROUTES_V1_START
+    @app.get("/api/validation/data-quality-audit")
+    def era_validation_data_quality_audit_api():
+        import json
+        from pathlib import Path
+        from flask import jsonify
+
+        root_dir = Path(__file__).resolve().parent.parent
+        p = root_dir / "data" / "validation" / "data_quality_temporal_audit_summary.json"
+
+        if not p.exists():
+            return jsonify({"ok": False, "error": "Data-quality audit summary not found."}), 404
+
+        data = json.loads(p.read_text(encoding="utf-8"))
+        data["ok"] = True
+        return jsonify(data)
+
+    @app.get("/validation-evidence/data-quality-audit.json")
+    def era_validation_data_quality_audit_download_json():
+        from pathlib import Path
+        from flask import Response
+
+        root_dir = Path(__file__).resolve().parent.parent
+        p = root_dir / "data" / "validation" / "data_quality_temporal_audit_summary.json"
+
+        if not p.exists():
+            return Response("Data-quality audit summary not found.", status=404, mimetype="text/plain")
+
+        return Response(
+            p.read_text(encoding="utf-8"),
+            mimetype="application/json",
+            headers={
+                "Content-Disposition": "attachment; filename=early-risk-alert-ai-data-quality-temporal-audit.json"
+            }
+        )
+    # ERA_DATA_QUALITY_AUDIT_ROUTES_V1_END
+
     return app
 
 

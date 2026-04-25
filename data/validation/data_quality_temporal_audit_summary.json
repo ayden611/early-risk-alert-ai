@@ -1,0 +1,117 @@
+{
+  "ok": true,
+  "generated_at_utc": "2026-04-25T18:34:23.690174+00:00",
+  "purpose": "DUA-safe aggregate data-quality and temporal-alignment audit.",
+  "source_schema_audit": {
+    "rows": 456453,
+    "unique_cases": 1705,
+    "valid_timestamp_rows": 456453,
+    "valid_timestamp_pct": 100.0,
+    "time_span_days": 35892.99,
+    "duplicate_case_time_rows": 0,
+    "chronology_issues_in_original_order": 17783,
+    "median_rows_per_case": 144,
+    "p90_rows_per_case": 659,
+    "event_labeled_rows": 12518,
+    "event_clusters_gap_6h": 1672,
+    "cases_with_event_clusters": 1649
+  },
+  "vital_coverage_audit": {
+    "heart_rate": {
+      "column_present": true,
+      "missing_rows": 5958,
+      "missing_pct": 1.31
+    },
+    "spo2": {
+      "column_present": true,
+      "missing_rows": 24196,
+      "missing_pct": 5.3
+    },
+    "bp_systolic": {
+      "column_present": true,
+      "missing_rows": 142641,
+      "missing_pct": 31.25
+    },
+    "bp_diastolic": {
+      "column_present": true,
+      "missing_rows": 142714,
+      "missing_pct": 31.27
+    },
+    "respiratory_rate": {
+      "column_present": true,
+      "missing_rows": 11743,
+      "missing_pct": 2.57
+    },
+    "temperature_f": {
+      "column_present": true,
+      "missing_rows": 330208,
+      "missing_pct": 72.34
+    }
+  },
+  "vital_completeness": {
+    "median_present_core_vitals_per_row": 5,
+    "rows_with_at_least_3_core_vitals_pct": 100.0,
+    "rows_with_all_detected_core_vitals_pct": 17.3
+  },
+  "enriched_export_audit": {
+    "rows": 456453,
+    "unique_cases": 1705,
+    "source_enriched_case_time_overlap_rows": 456453,
+    "source_enriched_case_time_overlap_pct_of_source": 100.0,
+    "risk_score_rows": 456453,
+    "risk_score_coverage_pct": 100.0,
+    "median_risk_score": 1.5,
+    "max_risk_score": 9.9,
+    "era_alert_rows_t6_export_state": 19215,
+    "priority_tier_distribution": {
+      "Critical": 9768,
+      "Elevated": 9447
+    },
+    "trend_distribution": {
+      "Worsening": 19215
+    },
+    "driver_family_distribution": {
+      "SpO2 / oxygenation": 14991,
+      "Blood pressure": 803,
+      "Heart rate": 3404,
+      "Respiratory rate": 17
+    }
+  },
+  "temporal_alignment_diagnostic": {
+    "event_window_hours": 6.0,
+    "event_gap_hours": 6.0,
+    "thresholds": [
+      {
+        "threshold": 4.0,
+        "source_event_clusters_reviewed": 1405,
+        "pre_window_cluster_hits": 253,
+        "post_window_cluster_hits": 646,
+        "pre_window_cluster_hit_pct": 18.01,
+        "post_window_cluster_hit_pct": 45.98,
+        "interpretation": "Aggregate temporal-alignment diagnostic only; not used as official lead-time evidence."
+      },
+      {
+        "threshold": 5.0,
+        "source_event_clusters_reviewed": 1405,
+        "pre_window_cluster_hits": 253,
+        "post_window_cluster_hits": 646,
+        "pre_window_cluster_hit_pct": 18.01,
+        "post_window_cluster_hit_pct": 45.98,
+        "interpretation": "Aggregate temporal-alignment diagnostic only; not used as official lead-time evidence."
+      },
+      {
+        "threshold": 6.0,
+        "source_event_clusters_reviewed": 1405,
+        "pre_window_cluster_hits": 253,
+        "post_window_cluster_hits": 646,
+        "pre_window_cluster_hit_pct": 18.01,
+        "post_window_cluster_hit_pct": 45.98,
+        "interpretation": "Aggregate temporal-alignment diagnostic only; not used as official lead-time evidence."
+      }
+    ],
+    "note": "This diagnostic explains source-event/enriched-alert timing alignment. Official lead-time evidence remains the dedicated lead-time robustness analysis."
+  },
+  "public_policy": "Aggregate metrics only. No row-level MIMIC data, no MIMIC IDs, no exact patient-linked timestamps.",
+  "pilot_safe_claim": "A DUA-safe aggregate audit found the validation dataset and enriched ERA export can be reviewed for schema coverage, event-label integrity, timestamp quality, and temporal-alignment behavior without exposing row-level data.",
+  "notice": "Decision support only. Retrospective analysis only. Not intended to diagnose, direct treatment, replace clinician judgment, or independently trigger escalation."
+}
