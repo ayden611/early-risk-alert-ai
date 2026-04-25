@@ -442,8 +442,8 @@
   },
   "real_era_validation_export": {
     "status": "Generated",
-    "latest_run_id": "era_mimic_20260425_134002_t6_0",
-    "generated_at_utc": "2026-04-25T13:40:04.993622+00:00",
+    "latest_run_id": "era_mimic_20260425_140535_t6_0",
+    "generated_at_utc": "2026-04-25T14:05:37.406090+00:00",
     "enriched_csv": "local-only-not-public",
     "summary_file": "local-only-not-public",
     "columns_added": [
@@ -480,7 +480,7 @@
       "standard_alerts_per_patient_day": 11.2743,
       "detected_examples": [
         {
-          "case_id": "Case-013",
+          "case_id": "Case-021",
           "lead_hours": 3.0,
           "priority_tier": "Critical",
           "primary_driver": "SpO2 decline",
@@ -489,28 +489,10 @@
           "queue_rank": 1
         },
         {
-          "case_id": "Case-017",
+          "case_id": "Case-022",
           "lead_hours": 4.0,
           "priority_tier": "Critical",
           "primary_driver": "SpO2 below 90",
-          "trend_direction": "Worsening",
-          "score": 9.9,
-          "queue_rank": 1
-        },
-        {
-          "case_id": "Case-021",
-          "lead_hours": 6.0,
-          "priority_tier": "Critical",
-          "primary_driver": "SpO2 below 90",
-          "trend_direction": "Worsening",
-          "score": 9.9,
-          "queue_rank": 1
-        },
-        {
-          "case_id": "Case-022",
-          "lead_hours": 5.0,
-          "priority_tier": "Critical",
-          "primary_driver": "severe SpO2 decline",
           "trend_direction": "Worsening",
           "score": 9.9,
           "queue_rank": 1
@@ -519,13 +501,31 @@
           "case_id": "Case-023",
           "lead_hours": 6.0,
           "priority_tier": "Critical",
+          "primary_driver": "SpO2 below 90",
+          "trend_direction": "Worsening",
+          "score": 9.9,
+          "queue_rank": 1
+        },
+        {
+          "case_id": "Case-024",
+          "lead_hours": 5.0,
+          "priority_tier": "Critical",
+          "primary_driver": "severe SpO2 decline",
+          "trend_direction": "Worsening",
+          "score": 9.9,
+          "queue_rank": 1
+        },
+        {
+          "case_id": "Case-025",
+          "lead_hours": 6.0,
+          "priority_tier": "Critical",
           "primary_driver": "SpO2 decline",
           "trend_direction": "Worsening",
           "score": 9.5,
           "queue_rank": 1
         },
         {
-          "case_id": "Case-007",
+          "case_id": "Case-026",
           "lead_hours": 5.0,
           "priority_tier": "Critical",
           "primary_driver": "borderline SpO2",
@@ -534,7 +534,7 @@
           "queue_rank": 1
         },
         {
-          "case_id": "Case-011",
+          "case_id": "Case-027",
           "lead_hours": 3.0,
           "priority_tier": "Critical",
           "primary_driver": "SpO2 decline",
@@ -543,7 +543,7 @@
           "queue_rank": 1
         },
         {
-          "case_id": "Case-014",
+          "case_id": "Case-028",
           "lead_hours": 5.0,
           "priority_tier": "Critical",
           "primary_driver": "severe SpO2 decline",
@@ -552,7 +552,7 @@
           "queue_rank": 1
         },
         {
-          "case_id": "Case-024",
+          "case_id": "Case-029",
           "lead_hours": 4.0,
           "priority_tier": "Critical",
           "primary_driver": "SpO2 decline",
@@ -561,7 +561,7 @@
           "queue_rank": 1
         },
         {
-          "case_id": "Case-025",
+          "case_id": "Case-030",
           "lead_hours": 2.5,
           "priority_tier": "Critical",
           "primary_driver": "borderline SpO2",
@@ -570,7 +570,7 @@
           "queue_rank": 1
         },
         {
-          "case_id": "Case-026",
+          "case_id": "Case-031",
           "lead_hours": 6.0,
           "priority_tier": "Critical",
           "primary_driver": "severe SpO2 decline",
@@ -579,7 +579,7 @@
           "queue_rank": 1
         },
         {
-          "case_id": "Case-008",
+          "case_id": "Case-032",
           "lead_hours": 3.3,
           "priority_tier": "Critical",
           "primary_driver": "SpO2 decline",
@@ -588,7 +588,7 @@
           "queue_rank": 1
         },
         {
-          "case_id": "Case-027",
+          "case_id": "Case-033",
           "lead_hours": 6.0,
           "priority_tier": "Critical",
           "primary_driver": "SpO2 decline",
@@ -597,7 +597,7 @@
           "queue_rank": 1
         },
         {
-          "case_id": "Case-028",
+          "case_id": "Case-034",
           "lead_hours": 4.0,
           "priority_tier": "Critical",
           "primary_driver": "SpO2 decline",
@@ -606,7 +606,7 @@
           "queue_rank": 1
         },
         {
-          "case_id": "Case-018",
+          "case_id": "Case-035",
           "lead_hours": 6.0,
           "priority_tier": "Critical",
           "primary_driver": "SpO2 decline",
@@ -615,7 +615,7 @@
           "queue_rank": 1
         },
         {
-          "case_id": "Case-003",
+          "case_id": "Case-036",
           "lead_hours": 5.0,
           "priority_tier": "Critical",
           "primary_driver": "HR elevation/depression",
@@ -624,7 +624,7 @@
           "queue_rank": 1
         },
         {
-          "case_id": "Case-006",
+          "case_id": "Case-037",
           "lead_hours": 2.0,
           "priority_tier": "Critical",
           "primary_driver": "borderline SpO2",
@@ -633,7 +633,7 @@
           "queue_rank": 1
         },
         {
-          "case_id": "Case-012",
+          "case_id": "Case-038",
           "lead_hours": 3.5,
           "priority_tier": "Critical",
           "primary_driver": "SpO2 decline",
@@ -642,7 +642,7 @@
           "queue_rank": 1
         },
         {
-          "case_id": "Case-029",
+          "case_id": "Case-039",
           "lead_hours": 4.0,
           "priority_tier": "Critical",
           "primary_driver": "SpO2 below 90",
@@ -651,7 +651,7 @@
           "queue_rank": 1
         },
         {
-          "case_id": "Case-030",
+          "case_id": "Case-040",
           "lead_hours": 3.0,
           "priority_tier": "Critical",
           "primary_driver": "SpO2 decline",
@@ -665,11 +665,11 @@
   "validation_run_registry": {
     "status": "Available",
     "registry_file": "data/validation/validation_run_registry.json",
-    "latest_run_id": "era_mimic_20260425_134002_t6_0"
+    "latest_run_id": "era_mimic_20260425_140535_t6_0"
   },
   "mimic_dua_public_safety": {
     "status": "Applied",
-    "applied_at_utc": "2026-04-25T13:55:44.860289+00:00",
+    "applied_at_utc": "2026-04-25T14:05:37.859444+00:00",
     "public_policy": "Only aggregate metrics, sanitized case examples, validation methodology, and code are public-facing. Row-level MIMIC-derived exports remain local-only.",
     "removed_from_public_outputs": [
       "raw MIMIC files",
