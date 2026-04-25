@@ -1,3 +1,14 @@
 .DS_Store
 cardio_train.csv
 instance/local.db
+
+# ERA local validation exports — keep row-level MIMIC-derived files local unless approved
+data/validation/latest_era_validation_export.csv
+data/validation/local_exports/
+
+# MIMIC / PhysioNet restricted-data safety
+data/validation/local_private/
+data/retro/
+mimic_event_maps/
+*.mimic.csv
+*mimic*row*.csv

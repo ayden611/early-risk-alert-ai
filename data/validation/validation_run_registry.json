@@ -1,0 +1,51 @@
+{
+  "runs": [
+    {
+      "run_id": "era_mimic_20260425_134002_t6_0",
+      "dataset": "MIMIC-IV de-identified retrospective validation subset",
+      "rows": 456453,
+      "patients": 1705,
+      "events": 1658,
+      "threshold": 6.0,
+      "alert_reduction_pct": 94.3,
+      "fpr_pct": 4.2,
+      "patient_detection_pct": 15.3,
+      "median_lead_time_hours": 4.0,
+      "era_alerts_per_patient_day": 0.6467,
+      "standard_alerts_per_patient_day": 11.2743,
+      "date_generated": "2026-04-25T13:40:04.993622+00:00",
+      "validation_status": "Generated for retrospective validation review",
+      "summary_file": "local-only-not-public",
+      "enriched_csv": "local-only-not-public"
+    }
+  ],
+  "latest_run_id": "era_mimic_20260425_134002_t6_0",
+  "updated_at_utc": "2026-04-25T13:40:04.993622+00:00",
+  "mimic_dua_public_safety": {
+    "status": "Applied",
+    "applied_at_utc": "2026-04-25T13:55:44.862347+00:00",
+    "public_policy": "Only aggregate metrics, sanitized case examples, validation methodology, and code are public-facing. Row-level MIMIC-derived exports remain local-only.",
+    "removed_from_public_outputs": [
+      "raw MIMIC files",
+      "row-level enriched CSV downloads",
+      "patient IDs",
+      "subject IDs",
+      "hospital admission/stay IDs",
+      "exact patient-linked timestamps",
+      "source file paths",
+      "patient-level rows"
+    ],
+    "safe_public_outputs": [
+      "aggregate validation metrics",
+      "threshold comparison tables",
+      "alert reduction percentage",
+      "false-positive rate",
+      "patient-level detection percentage",
+      "median lead-time summary",
+      "sanitized case examples",
+      "validation methodology",
+      "code used to produce results"
+    ],
+    "notice": "Decision support only. Retrospective analysis only. Not intended to diagnose, direct treatment, replace clinician judgment, or independently trigger escalation."
+  }
+}

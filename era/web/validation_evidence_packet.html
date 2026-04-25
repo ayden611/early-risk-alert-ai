@@ -152,6 +152,17 @@
   </style>
 </head>
 <body>
+
+<!-- ERA_MIMIC_DUA_PUBLIC_NOTICE_V1 -->
+<div class="wrap" style="padding-top:0;">
+  <div class="notice" style="margin:14px 0;border-color:rgba(255,209,102,.35);background:rgba(255,209,102,.08);color:#ffe5ad;">
+    <strong>MIMIC/PhysioNet data-use safety:</strong>
+    Public validation pages show aggregate metrics and sanitized Case-001 style examples only.
+    Row-level MIMIC-derived exports, real patient identifiers, subject IDs, admission/stay IDs, and exact patient-linked timestamps remain local-only and are not publicly downloadable.
+  </div>
+</div>
+<!-- ERA_MIMIC_DUA_PUBLIC_NOTICE_V1 -->
+
   <div class="wrap">
     <div class="top">
       <div>
@@ -163,6 +174,7 @@
         <button class="btn primary" onclick="window.print()">Print / Save PDF</button>
         <a class="btn" href="/validation-evidence/download.md">Download Markdown</a>
         <a class="btn" href="/validation-evidence/download.json">Download JSON</a>
+        <a class="btn" href="/validation-evidence" title="Row-level MIMIC-derived enriched CSV is local-only and blocked from public download">Enriched CSV: Local Only</a>
         <a class="btn" href="/validation-evidence/examples.csv">Examples CSV</a>
         <a class="btn" href="/validation-intelligence">Validation Intelligence</a>
         <a class="btn" href="/command-center">Command Center</a>
@@ -194,7 +206,7 @@
         <div class="metric"><div class="k">Alert reduction</div><div class="v good" id="alertReduction">—</div></div>
         <div class="metric"><div class="k">Median lead time</div><div class="v good" id="leadTime">—</div></div>
         <div class="metric"><div class="k">ERA FPR</div><div class="v good" id="fpr">—</div></div>
-        <div class="metric"><div class="k">Patient detection</div><div class="v blue" id="detection">—</div></div>
+        <div class="metric"><div class="k">Case detection</div><div class="v blue" id="detection">—</div></div>
       </div>
     </section>
 
@@ -262,7 +274,7 @@
         <thead>
           <tr>
             <th>Rank</th>
-            <th>Patient ID</th>
+            <th>Case ID</th>
             <th>Lead time</th>
             <th>Tier</th>
             <th>Primary driver</th>
@@ -332,7 +344,7 @@
 
       document.getElementById('datasetRows').innerHTML = [
         ['Rows analyzed', fmt(ds.total_rows)],
-        ['Patients', fmt(ds.total_patients)],
+        ['Cases', fmt(ds.total_patients)],
         ['Clinical events', fmt(ds.total_events)],
         ['Event window', (ds.event_window_hours || 6) + ' hours'],
         ['Thresholds tested', (ds.thresholds_tested || [4,5,6]).join(', ')]
@@ -352,7 +364,7 @@
       document.getElementById('exampleRows').innerHTML = examples.map((x, idx) => `
         <tr>
           <td><strong>#${idx+1}</strong></td>
-          <td>${esc(x.patient_id)}</td>
+          <td>${esc((x.case_id || x.patient_id))}</td>
           <td>${lead(x.lead_hours)}</td>
           <td>${esc(x.priority_tier)}</td>
           <td>${esc(driver(x.primary_driver))}</td>

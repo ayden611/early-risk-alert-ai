@@ -232,6 +232,17 @@
 </style>
 </head>
 <body>
+
+<!-- ERA_MIMIC_DUA_PUBLIC_NOTICE_V1 -->
+<div class="wrap" style="padding-top:0;">
+  <div class="notice" style="margin:14px 0;border-color:rgba(255,209,102,.35);background:rgba(255,209,102,.08);color:#ffe5ad;">
+    <strong>MIMIC/PhysioNet data-use safety:</strong>
+    Public validation pages show aggregate metrics and sanitized Case-001 style examples only.
+    Row-level MIMIC-derived exports, real patient identifiers, subject IDs, admission/stay IDs, and exact patient-linked timestamps remain local-only and are not publicly downloadable.
+  </div>
+</div>
+<!-- ERA_MIMIC_DUA_PUBLIC_NOTICE_V1 -->
+
   <div class="wrap">
 
 <!-- ERA_VALIDATION_SHOWCASE_CLEANUP_V3_START -->
@@ -262,9 +273,9 @@
         <div class="era-v3-note">Compared with standard threshold-only false-positive rate.</div>
       </div>
       <div class="era-v3-metric">
-        <div class="era-v3-k">Patient detection</div>
+        <div class="era-v3-k">Case detection</div>
         <div class="era-v3-v" id="eraV3Detection" style="color:#8ab4ff">36.6%</div>
-        <div class="era-v3-note">Patient-level detection at t=6.0 in the 6-hour event window.</div>
+        <div class="era-v3-note">Case-level detection at t=6.0 in the 6-hour event window.</div>
       </div>
     </div>
 
@@ -312,7 +323,7 @@
           <thead>
             <tr>
               <th>Rank</th>
-              <th>Patient ID</th>
+              <th>Case ID</th>
               <th>Lead time</th>
               <th>Tier</th>
               <th>Primary driver</th>
@@ -350,7 +361,7 @@
 
       <div class="grid">
         <div class="card"><div class="label">Rows analyzed</div><div class="value" id="rows">—</div></div>
-        <div class="card"><div class="label">Patients</div><div class="value" id="patients">—</div></div>
+        <div class="card"><div class="label">Cases</div><div class="value" id="patients">—</div></div>
         <div class="card"><div class="label">Clinical events</div><div class="value" id="events">—</div></div>
         <div class="card"><div class="label">Alert reduction</div><div class="value good" id="reduction">—</div></div>
       </div>
@@ -409,9 +420,9 @@
       <div class="sub" style="font-size:12px;margin-top:8px;">Compared with standard threshold-only alerting.</div>
     </div>
     <div class="card">
-      <div class="label">Patient detection</div>
+      <div class="label">Case detection</div>
       <div class="value blue" id="v2Detection">36.6%</div>
-      <div class="sub" style="font-size:12px;margin-top:8px;">Patient-level, t=6.0, 6-hour window.</div>
+      <div class="sub" style="font-size:12px;margin-top:8px;">Case-level, t=6.0, 6-hour window.</div>
     </div>
   </div>
 
@@ -445,7 +456,7 @@
           <th>Threshold</th>
           <th>Suggested setting</th>
           <th>Framing</th>
-          <th>Patient detection</th>
+          <th>Case detection</th>
           <th>FPR</th>
           <th>Alert reduction</th>
         </tr>
@@ -521,7 +532,7 @@
       <div class="card">
         <h2>Default Threshold — t=6.0</h2>
         <div class="grid" style="grid-template-columns:1fr 1fr;">
-          <div><div class="label">Patient detection</div><div class="value blue" id="patientDetection">—</div></div>
+          <div><div class="label">Case detection</div><div class="value blue" id="patientDetection">—</div></div>
           <div><div class="label">ERA FPR</div><div class="value good" id="fpr">—</div></div>
         </div>
         <p class="sub" style="font-size:14px;margin-top:14px;">Framing: conservative telemetry / stepdown review queue optimized for alert-burden reduction.</p>
@@ -542,7 +553,7 @@
       <table>
         <thead>
           <tr>
-            <th>Threshold</th><th>Suggested setting</th><th>Framing</th><th>Patient detection</th><th>FPR</th><th>Alert reduction</th>
+            <th>Threshold</th><th>Suggested setting</th><th>Framing</th><th>Case detection</th><th>FPR</th><th>Alert reduction</th>
           </tr>
         </thead>
         <tbody id="thresholdRows"></tbody>
@@ -697,7 +708,7 @@ fetch('/api/validation/milestone', {cache:'no-store'})
       <thead>
         <tr>
           <th>Queue rank</th>
-          <th>Patient</th>
+          <th>Case</th>
           <th>Lead time</th>
           <th>Tier</th>
           <th>Primary driver</th>
@@ -726,7 +737,7 @@ fetch('/api/validation/milestone', {cache:'no-store'})
     </div>
 
     <div class="card">
-      <h2>How ERA Distinguishes High-Priority Patients</h2>
+      <h2>How ERA Distinguishes High-Priority Cases</h2>
       <p class="claim">
         Even when multiple patients reach a high score, the command center can distinguish them using:
       </p>
@@ -804,7 +815,7 @@ fetch('/api/validation/milestone', {cache:'no-store'})
         ? examples.map(function (x, idx) {
             return '<tr>' +
               '<td><span class="pill">#' + (idx + 1) + '</span></td>' +
-              '<td>' + esc(x.patient_id) + '</td>' +
+              '<td>' + esc((x.case_id || x.patient_id)) + '</td>' +
               '<td>' + esc(x.lead_hours) + ' hrs</td>' +
               '<td>' + esc(x.priority_tier) + '</td>' +
               '<td>' + esc(x.primary_driver) + '</td>' +
@@ -1010,7 +1021,7 @@ fetch('/api/validation/milestone', {cache:'no-store'})
           exampleRows.innerHTML = examples.length ? examples.map(function(x, idx){
             return '<tr>' +
               '<td><strong>#' + (idx + 1) + '</strong></td>' +
-              '<td>' + esc(x.patient_id) + '</td>' +
+              '<td>' + esc((x.case_id || x.patient_id)) + '</td>' +
               '<td>' + roundedHours(x.lead_hours) + '</td>' +
               '<td>' + esc(x.priority_tier) + '</td>' +
               '<td>' + esc(cleanDriver(x.primary_driver)) + '</td>' +

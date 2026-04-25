@@ -6386,7 +6386,7 @@ def create_app() -> Flask:
         )
 
     @app.get("/validation-evidence/examples.csv")
-    def era_validation_evidence_examples_csv():
+    def era_validation_evidence_examples_csv_sanitized():
         import json
         import csv
         import io
@@ -6394,61 +6394,112 @@ def create_app() -> Flask:
         from flask import Response
 
         root_dir = Path(__file__).resolve().parent.parent
-        p = root_dir / "data" / "validation" / "mimic_validation_milestone_2026_04.json"
+        p = root_dir / "data" / "validation" / "public_representative_examples.json"
 
         if not p.exists():
-            return Response("Validation evidence not found.", status=404, mimetype="text/plain")
+            return Response("Sanitized public representative examples not found.", status=404, mimetype="text/plain")
 
-        data = json.loads(p.read_text(encoding="utf-8"))
-        lead = (
-            data.get("computed_validation_metrics", {})
-            .get("lead_time_before_event", {})
-        )
-        examples = lead.get("detected_examples", [])
+        payload = json.loads(p.read_text(encoding="utf-8"))
+        examples = payload.get("examples", [])
 
         output = io.StringIO()
         writer = csv.DictWriter(output, fieldnames=[
-            "rank",
-            "patient_id",
+            "case_id",
             "lead_hours",
             "priority_tier",
             "primary_driver",
+            "trend_direction",
             "score",
-            "event_time",
-            "first_alert_time"
+            "queue_rank"
         ])
         writer.writeheader()
 
-        sorted_examples = sorted(
-            examples,
-            key=lambda x: float(x.get("score") or 0),
-            reverse=True
-        )
-
-        for idx, ex in enumerate(sorted_examples, start=1):
-            driver = ex.get("primary_driver") or "Review context"
-            if str(driver).lower() == "no dominant driver":
-                driver = "Composite multi-signal pattern"
-
+        for ex in examples:
             writer.writerow({
-                "rank": idx,
-                "patient_id": ex.get("patient_id", ""),
-                "lead_hours": round(float(ex.get("lead_hours") or 0), 1) if ex.get("lead_hours") not in (None, "") else "",
+                "case_id": ex.get("case_id", ""),
+                "lead_hours": ex.get("lead_hours", ""),
                 "priority_tier": ex.get("priority_tier", ""),
-                "primary_driver": driver,
+                "primary_driver": ex.get("primary_driver", ""),
+                "trend_direction": ex.get("trend_direction", ""),
                 "score": ex.get("score", ""),
-                "event_time": ex.get("event_time", ""),
-                "first_alert_time": ex.get("first_alert_time", "")
+                "queue_rank": ex.get("queue_rank", "")
             })
 
         return Response(
             output.getvalue(),
             mimetype="text/csv",
             headers={
-                "Content-Disposition": "attachment; filename=early-risk-alert-ai-representative-examples.csv"
+                "Content-Disposition": "attachment; filename=early-risk-alert-ai-sanitized-representative-examples.csv",
+                "X-ERA-Data-Use-Safety": "sanitized-case-examples-no-mimic-ids-no-timestamps"
             }
         )
     # ERA_EXPORT_DOWNLOAD_ROUTES_V2_END
+
+
+    # ERA_VALIDATION_RUN_REGISTRY_ROUTES_V1_START
+    # Validation run registry and enriched export routes.
+    @app.get("/api/validation/runs")
+    def era_validation_runs_api():
+        import json
+        from pathlib import Path
+        from flask import jsonify
+
+        root_dir = Path(__file__).resolve().parent.parent
+        p = root_dir / "data" / "validation" / "validation_run_registry.json"
+
+        if not p.exists():
+            return jsonify({
+                "ok": True,
+                "runs": [],
+                "latest_run_id": None
+            })
+
+        data = json.loads(p.read_text(encoding="utf-8"))
+        data["ok"] = True
+        return jsonify(data)
+
+    @app.get("/validation-runs")
+    def era_validation_runs_page():
+        from pathlib import Path
+        from flask import send_from_directory
+
+        web_dir = Path(__file__).resolve().parent / "web"
+        return send_from_directory(str(web_dir), "validation_runs.html")
+
+    @app.get("/validation-evidence/runs.json")
+    def era_validation_runs_download_json():
+        from pathlib import Path
+        from flask import Response
+
+        root_dir = Path(__file__).resolve().parent.parent
+        p = root_dir / "data" / "validation" / "validation_run_registry.json"
+
+        if not p.exists():
+            body = '{"ok": true, "runs": []}'
+        else:
+            body = p.read_text(encoding="utf-8")
+
+        return Response(
+            body,
+            mimetype="application/json",
+            headers={
+                "Content-Disposition": "attachment; filename=early-risk-alert-ai-validation-run-registry.json"
+            }
+        )
+
+    @app.get("/validation-evidence/latest-enriched.csv")
+    def era_validation_latest_enriched_csv_blocked():
+        from flask import Response
+
+        return Response(
+            "Row-level MIMIC-derived enriched CSV exports are local-only and are not publicly downloadable. Public evidence uses aggregate metrics and sanitized Case-001 style examples only.",
+            status=403,
+            mimetype="text/plain",
+            headers={
+                "X-ERA-Data-Use-Safety": "row-level-mimic-derived-export-blocked"
+            }
+        )
+    # ERA_VALIDATION_RUN_REGISTRY_ROUTES_V1_END
 
     return app
 

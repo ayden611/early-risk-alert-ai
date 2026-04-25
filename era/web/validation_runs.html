@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Validation Runs — Early Risk Alert AI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root{--bg:#070a12;--panel:#101827;--text:#f8fafc;--muted:#a8b3c7;--line:rgba(255,255,255,.12);--green:#8ff0b3;--blue:#8ab4ff}
+    body{margin:0;background:radial-gradient(circle at 20% 0%,rgba(138,180,255,.16),transparent 35%),var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    .wrap{max-width:1180px;margin:0 auto;padding:30px 20px 70px}
+    .brand{font-size:12px;letter-spacing:.16em;text-transform:uppercase;font-weight:1000;color:#dce8ff}
+    h1{font-size:clamp(34px,5vw,58px);line-height:.95;letter-spacing:-.05em;margin:10px 0}
+    p{color:var(--muted);line-height:1.6}
+    .card{border:1px solid var(--line);background:rgba(16,24,39,.88);border-radius:24px;padding:22px;box-shadow:0 24px 80px rgba(0,0,0,.35)}
+    .actions{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0}
+    .btn{padding:10px 13px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--text);text-decoration:none;font-weight:900}
+    .btn.primary{background:linear-gradient(135deg,var(--blue),var(--green));color:#07101c;border:0}
+    table{width:100%;border-collapse:collapse;margin-top:16px}
+    th,td{padding:12px;border-bottom:1px solid var(--line);text-align:left;color:var(--muted);font-size:13px}
+    th{color:#dce8ff;background:rgba(255,255,255,.05);text-transform:uppercase;font-size:11px;letter-spacing:.08em}
+    .good{color:var(--green);font-weight:1000}
+    .pill{border-radius:999px;background:rgba(138,180,255,.12);color:#dce8ff;padding:5px 9px;font-weight:900}
+    .scroll{overflow-x:auto}
+  </style>
+</head>
+<body>
+
+<!-- ERA_MIMIC_DUA_PUBLIC_NOTICE_V1 -->
+<div class="wrap" style="padding-top:0;">
+  <div class="notice" style="margin:14px 0;border-color:rgba(255,209,102,.35);background:rgba(255,209,102,.08);color:#ffe5ad;">
+    <strong>MIMIC/PhysioNet data-use safety:</strong>
+    Public validation pages show aggregate metrics and sanitized Case-001 style examples only.
+    Row-level MIMIC-derived exports, real patient identifiers, subject IDs, admission/stay IDs, and exact patient-linked timestamps remain local-only and are not publicly downloadable.
+  </div>
+</div>
+<!-- ERA_MIMIC_DUA_PUBLIC_NOTICE_V1 -->
+
+  <div class="wrap">
+    <div class="brand">EARLY RISK ALERT AI · VALIDATION RUN REGISTRY</div>
+    <h1>Validation Run Registry</h1>
+    <p>Track each MIMIC retrospective validation run with rows, patients, events, threshold, alert reduction, FPR, patient detection, median lead time, and validation status.</p>
+
+    <div class="actions">
+      <a class="btn primary" href="/data-ingest">Run New Test</a>
+      <a class="btn" href="/validation-intelligence">Validation Intelligence</a>
+      <a class="btn" href="/validation-evidence">Evidence Packet</a>
+      <a class="btn" href="/validation-evidence/runs.json">Download Registry JSON</a>
+      <a class="btn" href="/validation-evidence" title="Row-level MIMIC-derived enriched CSV is local-only and blocked from public download">Enriched CSV: Local Only</a>
+    </div>
+
+    <div class="card">
+      <h2>Runs</h2>
+      <div class="scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Run ID</th>
+              <th>Dataset</th>
+              <th>Rows</th>
+              <th>Cases</th>
+              <th>Events</th>
+              <th>Threshold</th>
+              <th>Alert Reduction</th>
+              <th>FPR</th>
+              <th>Case Detection</th>
+              <th>Median Lead Time</th>
+              <th>Date Generated</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="runRows">
+            <tr><td colspan="12">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+<script>
+(function(){
+  function fmt(v){ if(v===null||v===undefined||v==='') return '—'; return Number(v).toLocaleString(); }
+  function pct(v){ if(v===null||v===undefined||v==='') return '—'; return String(v).replace('.0','') + '%'; }
+  function esc(v){ return String(v ?? '').replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+
+  fetch('/api/validation/runs', {cache:'no-store'})
+    .then(r => r.json())
+    .then(data => {
+      const runs = data.runs || [];
+      document.getElementById('runRows').innerHTML = runs.length ? runs.map(r => `
+        <tr>
+          <td><span class="pill">${esc(r.run_id)}</span></td>
+          <td>${esc(r.dataset)}</td>
+          <td>${fmt(r.rows)}</td>
+          <td>${fmt(r.patients)}</td>
+          <td>${fmt(r.events)}</td>
+          <td>${esc(r.threshold)}</td>
+          <td class="good">${pct(r.alert_reduction_pct)}</td>
+          <td>${pct(r.fpr_pct)}</td>
+          <td>${pct(r.patient_detection_pct)}</td>
+          <td>${esc(r.median_lead_time_hours ?? '—')} hrs</td>
+          <td>${esc(r.date_generated)}</td>
+          <td>${esc(r.validation_status)}</td>
+        </tr>
+      `).join('') : '<tr><td colspan="12">No validation runs recorded yet.</td></tr>';
+    })
+    .catch(err => {
+      document.getElementById('runRows').innerHTML = '<tr><td colspan="12">Validation run registry could not load.</td></tr>';
+      console.error(err);
+    });
+})();
+</script>
+</body>
+</html>

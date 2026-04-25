@@ -280,7 +280,7 @@
     if (interp) html += '<div class="interp">' + escapeHtml(interp) + '</div>';
 
     if (patients.length){
-      html += '<div class="table-wrap"><table><thead><tr><th>Patient ID</th><th>Readings</th><th>Events</th><th>ERA Alerts</th><th>Peak Risk</th></tr></thead><tbody>';
+      html += '<div class="table-wrap"><table><thead><tr><th>Case ID</th><th>Readings</th><th>Events</th><th>ERA Alerts</th><th>Peak Risk</th></tr></thead><tbody>';
       patients.forEach(function(p){
         html += '<tr><td>' + escapeHtml(p.patient_id) + '</td><td>' + escapeHtml(fmtNum(p.readings)) + '</td><td>' + escapeHtml(fmtNum(p.events)) + '</td><td>' + escapeHtml(fmtNum(p.era_alerts)) + '</td><td>' + escapeHtml(String(p.peak_risk ?? '--')) + '</td></tr>';
       });

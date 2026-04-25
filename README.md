@@ -225,3 +225,91 @@ Pilot-safe framing: retrospective analysis on de-identified MIMIC data showed ER
 Decision support only. Not intended to diagnose, direct treatment, replace clinician judgment, or independently trigger escalation.
 <!-- ERA_VALIDATION_ROUTES_V3_END -->
 
+
+<!-- ERA_REAL_VALIDATION_EXPORT_ROUTES_START -->
+## Real ERA Validation Export and Run Registry
+
+The validation workflow now supports enriched retrospective exports for repeated MIMIC testing.
+
+### Enriched Export Columns
+
+- risk_score
+- era_alert
+- priority_tier
+- primary_driver
+- trend_direction
+- threshold_crossed_at
+- queue_rank
+- standard_threshold_alert
+
+### Run Registry Fields
+
+- Run ID
+- Dataset
+- Rows
+- Patients
+- Events
+- Threshold
+- Alert reduction
+- FPR
+- Patient detection
+- Median lead time
+- Date generated
+- Validation status
+
+### Routes
+
+| Route | Purpose |
+|---|---|
+| `/validation-runs` | Validation Run Registry page |
+| `/api/validation/runs` | Validation Run Registry API |
+| `/validation-evidence/runs.json` | Downloadable run registry JSON |
+| `/validation-evidence/latest-enriched.csv` | Downloadable latest enriched ERA validation CSV |
+
+### Manual MIMIC Test Command
+
+```bash
+python3 tools/generate_real_era_validation_export.py /path/to/mimic_strict_event_labeled_era_cohort.csv --threshold 6.0 --window-hours 6 --event-gap-hours 6
+Decision support only. Retrospective analysis only. Not intended to diagnose, direct treatment, replace clinician judgment, or independently trigger escalation.
+<!-- ERA_REAL_VALIDATION_EXPORT_ROUTES_END -->
+
+
+<!-- ERA_MIMIC_DUA_PUBLIC_SAFETY_V1_START -->
+## MIMIC / PhysioNet Data-Use Safety
+
+Public-facing validation evidence is limited to aggregate metrics, sanitized case examples, validation methodology, and code.
+
+### Public-Safe
+
+- Aggregate validation metrics
+- High-level threshold tables
+- Alert reduction percentage
+- False-positive rate
+- Patient detection percentage
+- Median lead-time summary
+- Pilot-safe evidence packet
+- Validation methodology
+- Sanitized Case-001 style examples
+
+### Local-Only / Not Public
+
+- Raw MIMIC CSV files
+- Row-level enriched CSV files
+- Patient-level rows
+- MIMIC patient IDs
+- Subject IDs
+- Hospital admission IDs
+- Stay IDs
+- Exact timestamps tied to cases/patients
+- Representative examples with real MIMIC IDs or exact timestamps
+
+### Safer Testing Command
+
+Use the DUA-safe wrapper for future local MIMIC testing:
+
+```bash
+tools/run_mimic_validation_dua_safe.sh ~/Desktop/mimic_strict_event_labeled_era_cohort.csv --threshold 6.0 --window-hours 6 --event-gap-hours 6
+The wrapper generates local/private outputs, sanitizes public artifacts, and keeps row-level MIMIC-derived CSV exports out of Git.
+Decision support only. Retrospective analysis only. Not intended to diagnose, direct treatment, replace clinician judgment, or independently trigger escalation.
+<!-- ERA_MIMIC_DUA_PUBLIC_SAFETY_V1_END -->
+
