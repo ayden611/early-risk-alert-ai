@@ -6539,6 +6539,44 @@ def create_app() -> Flask:
         )
     # ERA_THRESHOLD_MATRIX_ROUTES_V1_END
 
+
+    # ERA_LEAD_TIME_SENSITIVITY_ROUTES_V1_START
+    @app.get("/api/validation/lead-time-sensitivity")
+    def era_validation_lead_time_sensitivity_api():
+        import json
+        from pathlib import Path
+        from flask import jsonify
+
+        root_dir = Path(__file__).resolve().parent.parent
+        p = root_dir / "data" / "validation" / "lead_time_window_sensitivity_summary.json"
+
+        if not p.exists():
+            return jsonify({"ok": False, "error": "Lead-time sensitivity summary not found."}), 404
+
+        data = json.loads(p.read_text(encoding="utf-8"))
+        data["ok"] = True
+        return jsonify(data)
+
+    @app.get("/validation-evidence/lead-time-sensitivity.json")
+    def era_validation_lead_time_sensitivity_download_json():
+        from pathlib import Path
+        from flask import Response
+
+        root_dir = Path(__file__).resolve().parent.parent
+        p = root_dir / "data" / "validation" / "lead_time_window_sensitivity_summary.json"
+
+        if not p.exists():
+            return Response("Lead-time sensitivity summary not found.", status=404, mimetype="text/plain")
+
+        return Response(
+            p.read_text(encoding="utf-8"),
+            mimetype="application/json",
+            headers={
+                "Content-Disposition": "attachment; filename=early-risk-alert-ai-lead-time-sensitivity-summary.json"
+            }
+        )
+    # ERA_LEAD_TIME_SENSITIVITY_ROUTES_V1_END
+
     return app
 
 

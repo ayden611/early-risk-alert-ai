@@ -224,11 +224,39 @@
   ],
   "pilot_safe_claim": "Retrospective analysis on de-identified MIMIC data showed ERA can support configurable review-prioritization workflows with substantially reduced alert burden and retrospective lead-time context.",
   "notice": "Decision support only. Retrospective analysis only. Not intended to diagnose, direct treatment, replace clinician judgment, or independently trigger escalation.",
-  "updated_at_utc": "2026-04-25T17:31:38.946309+00:00",
+  "updated_at_utc": "2026-04-25T17:43:37.503756+00:00",
   "report_file": "docs/validation/lead_time_window_sensitivity_summary.md",
   "interpretation_guidance": {
     "main_question": "Does lead time remain meaningful when event-window assumptions change?",
     "hospital_review_use": "Supports discussion of whether timing behavior is robust across 3-hour, 6-hour, and 12-hour retrospective windows.",
+    "caution": "Retrospective timing behavior should not be described as prospective proof."
+  },
+  "public_story": {
+    "status": "Completed",
+    "updated_at_utc": "2026-04-25T17:43:37.503620+00:00",
+    "primary_finding": "Lead-time behavior scaled predictably across 3-hour, 6-hour, and 12-hour retrospective event windows.",
+    "stability_finding": "Alert reduction, FPR, and alerts-per-patient-day remained stable for each threshold because those values are tied to operating point behavior rather than event-window size.",
+    "t6_window_progression": {
+      "3h": {
+        "detection_pct": 9.2,
+        "median_lead_time_hours": 2.0,
+        "alert_reduction_pct": 94.3,
+        "fpr_pct": 4.2
+      },
+      "6h": {
+        "detection_pct": 15.3,
+        "median_lead_time_hours": 4.0,
+        "alert_reduction_pct": 94.3,
+        "fpr_pct": 4.2
+      },
+      "12h": {
+        "detection_pct": 22.5,
+        "median_lead_time_hours": 7.0,
+        "alert_reduction_pct": 94.3,
+        "fpr_pct": 4.2
+      }
+    },
+    "pilot_safe_interpretation": "This robustness matrix supports a controlled pilot conversation by showing that ERA\u2019s alert-burden behavior remains stable while detection and retrospective lead-time scale with the size of the pre-event review window.",
     "caution": "Retrospective timing behavior should not be described as prospective proof."
   }
 }

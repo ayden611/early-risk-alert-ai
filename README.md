@@ -347,3 +347,31 @@ Retrospective analysis on de-identified MIMIC data showed ERA can support config
 Decision support only. Retrospective analysis only. Not intended to diagnose, direct treatment, replace clinician judgment, or independently trigger escalation.
 <!-- ERA_REAL_ENGINE_PUBLIC_WORDING_V2_END -->
 
+
+<!-- ERA_LEAD_TIME_ROBUSTNESS_PROGRESS_V1_START -->
+## Lead-Time Robustness / Event-Window Sensitivity Progress
+
+Early Risk Alert AI completed a DUA-safe lead-time robustness matrix across:
+
+- 3-hour retrospective event window
+- 6-hour retrospective event window
+- 12-hour retrospective event window
+
+Each window was tested at:
+
+- t=4.0 — ICU / high-acuity
+- t=5.0 — mixed-unit balanced
+- t=6.0 — telemetry / stepdown conservative
+
+Public outputs remain aggregate-only and DUA-safe. Row-level MIMIC-derived exports remain local-only.
+
+### New Routes
+
+| Route | Purpose |
+|---|---|
+| `/api/validation/lead-time-sensitivity` | Aggregate lead-time robustness API |
+| `/validation-evidence/lead-time-sensitivity.json` | Downloadable aggregate lead-time robustness JSON |
+
+Decision support only. Retrospective analysis only. Not intended to diagnose, direct treatment, replace clinician judgment, or independently trigger escalation.
+<!-- ERA_LEAD_TIME_ROBUSTNESS_PROGRESS_V1_END -->
+

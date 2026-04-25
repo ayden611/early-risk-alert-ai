@@ -683,7 +683,7 @@
   },
   "mimic_dua_public_safety": {
     "status": "Applied",
-    "applied_at_utc": "2026-04-25T17:31:39.015274+00:00",
+    "applied_at_utc": "2026-04-25T17:43:37.679187+00:00",
     "public_policy": "Only aggregate metrics, sanitized case examples, validation methodology, and code are public-facing. Row-level MIMIC-derived exports remain local-only.",
     "removed_from_public_outputs": [
       "raw MIMIC files",
@@ -815,10 +815,10 @@
     "dua_policy": "Public outputs use aggregate metrics and sanitized Case-001 style examples only. Row-level MIMIC-derived exports remain local-only."
   },
   "lead_time_window_sensitivity": {
-    "status": "Completed",
-    "updated_at_utc": "2026-04-25T17:31:38.977671+00:00",
-    "summary_file": "local-only-not-public",
-    "report_file": "docs/validation/lead_time_window_sensitivity_summary.md",
+    "ok": true,
+    "generated_at_utc": "2026-04-25T17:29:51.257808+00:00",
+    "purpose": "DUA-safe aggregate lead-time robustness and event-window sensitivity testing.",
+    "public_policy": "Aggregate metrics only. No row-level MIMIC data, no MIMIC IDs, no exact patient-linked timestamps.",
     "windows_tested_hours": [
       3,
       6,
@@ -829,7 +829,6 @@
       5.0,
       6.0
     ],
-    "public_policy": "Aggregate metrics only; row-level MIMIC-derived data remains local-only.",
     "runs": [
       {
         "run_id": "era_mimic_20260425_173000_t4_0",
@@ -1039,6 +1038,76 @@
         "validation_status": "DUA-safe aggregate event-window sensitivity run"
       }
     ],
-    "pilot_safe_note": "Decision support only. Retrospective analysis only."
+    "pilot_safe_claim": "Retrospective analysis on de-identified MIMIC data showed ERA can support configurable review-prioritization workflows with substantially reduced alert burden and retrospective lead-time context.",
+    "notice": "Decision support only. Retrospective analysis only. Not intended to diagnose, direct treatment, replace clinician judgment, or independently trigger escalation.",
+    "updated_at_utc": "2026-04-25T17:43:37.503756+00:00",
+    "report_file": "docs/validation/lead_time_window_sensitivity_summary.md",
+    "interpretation_guidance": {
+      "main_question": "Does lead time remain meaningful when event-window assumptions change?",
+      "hospital_review_use": "Supports discussion of whether timing behavior is robust across 3-hour, 6-hour, and 12-hour retrospective windows.",
+      "caution": "Retrospective timing behavior should not be described as prospective proof."
+    },
+    "public_story": {
+      "status": "Completed",
+      "updated_at_utc": "2026-04-25T17:43:37.503620+00:00",
+      "primary_finding": "Lead-time behavior scaled predictably across 3-hour, 6-hour, and 12-hour retrospective event windows.",
+      "stability_finding": "Alert reduction, FPR, and alerts-per-patient-day remained stable for each threshold because those values are tied to operating point behavior rather than event-window size.",
+      "t6_window_progression": {
+        "3h": {
+          "detection_pct": 9.2,
+          "median_lead_time_hours": 2.0,
+          "alert_reduction_pct": 94.3,
+          "fpr_pct": 4.2
+        },
+        "6h": {
+          "detection_pct": 15.3,
+          "median_lead_time_hours": 4.0,
+          "alert_reduction_pct": 94.3,
+          "fpr_pct": 4.2
+        },
+        "12h": {
+          "detection_pct": 22.5,
+          "median_lead_time_hours": 7.0,
+          "alert_reduction_pct": 94.3,
+          "fpr_pct": 4.2
+        }
+      },
+      "pilot_safe_interpretation": "This robustness matrix supports a controlled pilot conversation by showing that ERA\u2019s alert-burden behavior remains stable while detection and retrospective lead-time scale with the size of the pre-event review window.",
+      "caution": "Retrospective timing behavior should not be described as prospective proof."
+    }
+  },
+  "lead_time_robustness_public_story_v1": {
+    "status": "Completed",
+    "updated_at_utc": "2026-04-25T17:43:37.503620+00:00",
+    "primary_finding": "Lead-time behavior scaled predictably across 3-hour, 6-hour, and 12-hour retrospective event windows.",
+    "stability_finding": "Alert reduction, FPR, and alerts-per-patient-day remained stable for each threshold because those values are tied to operating point behavior rather than event-window size.",
+    "t6_window_progression": {
+      "3h": {
+        "detection_pct": 9.2,
+        "median_lead_time_hours": 2.0,
+        "alert_reduction_pct": 94.3,
+        "fpr_pct": 4.2
+      },
+      "6h": {
+        "detection_pct": 15.3,
+        "median_lead_time_hours": 4.0,
+        "alert_reduction_pct": 94.3,
+        "fpr_pct": 4.2
+      },
+      "12h": {
+        "detection_pct": 22.5,
+        "median_lead_time_hours": 7.0,
+        "alert_reduction_pct": 94.3,
+        "fpr_pct": 4.2
+      }
+    },
+    "pilot_safe_interpretation": "This robustness matrix supports a controlled pilot conversation by showing that ERA\u2019s alert-burden behavior remains stable while detection and retrospective lead-time scale with the size of the pre-event review window.",
+    "caution": "Retrospective timing behavior should not be described as prospective proof."
+  },
+  "latest_progress_update": {
+    "status": "Lead-time robustness / event-window sensitivity completed",
+    "updated_at_utc": "2026-04-25T17:43:37.505670+00:00",
+    "summary": "DUA-safe aggregate event-window sensitivity testing completed across 3h, 6h, and 12h windows at thresholds t=4.0, t=5.0, and t=6.0.",
+    "public_takeaway": "This robustness matrix supports a controlled pilot conversation by showing that ERA\u2019s alert-burden behavior remains stable while detection and retrospective lead-time scale with the size of the pre-event review window."
   }
 }

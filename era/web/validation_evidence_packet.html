@@ -434,9 +434,187 @@
     }
     /* ERA_THRESHOLD_MATRIX_PUBLIC_STORY_V1_CSS_END */
 
+
+    /* ERA_LEAD_TIME_ROBUSTNESS_PROGRESS_V1_CSS_START */
+    .era-lead-robustness{
+      border:1px solid rgba(138,180,255,.34);
+      background:
+        radial-gradient(circle at 18% 0%, rgba(138,180,255,.16), transparent 34%),
+        linear-gradient(180deg, rgba(16,24,39,.96), rgba(8,13,23,.94));
+      border-radius:30px;
+      padding:28px;
+      margin:18px 0 24px;
+      box-shadow:0 28px 90px rgba(0,0,0,.36);
+    }
+    .era-lead-eyebrow{
+      color:#8ab4ff;
+      font-size:12px;
+      letter-spacing:.16em;
+      text-transform:uppercase;
+      font-weight:1000;
+    }
+    .era-lead-title{
+      margin:10px 0;
+      font-size:clamp(32px,5vw,58px);
+      line-height:.95;
+      letter-spacing:-.055em;
+      color:#f8fafc;
+      font-weight:1000;
+    }
+    .era-lead-sub{
+      color:#b8c5dc;
+      font-size:16px;
+      line-height:1.6;
+      max-width:1000px;
+      margin:0;
+    }
+    .era-lead-grid{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:14px;
+      margin-top:18px;
+    }
+    .era-lead-card{
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.045);
+      border-radius:22px;
+      padding:18px;
+      min-height:126px;
+    }
+    .era-lead-k{
+      color:#9fc4ff;
+      font-size:11px;
+      letter-spacing:.13em;
+      text-transform:uppercase;
+      font-weight:1000;
+    }
+    .era-lead-v{
+      font-size:34px;
+      font-weight:1000;
+      letter-spacing:-.05em;
+      margin-top:8px;
+      color:#8ff0b3;
+    }
+    .era-lead-note{
+      color:#b8c5dc;
+      font-size:12px;
+      line-height:1.45;
+      margin-top:10px;
+      font-weight:700;
+    }
+    .era-lead-table-wrap{
+      overflow-x:auto;
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:18px;
+      margin-top:18px;
+    }
+    .era-lead-table-wrap table{
+      width:100%;
+      min-width:900px;
+      border-collapse:collapse;
+    }
+    .era-lead-table-wrap th,
+    .era-lead-table-wrap td{
+      padding:12px;
+      border-bottom:1px solid rgba(255,255,255,.10);
+      text-align:left;
+    }
+    .era-lead-table-wrap th{
+      color:#dce8ff;
+      background:rgba(255,255,255,.05);
+      font-size:11px;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+    }
+    .era-lead-table-wrap td{
+      color:#b8c5dc;
+      font-size:13px;
+      font-weight:800;
+    }
+    .era-lead-pill{
+      display:inline-flex;
+      padding:6px 10px;
+      border-radius:999px;
+      background:rgba(138,180,255,.12);
+      color:#dce8ff;
+      font-weight:1000;
+      font-size:12px;
+    }
+    .era-lead-dua{
+      margin-top:16px;
+      border:1px solid rgba(255,209,102,.35);
+      background:rgba(255,209,102,.08);
+      color:#ffe5ad;
+      padding:13px 14px;
+      border-radius:16px;
+      font-weight:800;
+      line-height:1.5;
+    }
+    @media(max-width:900px){
+      .era-lead-grid{grid-template-columns:1fr}
+    }
+    /* ERA_LEAD_TIME_ROBUSTNESS_PROGRESS_V1_CSS_END */
+
 </style>
 </head>
 <body>
+
+<!-- ERA_LEAD_TIME_ROBUSTNESS_PROGRESS_V1_START -->
+<div class="wrap" style="padding-top:0;">
+  <section class="era-lead-robustness">
+    <div class="era-lead-eyebrow">Progress Update · Lead-Time Robustness</div>
+    <h1 class="era-lead-title">Lead-time robustness tested across 3h, 6h, and 12h windows</h1>
+    <p class="era-lead-sub">
+      ERA completed a DUA-safe event-window sensitivity matrix across 3-hour, 6-hour, and 12-hour retrospective windows.
+      Results remain aggregate-only and show how detection and lead time scale as the review window expands.
+    </p>
+
+    <div class="era-lead-grid">
+      <div class="era-lead-card">
+        <div class="era-lead-k">Windows tested</div>
+        <div class="era-lead-v">3 / 6 / 12h</div>
+        <div class="era-lead-note">Checks whether lead-time findings depend on the selected retrospective window.</div>
+      </div>
+      <div class="era-lead-card">
+        <div class="era-lead-k">Thresholds tested</div>
+        <div class="era-lead-v">4 / 5 / 6</div>
+        <div class="era-lead-note">High-acuity, balanced, and conservative operating points.</div>
+      </div>
+      <div class="era-lead-card">
+        <div class="era-lead-k">Public output</div>
+        <div class="era-lead-v">DUA-safe</div>
+        <div class="era-lead-note">Aggregate metrics only. No row-level MIMIC-derived files.</div>
+      </div>
+    </div>
+
+    <div class="era-lead-table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Window</th>
+            <th>Threshold</th>
+            <th>Setting</th>
+            <th>Alert reduction</th>
+            <th>FPR</th>
+            <th>Detection</th>
+            <th>Median lead time</th>
+            <th>ERA alerts / patient-day</th>
+          </tr>
+        </thead>
+        <tbody id="eraLeadRobustnessRows">
+          <tr><td>Loading...</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="era-lead-dua">
+      Public evidence is DUA-safe: aggregate event-window metrics only. Row-level MIMIC-derived exports, real identifiers,
+      and exact patient-linked timestamps remain local-only.
+    </div>
+  </section>
+</div>
+<!-- ERA_LEAD_TIME_ROBUSTNESS_PROGRESS_V1_END -->
+
 
 <!-- ERA_THRESHOLD_MATRIX_PUBLIC_STORY_V1_START -->
 <div class="wrap" style="padding-top:0;">
@@ -951,6 +1129,43 @@
     .catch(err => console.error('Threshold matrix story failed to load', err));
 })();
 /* ERA_THRESHOLD_MATRIX_PUBLIC_STORY_V1_SCRIPT_END */
+</script>
+
+
+<script>
+/* ERA_LEAD_TIME_ROBUSTNESS_PROGRESS_V1_SCRIPT_START */
+(function(){
+  function pct(v){ return (v === null || v === undefined || v === '') ? '—' : String(v).replace('.0','') + '%'; }
+  function esc(v){ return String(v ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+
+  fetch('/api/validation/lead-time-sensitivity', {cache:'no-store'})
+    .then(r => r.json())
+    .then(data => {
+      const rows = data.runs || [];
+      const tbody = document.getElementById('eraLeadRobustnessRows');
+      if(!tbody) return;
+
+      tbody.innerHTML = rows
+        .sort((a,b) => (a.event_window_hours - b.event_window_hours) || (a.threshold - b.threshold))
+        .map(r => {
+          const detection = r.event_cluster_detection_pct ?? r.patient_detection_pct;
+          return `
+            <tr>
+              <td><span class="era-lead-pill">${esc(r.event_window_hours)}h</span></td>
+              <td>t=${esc(r.threshold)}</td>
+              <td>${esc(r.suggested_setting)}</td>
+              <td>${pct(r.alert_reduction_pct)}</td>
+              <td>${pct(r.era_fpr_pct)}</td>
+              <td>${pct(detection)}</td>
+              <td>${esc(r.median_lead_time_hours)} hrs</td>
+              <td>${esc(r.era_alerts_per_patient_day)}</td>
+            </tr>
+          `;
+        }).join('');
+    })
+    .catch(err => console.error('Lead-time robustness section failed to load', err));
+})();
+/* ERA_LEAD_TIME_ROBUSTNESS_PROGRESS_V1_SCRIPT_END */
 </script>
 
 </body>
