@@ -2,15 +2,26 @@
 
 ## Core Demo Routes
 
-- `/command-center` — live command-center demo interface.
-- `/validation-intelligence` — hospital-facing validation showcase.
+- `/command-center` — live command-center demo with validation intelligence and patient-card explainability context.
+- `/validation-intelligence` — hospital-facing validation showcase with simplified 81% alert-reduction hero section.
 - `/validation-evidence` — printable Pilot Evidence Packet.
 - `/validation-evidence/download.md` — downloadable Markdown evidence packet.
 - `/validation-evidence/download.json` — downloadable validation JSON.
-- `/validation-evidence/examples.csv` — representative detected review examples.
+- `/validation-evidence/examples.csv` — representative detected review examples CSV.
 - `/api/validation/evidence` — JSON evidence API.
 - `/api/validation/milestone` — validation milestone API.
-- `/data-ingest` — retrospective de-identified CSV validation/upload workflow.
+- `/data-ingest` — de-identified retrospective CSV upload and validation workflow.
+
+## Current Validation Headline
+
+Retrospective analysis on de-identified MIMIC data showed ERA can reduce alert burden while maintaining configurable patient-level detection in a 6-hour pre-event window.
+
+## Current Hero Metrics
+
+- Alert reduction: 81%
+- Median first-flag timing among detected event clusters: approximately 4.0 hours
+- ERA false-positive rate: 4.5%
+- Patient-level detection at t=6.0: 36.6%
 
 ## Pilot-Safe Positioning
 

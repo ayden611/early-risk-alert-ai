@@ -101,10 +101,238 @@
     @media(max-width:900px){.era-simplified-grid{grid-template-columns:1fr}}
     /* ERA_VALIDATION_SIMPLIFY_V2_END */
 
+
+    /* ERA_VALIDATION_SHOWCASE_CLEANUP_V3_CSS_START */
+    .era-v3-showcase{
+      border:1px solid rgba(143,240,179,.32);
+      background:
+        radial-gradient(circle at 20% 0%, rgba(143,240,179,.13), transparent 32%),
+        linear-gradient(180deg, rgba(16,24,39,.94), rgba(8,13,23,.92));
+      border-radius:30px;
+      padding:26px;
+      margin:18px 0 22px;
+      box-shadow:0 28px 90px rgba(0,0,0,.34);
+    }
+    .era-v3-eyebrow{
+      color:#8ff0b3;
+      font-size:12px;
+      letter-spacing:.16em;
+      text-transform:uppercase;
+      font-weight:1000;
+    }
+    .era-v3-title{
+      font-size:clamp(34px,5vw,64px);
+      line-height:.92;
+      letter-spacing:-.06em;
+      margin:10px 0;
+      color:#f8fafc;
+      font-weight:1000;
+    }
+    .era-v3-sub{
+      color:#b8c5dc;
+      font-size:16px;
+      line-height:1.6;
+      max-width:980px;
+      margin:0;
+    }
+    .era-v3-hero-grid{
+      display:grid;
+      grid-template-columns:1.35fr 1fr 1fr 1fr;
+      gap:14px;
+      margin-top:18px;
+    }
+    .era-v3-metric{
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.045);
+      border-radius:22px;
+      padding:18px;
+      min-height:132px;
+    }
+    .era-v3-metric.hero{
+      background:linear-gradient(180deg, rgba(143,240,179,.18), rgba(255,255,255,.04));
+      border-color:rgba(143,240,179,.38);
+    }
+    .era-v3-k{
+      color:#9fc4ff;
+      font-size:11px;
+      letter-spacing:.13em;
+      text-transform:uppercase;
+      font-weight:1000;
+    }
+    .era-v3-v{
+      font-size:34px;
+      font-weight:1000;
+      letter-spacing:-.05em;
+      margin-top:8px;
+      color:#8ff0b3;
+    }
+    .era-v3-metric.hero .era-v3-v{
+      font-size:64px;
+      line-height:.9;
+    }
+    .era-v3-note{
+      color:#b8c5dc;
+      font-size:12px;
+      line-height:1.45;
+      margin-top:10px;
+      font-weight:700;
+    }
+    .era-v3-two{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:16px;
+      margin-top:16px;
+    }
+    .era-v3-panel{
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.035);
+      border-radius:22px;
+      padding:18px;
+    }
+    .era-v3-panel h3{
+      margin:0 0 10px;
+      font-size:20px;
+      color:#f8fafc;
+    }
+    .era-v3-panel p{
+      color:#b8c5dc;
+      line-height:1.55;
+      margin:0;
+    }
+    .era-v3-table-wrap{
+      overflow-x:auto;
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:18px;
+      margin-top:12px;
+    }
+    .era-v3-table-wrap table{
+      min-width:760px;
+    }
+    .era-v3-driver-collapsed table{display:none!important}
+    .era-v3-toggle{
+      margin-top:10px;
+      display:inline-flex;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.05);
+      color:#f8fafc;
+      border-radius:12px;
+      padding:9px 12px;
+      font-weight:900;
+      cursor:pointer;
+    }
+    .era-v3-hidden-duplicate{
+      display:none!important;
+    }
+    @media(max-width:900px){
+      .era-v3-hero-grid,.era-v3-two{grid-template-columns:1fr}
+      .era-v3-metric.hero .era-v3-v{font-size:48px}
+    }
+    /* ERA_VALIDATION_SHOWCASE_CLEANUP_V3_CSS_END */
+
 </style>
 </head>
 <body>
   <div class="wrap">
+
+<!-- ERA_VALIDATION_SHOWCASE_CLEANUP_V3_START -->
+<div class="wrap" style="padding-top:0;">
+  <section class="era-v3-showcase">
+    <div class="era-v3-eyebrow">Validation Intelligence · Hospital-Facing Summary</div>
+    <h1 class="era-v3-title">81% fewer unnecessary alerts</h1>
+    <p class="era-v3-sub">
+      Retrospective analysis on de-identified MIMIC data showed ERA can reduce alert burden while maintaining
+      configurable patient-level detection in a 6-hour pre-event window. This page is intended for pilot-readiness
+      review, not prospective clinical-performance claims.
+    </p>
+
+    <div class="era-v3-hero-grid">
+      <div class="era-v3-metric hero">
+        <div class="era-v3-k">Alert reduction</div>
+        <div class="era-v3-v" id="eraV3AlertReduction">81%</div>
+        <div class="era-v3-note">Conservative t=6.0 review queue versus standard threshold-only alerting.</div>
+      </div>
+      <div class="era-v3-metric">
+        <div class="era-v3-k">Median lead time</div>
+        <div class="era-v3-v" id="eraV3LeadTime">4 hrs</div>
+        <div class="era-v3-note">Among detected event clusters inside the 6-hour pre-event window.</div>
+      </div>
+      <div class="era-v3-metric">
+        <div class="era-v3-k">ERA FPR</div>
+        <div class="era-v3-v" id="eraV3Fpr">4.5%</div>
+        <div class="era-v3-note">Compared with standard threshold-only false-positive rate.</div>
+      </div>
+      <div class="era-v3-metric">
+        <div class="era-v3-k">Patient detection</div>
+        <div class="era-v3-v" id="eraV3Detection" style="color:#8ab4ff">36.6%</div>
+        <div class="era-v3-note">Patient-level detection at t=6.0 in the 6-hour event window.</div>
+      </div>
+    </div>
+
+    <div class="era-v3-two">
+      <div class="era-v3-panel">
+        <h3>Plain-language lead-time framing</h3>
+        <p id="eraV3LeadFraming">
+          Among detected event clusters, the median time from first ERA flag to documented event timestamp was approximately 4.0 hours within the 6-hour pre-event window.
+        </p>
+      </div>
+      <div class="era-v3-panel">
+        <h3>Operational alert burden</h3>
+        <p id="eraV3AlertBurden">
+          ERA displayed approximately 0.65 alerts per patient-day versus approximately 3.77 alerts per patient-day under standard threshold-only alerting.
+        </p>
+      </div>
+    </div>
+
+    <div class="era-v3-panel" style="margin-top:16px;">
+      <h3>Recommended operating points</h3>
+      <div class="era-v3-table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Threshold</th>
+              <th>Suggested setting</th>
+              <th>Framing</th>
+              <th>Detection</th>
+              <th>FPR</th>
+              <th>Alert reduction</th>
+            </tr>
+          </thead>
+          <tbody id="eraV3ThresholdRows">
+            <tr><td>Loading...</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="era-v3-panel" style="margin-top:16px;">
+      <h3>Representative review examples</h3>
+      <p>Queue-ranked retrospective examples showing lead time, priority tier, primary driver, and score together.</p>
+      <div class="era-v3-table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th>Patient ID</th>
+              <th>Lead time</th>
+              <th>Tier</th>
+              <th>Primary driver</th>
+              <th>Score</th>
+            </tr>
+          </thead>
+          <tbody id="eraV3ExampleRows">
+            <tr><td>Loading...</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="notice" style="margin-top:16px;">
+      Decision support only. Not intended to diagnose, direct treatment, replace clinician judgment, or independently trigger escalation.
+    </div>
+  </section>
+</div>
+<!-- ERA_VALIDATION_SHOWCASE_CLEANUP_V3_END -->
+
     <div class="nav">
       <div class="brand">EARLY RISK ALERT AI</div>
       <div class="links">
@@ -634,6 +862,183 @@ fetch('/api/validation/milestone', {cache:'no-store'})
   });
 })();
 /* ERA_VALIDATION_SIMPLIFY_SCRIPT_V2_END */
+</script>
+
+
+<script>
+/* ERA_VALIDATION_SHOWCASE_CLEANUP_V3_SCRIPT_START */
+(function(){
+  if (window.__eraValidationShowcaseCleanupV3) return;
+  window.__eraValidationShowcaseCleanupV3 = true;
+
+  function pct(v){
+    if (v === null || v === undefined || v === '') return '—';
+    return String(v).replace('.0','') + '%';
+  }
+
+  function esc(v){
+    return String(v === null || v === undefined ? '' : v)
+      .replace(/&/g,'&amp;')
+      .replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;');
+  }
+
+  function roundedHours(v){
+    var n = Number(v);
+    if (!Number.isFinite(n)) return '—';
+    var r = Math.round(n * 10) / 10;
+    return (r % 1 === 0 ? String(Math.round(r)) : String(r)) + ' hrs';
+  }
+
+  function cleanDriver(v){
+    if (!v) return 'Review context';
+    return String(v).toLowerCase() === 'no dominant driver' ? 'Composite multi-signal pattern' : v;
+  }
+
+  function replaceTextNodes(root){
+    var walker = document.createTreeWalker(root || document.body, NodeFilter.SHOW_TEXT);
+    var nodes = [];
+    while(walker.nextNode()) nodes.push(walker.currentNode);
+
+    nodes.forEach(function(node){
+      var t = node.nodeValue;
+      if (!t) return;
+      t = t.replace(/no dominant driver/gi, 'Composite multi-signal pattern');
+      t = t.replace(/(\d+\.\d{2,})\s*hrs/g, function(_, n){
+        return roundedHours(n);
+      });
+      node.nodeValue = t;
+    });
+  }
+
+  function collapseDriverBreakdown(){
+    var headings = Array.from(document.querySelectorAll('h2,h3'));
+    var matches = headings.filter(function(h){
+      return h.textContent.trim().toLowerCase().includes('top contributing drivers');
+    });
+
+    matches.forEach(function(h){
+      var card = h.closest('.card') || h.closest('.era-v3-panel') || h.parentElement;
+      if (!card || card.dataset.eraV3DriverCollapse === '1') return;
+      card.dataset.eraV3DriverCollapse = '1';
+      card.classList.add('era-v3-driver-collapsed');
+
+      var note = document.createElement('p');
+      note.className = 'sub';
+      note.style.fontSize = '13px';
+      note.textContent = 'Detailed driver counts are available for informatics review, but the headline story is alert reduction, lead time, false-positive control, and representative examples.';
+      h.insertAdjacentElement('afterend', note);
+
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'era-v3-toggle';
+      btn.textContent = 'Show detailed driver counts';
+      btn.onclick = function(){
+        card.classList.toggle('era-v3-driver-collapsed');
+        btn.textContent = card.classList.contains('era-v3-driver-collapsed') ? 'Show detailed driver counts' : 'Hide detailed driver counts';
+      };
+      note.insertAdjacentElement('afterend', btn);
+    });
+  }
+
+  function hideDuplicateThresholdSections(){
+    var headings = Array.from(document.querySelectorAll('h2,h3'));
+    var matches = headings.filter(function(h){
+      var txt = h.textContent.trim().toLowerCase();
+      return txt.includes('threshold profiles') || txt.includes('recommended threshold framing') || txt.includes('unit-specific threshold');
+    });
+
+    matches.forEach(function(h){
+      var card = h.closest('.card') || h.closest('.section') || h.parentElement;
+      if (card && !card.closest('.era-v3-showcase')) {
+        card.classList.add('era-v3-hidden-duplicate');
+      }
+    });
+  }
+
+  function hydrateShowcase(){
+    fetch('/api/validation/milestone', {cache:'no-store'})
+      .then(function(r){ return r.json(); })
+      .then(function(data){
+        var d = data.default_threshold || {};
+        var metrics = data.next_validation_metrics || {};
+        var comparison = data.operational_alert_burden_comparison || {};
+        var profiles = data.threshold_profiles || [];
+        var lead = data.computed_validation_metrics && data.computed_validation_metrics.lead_time_before_event
+          ? data.computed_validation_metrics.lead_time_before_event
+          : {};
+        var examples = (lead.detected_examples || []).slice(0,8).sort(function(a,b){
+          return Number(b.score || 0) - Number(a.score || 0);
+        });
+
+        var ar = document.getElementById('eraV3AlertReduction');
+        var lt = document.getElementById('eraV3LeadTime');
+        var fpr = document.getElementById('eraV3Fpr');
+        var det = document.getElementById('eraV3Detection');
+        var leadText = document.getElementById('eraV3LeadFraming');
+        var burden = document.getElementById('eraV3AlertBurden');
+
+        if (ar) ar.textContent = pct(d.alert_reduction_pct);
+        if (lt) lt.textContent = roundedHours(metrics.median_lead_time_before_event_hours);
+        if (fpr) fpr.textContent = pct(d.era_fpr_pct);
+        if (det) det.textContent = pct(d.era_patient_sensitivity_pct);
+
+        if (leadText) {
+          leadText.textContent = 'Among detected event clusters, the median time from first ERA flag to documented event timestamp was approximately ' + roundedHours(metrics.median_lead_time_before_event_hours) + ' within the 6-hour pre-event window.';
+        }
+
+        if (burden && comparison.pilot_safe_summary) {
+          burden.textContent = comparison.pilot_safe_summary;
+        }
+
+        var thresholdRows = document.getElementById('eraV3ThresholdRows');
+        if (thresholdRows) {
+          thresholdRows.innerHTML = profiles.map(function(p){
+            return '<tr>' +
+              '<td><span class="pill">t=' + esc(p.threshold) + '</span></td>' +
+              '<td>' + esc(p.unit_profile || 'Configurable') + '</td>' +
+              '<td>' + esc(p.framing || 'Configurable operating point') + '</td>' +
+              '<td>' + pct(p.era_patient_sensitivity_pct) + '</td>' +
+              '<td>' + pct(p.era_fpr_pct) + '</td>' +
+              '<td>' + pct(p.alert_reduction_pct) + '</td>' +
+            '</tr>';
+          }).join('');
+        }
+
+        var exampleRows = document.getElementById('eraV3ExampleRows');
+        if (exampleRows) {
+          exampleRows.innerHTML = examples.length ? examples.map(function(x, idx){
+            return '<tr>' +
+              '<td><strong>#' + (idx + 1) + '</strong></td>' +
+              '<td>' + esc(x.patient_id) + '</td>' +
+              '<td>' + roundedHours(x.lead_hours) + '</td>' +
+              '<td>' + esc(x.priority_tier) + '</td>' +
+              '<td>' + esc(cleanDriver(x.primary_driver)) + '</td>' +
+              '<td>' + esc(x.score) + '</td>' +
+            '</tr>';
+          }).join('') : '<tr><td colspan="6">No representative examples available.</td></tr>';
+        }
+
+        setTimeout(cleanupPage, 200);
+      })
+      .catch(function(err){
+        console.error('Validation Showcase Cleanup V3 failed:', err);
+      });
+  }
+
+  function cleanupPage(){
+    replaceTextNodes(document.body);
+    collapseDriverBreakdown();
+    hideDuplicateThresholdSections();
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    hydrateShowcase();
+    setTimeout(cleanupPage, 800);
+    setTimeout(cleanupPage, 1800);
+  });
+})();
+/* ERA_VALIDATION_SHOWCASE_CLEANUP_V3_SCRIPT_END */
 </script>
 
 </body>

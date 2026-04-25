@@ -419,5 +419,22 @@
       "/validation-intelligence",
       "/command-center"
     ]
+  },
+  "validation_showcase_cleanup_v3": {
+    "status": "Implemented",
+    "implemented_at_utc": "2026-04-25T12:35:22.638015+00:00",
+    "purpose": "Make Validation Intelligence and Pilot Evidence pages read as polished hospital-facing validation assets instead of internal notes.",
+    "visible_improvements": [
+      "81% alert reduction becomes dominant hero metric",
+      "Lead-time language tightened",
+      "Duplicate threshold tables reduced",
+      "Driver breakdown collapsed behind review toggle",
+      "Composite multi-signal pattern explanation retained",
+      "Representative examples lead times rounded",
+      "Evidence packet print/export polish improved",
+      "Download JSON and representative examples CSV preserved"
+    ],
+    "lead_time_safe_framing": "Among detected event clusters, the median time from first ERA flag to documented event timestamp was approximately 4.0 hours within the 6-hour pre-event window.",
+    "pilot_safe_headline": "Retrospective analysis on de-identified MIMIC data showed ERA can reduce alert burden while maintaining configurable patient-level detection in a 6-hour pre-event window."
   }
 }

@@ -6433,7 +6433,7 @@ def create_app() -> Flask:
             writer.writerow({
                 "rank": idx,
                 "patient_id": ex.get("patient_id", ""),
-                "lead_hours": ex.get("lead_hours", ""),
+                "lead_hours": round(float(ex.get("lead_hours") or 0), 1) if ex.get("lead_hours") not in (None, "") else "",
                 "priority_tier": ex.get("priority_tier", ""),
                 "primary_driver": driver,
                 "score": ex.get("score", ""),

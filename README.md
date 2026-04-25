@@ -189,3 +189,39 @@ Pilot-safe framing: retrospective analysis on de-identified MIMIC data showed ER
 Decision support only. Not intended to diagnose, direct treatment, replace clinician judgment, or independently trigger escalation.
 <!-- ERA_VALIDATION_ROUTES_V2_END -->
 
+
+<!-- ERA_VALIDATION_ROUTES_V3_START -->
+## Validation Intelligence, Evidence Export, and Pilot Routes
+
+Early Risk Alert AI includes a pilot-safe retrospective validation and evidence workflow.
+
+### Key Validation Results
+
+- Rows analyzed: 456,453
+- Patients: 1,705
+- Clinical events: 21,396
+- Conservative threshold: t=6.0
+- Alert reduction: 81%
+- ERA false-positive rate: 4.5%
+- Patient-level detection: 36.6%
+- Median first-flag timing among detected event clusters: approximately 4.0 hours
+
+### Routes
+
+| Route | Purpose |
+|---|---|
+| `/command-center` | Live command-center demo with validation intelligence and patient-card explainability context |
+| `/validation-intelligence` | Hospital-facing validation showcase |
+| `/validation-evidence` | Printable Pilot Evidence Packet |
+| `/validation-evidence/download.md` | Downloadable Markdown evidence packet |
+| `/validation-evidence/download.json` | Downloadable validation JSON |
+| `/validation-evidence/examples.csv` | Representative detected review examples CSV |
+| `/api/validation/evidence` | JSON evidence API |
+| `/api/validation/milestone` | Validation milestone API |
+| `/data-ingest` | De-identified retrospective CSV upload and validation workflow |
+
+Pilot-safe framing: retrospective analysis on de-identified MIMIC data showed ERA can reduce alert burden while maintaining configurable patient-level detection in a 6-hour pre-event window.
+
+Decision support only. Not intended to diagnose, direct treatment, replace clinician judgment, or independently trigger escalation.
+<!-- ERA_VALIDATION_ROUTES_V3_END -->
+

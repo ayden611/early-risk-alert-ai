@@ -116,6 +116,39 @@
     }
     /* ERA_EVIDENCE_PACKET_POLISH_V2_END */
 
+  
+    /* ERA_EVIDENCE_PACKET_FINAL_POLISH_V3_START */
+    .evidence-hero-focus{
+      border:1px solid rgba(143,240,179,.34);
+      background:linear-gradient(180deg,rgba(143,240,179,.12),rgba(255,255,255,.035));
+      border-radius:24px;
+      padding:18px;
+      margin-top:16px;
+    }
+    .evidence-hero-focus h2{
+      font-size:26px;
+      margin:0 0 8px;
+    }
+    .evidence-hero-focus p{
+      margin:0;
+    }
+    .evidence-table-note{
+      color:#a8b3c7;
+      font-size:13px;
+      margin-top:8px;
+      line-height:1.5;
+    }
+    @media print{
+      .evidence-hero-focus{
+        border:2px solid #111;
+        background:white;
+      }
+      .actions{display:none!important}
+      body{font-size:12px}
+      .wrap{padding:10px}
+    }
+    /* ERA_EVIDENCE_PACKET_FINAL_POLISH_V3_END */
+
   </style>
 </head>
 <body>
@@ -135,6 +168,22 @@
         <a class="btn" href="/command-center">Command Center</a>
       </div>
     </div>
+
+    
+    <!-- ERA_EVIDENCE_PACKET_FINAL_POLISH_V3_START -->
+    <section class="evidence-hero-focus">
+      <h2>Primary Evidence Story</h2>
+      <p>
+        ERA is framed as a selective clinical review-prioritization layer: 81% alert reduction,
+        4-hour median first-flag timing among detected event clusters, 4.5% ERA FPR,
+        and 36.6% patient-level detection at conservative threshold t=6.0.
+      </p>
+      <div class="evidence-table-note">
+        Lead time is retrospective and applies to detected event clusters inside the configured 6-hour pre-event window.
+      </div>
+    </section>
+    <!-- ERA_EVIDENCE_PACKET_FINAL_POLISH_V3_END -->
+
 
     <section class="hero">
       <h2>MIMIC Retrospective Validation Milestone</h2>
@@ -262,7 +311,7 @@
   function fmt(v){ if(v===null||v===undefined||v==='') return '—'; return Number(v).toLocaleString(); }
   function esc(v){ return String(v ?? '').replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
   function lead(v){ const n=Number(v); if(!Number.isFinite(n)) return '—'; return (Math.round(n*10)/10).toString() + ' hrs'; }
-  function driver(v){ if(!v) return 'Review context'; return String(v).toLowerCase()==='no dominant driver' ? 'Composite multi-signal pattern' : v; }
+  function driver(v){ if(!v) return 'Review context'; return String(v).toLowerCase()==='Composite multi-signal pattern' ? 'Composite multi-signal pattern' : v; }
 
   fetch('/api/validation/evidence', {cache:'no-store'})
     .then(r => r.json())
