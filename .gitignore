@@ -12,3 +12,8 @@ data/retro/
 mimic_event_maps/
 *.mimic.csv
 *mimic*row*.csv
+
+# ERA local-only restricted datasets / validation working files
+data/eicu/
+*.crdownload
+*.csv.gz
