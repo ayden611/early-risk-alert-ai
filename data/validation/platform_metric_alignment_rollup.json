@@ -1,0 +1,41 @@
+{
+  "checkpoint": "platform_metric_alignment_rollup",
+  "purpose": "Canonical public-facing aggregate metric alignment across MIMIC-IV and eICU, while keeping event-definition differences clear.",
+  "mimic_iv_strict_clinical_event_t6_range": {
+    "dataset": "MIMIC-IV v3.1",
+    "event_definition": "Strict clinical-event labels / event clusters",
+    "cohorts": "Full cohort + subcohorts B/C",
+    "alert_reduction_percent_range": "94.0%-94.9%",
+    "fpr_percent_range": "3.7%-4.4%",
+    "detection_percent_range": "14.1%-16.0%",
+    "median_lead_time_hours": "4.0 hrs"
+  },
+  "eicu_harmonized_clinical_event_full_t6": {
+    "dataset": "eICU v2.0",
+    "event_definition": "Harmonized clinical-event labeling pass",
+    "cohort": "Full harmonized eICU cohort",
+    "alert_reduction_percent": "94.25%",
+    "fpr_percent": "0.98%",
+    "detection_percent": "24.66%",
+    "median_lead_time_hours": "4.83 hrs"
+  },
+  "eicu_harmonized_clinical_event_subcohorts_bc_t6_range": {
+    "dataset": "eICU v2.0",
+    "event_definition": "Harmonized clinical-event labeling pass",
+    "cohorts": "Subcohorts B/C",
+    "alert_reduction_percent_range": "95.26%-95.64%",
+    "fpr_percent_range": "1.78%-2.02%",
+    "detection_percent_range": "64.03%-64.49%",
+    "median_lead_time_hours_range": "3.13-3.69 hrs"
+  },
+  "eicu_outcome_proxy_t6_separate_track": {
+    "dataset": "eICU v2.0",
+    "event_definition": "Outcome-proxy check using mortality/discharge-derived context",
+    "alert_reduction_percent": "96.8%",
+    "fpr_percent": "1.8%",
+    "detection_percent": "66.6%",
+    "median_lead_time_hours": "3.41 hrs",
+    "note": "Separate evidence track; do not merge with harmonized clinical-event pass."
+  },
+  "public_guardrail": "Retrospective aggregate evidence only. MIMIC-IV and eICU event definitions must be labeled. Do not claim prospective validation, diagnosis, treatment direction, clinician replacement, or independent escalation."
+}

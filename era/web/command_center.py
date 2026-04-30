@@ -624,8 +624,18 @@ COMMAND_CENTER_HTML = r"""
 <!-- ERA_COMMAND_QUEUE_CONSISTENCY_HEAD_START -->
 <link rel="stylesheet" href="/era-static/era_command_queue_consistency.css?v=queue-consistency1">
 <!-- ERA_COMMAND_QUEUE_CONSISTENCY_HEAD_END -->
+<!-- ERA_VALIDATION_ALIGNMENT_V2_START -->
+<link rel="stylesheet" href="/static/era_validation_alignment_v2.css?v=alignment2">
+<script src="/static/era_validation_alignment_v2.js?v=alignment2"></script>
+<!-- ERA_VALIDATION_ALIGNMENT_V2_END -->
 </head>
 <body>
+<!-- ERA_LIVE_UNIT_ROTATION_V2_START -->
+<link rel="stylesheet" href="/static/era_live_unit_rotation_v2.css?v=liveunit2">
+<section id="era-live-unit-rotation-root"></section>
+<script src="/static/era_live_unit_rotation_v2.js?v=liveunit2"></script>
+<!-- ERA_LIVE_UNIT_ROTATION_V2_END -->
+
   <div class="topbar">
     <div class="topbar-inner">
       <div>

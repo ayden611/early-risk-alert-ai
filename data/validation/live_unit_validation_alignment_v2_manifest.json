@@ -1,0 +1,20 @@
+{
+  "timestamp_utc": "2026-04-30T18:25:06.685576+00:00",
+  "command_center_target": "era/web/command_center.py",
+  "patched_files": [
+    "era/web/command_center.py",
+    "era/__init__.py",
+    "era/web/command_center.py",
+    "era/web/data_ingest.html",
+    "era/web/model_card.html",
+    "era/web/pilot_success_guide.html",
+    "era/web/validation_evidence.html",
+    "era/web/validation_evidence_packet.html",
+    "era/web/validation_intelligence.html",
+    "era/web/validation_runs.html"
+  ],
+  "purpose": "Rotate old live unit visible cards, remove fixed ICU-12 99% risk display, and align validation pages with canonical MIMIC/eICU evidence tracks.",
+  "command_center_score_rule": "Use Review Score 0-10 only for patient/unit demo cards.",
+  "validation_rule": "Keep aggregate validation percentages separate from case-level review scores.",
+  "raw_data_policy": "No raw row-level files included."
+}

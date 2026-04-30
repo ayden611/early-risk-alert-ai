@@ -78,6 +78,10 @@ pre{font-size:10px;color:#9adfff;margin-top:10px;overflow-x:auto;background:rgba
 <!-- ERA_COMMAND_QUEUE_CONSISTENCY_HEAD_START -->
 <link rel="stylesheet" href="/era-static/era_command_queue_consistency.css?v=queue-consistency1">
 <!-- ERA_COMMAND_QUEUE_CONSISTENCY_HEAD_END -->
+<!-- ERA_VALIDATION_ALIGNMENT_V2_START -->
+<link rel="stylesheet" href="/static/era_validation_alignment_v2.css?v=alignment2">
+<script src="/static/era_validation_alignment_v2.js?v=alignment2"></script>
+<!-- ERA_VALIDATION_ALIGNMENT_V2_END -->
 </head>
 <body>
 <div class="container">
