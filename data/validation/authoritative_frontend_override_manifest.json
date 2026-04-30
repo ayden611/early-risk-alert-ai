@@ -1,0 +1,15 @@
+{
+  "ok": true,
+  "generated_at_utc": "2026-04-30T12:38:38.350420+00:00",
+  "stamp": "ERA_FORCE_PUBLIC_PAGE_OVERRIDE_V1",
+  "purpose": "Force public routes to serve corrected frontend files before older route handlers.",
+  "routes_forced": {
+    "/validation-intelligence": "validation_intelligence_forced.html",
+    "/validation-evidence": "validation_evidence_forced.html",
+    "/validation-runs": "validation_runs_forced.html",
+    "/command-center": "command_center_forced.html",
+    "/model-card": "model_card_forced.html",
+    "/pilot-success-guide": "pilot_success_guide_forced.html"
+  },
+  "claim_boundary": "Cross-dataset retrospective robustness evidence across de-identified ICU datasets; decision support only."
+}

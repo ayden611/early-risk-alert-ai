@@ -7061,6 +7061,28 @@ def create_app() -> Flask:
         return jsonify(data)
     # ERA_FINAL_FRONTEND_EVIDENCE_POLISH_ROUTES_V1_END
 
+
+    # ERA_FORCE_PUBLIC_PAGE_OVERRIDE_V1_START
+    @app.before_request
+    def era_force_public_page_override_v1():
+        from pathlib import Path
+        from flask import request, send_from_directory
+
+        forced_pages = {
+            "/validation-intelligence": "validation_intelligence_forced.html",
+            "/validation-evidence": "validation_evidence_forced.html",
+            "/validation-runs": "validation_runs_forced.html",
+            "/command-center": "command_center_forced.html",
+            "/model-card": "model_card_forced.html",
+            "/pilot-success-guide": "pilot_success_guide_forced.html",
+        }
+
+        path = request.path.rstrip("/") or "/"
+        if path in forced_pages:
+            web_dir = Path(__file__).resolve().parent / "web"
+            return send_from_directory(str(web_dir), forced_pages[path])
+    # ERA_FORCE_PUBLIC_PAGE_OVERRIDE_V1_END
+
     return app
 
 
