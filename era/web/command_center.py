@@ -3768,6 +3768,10 @@ function renderRouteStatusModule(){
 <link rel="stylesheet" href="/static/era_command_center_tool_mode.css?v=toolmode1">
 <script src="/static/era_command_center_tool_mode.js?v=toolmode1"></script>
 <!-- ERA_COMMAND_CENTER_TOOL_MODE_END -->
+<!-- ERA_COMMAND_CENTER_VISIBILITY_RESCUE_START -->
+<link rel="stylesheet" href="/static/era_command_center_visibility_rescue.css?v=visibility3">
+<script src="/static/era_command_center_visibility_rescue.js?v=visibility3"></script>
+<!-- ERA_COMMAND_CENTER_VISIBILITY_RESCUE_END -->
 </body>
 </html>
 """

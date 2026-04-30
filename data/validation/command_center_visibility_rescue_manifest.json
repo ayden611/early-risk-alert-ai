@@ -1,0 +1,20 @@
+{
+  "timestamp_utc": "2026-04-30T19:06:42.202014+00:00",
+  "command_center_file": "era/web/command_center.py",
+  "changed_files": [
+    "era/web/command_center.py"
+  ],
+  "static_files": [
+    "era/static/era_command_center_visibility_rescue.css",
+    "era/static/era_command_center_visibility_rescue.js"
+  ],
+  "purpose": [
+    "Make compact review workboard stop consuming the whole Command Center view.",
+    "Add controls: Compact Queue, Expand Queue, Minimize Queue, Go to Full Command Center.",
+    "Add marker showing full original Command Center continues below.",
+    "Continue normalizing legacy ICU-12 / P101 99% risk displays into rotating 0-10 Review Score context.",
+    "Keep original Command Center, pilot packet, governance, validation, and operations sections visible."
+  ],
+  "guardrail": "No diagnosis, treatment direction, clinician replacement, or independent escalation.",
+  "raw_data_policy": "No raw or restricted row-level files included."
+}
