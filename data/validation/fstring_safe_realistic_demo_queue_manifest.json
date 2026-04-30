@@ -1,0 +1,25 @@
+{
+  "timestamp_utc": "2026-04-30T16:42:26.978986+00:00",
+  "target_file": "era/web/command_center.py",
+  "css_file": "era/static/era_realistic_demo_queue.css",
+  "js_file": "era/static/era_realistic_demo_queue.js",
+  "tag_actions": {
+    "removed_<!-- ERA_TOOL_COMMAND_CENTER_STYLE_START -->": true,
+    "removed_<!-- ERA_TOOL_COMMAND_CENTER_SCRIPT_START -->": true,
+    "head_tags": "inserted",
+    "body_tags": "inserted"
+  },
+  "static_route": {
+    "status": "patched",
+    "file": "era/__init__.py"
+  },
+  "purpose": "F-string-safe realistic Command Center demo queue using external CSS/JS assets.",
+  "why_safe": "The Command Center file only receives simple link/script tags; JavaScript and CSS braces live outside Python-rendered HTML strings.",
+  "claim_policy": [
+    "Synthetic demo values only.",
+    "Review score is not a diagnosis.",
+    "Decision support only.",
+    "No treatment direction.",
+    "No independent escalation."
+  ]
+}

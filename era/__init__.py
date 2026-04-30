@@ -7090,6 +7090,16 @@ def create_app() -> Flask:
 
     
 
+
+    # ERA_STATIC_ASSET_ROUTE_V1_START
+    @app.get("/era-static/<path:filename>")
+    def era_static_asset_route_v1(filename):
+        from pathlib import Path
+        from flask import send_from_directory
+        static_dir = Path(__file__).resolve().parent / "static"
+        return send_from_directory(str(static_dir), filename)
+    # ERA_STATIC_ASSET_ROUTE_V1_END
+
     return app
 
 
