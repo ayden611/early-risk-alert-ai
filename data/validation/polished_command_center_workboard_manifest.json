@@ -1,0 +1,15 @@
+{
+  "timestamp_utc": "2026-04-30T20:07:21Z",
+  "purpose": "Rebuild Command Center as compact interactive review workboard instead of brochure/static demo page.",
+  "changes": [
+    "Removed static ICU-12 99% display.",
+    "Replaced patient-risk percentage display with 0-10 Review Score wording.",
+    "Added rotating simulated de-identified queue snapshots.",
+    "Made Priority Tier, Primary Driver, Trend, Lead-Time Context, and Workflow State visible in the top workboard.",
+    "Added pause/resume and rotate snapshot controls.",
+    "Preserved conservative decision-support-only guardrails.",
+    "Kept validation percentages separate from patient-level Review Score."
+  ],
+  "claims_guardrail": "Retrospective aggregate evidence only. Decision support only. No diagnosis, treatment direction, clinician replacement, or independent escalation.",
+  "raw_data_policy": "No raw row-level MIMIC, eICU, or HiRID files are committed."
+}
