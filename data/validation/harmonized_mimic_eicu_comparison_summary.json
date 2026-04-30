@@ -1,0 +1,53 @@
+{
+  "ok": true,
+  "status": "locked_aggregate_summary",
+  "public_safety": "DUA-safe aggregate-only comparison. No row-level restricted data, patient IDs, or timestamps.",
+  "comparison_type": "MIMIC-IV strict clinical-event retrospective validation compared with eICU harmonized clinical-event labeling pass",
+  "conservative_t6_comparison": {
+    "mimic_iv": {
+      "event_framing": "strict clinical-event clusters",
+      "alert_reduction_pct": 94.3,
+      "fpr_pct": 4.2,
+      "detection_pct": 15.3,
+      "median_lead_time_hours": 4.0
+    },
+    "eicu_harmonized": {
+      "event_framing": "harmonized clinical-event labels",
+      "alert_reduction_pct": 94.25,
+      "fpr_pct": 0.98,
+      "detection_pct": 24.66,
+      "median_lead_time_hours": 4.83
+    }
+  },
+  "eicu_harmonized_threshold_matrix": [
+    {
+      "threshold": 4.0,
+      "suggested_setting": "ICU / high-acuity",
+      "alert_reduction_pct": 69.74,
+      "fpr_pct": 5.34,
+      "detection_pct": 62.51,
+      "median_lead_time_hours": 5.67,
+      "alerts_per_patient_day": 29.2181
+    },
+    {
+      "threshold": 5.0,
+      "suggested_setting": "Mixed units / balanced",
+      "alert_reduction_pct": 87.85,
+      "fpr_pct": 2.23,
+      "detection_pct": 38.80,
+      "median_lead_time_hours": 5.17,
+      "alerts_per_patient_day": 11.733
+    },
+    {
+      "threshold": 6.0,
+      "suggested_setting": "Telemetry / stepdown conservative",
+      "alert_reduction_pct": 94.25,
+      "fpr_pct": 0.98,
+      "detection_pct": 24.66,
+      "median_lead_time_hours": 4.83,
+      "alerts_per_patient_day": 5.5536
+    }
+  ],
+  "safe_public_wording": "Early Risk Alert AI has been retrospectively evaluated across MIMIC-IV and eICU using a harmonized threshold framework, with consistent conservative-threshold behavior across both datasets.",
+  "claim_boundary": "Supports multi-dataset retrospective robustness. Do not claim fully validated on two datasets until validation question, event definitions, inclusion/exclusion criteria, scoring logic, and statistical review are formally locked and reviewed."
+}
