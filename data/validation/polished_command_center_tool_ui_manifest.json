@@ -1,0 +1,20 @@
+{
+  "timestamp_utc": "2026-04-30T20:48:02Z",
+  "purpose": "Rebuild Command Center as compact interactive live review queue with rotating snapshots, selected-patient review basis, sidebar metrics, and conservative guardrails.",
+  "score_policy": "Case-level demo values use Review Score 0-10 only. No static ICU-12 high-risk percentage display.",
+  "route_policy": "Keep /command-center and restore /command-center/deck route.",
+  "features": [
+    "Top bar with platform name and nav",
+    "Role/scope/MFA status",
+    "Pilot banner with decision-support-only wording",
+    "Compact live review queue",
+    "Rotating demo snapshots",
+    "ICU-12 varies across snapshots and is not always highest priority",
+    "Review Score shown consistently as 0-10",
+    "Selected patient detail panel",
+    "Sidebar metrics",
+    "Footer guardrail"
+  ],
+  "claim_guardrail": "Decision support only. Not intended to diagnose, direct treatment, replace clinician judgment, or independently trigger escalation.",
+  "raw_data_policy": "No raw row-level MIMIC, eICU, HiRID, CSV, parquet, zip, or local private files committed."
+}

@@ -7117,6 +7117,33 @@ def create_app() -> Flask:
         return send_from_directory(str(static_dir), filename)
     # ERA_STATIC_ASSET_ROUTE_V1_END
 
+
+    # ERA_DIRECT_COMMAND_CENTER_DECK_ROUTE_START
+
+    try:
+
+        from era.web.command_center import command_center_deck_page
+
+        existing_rules = {str(rule.rule) for rule in app.url_map.iter_rules()}
+
+        if "/command-center/deck" not in existing_rules:
+
+            app.add_url_rule(
+
+                "/command-center/deck",
+
+                "command_center_deck_direct",
+
+                command_center_deck_page,
+
+            )
+
+    except Exception as deck_route_error:
+
+        app.logger.warning("Command Center deck route registration skipped: %s", deck_route_error)
+
+    # ERA_DIRECT_COMMAND_CENTER_DECK_ROUTE_END
+
     return app
 
 

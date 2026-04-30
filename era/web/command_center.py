@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from pathlib import Path
 from flask import Blueprint, Response
 
 command_center_bp = Blueprint("command_center", __name__)
@@ -10,79 +11,153 @@ COMMAND_CENTER_HTML = r"""
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Early Risk Alert AI — Command Center</title>
+  <title>Early Review Score Alert AI — Command Center</title>
   <style>
     :root{
-      --bg:#07111f;
+      --bg:#06101d;
       --panel:#101b2d;
       --panel2:#142238;
-      --line:rgba(181,211,255,.18);
+      --panel3:#0c1526;
+      --line:rgba(184,211,255,.16);
       --text:#f7fbff;
-      --muted:#a9b8cd;
+      --muted:#a9b8cc;
       --green:#a7ff9a;
       --cyan:#9bd7ff;
       --amber:#ffd36d;
       --red:#ff8fa3;
+      --blue:#9bc8ff;
       --purple:#d8b4fe;
-      --shadow:0 18px 70px rgba(0,0,0,.35);
+      --shadow:0 18px 70px rgba(0,0,0,.34);
     }
     *{box-sizing:border-box}
-    html{scroll-behavior:smooth}
     body{
       margin:0;
       font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
       background:
-        radial-gradient(circle at 12% 5%,rgba(88,166,255,.18),transparent 30%),
-        radial-gradient(circle at 80% 0%,rgba(167,255,154,.12),transparent 28%),
-        linear-gradient(180deg,#06101d 0%,#07111f 45%,#050912 100%);
+        radial-gradient(circle at 10% 0%,rgba(78,166,255,.18),transparent 32%),
+        radial-gradient(circle at 7.6/10 5%,rgba(167,255,154,.12),transparent 26%),
+        linear-gradient(180deg,#06101d 0%,#07111f 48%,#050912 100%);
       color:var(--text);
     }
     a{color:inherit;text-decoration:none}
-    .wrap{max-width:1540px;margin:0 auto;padding:18px 18px 80px}
     .topbar{
-      position:sticky;top:0;z-index:50;
-      background:rgba(7,17,31,.88);
-      backdrop-filter:blur(14px);
+      position:sticky;
+      top:0;
+      z-index:50;
+      background:rgba(6,16,29,.88);
+      backdrop-filter:blur(16px);
       border-bottom:1px solid var(--line);
     }
     .topbar-inner{
-      max-width:1540px;margin:0 auto;padding:12px 18px;
-      display:flex;gap:18px;align-items:center;justify-content:space-between;flex-wrap:wrap;
+      max-width:1540px;
+      margin:0 auto;
+      padding:12px 18px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+      flex-wrap:wrap;
     }
     .brand-kicker{
       color:#b8ffd0;
-      font-size:11px;
+      font-size:10px;
       letter-spacing:.18em;
       text-transform:uppercase;
-      font-weight:900;
+      font-weight:1000;
     }
     .brand-title{
-      margin-top:2px;
+      margin-top:3px;
       font-size:clamp(24px,3vw,40px);
-      line-height:.88;
+      line-height:.92;
       font-weight:1000;
       letter-spacing:-.06em;
     }
-    .brand-sub{color:var(--muted);font-size:13px;font-weight:800;margin-top:5px}
-    .nav{display:flex;gap:7px;flex-wrap:wrap}
-    .nav a,.btn,.chip{
+    .brand-sub{
+      color:var(--muted);
+      font-size:12px;
+      font-weight:850;
+      margin-top:5px;
+    }
+    .nav{
+      display:flex;
+      gap:7px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    .nav a,.btn{
       border:1px solid var(--line);
       background:rgba(255,255,255,.06);
       color:var(--text);
       border-radius:999px;
-      padding:9px 12px;
+      padding:8px 11px;
       font-weight:900;
       font-size:12px;
       cursor:pointer;
       transition:.15s ease;
       white-space:nowrap;
     }
-    .nav a:hover,.btn:hover{transform:translateY(-1px);background:rgba(255,255,255,.1)}
-    .hero{
+    .nav a:hover,.btn:hover{
+      background:rgba(255,255,255,.10);
+      transform:translateY(-1px);
+    }
+    .wrap{
+      max-width:1540px;
+      margin:0 auto;
+      padding:16px 18px 70px;
+    }
+    .pilot-banner{
       display:grid;
-      grid-template-columns:1.1fr .9fr;
-      gap:16px;
-      margin-top:18px;
+      grid-template-columns:1fr auto;
+      gap:12px;
+      align-items:center;
+      padding:12px 14px;
+      border:1px solid rgba(255,211,109,.34);
+      background:linear-gradient(90deg,rgba(255,211,109,.10),rgba(167,255,154,.06));
+      border-radius:18px;
+      margin-bottom:14px;
+      box-shadow:0 10px 35px rgba(0,0,0,.18);
+    }
+    .pilot-banner strong{
+      color:#ffe7a3;
+      font-size:12px;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+    }
+    .pilot-banner p{
+      margin:4px 0 0;
+      color:#dfe9f8;
+      font-size:13px;
+      line-height:1.35;
+      font-weight:760;
+    }
+    .status-pills{
+      display:flex;
+      gap:7px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      border-radius:999px;
+      padding:6px 9px;
+      font-size:10px;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+      font-weight:1000;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.055);
+      white-space:nowrap;
+    }
+    .pill.green{color:#d7ffd1;border-color:rgba(167,255,154,.42);background:rgba(167,255,154,.10)}
+    .pill.amber{color:#ffe6a2;border-color:rgba(255,211,109,.52);background:rgba(255,211,109,.12)}
+    .pill.blue{color:#d5e9ff;border-color:rgba(155,200,255,.42);background:rgba(155,200,255,.10)}
+    .hero-grid{
+      display:grid;
+      grid-template-columns:minmax(0,1.7fr) minmax(320px,.75fr);
+      gap:14px;
+      align-items:start;
     }
     .panel{
       background:linear-gradient(180deg,rgba(20,34,56,.94),rgba(11,20,35,.94));
@@ -90,9 +165,22 @@ COMMAND_CENTER_HTML = r"""
       border-radius:22px;
       box-shadow:var(--shadow);
     }
-    .intro{padding:20px}
-    .badge{
-      display:inline-flex;align-items:center;gap:8px;
+    .queue-panel{
+      padding:16px;
+      border-color:rgba(167,255,154,.25);
+    }
+    .queue-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-bottom:12px;
+    }
+    .eyebrow{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
       border:1px solid rgba(167,255,154,.35);
       background:rgba(167,255,154,.09);
       color:#caffbf;
@@ -104,121 +192,97 @@ COMMAND_CENTER_HTML = r"""
       font-weight:1000;
     }
     h1,h2,h3{margin:0;letter-spacing:-.045em}
-    .intro h1{
-      font-size:clamp(31px,4vw,58px);
+    .queue-head h1{
+      font-size:clamp(31px,4vw,54px);
       line-height:.92;
-      margin:12px 0 10px;
-      max-width:850px;
+      margin:11px 0 6px;
     }
-    .intro p{color:#d4dfef;font-size:15px;line-height:1.5;margin:0;max-width:900px;font-weight:700}
-    .quick{
-      padding:20px;
-      display:grid;
-      grid-template-columns:repeat(2,minmax(0,1fr));
-      gap:10px;
+    .queue-head p{
+      color:#d8e3f2;
+      margin:0;
+      font-size:14px;
+      line-height:1.42;
+      font-weight:760;
+      max-width:900px;
     }
-    .quick .metric{
-      background:rgba(255,255,255,.055);
-      border:1px solid var(--line);
-      border-radius:16px;
-      padding:14px;
-    }
-    .metric label{
-      display:block;
-      color:#c2d0e3;
-      font-size:11px;
-      letter-spacing:.14em;
-      text-transform:uppercase;
-      font-weight:1000;
-      margin-bottom:6px;
-    }
-    .metric strong{
-      font-size:clamp(26px,3vw,40px);
-      color:var(--green);
-      line-height:1;
-      letter-spacing:-.05em;
-    }
-    .metric span{display:block;color:var(--muted);font-size:12px;font-weight:800;margin-top:7px;line-height:1.35}
-    .workboard{
-      margin-top:16px;
-      padding:16px;
-      border-color:rgba(167,255,154,.25);
-    }
-    .work-head{
+    .controls{
       display:flex;
-      align-items:flex-start;
-      justify-content:space-between;
-      gap:12px;
+      gap:7px;
       flex-wrap:wrap;
-      margin-bottom:12px;
+      justify-content:flex-end;
+      align-items:center;
     }
-    .work-head h2{
-      font-size:clamp(27px,3vw,44px);
-      line-height:.95;
+    .btn.active{
+      background:rgba(167,255,154,.18);
+      border-color:rgba(167,255,154,.52);
+      color:#d9ffd2;
     }
-    .work-head p{
-      margin:6px 0 0;
-      color:#d6e1f0;
-      font-weight:750;
-      line-height:1.35;
-      max-width:850px;
-      font-size:13px;
+    .btn.purple{
+      background:rgba(216,180,254,.13);
+      border-color:rgba(216,180,254,.35);
     }
-    .controls{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
-    .btn.active{background:rgba(167,255,154,.18);border-color:rgba(167,255,154,.5);color:#d9ffd2}
-    .btn.purple{background:rgba(216,180,254,.14);border-color:rgba(216,180,254,.35)}
-    .stats-row{
+    .mini-metrics{
       display:grid;
       grid-template-columns:repeat(4,minmax(0,1fr));
       gap:10px;
       margin:12px 0;
     }
-    .stat{
+    .metric{
       background:rgba(255,255,255,.055);
       border:1px solid var(--line);
       border-radius:16px;
-      padding:13px;
-      min-height:88px;
+      padding:12px;
+      min-height:86px;
     }
-    .stat small{
+    .metric small{
+      display:block;
       color:#b8c7da;
       text-transform:uppercase;
       letter-spacing:.13em;
       font-size:10px;
       font-weight:1000;
+      margin-bottom:6px;
     }
-    .stat b{
+    .metric b{
       display:block;
-      margin-top:6px;
-      font-size:28px;
+      font-size:27px;
       color:var(--green);
       letter-spacing:-.04em;
+      line-height:1;
     }
-    .stat span{
+    .metric span{
       display:block;
       color:var(--muted);
       font-size:12px;
       font-weight:800;
       line-height:1.25;
-      margin-top:3px;
+      margin-top:5px;
     }
-    .command-grid{
+    .main-tool{
       display:grid;
-      grid-template-columns:1.15fr .85fr;
+      grid-template-columns:minmax(0,1.2fr) minmax(300px,.62fr);
       gap:12px;
       align-items:start;
     }
-    .queue-zone{
+    .queue-box{
       background:rgba(255,255,255,.035);
       border:1px solid var(--line);
       border-radius:18px;
       padding:12px;
+      overflow:hidden;
     }
     .snapshot-meta{
-      display:flex;align-items:center;justify-content:space-between;gap:10px;
-      color:var(--muted);font-size:12px;font-weight:900;margin-bottom:10px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      color:var(--muted);
+      font-size:12px;
+      font-weight:900;
+      margin-bottom:10px;
+      flex-wrap:wrap;
     }
-    .cards{
+    .card-row{
       display:grid;
       grid-template-columns:repeat(4,minmax(0,1fr));
       gap:9px;
@@ -230,7 +294,7 @@ COMMAND_CENTER_HTML = r"""
       border-radius:16px;
       padding:12px;
       cursor:pointer;
-      min-height:150px;
+      min-height:146px;
       transition:.15s ease;
     }
     .patient-card:hover,.patient-card.selected{
@@ -242,45 +306,50 @@ COMMAND_CENTER_HTML = r"""
       display:flex;
       justify-content:space-between;
       gap:10px;
-      align-items:start;
+      align-items:flex-start;
     }
     .rank-title{
-      font-size:20px;
+      font-size:18px;
       font-weight:1000;
       letter-spacing:-.04em;
-      line-height:1.02;
+      line-height:1.05;
     }
-    .unit{color:#c6d6e8;font-size:12px;font-weight:900;margin-top:2px}
+    .unit{
+      color:#c6d6e8;
+      font-size:12px;
+      font-weight:900;
+      margin-top:2px;
+    }
     .score{
       color:var(--green);
       font-size:31px;
       font-weight:1000;
       letter-spacing:-.06em;
       line-height:1;
-      margin-top:14px;
+      margin-top:12px;
     }
-    .score small{font-size:14px;color:#dfffd9;letter-spacing:0}
-    .mini{margin-top:8px;color:#dbe7f5;font-size:12px;font-weight:850;line-height:1.35}
-    .pill{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      border-radius:999px;
-      padding:5px 8px;
-      font-size:10px;
-      text-transform:uppercase;
-      letter-spacing:.09em;
-      font-weight:1000;
-      border:1px solid var(--line);
+    .score small{
+      font-size:14px;
+      color:#dfffd9;
+      letter-spacing:0;
+    }
+    .mini{
+      margin-top:8px;
+      color:#dbe7f5;
+      font-size:12px;
+      font-weight:850;
+      line-height:1.35;
     }
     .tier-critical{background:rgba(255,143,163,.14);border-color:rgba(255,143,163,.55);color:#ffd2da}
     .tier-elevated{background:rgba(255,211,109,.14);border-color:rgba(255,211,109,.55);color:#ffe6a2}
     .tier-watch{background:rgba(155,215,255,.12);border-color:rgba(155,215,255,.45);color:#cceeff}
     .tier-low{background:rgba(167,255,154,.1);border-color:rgba(167,255,154,.42);color:#d7ffd1}
+    .table-wrap{overflow-x:auto}
     table{
       width:100%;
       border-collapse:separate;
       border-spacing:0;
+      min-width:880px;
       overflow:hidden;
       border-radius:14px;
       border:1px solid var(--line);
@@ -295,6 +364,7 @@ COMMAND_CENTER_HTML = r"""
       padding:10px 9px;
       text-align:left;
       font-weight:1000;
+      white-space:nowrap;
     }
     td{
       border-top:1px solid rgba(181,211,255,.12);
@@ -305,6 +375,20 @@ COMMAND_CENTER_HTML = r"""
     }
     tr{cursor:pointer}
     tr:hover td{background:rgba(255,255,255,.04)}
+    .score-cell{color:var(--green);font-weight:1000;white-space:nowrap}
+    .action-row{display:flex;gap:5px;flex-wrap:wrap}
+    .small-action{
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.07);
+      color:#fff;
+      border-radius:999px;
+      padding:5px 8px;
+      font-size:10px;
+      font-weight:900;
+      cursor:pointer;
+      white-space:nowrap;
+    }
+    .small-action:hover{background:rgba(167,255,154,.13);border-color:rgba(167,255,154,.35)}
     .detail{
       padding:14px;
       background:rgba(255,255,255,.045);
@@ -314,13 +398,22 @@ COMMAND_CENTER_HTML = r"""
     }
     .detail-title{
       display:flex;
-      align-items:start;
+      align-items:flex-start;
       justify-content:space-between;
       gap:12px;
-      margin-bottom:12px;
+      margin-bottom:10px;
     }
-    .detail-title h3{font-size:26px;line-height:1}
-    .detail-title span{color:var(--muted);font-size:12px;font-weight:900}
+    .detail-title h3{
+      font-size:26px;
+      line-height:1;
+    }
+    .detail-sub{
+      color:var(--muted);
+      font-size:12px;
+      font-weight:900;
+      line-height:1.3;
+      margin-top:4px;
+    }
     .vitals{
       display:grid;
       grid-template-columns:repeat(2,minmax(0,1fr));
@@ -341,7 +434,11 @@ COMMAND_CENTER_HTML = r"""
       text-transform:uppercase;
       font-weight:1000;
     }
-    .vital b{display:block;font-size:20px;margin-top:4px}
+    .vital b{
+      display:block;
+      font-size:18px;
+      margin-top:4px;
+    }
     .reason{
       border-left:4px solid var(--green);
       background:rgba(167,255,154,.07);
@@ -361,16 +458,43 @@ COMMAND_CENTER_HTML = r"""
       line-height:1.55;
       font-weight:800;
     }
-    .actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}
-    .action{
+    .side-panel{
+      padding:14px;
+    }
+    .side-panel h2{
+      font-size:24px;
+      margin-bottom:8px;
+    }
+    .side-grid{
+      display:grid;
+      gap:10px;
+    }
+    .side-card{
       border:1px solid var(--line);
-      background:rgba(255,255,255,.07);
-      border-radius:10px;
-      color:#fff;
-      padding:8px 10px;
+      background:rgba(255,255,255,.05);
+      border-radius:16px;
+      padding:12px;
+    }
+    .side-card small{
+      display:block;
+      color:#b8c7da;
+      text-transform:uppercase;
+      letter-spacing:.13em;
+      font-size:10px;
+      font-weight:1000;
+      margin-bottom:6px;
+    }
+    .side-card b{
+      color:var(--green);
+      font-size:25px;
+      letter-spacing:-.04em;
+    }
+    .side-card p{
+      margin:5px 0 0;
+      color:#d6e3f5;
       font-size:12px;
-      font-weight:900;
-      cursor:pointer;
+      line-height:1.35;
+      font-weight:780;
     }
     .guardrail{
       margin-top:10px;
@@ -383,14 +507,31 @@ COMMAND_CENTER_HTML = r"""
       line-height:1.35;
       font-weight:900;
     }
+    .footer-guardrail{
+      margin-top:14px;
+      border:1px solid rgba(255,211,109,.38);
+      background:rgba(255,211,109,.075);
+      color:#ffe6a2;
+      border-radius:18px;
+      padding:12px 14px;
+      font-size:12px;
+      line-height:1.45;
+      font-weight:900;
+      text-align:center;
+    }
     .lower{
-      margin-top:16px;
+      margin-top:14px;
       display:grid;
       grid-template-columns:repeat(3,minmax(0,1fr));
       gap:12px;
     }
-    .lower .panel{padding:16px}
-    .lower h3{font-size:20px;margin-bottom:8px}
+    .lower .panel{
+      padding:16px;
+    }
+    .lower h3{
+      font-size:20px;
+      margin-bottom:8px;
+    }
     .lower p,.lower li{
       color:#d7e3f2;
       font-size:13px;
@@ -398,41 +539,16 @@ COMMAND_CENTER_HTML = r"""
       font-weight:750;
     }
     .lower ul{margin:0;padding-left:18px}
-    .mini-table{
-      display:grid;
-      gap:7px;
-      margin-top:10px;
-    }
-    .mini-row{
-      display:grid;
-      grid-template-columns:1fr 1fr 1fr;
-      gap:7px;
-      padding:9px;
-      border:1px solid rgba(181,211,255,.13);
-      border-radius:12px;
-      background:rgba(255,255,255,.04);
-      color:#eef6ff;
-      font-size:12px;
-      font-weight:850;
-    }
-    .footer{
-      color:#aab8cb;
-      font-size:12px;
-      font-weight:800;
-      margin-top:20px;
-      padding:14px 0;
-      border-top:1px solid var(--line);
-    }
-    .hidden{display:none!important}
-    @media(max-width:1100px){
-      .hero,.command-grid,.lower{grid-template-columns:1fr}
-      .cards,.stats-row{grid-template-columns:repeat(2,minmax(0,1fr))}
+    @media(max-width:1150px){
+      .hero-grid,.main-tool,.lower{grid-template-columns:1fr}
+      .card-row,.mini-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .side-panel{order:3}
     }
     @media(max-width:720px){
-      .cards,.stats-row,.quick{grid-template-columns:1fr}
+      .card-row,.mini-metrics,.vitals{grid-template-columns:1fr}
+      .pilot-banner{grid-template-columns:1fr}
+      .status-pills,.controls{justify-content:flex-start}
       .wrap{padding:12px}
-      table{font-size:11px}
-      th,td{padding:8px 6px}
     }
   </style>
 </head>
@@ -441,8 +557,8 @@ COMMAND_CENTER_HTML = r"""
     <div class="topbar-inner">
       <div>
         <div class="brand-kicker">HCP-facing decision support • rules-based • explainable • CITI certified</div>
-        <div class="brand-title">Early Risk Alert AI</div>
-        <div class="brand-sub">Explainable Rules-Based Command-Center Platform</div>
+        <div class="brand-title">Early Review Score Alert AI</div>
+        <div class="brand-sub">Explainable Rules-Based Command Center</div>
       </div>
       <nav class="nav" aria-label="Platform navigation">
         <a href="/command-center">Command Center</a>
@@ -451,264 +567,223 @@ COMMAND_CENTER_HTML = r"""
         <a href="/executive-walkthrough">Executive Walkthrough</a>
         <a href="/admin/review">Admin Review</a>
         <a href="/pilot-docs">Pilot Docs</a>
+        <a href="/command-center/deck">Governance Deck</a>
         <a href="/validation-evidence">Evidence Packet</a>
         <a href="/validation-intelligence">Validation Intelligence</a>
-        <a href="/model-card">Model Card</a>
-        <a href="/pilot-success-guide">Pilot Success Guide</a>
       </nav>
     </div>
   </header>
 
   <main class="wrap">
-    <section class="hero">
-      <div class="panel intro">
-        <span class="badge">Pilot mode • controlled demonstration environment</span>
-        <h1>Live review workboard for explainable prioritization.</h1>
+    <section class="pilot-banner">
+      <div>
+        <strong>Pilot mode • controlled demonstration • decision support only</strong>
         <p>
-          A compact command-center view showing queue rank, priority tier, primary driver, trend,
-          lead-time context, and workflow state. Review Score is a 0–10 simulated prioritization
-          score for queue ordering, not a patient-risk percentage.
+          This is a simulated pilot environment. Outputs support — not replace — clinical judgment.
+          Review Score is a 0–10 prioritization score, not a clinical probability.
         </p>
       </div>
-      <div class="panel quick">
-        <div class="metric">
-          <label>Evidence status</label>
-          <strong>Locked</strong>
-          <span>MIMIC-IV and eICU aggregate retrospective evidence. Raw data remains local-only.</span>
-        </div>
-        <div class="metric">
-          <label>Safety posture</label>
-          <strong>CDS</strong>
-          <span>Decision support only. No diagnosis, treatment direction, or independent escalation.</span>
-        </div>
-        <div class="metric">
-          <label>Operating point</label>
-          <strong>t=6.0</strong>
-          <span>Conservative review-burden setting used for public aggregate framing.</span>
-        </div>
-        <div class="metric">
-          <label>Lead-time context</label>
-          <strong>3.4–4.8h</strong>
-          <span>Retrospective timing context across locked aggregate runs.</span>
-        </div>
+      <div class="status-pills">
+        <span class="pill green">Role: Admin</span>
+        <span class="pill blue">Scope: All Units</span>
+        <span class="pill green">MFA Active</span>
+        <span class="pill amber" id="lastUpdated">Updated now</span>
       </div>
     </section>
 
-    <section class="panel workboard" id="review-workboard">
-      <div class="work-head">
-        <div>
-          <span class="badge">Live review queue • simulated pilot view</span>
-          <h2>Prioritized patient review queue</h2>
-          <p>
-            The top 3–4 review items are visible without scrolling. Tiers, drivers, lead-time context,
-            and workflow state are shown visually so the reviewer can understand the queue quickly.
-          </p>
-        </div>
-        <div class="controls">
-          <button class="btn active" data-filter="all">All</button>
-          <button class="btn" data-filter="Critical">Critical</button>
-          <button class="btn" data-filter="Elevated">Elevated</button>
-          <button class="btn" data-filter="Watch">Watch</button>
-          <button class="btn purple" id="rotateBtn">Rotate snapshot</button>
-          <button class="btn" id="pauseBtn">Pause</button>
-        </div>
-      </div>
-
-      <div class="stats-row">
-        <div class="stat">
-          <small>Open review items</small>
-          <b id="statOpen">4</b>
-          <span>Within current demo scope</span>
-        </div>
-        <div class="stat">
-          <small>Highest tier</small>
-          <b id="statTier">Critical</b>
-          <span>Tier shown visually, not buried in text</span>
-        </div>
-        <div class="stat">
-          <small>Top review driver</small>
-          <b id="statDriver">SpO₂ decline</b>
-          <span id="statDriverSub">ICU-12 • Worsening</span>
-        </div>
-        <div class="stat">
-          <small>Median lead-time context</small>
-          <b id="statLead">3.8h</b>
-          <span>Across visible queue</span>
-        </div>
-      </div>
-
-      <div class="command-grid">
-        <div class="queue-zone">
-          <div class="snapshot-meta">
-            <span id="snapshotLabel">Snapshot 1/4</span>
-            <span id="snapshotTime">Demo time</span>
+    <section class="hero-grid">
+      <div class="panel queue-panel">
+        <div class="queue-head">
+          <div>
+            <span class="eyebrow">Live review queue • simulated pilot view</span>
+            <h1>Prioritized patient review queue</h1>
+            <p>
+              Compact workboard showing rank, unit, priority tier, review score, primary driver,
+              trend, lead-time context, and workflow state in one glanceable view.
+            </p>
           </div>
-          <div class="cards" id="cards"></div>
-          <table aria-label="Prioritized review queue">
-            <thead>
-              <tr>
-                <th>Rank</th>
-                <th>Patient</th>
-                <th>Unit</th>
-                <th>Tier</th>
-                <th>Review Score</th>
-                <th>Primary Driver</th>
-                <th>Trend</th>
-                <th>Lead Time</th>
-                <th>Workflow</th>
-              </tr>
-            </thead>
-            <tbody id="queueBody"></tbody>
-          </table>
-          <div class="guardrail">
-            Guardrail: simulated de-identified demonstration queue. Review Score is a 0–10 prioritization score, not a patient-risk percentage. Workflow actions are review-state examples only.
+          <div class="controls">
+            <button class="btn active" data-filter="all">All</button>
+            <button class="btn" data-filter="Critical">Critical</button>
+            <button class="btn" data-filter="Elevated">Elevated</button>
+            <button class="btn" data-filter="Watch">Watch</button>
+            <button class="btn purple" id="rotateBtn">Rotate snapshot</button>
+            <button class="btn" id="pauseBtn">Pause</button>
           </div>
         </div>
 
-        <aside class="detail" id="detail">
-          <div class="detail-title">
-            <div>
-              <h3 id="detailPatient">ICU-12</h3>
-              <span id="detailSub">ICU • Queue rank #1 • First threshold context ~4.6h</span>
+        <div class="mini-metrics">
+          <div class="metric">
+            <small>Open review items</small>
+            <b id="statOpen">4</b>
+            <span>Visible in current queue</span>
+          </div>
+          <div class="metric">
+            <small>Critical items</small>
+            <b id="statCritical">1</b>
+            <span>Higher-priority items</span>
+          </div>
+          <div class="metric">
+            <small>Average review score</small>
+            <b id="statAverage">7.4/10</b>
+            <span>0–10 queue scale</span>
+          </div>
+          <div class="metric">
+            <small>System status</small>
+            <b>Connected</b>
+            <span>Role scoped • MFA active</span>
+          </div>
+        </div>
+
+        <div class="main-tool">
+          <div class="queue-box">
+            <div class="snapshot-meta">
+              <span id="snapshotLabel">Snapshot 1/4</span>
+              <span>Sort: Queue Rank ↓ • Filter: <span id="filterLabel">All Units</span> • Operating Point: t=6.0 Conservative</span>
             </div>
-            <span class="pill tier-critical" id="detailTier">Critical</span>
+
+            <div class="card-row" id="cards"></div>
+
+            <div class="table-wrap">
+              <table aria-label="Prioritized patient review queue">
+                <thead>
+                  <tr>
+                    <th>Rank</th>
+                    <th>Patient / Unit</th>
+                    <th>Tier</th>
+                    <th>Review Score</th>
+                    <th>Primary Driver</th>
+                    <th>Trend</th>
+                    <th>Lead Time</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="queueBody"></tbody>
+              </table>
+            </div>
           </div>
 
-          <div class="score" id="detailScore">8.6<small>/10</small></div>
+          <aside class="detail" id="detail">
+            <div class="detail-title">
+              <div>
+                <h3 id="detailPatient">ICU-12</h3>
+                <div class="detail-sub" id="detailSub">ICU • Rank #1 • Critical</div>
+              </div>
+              <span class="pill tier-critical" id="detailTier">Critical</span>
+            </div>
 
-          <div class="vitals" id="vitals"></div>
+            <div class="score" id="detailScore">9.2<small>/10</small></div>
+            <div class="vitals" id="vitals"></div>
+            <div class="reason" id="reason"></div>
+            <ul id="explainBullets"></ul>
 
-          <div class="reason" id="reason">
-            Oxygenation is the primary driver, with worsening trend and lead-time context.
-          </div>
+            <div class="guardrail">
+              Selected patient detail is review-support context only. Clinicians must independently review the patient and current clinical context.
+            </div>
+          </aside>
+        </div>
 
-          <ul id="explainBullets"></ul>
-
-          <div class="actions">
-            <button class="action">Acknowledge</button>
-            <button class="action">Assign</button>
-            <button class="action">Escalate review</button>
-            <button class="action">Resolve</button>
-          </div>
-
-          <div class="guardrail">
-            Decision support only. This display does not diagnose, direct treatment, replace clinician judgment, or independently trigger escalation.
-          </div>
-        </aside>
-      </div>
-    </section>
-
-    <section class="lower">
-      <div class="panel">
-        <h3>Validation alignment</h3>
-        <p>
-          Current public framing should stay conservative: retrospectively evaluated across MIMIC-IV
-          and eICU using a harmonized threshold framework.
-        </p>
-        <div class="mini-table">
-          <div class="mini-row"><span>MIMIC-IV t=6.0</span><span>94.3% alert reduction</span><span>4.2% FPR</span></div>
-          <div class="mini-row"><span>eICU harmonized t=6.0</span><span>94.25% alert reduction</span><span>0.98% FPR</span></div>
-          <div class="mini-row"><span>eICU B/C t=6.0</span><span>95.26%–95.64%</span><span>1.78%–2.02% FPR</span></div>
+        <div class="footer-guardrail">
+          Decision support only. Does not diagnose, direct treatment, replace clinician judgment, or independently trigger escalation.
+          Simulated demo data only. Retrospective MIMIC-IV + eICU validation remains aggregate and DUA-safe.
         </div>
       </div>
 
-      <div class="panel">
-        <h3>Explainability layer</h3>
-        <ul>
-          <li>Priority Tier: Critical / Elevated / Watch / Low.</li>
-          <li>Queue Rank: relative review ordering.</li>
-          <li>Primary Driver: SpO₂, HR, BP, RR, or trend context.</li>
-          <li>Lead Time: retrospective first-flag timing context.</li>
-          <li>Workflow State: needs review, acknowledged, assigned, monitoring.</li>
-        </ul>
-      </div>
-
-      <div class="panel">
-        <h3>Pilot readiness links</h3>
-        <ul>
-          <li><a href="/model-card">Model Card</a> — intended use, evidence status, limitations.</li>
-          <li><a href="/pilot-success-guide">Pilot Success Guide</a> — pilot success metrics and workflow guardrails.</li>
-          <li><a href="/validation-evidence">Evidence Packet</a> — DUA-safe aggregate evidence.</li>
-          <li><a href="/validation-runs">Validation Runs</a> — locked aggregate run registry.</li>
-        </ul>
-      </div>
+      <aside class="panel side-panel">
+        <h2>Command summary</h2>
+        <div class="side-grid">
+          <div class="side-card">
+            <small>Open review items</small>
+            <b id="sideOpen">4</b>
+            <p>Number of currently visible queue items.</p>
+          </div>
+          <div class="side-card">
+            <small>Higher-priority items</small>
+            <b id="sideHigh">1</b>
+            <p>Critical tier items in current snapshot.</p>
+          </div>
+          <div class="side-card">
+            <small>Avg review score</small>
+            <b id="sideAverage">7.4/10</b>
+            <p>Average score on the 0–10 queue scale.</p>
+          </div>
+          <div class="side-card">
+            <small>System status</small>
+            <b>Connected</b>
+            <p>Admin role, all-units scope, MFA active.</p>
+          </div>
+        </div>
+        <div class="guardrail">
+          Workflow buttons are audit/workflow-state examples only: acknowledge, assign, escalate review, resolve.
+        </div>
+      </aside>
     </section>
 
     <section class="lower">
       <div class="panel">
-        <h3>Governance guardrails</h3>
+        <h3>Explainability shown visually</h3>
         <ul>
-          <li>Authorized healthcare professional review required.</li>
-          <li>Aggregate retrospective evidence only.</li>
-          <li>No raw MIMIC/eICU/HiRID row-level data in public pages or commits.</li>
-          <li>No autonomous diagnosis, treatment direction, or escalation.</li>
+          <li>Priority tier appears as a badge.</li>
+          <li>Primary driver is visible in the queue.</li>
+          <li>Trend and lead-time context are not buried in paragraphs.</li>
+          <li>Selected patient detail shows vitals and short bullets.</li>
         </ul>
       </div>
-
       <div class="panel">
-        <h3>Operational controls</h3>
-        <ul>
-          <li>Role and unit scope visible in pilot view.</li>
-          <li>Workflow states support audit-aware review coordination.</li>
-          <li>MFA/security posture remains part of pilot readiness.</li>
-          <li>Data upload is positioned as retrospective pilot evaluation.</li>
-        </ul>
-      </div>
-
-      <div class="panel">
-        <h3>What changed</h3>
+        <h3>Metric clarity</h3>
         <p>
-          The old fixed high-percentage ICU-12 display has been removed. The queue now rotates controlled
-          snapshots with realistic 0–10 Review Scores, visible tiers, drivers, trends, and lead-time context.
+          Review Score is always shown as 0–10. Aggregate validation percentages such as alert reduction,
+          FPR, detection, and lead-time stay in validation pages and evidence packets.
         </p>
       </div>
+      <div class="panel">
+        <h3>Governance links</h3>
+        <ul>
+          <li><a href="/command-center/deck">Governance Deck</a></li>
+          <li><a href="/model-card">Model Card</a></li>
+          <li><a href="/pilot-success-guide">Pilot Success Guide</a></li>
+          <li><a href="/validation-evidence">Validation Evidence</a></li>
+        </ul>
+      </div>
     </section>
-
-    <div class="footer">
-      Early Risk Alert AI LLC • Decision support only • Retrospective aggregate analysis only • Not intended to diagnose, direct treatment, replace clinician judgment, or independently trigger escalation.
-    </div>
   </main>
 
   <script>
     const snapshots = [
       {
         label:"Snapshot 1/4",
-        time:"03:43 PM",
         rows:[
-          {patient:"ICU-12",unit:"ICU",tier:"Critical",score:8.6,driver:"SpO₂ decline",trend:"Worsening",lead:"~4.6 hrs",workflow:"Needs review",vitals:{HR:"127 bpm",SpO2:"88%",BP:"168/101",RR:"29/min",Temp:"100.6°F"},why:["SpO₂ decline is the leading driver.","Trend is worsening across the visible window.","Lead-time context places this item at the top of the review queue."]},
-          {patient:"TELEMETRY-04",unit:"Telemetry",tier:"Watch",score:6.2,driver:"HR variability",trend:"Stable",lead:"~2.8 hrs",workflow:"Monitoring",vitals:{HR:"104 bpm",SpO2:"94%",BP:"132/82",RR:"20/min",Temp:"98.8°F"},why:["HR variability is present but stable.","No critical tier signal in this snapshot.","Continue monitoring in pilot workflow."]},
-          {patient:"STEPDOWN-09",unit:"Stepdown",tier:"Elevated",score:7.4,driver:"RR elevation",trend:"Stable / Watch",lead:"~3.1 hrs",workflow:"Assigned",vitals:{HR:"116 bpm",SpO2:"91%",BP:"142/88",RR:"27/min",Temp:"99.4°F"},why:["Respiratory rate is the main driver.","Trend supports elevated review priority.","Workflow state is assigned."]},
-          {patient:"WARD-21",unit:"Ward",tier:"Watch",score:5.8,driver:"BP trend",trend:"Stable",lead:"~2.2 hrs",workflow:"Monitoring",vitals:{HR:"92 bpm",SpO2:"96%",BP:"149/91",RR:"18/min",Temp:"98.6°F"},why:["BP trend is visible but stable.","Review score remains below elevated threshold.","Continue monitoring."]}
+          {patient:"ICU-12",unit:"ICU",tier:"Critical",score:9.2,driver:"SpO2 decline",trend:"Worsening",lead:"~4.8 hrs",workflow:"Needs review",vitals:{SpO2:"88% ↓",HR:"127 bpm",BP:"168/99",RR:"29/min",Temp:"100.8°F"},why:["Oxygen saturation below threshold and trending down.","Heart rate elevated relative to baseline.","Respiratory rate outside normal range.","Lead-time context supports higher review priority."]},
+          {patient:"ICU-07",unit:"ICU",tier:"Elevated",score:8.1,driver:"BP instability",trend:"Worsening",lead:"~4.1 hrs",workflow:"Acknowledged",vitals:{SpO2:"92%",HR:"118 bpm",BP:"91/58",RR:"24/min",Temp:"99.7°F"},why:["Blood-pressure instability is the primary driver.","Trend is worsening across the visible window.","Lead-time context remains relevant for review."]},
+          {patient:"TEL-18",unit:"Telemetry",tier:"Elevated",score:7.5,driver:"HR instability",trend:"Stable",lead:"~3.4 hrs",workflow:"Acknowledged",vitals:{SpO2:"8.4/10",HR:"132 bpm",BP:"138/84",RR:"23/min",Temp:"99.1°F"},why:["Heart-rate instability remains visible.","Current trend is stable rather than worsening.","Elevated tier supports continued review."]},
+          {patient:"SDU-04",unit:"Stepdown",tier:"Watch",score:6.8,driver:"RR elevation",trend:"Stable",lead:"~2.9 hrs",workflow:"Monitoring",vitals:{SpO2:"95%",HR:"101 bpm",BP:"128/76",RR:"25/min",Temp:"98.8°F"},why:["Respiratory rate is elevated but stable.","No critical driver is dominant in this snapshot.","Monitoring state remains appropriate."]}
         ]
       },
       {
         label:"Snapshot 2/4",
-        time:"03:49 PM",
         rows:[
-          {patient:"TELEMETRY-04",unit:"Telemetry",tier:"Critical",score:8.4,driver:"HR instability",trend:"Worsening",lead:"~4.0 hrs",workflow:"Needs review",vitals:{HR:"132 bpm",SpO2:"94%",BP:"138/84",RR:"23/min",Temp:"98.7°F"},why:["HR instability increased.","Trend moved to worsening.","Telemetry case moved to top of queue."]},
-          {patient:"ICU-12",unit:"ICU",tier:"Elevated",score:7.2,driver:"SpO₂ recovery watch",trend:"Stable / Watch",lead:"~3.2 hrs",workflow:"Acknowledged",vitals:{HR:"119 bpm",SpO2:"91%",BP:"154/94",RR:"25/min",Temp:"99.8°F"},why:["Oxygenation remains a review driver but is no longer the top queue item.","Trend is stable/watch rather than worsening.","Review state is acknowledged."]},
-          {patient:"STEPDOWN-09",unit:"Stepdown",tier:"Elevated",score:7.0,driver:"RR elevation",trend:"Watch",lead:"~3.0 hrs",workflow:"Assigned",vitals:{HR:"112 bpm",SpO2:"92%",BP:"136/86",RR:"26/min",Temp:"99.1°F"},why:["RR elevation remains visible.","Tier stays elevated.","Assigned for workflow follow-up."]},
-          {patient:"WARD-21",unit:"Ward",tier:"Watch",score:6.1,driver:"BP trend",trend:"Stable",lead:"~2.5 hrs",workflow:"Monitoring",vitals:{HR:"96 bpm",SpO2:"95%",BP:"151/90",RR:"19/min",Temp:"98.9°F"},why:["BP trend remains present.","Stable trend keeps queue rank lower.","Monitoring continues."]}
+          {patient:"TEL-18",unit:"Telemetry",tier:"Critical",score:8.6,driver:"HR instability",trend:"Worsening",lead:"~4.0 hrs",workflow:"Needs review",vitals:{SpO2:"93%",HR:"138 bpm",BP:"141/86",RR:"24/min",Temp:"99.4°F"},why:["Heart-rate instability increased compared with prior snapshot.","Trend moved to worsening.","Telemetry case rises to top queue position."]},
+          {patient:"ICU-12",unit:"ICU",tier:"Elevated",score:7.4,driver:"SpO2 recovery watch",trend:"Stable / Watch",lead:"~3.2 hrs",workflow:"Assigned",vitals:{SpO2:"91%",HR:"116 bpm",BP:"156/94",RR:"25/min",Temp:"99.8°F"},why:["ICU-12 remains visible but is no longer fixed as top priority.","Oxygenation remains under watch but trend is less severe.","Assigned workflow state is shown."]},
+          {patient:"ICU-07",unit:"ICU",tier:"Elevated",score:7.1,driver:"BP trend",trend:"Watch",lead:"~3.0 hrs",workflow:"Acknowledged",vitals:{SpO2:"8.4/10",HR:"108 bpm",BP:"96/62",RR:"22/min",Temp:"99.0°F"},why:["Blood-pressure trend remains a review driver.","Trend supports watch/elevated review rather than critical tier.","Acknowledged workflow state remains visible."]},
+          {patient:"WARD-21",unit:"Ward",tier:"Watch",score:6.1,driver:"BP trend",trend:"Stable",lead:"~2.5 hrs",workflow:"Monitoring",vitals:{SpO2:"96%",HR:"94 bpm",BP:"149/90",RR:"19/min",Temp:"98.6°F"},why:["Blood-pressure trend is visible but stable.","Watch tier keeps this lower in the review queue.","Monitoring continues."]}
         ]
       },
       {
         label:"Snapshot 3/4",
-        time:"03:57 PM",
         rows:[
-          {patient:"STEPDOWN-09",unit:"Stepdown",tier:"Critical",score:8.3,driver:"RR elevation",trend:"Worsening",lead:"~4.2 hrs",workflow:"Needs review",vitals:{HR:"121 bpm",SpO2:"90%",BP:"144/91",RR:"31/min",Temp:"100.1°F"},why:["Respiratory trend worsened.","RR is the primary driver.","Lead-time context moved this patient to top rank."]},
-          {patient:"ICU-12",unit:"ICU",tier:"Watch",score:6.7,driver:"SpO₂ stable",trend:"Stable",lead:"~2.6 hrs",workflow:"Monitoring",vitals:{HR:"108 bpm",SpO2:"93%",BP:"145/88",RR:"21/min",Temp:"99.1°F"},why:["ICU-12 is no longer the highest-priority item in this snapshot.","SpO₂ is stable compared with prior snapshot.","Monitoring is appropriate as a review state."]},
-          {patient:"TELEMETRY-04",unit:"Telemetry",tier:"Elevated",score:7.5,driver:"HR instability",trend:"Stable / Watch",lead:"~3.4 hrs",workflow:"Acknowledged",vitals:{HR:"124 bpm",SpO2:"95%",BP:"133/82",RR:"22/min",Temp:"98.6°F"},why:["HR instability remains visible.","Trend is no longer worsening.","Acknowledged workflow state."]},
-          {patient:"WARD-21",unit:"Ward",tier:"Watch",score:5.9,driver:"BP trend",trend:"Stable",lead:"~2.1 hrs",workflow:"Monitoring",vitals:{HR:"94 bpm",SpO2:"96%",BP:"146/89",RR:"18/min",Temp:"98.4°F"},why:["BP trend is stable.","Lower review score keeps this item lower in queue.","Monitoring continues."]}
+          {patient:"SDU-04",unit:"Stepdown",tier:"Critical",score:8.4,driver:"RR elevation",trend:"Worsening",lead:"~4.2 hrs",workflow:"Needs review",vitals:{SpO2:"90%",HR:"121 bpm",BP:"144/91",RR:"31/min",Temp:"100.1°F"},why:["Respiratory trend worsened.","RR elevation is the primary driver.","Lead-time context moved this patient to top rank."]},
+          {patient:"ICU-12",unit:"ICU",tier:"Watch",score:6.7,driver:"SpO2 stable",trend:"Stable",lead:"~2.6 hrs",workflow:"Monitoring",vitals:{SpO2:"93%",HR:"108 bpm",BP:"145/88",RR:"21/min",Temp:"99.1°F"},why:["ICU-12 is not highest priority in this snapshot.","SpO2 is stable compared with prior snapshot.","Monitoring is the current workflow state."]},
+          {patient:"TEL-18",unit:"Telemetry",tier:"Elevated",score:7.5,driver:"HR instability",trend:"Stable / Watch",lead:"~3.4 hrs",workflow:"Acknowledged",vitals:{SpO2:"95%",HR:"124 bpm",BP:"133/82",RR:"22/min",Temp:"98.6°F"},why:["HR instability remains visible.","Trend is no longer worsening.","Acknowledged workflow state is maintained."]},
+          {patient:"WARD-21",unit:"Ward",tier:"Watch",score:5.9,driver:"BP trend",trend:"Stable",lead:"~2.1 hrs",workflow:"Monitoring",vitals:{SpO2:"96%",HR:"94 bpm",BP:"146/89",RR:"18/min",Temp:"98.4°F"},why:["Blood-pressure trend is stable.","Lower review score keeps this item lower in queue.","Monitoring continues."]}
         ]
       },
       {
         label:"Snapshot 4/4",
-        time:"04:05 PM",
         rows:[
-          {patient:"ICU-21",unit:"ICU",tier:"Critical",score:8.1,driver:"BP instability",trend:"Worsening",lead:"~3.9 hrs",workflow:"Needs review",vitals:{HR:"122 bpm",SpO2:"92%",BP:"172/96",RR:"24/min",Temp:"99.9°F"},why:["BP instability is the top driver.","Worsening trend raises priority.","Lead-time context supports top queue placement."]},
-          {patient:"ICU-12",unit:"ICU",tier:"Elevated",score:7.6,driver:"SpO₂ watch",trend:"Stable / Watch",lead:"~3.3 hrs",workflow:"Assigned",vitals:{HR:"115 bpm",SpO2:"92%",BP:"150/91",RR:"24/min",Temp:"99.5°F"},why:["ICU-12 remains visible but not static.","Review score and tier changed from prior snapshots.","Assigned workflow state."]},
-          {patient:"TELEMETRY-04",unit:"Telemetry",tier:"Elevated",score:7.1,driver:"HR variability",trend:"Stable",lead:"~2.9 hrs",workflow:"Acknowledged",vitals:{HR:"118 bpm",SpO2:"95%",BP:"129/80",RR:"21/min",Temp:"98.5°F"},why:["HR variability remains a driver.","Trend is stable.","Acknowledged workflow state."]},
-          {patient:"WARD-21",unit:"Ward",tier:"Watch",score:6.0,driver:"BP trend",trend:"Stable",lead:"~2.4 hrs",workflow:"Monitoring",vitals:{HR:"93 bpm",SpO2:"96%",BP:"148/90",RR:"18/min",Temp:"98.6°F"},why:["BP trend is stable.","Watch tier keeps this lower in review queue.","Monitoring continues."]}
+          {patient:"ICU-21",unit:"ICU",tier:"Critical",score:8.3,driver:"BP instability",trend:"Worsening",lead:"~3.9 hrs",workflow:"Needs review",vitals:{SpO2:"92%",HR:"122 bpm",BP:"172/96",RR:"24/min",Temp:"99.9°F"},why:["Blood-pressure instability is the top driver.","Worsening trend raises priority.","Lead-time context supports top queue placement."]},
+          {patient:"ICU-12",unit:"ICU",tier:"Elevated",score:7.6,driver:"SpO2 watch",trend:"Stable / Watch",lead:"~3.3 hrs",workflow:"Assigned",vitals:{SpO2:"92%",HR:"115 bpm",BP:"150/91",RR:"24/min",Temp:"99.5°F"},why:["ICU-12 remains visible but not static.","Review score and tier changed from prior snapshots.","Assigned workflow state is shown."]},
+          {patient:"TEL-18",unit:"Telemetry",tier:"Elevated",score:7.1,driver:"HR variability",trend:"Stable",lead:"~2.9 hrs",workflow:"Acknowledged",vitals:{SpO2:"95%",HR:"118 bpm",BP:"129/80",RR:"21/min",Temp:"98.5°F"},why:["HR variability remains a driver.","Trend is stable.","Acknowledged workflow state."]},
+          {patient:"WARD-21",unit:"Ward",tier:"Watch",score:6.0,driver:"BP trend",trend:"Stable",lead:"~2.4 hrs",workflow:"Monitoring",vitals:{SpO2:"96%",HR:"93 bpm",BP:"148/90",RR:"18/min",Temp:"98.6°F"},why:["Blood-pressure trend is stable.","Watch tier keeps this lower in review queue.","Monitoring continues."]}
         ]
       }
     ];
@@ -725,41 +800,42 @@ COMMAND_CENTER_HTML = r"""
       return "tier-low";
     }
 
-    function medianLead(rows){
-      const nums = rows.map(r => parseFloat(String(r.lead).replace(/[^0-9.]/g,""))).filter(n => !Number.isNaN(n));
-      if(!nums.length) return "—";
-      nums.sort((a,b)=>a-b);
-      const mid = Math.floor(nums.length/2);
-      const val = nums.length % 2 ? nums[mid] : (nums[mid-1] + nums[mid]) / 2;
-      return val.toFixed(1) + "h";
+    function rows(){
+      const all = snapshots[snapshotIndex].rows;
+      return currentFilter === "all" ? all : all.filter(r => r.tier === currentFilter);
     }
 
-    function filteredRows(){
-      const rows = snapshots[snapshotIndex].rows;
-      return currentFilter === "all" ? rows : rows.filter(r => r.tier === currentFilter);
+    function averageScore(list){
+      if(!list.length) return "—";
+      const avg = list.reduce((sum,r)=>sum+r.score,0)/list.length;
+      return avg.toFixed(1) + "/10";
     }
 
     function render(){
       const snap = snapshots[snapshotIndex];
-      const rows = filteredRows();
-      const displayRows = rows.length ? rows : snap.rows;
+      const visible = rows();
+      const displayRows = visible.length ? visible : snap.rows;
 
       if(!selectedPatient || !displayRows.some(r => r.patient === selectedPatient)){
         selectedPatient = displayRows[0].patient;
       }
 
+      const critical = snap.rows.filter(r => r.tier === "Critical").length;
+
       document.getElementById("snapshotLabel").textContent = snap.label;
-      document.getElementById("snapshotTime").textContent = snap.time;
+      document.getElementById("filterLabel").textContent = currentFilter === "all" ? "All Units" : currentFilter;
       document.getElementById("statOpen").textContent = snap.rows.length;
-      document.getElementById("statTier").textContent = snap.rows[0].tier;
-      document.getElementById("statDriver").textContent = snap.rows[0].driver;
-      document.getElementById("statDriverSub").textContent = snap.rows[0].patient + " • " + snap.rows[0].trend;
-      document.getElementById("statLead").textContent = medianLead(snap.rows);
+      document.getElementById("statCritical").textContent = critical;
+      document.getElementById("statAverage").textContent = averageScore(snap.rows);
+      document.getElementById("sideOpen").textContent = snap.rows.length;
+      document.getElementById("sideHigh").textContent = critical;
+      document.getElementById("sideAverage").textContent = averageScore(snap.rows);
+      document.getElementById("lastUpdated").textContent = "Updated: " + new Date().toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"});
 
       const cards = document.getElementById("cards");
       cards.innerHTML = "";
       displayRows.forEach((r, idx) => {
-        const card = document.createElement("div");
+        const card = document.createElement("article");
         card.className = "patient-card" + (r.patient === selectedPatient ? " selected" : "");
         card.onclick = () => { selectedPatient = r.patient; render(); };
         card.innerHTML = `
@@ -787,14 +863,19 @@ COMMAND_CENTER_HTML = r"""
         tr.onclick = () => { selectedPatient = r.patient; render(); };
         tr.innerHTML = `
           <td>#${idx + 1}</td>
-          <td>${r.patient}</td>
-          <td>${r.unit}</td>
+          <td><strong>${r.patient}</strong><br><span style="color:#a9b8cc">${r.unit}</span></td>
           <td><span class="pill ${tierClass(r.tier)}">${r.tier}</span></td>
-          <td>${r.score.toFixed(1)}/10</td>
+          <td class="score-cell">${r.score.toFixed(1)}/10</td>
           <td>${r.driver}</td>
           <td>${r.trend}</td>
           <td>${r.lead}</td>
-          <td>${r.workflow}</td>
+          <td>
+            <div class="action-row">
+              <button class="small-action">Acknowledge</button>
+              <button class="small-action">Assign</button>
+              <button class="small-action">Escalate Review</button>
+            </div>
+          </td>
         `;
         body.appendChild(tr);
       });
@@ -805,14 +886,13 @@ COMMAND_CENTER_HTML = r"""
 
     function renderDetail(r, rank){
       document.getElementById("detailPatient").textContent = r.patient;
-      document.getElementById("detailSub").textContent = `${r.unit} • Queue rank #${rank} • First threshold context ${r.lead}`;
+      document.getElementById("detailSub").textContent = `${r.unit} • Rank #${rank} • ${r.workflow}`;
       const tier = document.getElementById("detailTier");
       tier.className = "pill " + tierClass(r.tier);
       tier.textContent = r.tier;
       document.getElementById("detailScore").innerHTML = `${r.score.toFixed(1)}<small>/10</small>`;
 
-      const vitals = document.getElementById("vitals");
-      vitals.innerHTML = Object.entries(r.vitals).map(([k,v]) => `
+      document.getElementById("vitals").innerHTML = Object.entries(r.vitals).map(([k,v]) => `
         <div class="vital"><small>${k}</small><b>${v}</b></div>
       `).join("");
 
@@ -862,12 +942,33 @@ def command_center_page() -> Response:
 def command_center() -> Response:
     return command_center_page()
 
+@command_center_bp.route("/command-center/deck")
+@command_center_bp.route("/command-center/governance-deck")
+@command_center_bp.route("/governance-deck")
+def command_center_deck() -> Response:
+    deck_path = Path(__file__).resolve().parent / "command_center_deck.html"
+    if deck_path.exists():
+        return Response(deck_path.read_text(encoding="utf-8"), mimetype="text/html")
+    fallback = """
+    <!doctype html>
+    <html>
+      <head><title>Command Center Governance Deck</title></head>
+      <body style="font-family:Arial;background:#08111f;color:white;padding:40px">
+        <h1>Command Center Governance Deck</h1>
+        <p>The governance deck file is not currently present. Use /pilot-docs, /model-card, and /pilot-success-guide for governance documentation.</p>
+        <p><a style="color:#9bd7ff" href="/command-center">Back to Command Center</a></p>
+      </body>
+    </html>
+    """
+    return Response(fallback, mimetype="text/html")
+
 def register_command_center_routes(app):
     existing_rules = {str(rule.rule) for rule in app.url_map.iter_rules()}
     if "/command-center" not in existing_rules:
         app.add_url_rule("/command-center", "command_center_page", command_center_page)
+    if "/command-center/deck" not in existing_rules:
+        app.add_url_rule("/command-center/deck", "command_center_deck_page", command_center_deck)
 
-# Compatibility aliases used by earlier builds.
 bp = command_center_bp
 get_command_center_html = lambda: COMMAND_CENTER_HTML
 render_command_center = command_center_page
@@ -877,8 +978,197 @@ __all__ = [
     "bp",
     "command_center",
     "command_center_page",
+    "command_center_deck",
     "register_command_center_routes",
     "get_command_center_html",
     "render_command_center",
     "COMMAND_CENTER_HTML",
 ]
+
+
+# ERA_COMMAND_CENTER_DECK_ROUTE_FIX_START
+
+COMMAND_CENTER_DECK_HTML = r"""
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Early Risk Alert AI — Governance Deck</title>
+  <style>
+    :root{
+      --bg:#06101d;--panel:#101b2d;--panel2:#142238;--line:rgba(184,211,255,.16);
+      --text:#f7fbff;--muted:#a9b8cc;--green:#a7ff9a;--amber:#ffd36d;--blue:#9bd7ff;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      color:var(--text);background:radial-gradient(circle at 10% 0%,rgba(78,166,255,.16),transparent 30%),linear-gradient(180deg,#06101d,#050912);
+    }
+    a{color:inherit;text-decoration:none}
+    .wrap{max-width:1320px;margin:0 auto;padding:24px 18px 70px}
+    .top{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap;margin-bottom:20px}
+    .kicker{color:#b8ffd0;font-size:11px;letter-spacing:.18em;text-transform:uppercase;font-weight:1000}
+    h1{margin:6px 0 8px;font-size:clamp(34px,5vw,64px);line-height:.9;letter-spacing:-.06em}
+    p{color:#d8e3f2;font-size:14px;line-height:1.45;font-weight:760}
+    .nav{display:flex;gap:8px;flex-wrap:wrap}
+    .nav a,.pill{
+      border:1px solid var(--line);background:rgba(255,255,255,.06);border-radius:999px;
+      padding:8px 11px;font-weight:900;font-size:12px;white-space:nowrap;
+    }
+    .pill.green{color:#d7ffd1;border-color:rgba(167,255,154,.42);background:rgba(167,255,154,.10)}
+    .pill.amber{color:#ffe6a2;border-color:rgba(255,211,109,.52);background:rgba(255,211,109,.12)}
+    .hero{
+      border:1px solid rgba(255,211,109,.34);background:linear-gradient(90deg,rgba(255,211,109,.10),rgba(167,255,154,.06));
+      border-radius:22px;padding:18px;margin-bottom:16px;
+    }
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+    .card{
+      background:linear-gradient(180deg,rgba(20,34,56,.94),rgba(11,20,35,.94));
+      border:1px solid var(--line);border-radius:20px;padding:18px;min-height:150px;
+      box-shadow:0 18px 70px rgba(0,0,0,.25);
+    }
+    h2{margin:0 0 10px;font-size:24px;letter-spacing:-.04em}
+    h3{margin:0 0 8px;color:#d8efff;font-size:13px;letter-spacing:.14em;text-transform:uppercase}
+    ul{margin:0;padding-left:18px;color:#d8e3f2;font-size:14px;line-height:1.55;font-weight:760}
+    table{width:100%;border-collapse:separate;border-spacing:0;overflow:hidden;border-radius:14px;border:1px solid var(--line);font-size:13px}
+    th{background:rgba(154,190,255,.19);font-size:11px;text-transform:uppercase;letter-spacing:.12em;text-align:left;padding:10px}
+    td{border-top:1px solid rgba(181,211,255,.12);padding:10px;color:#f5f9ff;font-weight:800;vertical-align:top}
+    .footer{
+      margin-top:18px;border:1px solid rgba(255,211,109,.38);background:rgba(255,211,109,.075);
+      color:#ffe6a2;border-radius:18px;padding:13px;text-align:center;font-size:12px;font-weight:900;line-height:1.4
+    }
+    @media(max-width:850px){.grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <div class="top">
+      <div>
+        <div class="kicker">HCP-facing decision support • governance deck</div>
+        <h1>Pilot Governance + Documentation</h1>
+        <p>
+          One stable page for intended use, support claims, visible limitations, role/unit scoping,
+          audit controls, cybersecurity posture, and V&V-lite pilot readiness.
+        </p>
+      </div>
+      <nav class="nav">
+        <a href="/command-center">Command Center</a>
+        <a href="/pilot-docs">Pilot Docs</a>
+        <a href="/model-card">Model Card</a>
+        <a href="/pilot-success-guide">Pilot Success Guide</a>
+        <a href="/validation-evidence">Evidence Packet</a>
+        <a href="/validation-intelligence">Validation Intelligence</a>
+      </nav>
+    </div>
+
+    <section class="hero">
+      <span class="pill green">Pilot governance route restored</span>
+      <span class="pill amber">Decision support only</span>
+      <p>
+        This deck keeps the governance material separate from the live Command Center so the Command Center can stay compact,
+        interactive, and queue-focused.
+      </p>
+    </section>
+
+    <section class="grid">
+      <div class="card">
+        <h3>Frozen intended use</h3>
+        <p>
+          Early Risk Alert AI is an HCP-facing decision-support and workflow-support platform designed to help authorized
+          healthcare professionals identify patients who may warrant further clinical evaluation, support patient prioritization,
+          and improve command-center operational awareness.
+        </p>
+        <p>
+          It does not replace clinician judgment and is not intended to diagnose, direct treatment, or independently trigger escalation.
+        </p>
+      </div>
+
+      <div class="card">
+        <h3>Pilot controls</h3>
+        <ul>
+          <li>Outputs are patient-prioritization support, not clinical directives.</li>
+          <li>Review basis, confidence, limitations, freshness, and unknowns remain visible.</li>
+          <li>Workflow controls record operational handling and user action logs only.</li>
+          <li>Role, unit, and access scope should be confirmed before pilot launch.</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>Approved support language</h3>
+        <ul>
+          <li>Supports patient prioritization across monitored patients.</li>
+          <li>Provides explainable review-support context.</li>
+          <li>Supports command-center workflow awareness and operational visibility.</li>
+          <li>Helps identify patients who may warrant further review.</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>Claims to avoid</h3>
+        <ul>
+          <li>Detects deterioration autonomously.</li>
+          <li>Predicts who will clinically crash.</li>
+          <li>Directs bedside intervention.</li>
+          <li>Replaces clinician judgment.</li>
+          <li>Independently triggers escalation.</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>Risk register</h3>
+        <table>
+          <thead>
+            <tr><th>ID</th><th>Risk</th><th>Mitigation</th><th>Status</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>R-001</td><td>Claims drift</td><td>Freeze intended-use language and review claims before release.</td><td>Open</td></tr>
+            <tr><td>R-002</td><td>Explainability over-reliance</td><td>Show review basis, limitations, freshness, and unknowns.</td><td>In place</td></tr>
+            <tr><td>R-003</td><td>Workflow confusion</td><td>Keep acknowledge, assign, escalate, and resolve as workflow states only.</td><td>In place</td></tr>
+            <tr><td>R-004</td><td>Access scope</td><td>Maintain role and unit restrictions with filtered worklists.</td><td>In place</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h3>V&V-lite sheet</h3>
+        <table>
+          <thead>
+            <tr><th>ID</th><th>Check</th><th>Evidence</th><th>Status</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>VV-001</td><td>Role/unit scope respected</td><td>Route and access-context checks.</td><td>Pass</td></tr>
+            <tr><td>VV-002</td><td>Workflow actions remain operational</td><td>Audit/action routes and UI workflow controls.</td><td>Pass</td></tr>
+            <tr><td>VV-003</td><td>Explainability fields visible</td><td>Queue + selected-patient detail panel.</td><td>Pass</td></tr>
+            <tr><td>VV-004</td><td>Decision-support guardrails visible</td><td>Header, banner, page footer, and governance deck.</td><td>Pass</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <div class="footer">
+      Early Risk Alert AI • HCP-facing decision support and workflow support • Not intended to diagnose, direct treatment,
+      replace clinician judgment, or independently trigger escalation.
+    </div>
+  </main>
+</body>
+</html>
+"""
+
+def command_center_deck_page() -> Response:
+    return Response(COMMAND_CENTER_DECK_HTML, mimetype="text/html")
+
+try:
+    command_center_bp.add_url_rule("/command-center/deck", "command_center_deck", command_center_deck_page)
+except Exception:
+    pass
+
+def register_command_center_routes(app):
+    existing_rules = {str(rule.rule) for rule in app.url_map.iter_rules()}
+    if "/command-center" not in existing_rules:
+        app.add_url_rule("/command-center", "command_center_page", command_center_page)
+    if "/command-center/deck" not in existing_rules:
+        app.add_url_rule("/command-center/deck", "command_center_deck_page", command_center_deck_page)
+
+# ERA_COMMAND_CENTER_DECK_ROUTE_FIX_END
+
