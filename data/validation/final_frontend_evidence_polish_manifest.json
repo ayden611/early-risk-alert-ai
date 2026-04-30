@@ -1,0 +1,21 @@
+{
+  "ok": true,
+  "generated_at_utc": "2026-04-30T12:11:31.373124+00:00",
+  "updates": [
+    "Rebuilt validation intelligence page with cleaner MIMIC-IV vs eICU framing.",
+    "Rebuilt validation evidence page with populated matrices and no Loading placeholders.",
+    "Rebuilt validation runs page with real locked run history.",
+    "Created model card page and markdown.",
+    "Created pilot success guide page and markdown.",
+    "Patched command center with visible explainability alignment module.",
+    "Updated command-center route status for model card and pilot success guide where detectable."
+  ],
+  "not_added": [
+    "No hard ROI dollar claims.",
+    "No proven generalizability claim.",
+    "No direct equality claim between MIMIC and eICU detection rates.",
+    "No raw or row-level restricted data exposure."
+  ],
+  "command_center_file": null,
+  "safe_claim": "Cross-dataset retrospective robustness evidence across de-identified ICU datasets."
+}

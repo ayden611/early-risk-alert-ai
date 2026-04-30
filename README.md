@@ -494,3 +494,29 @@ Cross-dataset retrospective robustness evidence across de-identified ICU dataset
 Public evidence remains aggregate-only. Raw restricted files and row-level outputs remain local-only.
 <!-- ERA_MULTI_DATASET_PUBLIC_FRAMING_POLISH_README_V1_END -->
 
+
+<!-- ERA_FINAL_FRONTEND_EVIDENCE_POLISH_README_V1_START -->
+## Final Frontend Evidence Polish
+
+The live platform now includes:
+
+- `/validation-intelligence`
+- `/validation-evidence`
+- `/validation-runs`
+- `/model-card`
+- `/pilot-success-guide`
+- `/api/validation/final-frontend-polish`
+
+The public story is:
+
+**Early Risk Alert AI now has retrospective evidence across two de-identified ICU datasets: MIMIC-IV strict clinical-event cross-cohort validation plus a separate eICU outcome-proxy check.**
+
+Across both datasets, ERA preserved the same threshold-direction behavior: lower thresholds increased detection, while conservative thresholds reduced review burden and false positives.
+
+Important guardrail:
+
+MIMIC-IV and eICU detection rates should not be treated as equivalent endpoint definitions because MIMIC-IV uses stricter clinical-event labels, while eICU uses outcome-proxy event labels derived from mortality/discharge context.
+
+No raw restricted files or row-level outputs are published.
+<!-- ERA_FINAL_FRONTEND_EVIDENCE_POLISH_README_V1_END -->
+

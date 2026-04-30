@@ -2,874 +2,201 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Validation Intelligence — Early Risk Alert AI</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <style>
-:root {
-  --bg: #070b12;
-  --panel: rgba(15, 24, 42, 0.9);
-  --panel2: rgba(23, 34, 55, 0.92);
-  --line: rgba(155, 190, 255, 0.2);
-  --text: #f7fbff;
-  --muted: #b8c6d8;
-  --accent: #8fffd2;
-  --blue: #8bb8ff;
-  --gold: #ffd78a;
-  --red: #ff9aa9;
-  --green: #96ffb8;
+  
+<style>
+:root{
+  --bg:#07101f;
+  --panel:#101b2e;
+  --panel2:#0d1626;
+  --line:rgba(170,205,255,.22);
+  --text:#f6fbff;
+  --muted:#b8c6d8;
+  --green:#8fffd2;
+  --blue:#8bb8ff;
+  --gold:#ffe2a5;
+  --red:#ff9da8;
 }
-* { box-sizing: border-box; }
-body {
-  margin: 0;
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  color: var(--text);
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   background:
-    radial-gradient(circle at 18% 8%, rgba(50, 120, 255, 0.23), transparent 26rem),
-    radial-gradient(circle at 82% 4%, rgba(83, 255, 203, 0.16), transparent 25rem),
-    linear-gradient(180deg, #050914 0%, #0a1020 55%, #050914 100%);
+    radial-gradient(circle at 10% 0%, rgba(139,184,255,.16), transparent 28%),
+    radial-gradient(circle at 90% 10%, rgba(143,255,210,.12), transparent 28%),
+    var(--bg);
+  color:var(--text);
 }
-.page {
-  width: min(1180px, calc(100% - 32px));
-  margin: 0 auto;
-  padding: 34px 0 70px;
+a{color:var(--green);text-decoration:none;font-weight:850}
+.wrapper{width:min(1180px, calc(100% - 28px));margin:0 auto;padding:28px 0 52px}
+.eyebrow{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--green);font-weight:950}
+h1{font-size:clamp(34px,6vw,64px);letter-spacing:-.07em;line-height:.95;margin:8px 0 14px}
+h2{font-size:clamp(24px,3vw,36px);letter-spacing:-.05em;margin:0 0 12px}
+h3{margin:22px 0 10px;letter-spacing:-.03em}
+p{line-height:1.56}
+.muted{color:var(--muted)}
+.hero,.card{
+  border:1px solid var(--line);
+  background:linear-gradient(145deg, rgba(16,27,46,.95), rgba(7,16,31,.95));
+  border-radius:28px;
+  padding:24px;
+  box-shadow:0 22px 65px rgba(0,0,0,.28);
 }
-.nav {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 14px;
-  margin-bottom: 30px;
+.hero{margin-top:20px}
+.grid{display:grid;gap:14px}
+.grid.cols4{grid-template-columns:repeat(4,1fr)}
+.grid.cols3{grid-template-columns:repeat(3,1fr)}
+.grid.cols2{grid-template-columns:repeat(2,1fr)}
+.metric{
+  border:1px solid rgba(170,205,255,.18);
+  background:rgba(255,255,255,.055);
+  border-radius:20px;
+  padding:18px;
 }
-.brand {
-  font-size: 12px;
-  letter-spacing: .22em;
-  text-transform: uppercase;
-  color: var(--muted);
-  font-weight: 900;
+.metric span{display:block;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.13em;font-weight:950}
+.metric strong{display:block;font-size:clamp(26px,4vw,44px);margin-top:8px;color:var(--green);letter-spacing:-.06em}
+.metric em{display:block;color:var(--muted);font-style:normal;font-size:12px;margin-top:6px}
+.callout{
+  border-left:4px solid var(--green);
+  background:rgba(143,255,210,.09);
+  border-radius:16px;
+  padding:14px 16px;
+  font-weight:850;
 }
-.navlinks { display: flex; gap: 10px; flex-wrap: wrap; }
-.navlinks a, .btn {
-  text-decoration: none;
-  color: var(--text);
-  border: 1px solid var(--line);
-  background: rgba(255,255,255,.06);
-  padding: 10px 13px;
-  border-radius: 14px;
-  font-size: 13px;
-  font-weight: 800;
+.guardrail{
+  border:1px solid rgba(255,226,165,.35);
+  background:rgba(255,226,165,.09);
+  color:var(--gold);
+  border-radius:18px;
+  padding:14px 16px;
+  font-weight:780;
 }
-.btn.primary {
-  background: linear-gradient(135deg, rgba(143,255,210,.95), rgba(139,184,255,.95));
-  color: #061017;
-  border: 0;
+table{
+  width:100%;
+  border-collapse:collapse;
+  overflow:hidden;
+  border-radius:18px;
+  border:1px solid rgba(170,205,255,.20);
+  background:rgba(255,255,255,.035);
+  margin-top:12px;
 }
-.hero {
-  border: 1px solid var(--line);
-  border-radius: 32px;
-  background: linear-gradient(145deg, rgba(16, 26, 45, .96), rgba(7, 12, 22, .96));
-  padding: 34px;
-  box-shadow: 0 25px 75px rgba(0,0,0,.42);
+th,td{
+  text-align:left;
+  padding:12px 14px;
+  border-bottom:1px solid rgba(170,205,255,.14);
+  vertical-align:top;
+  font-size:14px;
 }
-.kicker {
-  color: var(--accent);
-  letter-spacing: .17em;
-  text-transform: uppercase;
-  font-size: 12px;
-  font-weight: 950;
-  margin-bottom: 10px;
+th{
+  color:#dce9ff;
+  background:rgba(139,184,255,.12);
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:.12em;
 }
-h1 {
-  margin: 0;
-  font-size: clamp(38px, 7vw, 74px);
-  line-height: .94;
-  letter-spacing: -.06em;
+tr:last-child td{border-bottom:0}
+.pill{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:6px 10px;
+  border-radius:999px;
+  border:1px solid rgba(143,255,210,.35);
+  background:rgba(143,255,210,.11);
+  color:var(--green);
+  font-size:11px;
+  font-weight:950;
+  letter-spacing:.08em;
+  text-transform:uppercase;
 }
-h2 {
-  margin: 0 0 14px;
-  font-size: clamp(24px, 3vw, 38px);
-  letter-spacing: -.04em;
+.warn{border-color:rgba(255,226,165,.35);background:rgba(255,226,165,.10);color:var(--gold)}
+.topnav{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin:18px 0;
 }
-h3 {
-  margin: 0 0 10px;
-  font-size: 20px;
-  letter-spacing: -.02em;
+.topnav a{
+  color:#eaf4ff;
+  border:1px solid rgba(170,205,255,.18);
+  background:rgba(255,255,255,.06);
+  border-radius:999px;
+  padding:9px 12px;
+  font-size:12px;
 }
-.lede {
-  color: #dbe8fb;
-  font-size: 18px;
-  max-width: 900px;
-  margin: 18px 0 0;
+.section{margin-top:18px}
+ul{line-height:1.7}
+.footer{margin-top:24px;color:var(--muted);font-size:12px}
+@media(max-width:900px){
+  .grid.cols4,.grid.cols3,.grid.cols2{grid-template-columns:1fr}
+  table{display:block;overflow-x:auto;white-space:nowrap}
 }
-.disclaimer {
-  margin-top: 22px;
-  border: 1px solid rgba(255,215,138,.38);
-  background: rgba(255,215,138,.1);
-  color: #ffe2a5;
-  border-radius: 18px;
-  padding: 14px 16px;
-  font-weight: 800;
-}
-.metrics {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 14px;
-  margin-top: 26px;
-}
-.metric {
-  border: 1px solid var(--line);
-  background: rgba(255,255,255,.06);
-  border-radius: 22px;
-  padding: 18px;
-  min-height: 132px;
-}
-.metric span {
-  display: block;
-  color: var(--muted);
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: .13em;
-  font-weight: 950;
-}
-.metric strong {
-  display: block;
-  font-size: clamp(32px, 5vw, 52px);
-  line-height: 1;
-  letter-spacing: -.06em;
-  margin-top: 12px;
-}
-.metric em {
-  display: block;
-  color: var(--muted);
-  font-size: 13px;
-  margin-top: 10px;
-  font-style: normal;
-}
-.grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 18px;
-  margin-top: 18px;
-}
-.card {
-  border: 1px solid var(--line);
-  background: var(--panel);
-  border-radius: 26px;
-  padding: 24px;
-  box-shadow: 0 18px 48px rgba(0,0,0,.28);
-}
-.card.full { grid-column: 1 / -1; }
-.callout {
-  border-left: 4px solid var(--accent);
-  padding: 12px 16px;
-  border-radius: 14px;
-  background: rgba(143,255,210,.08);
-  color: #dffdf3;
-  font-weight: 800;
-}
-.muted { color: var(--muted); }
-ul { margin-top: 8px; }
-li { margin: 7px 0; }
-table {
-  width: 100%;
-  border-collapse: collapse;
-  overflow: hidden;
-  border-radius: 18px;
-  font-size: 13px;
-}
-th, td {
-  padding: 13px 12px;
-  border-bottom: 1px solid var(--line);
-  text-align: left;
-  vertical-align: top;
-}
-th {
-  color: var(--muted);
-  background: rgba(255,255,255,.055);
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: .08em;
-}
-tr:last-child td { border-bottom: 0; }
-.download-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-}
-.download-card {
-  text-decoration: none;
-  color: var(--text);
-  border: 1px solid var(--line);
-  background: rgba(255,255,255,.055);
-  padding: 16px;
-  border-radius: 18px;
-}
-.download-card strong { display: block; margin-bottom: 5px; }
-.download-card span { color: var(--muted); font-size: 13px; }
-.footer {
-  margin-top: 26px;
-  color: var(--muted);
-  font-size: 13px;
-}
-@media print {
-  body { background: #fff; color: #111; }
-  .page { width: 100%; padding: 0; }
-  .navlinks, .btn { display: none !important; }
-  .hero, .card, .metric { background: #fff; color: #111; box-shadow: none; border-color: #aaa; }
-  .muted, .metric em, .metric span { color: #444; }
-  .disclaimer { color: #111; background: #f7f7f7; border-color: #777; }
-}
-@media (max-width: 900px) {
-  .metrics, .grid, .download-grid { grid-template-columns: 1fr; }
-  .hero { padding: 24px; }
-  table { display: block; overflow-x: auto; white-space: nowrap; }
+@media print{
+  body{background:#fff;color:#111}
+  .hero,.card,.metric{box-shadow:none;background:#fff;color:#111;border-color:#ccc}
+  .topnav{display:none}
+  a{color:#111}
 }
 </style>
+
 </head>
 <body>
-  <main class="page">
-    <nav class="nav">
-      <div class="brand">Early Risk Alert AI · Validation Intelligence</div>
-      <div class="navlinks">
-        <a href="/command-center">Command Center</a>
-        <a href="/validation-evidence">Evidence Packet</a>
-        <a href="/validation-runs">Validation Runs</a>
-        <a href="/data-ingest">Data Ingest</a>
-      </div>
-    </nav>
-
-    <section class="hero">
-      <div class="kicker">Cross-Cohort Validation Story</div>
-      <h1>Full cohort plus two subcohorts now support the validation story.</h1>
-      <p class="lede">
-        ERA validation evidence now compares the full validation cohort with two different deterministic case-level subcohorts.
-        This makes the public story stronger: results are no longer presented from one cohort slice alone.
-      </p>
-      <div class="disclaimer">
-        Decision support only. Retrospective aggregate analysis only. Not intended to diagnose, direct treatment, replace clinician judgment, or independently trigger escalation.
-      </div>
-
-      <div class="metrics">
-        
-      <div class="metric">
-        <span>Cohorts Compared</span>
-        <strong>3</strong>
-        <em>full cohort + deterministic subcohorts</em>
-      </div>
+  <div class="wrapper">
+    <div class="eyebrow">Early Risk Alert AI · Retrospective Evidence</div>
+    <h1>Validation Intelligence</h1>
     
-        
-      <div class="metric">
-        <span>Mean Alert Reduction</span>
-        <strong>94.4%</strong>
-        <em>t=6.0 conservative mode</em>
-      </div>
+<nav class="topnav">
+  <a href="/command-center">Command Center</a>
+  <a href="/validation-intelligence">Validation Intelligence</a>
+  <a href="/validation-evidence">Evidence Packet</a>
+  <a href="/validation-runs">Validation Runs</a>
+  <a href="/model-card">Model Card</a>
+  <a href="/pilot-success-guide">Pilot Success Guide</a>
+</nav>
+
     
-        
-      <div class="metric">
-        <span>Mean ERA FPR</span>
-        <strong>4.1%</strong>
-        <em>t=6.0 low-burden setting</em>
-      </div>
-    
-        
-      <div class="metric">
-        <span>Mean Lead Time</span>
-        <strong>4 hrs</strong>
-        <em>cross-cohort t=6.0</em>
-      </div>
-    
-      </div>
-    </section>
-
-<!-- ERA_CROSS_COHORT_RANGE_HEADLINE_V1_START -->
-<section class="cross-cohort-headline" style="
-  margin: 18px 0 0;
-  padding: 18px 20px;
-  border: 1px solid rgba(143,255,210,0.38);
-  border-left: 5px solid #8fffd2;
-  border-radius: 18px;
-  background: linear-gradient(135deg, rgba(143,255,210,0.12), rgba(139,184,255,0.08));
-  color: #f7fbff;
-  box-shadow: 0 18px 44px rgba(0,0,0,0.18);
-">
-  <div style="
-    color:#8fffd2;
-    text-transform:uppercase;
-    letter-spacing:.14em;
-    font-size:11px;
-    font-weight:900;
-    margin-bottom:7px;
-  ">Cross-Cohort Range Finding</div>
-  <p style="
-    margin:0;
-    font-size:16px;
-    line-height:1.55;
-    color:#eaf4ff;
-    font-weight:750;
-  ">Across the full validation cohort and two deterministic patient-level subcohorts (577–1,705 cases each), the conservative t=6.0 ERA setting showed consistent low-burden review-queue performance, with 94.0% to 94.9% alert reduction, 3.7% to 4.4% ERA FPR, 14.1% to 16.0% event-cluster detection, and a stable 4.0 hours median lead-time context across all cohorts.</p>
-</section>
-<!-- ERA_CROSS_COHORT_RANGE_HEADLINE_V1_END -->
-
-
-
-    <section class="grid">
-      <div class="card full">
-        <h2>Top Robustness Finding</h2>
-        <p class="callout">
-          The threshold story can now be reviewed across the full validation cohort, Subcohort B, and Subcohort C using DUA-safe aggregate evidence.
-        </p>
-        <p class="muted">
-          This supports a more credible pilot conversation because the results are framed as an operating-point pattern across multiple cohort slices, not a single isolated run.
-        </p>
-      </div>
-
-      <div class="card">
-        <h2>Cohorts Included</h2>
-        <ul><li>Full validation cohort</li><li>Subcohort B</li><li>Subcohort C</li></ul>
-      </div>
-
-      <div class="card">
-        <h2>How to Read It</h2>
-        <p class="muted">
-          t=4.0 supports higher-detection / high-acuity review. t=5.0 supports balanced review.
-          t=6.0 supports the conservative low-burden review queue with the lowest FPR.
-        </p>
-      </div>
-
-      <div class="card full">
-        <h2>Cross-Cohort Threshold Stability</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>Threshold</th>
-              <th>Cohorts</th>
-              <th>Mean Alert Reduction</th>
-              <th>SD</th>
-              <th>Mean FPR</th>
-              <th>SD</th>
-              <th>Mean Detection</th>
-              <th>SD</th>
-              <th>Mean Lead Time</th>
-              <th>Mean Alerts / Patient-Day</th>
-            </tr>
-          </thead>
-          <tbody>
-          <tr>
-            <td><strong>t=4.0</strong></td>
-            <td>3</td>
-            <td>80.6%</td>
-            <td>0.608</td>
-            <td>14.2%</td>
-            <td>0.529</td>
-            <td>37.833%</td>
-            <td>1.401</td>
-            <td>4 hrs</td>
-            <td>2.105</td>
-          </tr>
-        
-          <tr>
-            <td><strong>t=5.0</strong></td>
-            <td>3</td>
-            <td>89.267%</td>
-            <td>0.569</td>
-            <td>7.867%</td>
-            <td>0.416</td>
-            <td>24.4%</td>
-            <td>1.212</td>
-            <td>4 hrs</td>
-            <td>1.163</td>
-          </tr>
-        
-          <tr>
-            <td><strong>t=6.0</strong></td>
-            <td>3</td>
-            <td>94.4%</td>
-            <td>0.458</td>
-            <td>4.1%</td>
-            <td>0.361</td>
-            <td>15.133%</td>
-            <td>0.961</td>
-            <td>4 hrs</td>
-            <td>0.604</td>
-          </tr>
-        </tbody>
-        </table>
-      </div>
-
-      <div class="card full">
-        <h2>Run-Level Comparison</h2>
-        
-      <table>
-        <thead>
-          <tr>
-            <th>Cohort</th>
-            <th>Threshold</th>
-            <th>Setting</th>
-            <th>Rows</th>
-            <th>Cases</th>
-            <th>Alert Reduction</th>
-            <th>FPR</th>
-            <th>Detection</th>
-            <th>Lead Time</th>
-            <th>Alerts / Patient-Day</th>
-          </tr>
-        </thead>
-        <tbody>
-    
-          <tr>
-            <td>Full validation cohort</td>
-            <td><strong>t=4</strong></td>
-            <td>ICU / high-acuity</td>
-            <td>456453</td>
-            <td>1705</td>
-            <td>80.3%</td>
-            <td>14.4%</td>
-            <td>37.9%</td>
-            <td>4 hrs</td>
-            <td>2.215</td>
-          </tr>
-        
-          <tr>
-            <td>Full validation cohort</td>
-            <td><strong>t=5</strong></td>
-            <td>Mixed units</td>
-            <td>456453</td>
-            <td>1705</td>
-            <td>89.1%</td>
-            <td>8%</td>
-            <td>24.6%</td>
-            <td>4 hrs</td>
-            <td>1.231</td>
-          </tr>
-        
-          <tr>
-            <td>Full validation cohort</td>
-            <td><strong>t=6</strong></td>
-            <td>Telemetry / stepdown</td>
-            <td>456453</td>
-            <td>1705</td>
-            <td>94.3%</td>
-            <td>4.2%</td>
-            <td>15.3%</td>
-            <td>4 hrs</td>
-            <td>0.647</td>
-          </tr>
-        
-          <tr>
-            <td>Subcohort B</td>
-            <td><strong>t=4</strong></td>
-            <td>ICU / high-acuity</td>
-            <td>159692</td>
-            <td>577</td>
-            <td>80.2%</td>
-            <td>14.6%</td>
-            <td>39.2%</td>
-            <td>4 hrs</td>
-            <td>1.62</td>
-          </tr>
-        
-          <tr>
-            <td>Subcohort B</td>
-            <td><strong>t=5</strong></td>
-            <td>Mixed units / balanced</td>
-            <td>159692</td>
-            <td>577</td>
-            <td>88.8%</td>
-            <td>8.2%</td>
-            <td>25.5%</td>
-            <td>4 hrs</td>
-            <td>0.912</td>
-          </tr>
-        
-          <tr>
-            <td>Subcohort B</td>
-            <td><strong>t=6</strong></td>
-            <td>Telemetry / stepdown conservative</td>
-            <td>159692</td>
-            <td>577</td>
-            <td>94%</td>
-            <td>4.4%</td>
-            <td>16%</td>
-            <td>4 hrs</td>
-            <td>0.486</td>
-          </tr>
-        
-          <tr>
-            <td>Subcohort C</td>
-            <td><strong>t=4</strong></td>
-            <td>ICU / high-acuity</td>
-            <td>159397</td>
-            <td>621</td>
-            <td>81.3%</td>
-            <td>13.6%</td>
-            <td>36.4%</td>
-            <td>4 hrs</td>
-            <td>2.481</td>
-          </tr>
-        
-          <tr>
-            <td>Subcohort C</td>
-            <td><strong>t=5</strong></td>
-            <td>Mixed units / balanced</td>
-            <td>159397</td>
-            <td>621</td>
-            <td>89.9%</td>
-            <td>7.4%</td>
-            <td>23.1%</td>
-            <td>4 hrs</td>
-            <td>1.345</td>
-          </tr>
-        
-          <tr>
-            <td>Subcohort C</td>
-            <td><strong>t=6</strong></td>
-            <td>Telemetry / stepdown conservative</td>
-            <td>159397</td>
-            <td>621</td>
-            <td>94.9%</td>
-            <td>3.7%</td>
-            <td>14.1%</td>
-            <td>4 hrs</td>
-            <td>0.678</td>
-          </tr>
-        </tbody></table>
-      </div>
-
-      <div class="card full">
-        <h2>Pilot-Safe Claim</h2>
-        <p class="callout">
-          Retrospective DUA-safe cross-cohort comparison supports review of ERA operating-point behavior across the full validation cohort and different deterministic case-level subcohorts.
-        </p>
-        <p class="muted">
-          Avoid claims that ERA predicts deterioration, prevents adverse events, outperforms standard monitoring, replaces clinician judgment, or independently triggers escalation.
-        </p>
-      </div>
-    </section>
-
-    <p class="footer">Generated 2026-04-25T20:14:38.634724+00:00 · Aggregate DUA-safe public summary only.</p>
-  
-
-<!-- ERA_EICU_SECOND_DATASET_PUBLIC_V1_START -->
-<section class="card full" style="
-  border:1px solid rgba(139,184,255,.30);
-  border-left:5px solid #8bb8ff;
-  background:linear-gradient(145deg, rgba(13,24,42,.92), rgba(6,11,21,.92));
-  border-radius:26px;
-  padding:24px;
-  margin-top:18px;
-">
-  <div style="
-    color:#8bb8ff;
-    text-transform:uppercase;
-    letter-spacing:.14em;
-    font-size:11px;
-    font-weight:950;
-    margin-bottom:8px;
-  ">Second-Dataset Outcome-Proxy Check</div>
-
-  <h2 style="margin:0 0 12px;">eICU Retrospective Outcome-Proxy Validation</h2>
-
-  <p class="callout" style="
-    border-left:4px solid #8bb8ff;
-    padding:12px 16px;
-    border-radius:14px;
-    background:rgba(139,184,255,.09);
-    color:#eaf4ff;
-    font-weight:800;
-  ">
-    On a separate eICU outcome-proxy cohort, ERA preserved the same threshold pattern: lower thresholds produced higher detection, while the conservative t=6.0 setting emphasized low-burden review behavior.
-  </p>
-
-  <p class="muted">
-    This eICU run is intentionally framed separately from the locked MIMIC-IV evidence release because it uses outcome-proxy event labels from eICU mortality/discharge status fields and relative ICU offsets.
-  </p>
-
-  <div class="metrics" style="margin-top:16px;">
-    <div class="metric">
-      <span>t=6.0 Alert Reduction</span>
-      <strong>96.8%</strong>
-      <em>eICU outcome-proxy cohort</em>
-    </div>
-    <div class="metric">
-      <span>t=6.0 ERA FPR</span>
-      <strong>1.8%</strong>
-      <em>conservative setting</em>
-    </div>
-    <div class="metric">
-      <span>t=6.0 Detection</span>
-      <strong>66.6%</strong>
-      <em>outcome-proxy event context</em>
-    </div>
-    <div class="metric">
-      <span>t=6.0 Lead-Time Context</span>
-      <strong>3.41 hrs</strong>
-      <em>retrospective timing context</em>
-    </div>
-  </div>
-
-  <h3 style="margin-top:20px;">eICU Threshold Matrix</h3>
-  <table>
-    <thead>
-      <tr>
-        <th>Threshold</th>
-        <th>Setting</th>
-        <th>Rows</th>
-        <th>Cases</th>
-        <th>Event-Proxy Rows</th>
-        <th>Alert Reduction</th>
-        <th>ERA FPR</th>
-        <th>Detection</th>
-        <th>Lead Time</th>
-        <th>Alerts / Patient-Day</th>
-      </tr>
-    </thead>
-    <tbody>
-      
-      <tr>
-        <td><strong>t=4</strong></td>
-        <td>ICU / high-acuity</td>
-        <td>2023962</td>
-        <td>2394</td>
-        <td>772</td>
-        <td>87.7%</td>
-        <td>7.3%</td>
-        <td>81.3%</td>
-        <td>4.89 hrs</td>
-        <td>21.8</td>
-      </tr>
-    
-
-      <tr>
-        <td><strong>t=5</strong></td>
-        <td>Mixed units / balanced</td>
-        <td>2023962</td>
-        <td>2394</td>
-        <td>772</td>
-        <td>93.5%</td>
-        <td>3.7%</td>
-        <td>75.1%</td>
-        <td>4.32 hrs</td>
-        <td>11.44</td>
-      </tr>
-    
-
-      <tr>
-        <td><strong>t=6</strong></td>
-        <td>Telemetry / stepdown conservative</td>
-        <td>2023962</td>
-        <td>2394</td>
-        <td>772</td>
-        <td>96.8%</td>
-        <td>1.8%</td>
-        <td>66.6%</td>
-        <td>3.41 hrs</td>
-        <td>5.75</td>
-      </tr>
-    
-    </tbody>
-  </table>
-
-  <p class="muted" style="margin-top:14px;">
-    Safe claim: cross-dataset retrospective outcome-proxy evaluation on de-identified ICU data. Avoid claiming proven generalizability, prospective validation, diagnosis, treatment direction, prevention, or autonomous escalation.
-  </p>
-
-  <div class="era-release-lock-links" style="margin-top:12px;">
-    <a href="/api/validation/eicu-validation">eICU Validation JSON</a>
-    <a href="/validation-evidence/eicu-validation.json">Download eICU Summary</a>
-  </div>
-</section>
-<!-- ERA_EICU_SECOND_DATASET_PUBLIC_V1_END -->
-
-
-
-<!-- ERA_MULTI_DATASET_ROBUSTNESS_V1_START -->
-<section class="card full" style="
-  border:1px solid rgba(143,255,210,.34);
-  border-left:5px solid #8fffd2;
-  background:linear-gradient(145deg, rgba(13,24,42,.94), rgba(6,11,21,.94));
-  border-radius:28px;
-  padding:24px;
-  margin-top:18px;
-">
-  <div style="color:#8fffd2;text-transform:uppercase;letter-spacing:.14em;font-size:11px;font-weight:950;margin-bottom:8px;">
-    Multi-Dataset Robustness Summary
-  </div>
-
-  <h2 style="margin:0 0 12px;">MIMIC-IV + eICU evidence now support a stronger cross-dataset story.</h2>
-
-  <p class="callout" style="
-    border-left:4px solid #8fffd2;
-    padding:12px 16px;
-    border-radius:14px;
-    background:rgba(143,255,210,.09);
-    color:#eaf4ff;
-    font-weight:800;
-  ">
-    MIMIC-IV established strict clinical-event cross-cohort retrospective stability, while eICU added a separate second-dataset outcome-proxy check; across both datasets, ERA preserved the same threshold-direction behavior: lower thresholds increased detection, while conservative thresholds reduced review burden and false positives.
-  </p>
-
-  <p class="muted">
-    At the conservative t=6.0 operating point, MIMIC-IV showed 4 hrs median lead-time context across locked cross-cohort evidence, while eICU showed 3.41 hrs median lead-time context in the outcome-proxy check.
-  </p>
-
-  <table>
-    <thead>
-      <tr>
-        <th>Dataset</th>
-        <th>Evidence Role</th>
-        <th>Cases</th>
-        <th>Rows</th>
-        <th>Event Context</th>
-        <th>Threshold</th>
-        <th>Alert Reduction</th>
-        <th>FPR</th>
-        <th>Detection</th>
-        <th>Lead Time</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><strong>MIMIC-IV v3.1</strong></td>
-        <td>Locked strict clinical-event cross-cohort validation release</td>
-        <td>577–1,705</td>
-        <td>456,453 in full validation cohort</td>
-        <td>event clusters / clinical-event labels</td>
-        <td>t=6.0</td>
-        <td>94%–94.9%</td>
-        <td>3.7%–4.4%</td>
-        <td>14.1%–16%</td>
-        <td>4 hrs</td>
-      </tr>
-      <tr>
-        <td><strong>eICU Collaborative Research Database v2.0</strong></td>
-        <td>Second-dataset retrospective outcome-proxy check</td>
-        <td>2394</td>
-        <td>2023962</td>
-        <td>772</td>
-        <td>t=6.0</td>
-        <td>96.8%</td>
-        <td>1.8%</td>
-        <td>66.6%</td>
-        <td>3.41 hrs</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <p class="muted" style="margin-top:14px;">
-    Important interpretation: MIMIC-IV uses stricter clinical-event labels, while eICU uses outcome-proxy labels from mortality/discharge-derived event context. Detection rates should not be treated as equivalent endpoint definitions.
-  </p>
-
-  <h3 style="margin-top:18px;">Citation Story</h3>
-  <ul class="muted">
-    <li><strong>MIMIC-IV:</strong> Johnson et al., MIMIC-IV v3.1, PhysioNet, DOI 10.13026/kpb9-mt58; original Scientific Data publication DOI 10.1038/s41597-022-01899-x.</li>
-    <li><strong>eICU:</strong> Pollard et al., eICU Collaborative Research Database v2.0, PhysioNet, DOI 10.13026/C2WM1R; original Scientific Data publication DOI 10.1038/sdata.2018.178.</li>
-    <li><strong>DUA boundary:</strong> aggregate public evidence only; raw restricted files and row-level derived outputs remain local-only.</li>
-  </ul>
-
-  <div class="era-release-lock-links" style="margin-top:12px;">
-    <a href="/api/validation/multi-dataset-robustness">Multi-Dataset JSON</a>
-    <a href="/validation-evidence/multi-dataset-robustness.json">Download Summary</a>
-    <a href="/api/validation/eicu-validation">eICU JSON</a>
-    <a href="/api/validation/cross-cohort-validation">MIMIC Cross-Cohort JSON</a>
-  </div>
-</section>
-<!-- ERA_MULTI_DATASET_ROBUSTNESS_V1_END -->
-
-
-
-<!-- ERA_MULTI_DATASET_PUBLIC_FRAMING_POLISH_V1_START -->
-<section class="card full" style="
-  border:1px solid rgba(143,255,210,.34);
-  border-left:5px solid #8fffd2;
-  background:linear-gradient(145deg, rgba(13,24,42,.95), rgba(6,11,21,.95));
-  border-radius:28px;
-  padding:24px;
-  margin-top:18px;
-">
-  <div style="color:#8fffd2;text-transform:uppercase;letter-spacing:.14em;font-size:11px;font-weight:950;margin-bottom:8px;">
-    Multi-Dataset Robustness — Public Framing
-  </div>
-
-  <h2 style="margin:0 0 12px;">Retrospective evidence now spans MIMIC-IV and eICU.</h2>
-
-  <p class="callout" style="
-    border-left:4px solid #8fffd2;
-    padding:12px 16px;
-    border-radius:14px;
-    background:rgba(143,255,210,.09);
-    color:#eaf4ff;
-    font-weight:850;
-  ">
-    Early Risk Alert AI now has retrospective evidence across two de-identified ICU datasets: MIMIC-IV strict clinical-event cross-cohort validation plus a separate eICU outcome-proxy check.
-  </p>
-
+<section class="hero">
+  <span class="pill">Published · DUA-safe aggregate evidence</span>
+  <h2 style="margin-top:18px;">Multi-dataset retrospective robustness story</h2>
+  <p class="callout">Early Risk Alert AI now has retrospective evidence across two de-identified ICU datasets: MIMIC-IV strict clinical-event cross-cohort validation plus a separate eICU outcome-proxy check.</p>
   <p class="muted"><strong>Across both datasets, ERA preserved the same threshold-direction behavior: lower thresholds increased detection, while conservative thresholds reduced review burden and false positives.</strong></p>
   <p class="muted">At the conservative t=6.0 setting, MIMIC-IV showed 4 hrs median lead-time context across the locked cross-cohort release, while eICU showed 3.41 hrs median lead-time context in the outcome-proxy check.</p>
-
-  <table>
-    <thead>
-      <tr>
-        <th>Dataset</th>
-        <th>Evidence Role</th>
-        <th>Event Definition</th>
-        <th>Cases</th>
-        <th>Rows</th>
-        <th>t=6.0 Alert Reduction</th>
-        <th>t=6.0 FPR</th>
-        <th>t=6.0 Detection</th>
-        <th>Lead-Time Context</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><strong>MIMIC-IV v3.1</strong></td>
-        <td>Strict clinical-event cross-cohort validation release</td>
-        <td>Clinical-event labels / event clusters</td>
-        <td>577–1,705</td>
-        <td>456,453 in full validation cohort</td>
-        <td>94%–94.9%</td>
-        <td>3.7%–4.4%</td>
-        <td>14.1%–16%</td>
-        <td>4 hrs</td>
-      </tr>
-      <tr>
-        <td><strong>eICU v2.0</strong></td>
-        <td>Second-dataset outcome-proxy check</td>
-        <td>Mortality/discharge-derived outcome proxy</td>
-        <td>2394</td>
-        <td>2023962</td>
-        <td>96.8%</td>
-        <td>1.8%</td>
-        <td>66.6%</td>
-        <td>3.41 hrs</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <div style="
-    margin-top:14px;
-    padding:12px 14px;
-    border-radius:16px;
-    border:1px solid rgba(255,215,138,.34);
-    background:rgba(255,215,138,.09);
-    color:#ffe7b7;
-    font-weight:780;
-    line-height:1.5;
-  ">
-    Interpretation guardrail: MIMIC-IV and eICU detection rates should not be treated as equivalent endpoint definitions because MIMIC-IV uses stricter clinical-event labels, while eICU uses outcome-proxy event labels derived from mortality/discharge context.
-  </div>
-
-  <p class="muted" style="margin-top:14px;">
-    Approved framing: cross-dataset retrospective robustness evidence across de-identified ICU datasets. Avoid claims of proven generalizability, prospective validation, diagnosis, treatment direction, prevention, autonomous escalation, or replacement of clinician judgment.
-  </p>
-
-  <div class="era-release-lock-links" style="margin-top:12px;">
-    <a href="/api/validation/multi-dataset-public-framing">Public Framing JSON</a>
-    <a href="/validation-evidence/multi-dataset-pilot-summary.md">Pilot One-Pager</a>
-    <a href="/api/validation/multi-dataset-checkpoint">Locked Checkpoint</a>
+  <div class="grid cols4 section">
+    <div class="metric"><span>MIMIC-IV t=6.0 Alert Reduction</span><strong>94%–94.9%</strong><em>Strict clinical-event evidence</em></div>
+    <div class="metric"><span>MIMIC-IV t=6.0 FPR</span><strong>3.7%–4.4%</strong><em>Cross-cohort release</em></div>
+    <div class="metric"><span>eICU t=6.0 Alert Reduction</span><strong>96.8%</strong><em>Outcome-proxy check</em></div>
+    <div class="metric"><span>Lead-Time Context</span><strong>3.4–4.0 hrs</strong><em>Retrospective timing context</em></div>
   </div>
 </section>
-<!-- ERA_MULTI_DATASET_PUBLIC_FRAMING_POLISH_V1_END -->
 
-</main>
+<section class="card section">
+  <h2>Side-by-Side Conservative Operating Point</h2>
+  <p class="muted">The strongest public story is consistent threshold-direction behavior, not direct equality between different event definitions.</p>
+  <table>
+    <thead><tr><th>Dataset</th><th>Evidence Role</th><th>Event Definition</th><th>Cases</th><th>Rows</th><th>Alert Reduction</th><th>FPR</th><th>Detection</th><th>Lead Time</th></tr></thead>
+    <tbody>
+      <tr><td><strong>MIMIC-IV v3.1</strong></td><td>Strict clinical-event cross-cohort validation release</td><td>Strict clinical-event labels / event clusters</td><td>577–1,705</td><td>456,453 in full validation cohort</td><td>94%–94.9%</td><td>3.7%–4.4%</td><td>14.1%–16%</td><td>4 hrs</td></tr>
+      <tr><td><strong>eICU v2.0</strong></td><td>Second-dataset outcome-proxy check</td><td>Mortality/discharge-derived outcome proxy</td><td>2394</td><td>2023962</td><td>96.8%</td><td>1.8%</td><td>66.6%</td><td>3.41 hrs</td></tr>
+    </tbody>
+  </table>
+  <p class="guardrail">MIMIC-IV and eICU detection rates should not be treated as equivalent endpoint definitions because MIMIC-IV uses stricter clinical-event labels, while eICU uses outcome-proxy event labels derived from mortality/discharge context.</p>
+</section>
+
+<section class="card section">
+  <h2>Explainability Context</h2>
+  <p class="muted">The command-center display should make prioritization understandable without relying on raw score alone.</p>
+  <div class="grid cols4">
+    <div class="metric"><span>Priority Tier</span><strong>Critical</strong><em>Low / Watch / Elevated / Critical</em></div>
+    <div class="metric"><span>Queue Rank</span><strong>#1</strong><em>Relative review ordering</em></div>
+    <div class="metric"><span>Primary Driver</span><strong>SpO₂</strong><em>SpO₂ / HR / BP / RR</em></div>
+    <div class="metric"><span>Trend</span><strong>Worsening</strong><em>Context for review</em></div>
+  </div>
+</section>
+
+    <div class="footer">
+      Decision support only. Retrospective aggregate analysis only. Not intended to diagnose, direct treatment, replace clinician judgment, or independently trigger escalation.
+    </div>
+  </div>
 </body>
 </html>

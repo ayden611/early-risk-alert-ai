@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Validation Runs — Early Risk Alert AI</title>
+  <title>Model Card — Early Risk Alert AI</title>
   
 <style>
 :root{
@@ -143,8 +143,8 @@ ul{line-height:1.7}
 </head>
 <body>
   <div class="wrapper">
-    <div class="eyebrow">Early Risk Alert AI · Run Registry</div>
-    <h1>Validation Runs</h1>
+    <div class="eyebrow">Early Risk Alert AI · Governance</div>
+    <h1>Model Card</h1>
     
 <nav class="topnav">
   <a href="/command-center">Command Center</a>
@@ -157,81 +157,32 @@ ul{line-height:1.7}
 
     
 <section class="hero">
-  <span class="pill">Run Registry</span>
-  <h2 style="margin-top:18px;">Validation run history</h2>
-  <p class="muted">This page replaces placeholder “Loading…” views with the current locked evidence registry.</p>
-  <p class="callout">Across both datasets, ERA preserved the same threshold-direction behavior: lower thresholds increased detection, while conservative thresholds reduced review burden and false positives.</p>
+  <span class="pill">Model Card</span>
+  <h2 style="margin-top:18px;">Current model and validation disclosure</h2>
+  <p class="callout">Early Risk Alert AI is decision support and workflow support for authorized healthcare professionals.</p>
+  <p class="guardrail">It is not intended to diagnose, direct treatment, replace clinician judgment, or independently trigger escalation.</p>
 </section>
 
 <section class="card section">
-  <h2>Current Locked Runs</h2>
+  <h2>Evidence Status</h2>
   <table>
-    <thead><tr><th>Run</th><th>Dataset</th><th>Event Definition</th><th>Cases</th><th>Rows</th><th>Threshold</th><th>Alert Reduction</th><th>FPR</th><th>Detection</th><th>Lead Time</th><th>Status</th></tr></thead>
+    <thead><tr><th>Dataset</th><th>Role</th><th>Event Definition</th><th>Alert Reduction</th><th>FPR</th><th>Detection</th><th>Lead Time</th></tr></thead>
     <tbody>
-        <tr>
-          <td><strong>MIMIC-IV full cohort</strong></td>
-          <td>MIMIC-IV v3.1</td>
-          <td>Strict clinical-event labels</td>
-          <td>1,705</td>
-          <td>456,453</td>
-          <td>t=6.0</td>
-          <td>94.3%</td>
-          <td>4.2%</td>
-          <td>15.3%</td>
-          <td>4.0 hrs</td>
-          <td><span class="pill">Locked</span></td>
-        </tr>
-        
-        <tr>
-          <td><strong>MIMIC-IV subcohort B</strong></td>
-          <td>MIMIC-IV v3.1</td>
-          <td>Strict clinical-event labels</td>
-          <td>577</td>
-          <td>~159K</td>
-          <td>t=6.0</td>
-          <td>94.0%</td>
-          <td>4.4%</td>
-          <td>16.0%</td>
-          <td>4.0 hrs</td>
-          <td><span class="pill">Locked</span></td>
-        </tr>
-        
-        <tr>
-          <td><strong>MIMIC-IV subcohort C</strong></td>
-          <td>MIMIC-IV v3.1</td>
-          <td>Strict clinical-event labels</td>
-          <td>621</td>
-          <td>~159K</td>
-          <td>t=6.0</td>
-          <td>94.9%</td>
-          <td>3.7%</td>
-          <td>14.1%</td>
-          <td>4.0 hrs</td>
-          <td><span class="pill">Locked</span></td>
-        </tr>
-        
-        <tr>
-          <td><strong>eICU outcome-proxy cohort</strong></td>
-          <td>eICU v2.0</td>
-          <td>Mortality/discharge-derived outcome proxy</td>
-          <td>2,394</td>
-          <td>2,023,962</td>
-          <td>t=6.0</td>
-          <td>96.8%</td>
-          <td>1.8%</td>
-          <td>66.6%</td>
-          <td>3.41 hrs</td>
-          <td><span class="pill">Outcome-proxy check</span></td>
-        </tr>
-        </tbody>
+      <tr><td>MIMIC-IV v3.1</td><td>Strict clinical-event validation</td><td>Clinical-event labels / clusters</td><td>94%–94.9%</td><td>3.7%–4.4%</td><td>14.1%–16%</td><td>4 hrs</td></tr>
+      <tr><td>eICU v2.0</td><td>Outcome-proxy check</td><td>Mortality/discharge-derived proxy</td><td>96.8%</td><td>1.8%</td><td>66.6%</td><td>3.41 hrs</td></tr>
+    </tbody>
   </table>
 </section>
 
 <section class="card section">
-  <h2>Checkpoint</h2>
-  <p><span class="pill">Locked</span></p>
-  <p><strong>multi-dataset-retrospective-robustness-checkpoint-2026-04-30</strong></p>
-  <p class="muted">MIMIC-IV strict clinical-event evidence and eICU second-dataset outcome-proxy evidence are locked as the current validation checkpoint.</p>
+  <h2>Limitations and Guardrails</h2>
+  <ul>
+    <li>Retrospective aggregate evidence only.</li>
+    <li>No prospective clinical validation yet.</li>
+    <li>MIMIC-IV and eICU event definitions differ.</li>
+    <li>Detection rates are not equivalent endpoint definitions.</li>
+    <li>Decision support only; no diagnosis or treatment direction.</li>
+  </ul>
 </section>
 
     <div class="footer">

@@ -6998,6 +6998,69 @@ def create_app() -> Flask:
         )
     # ERA_MULTI_DATASET_PUBLIC_FRAMING_POLISH_ROUTES_V1_END
 
+
+    # ERA_FINAL_FRONTEND_EVIDENCE_POLISH_ROUTES_V1_START
+    @app.get("/validation-runs")
+    def era_validation_runs_page_final():
+        from pathlib import Path
+        from flask import send_from_directory
+
+        web_dir = Path(__file__).resolve().parent / "web"
+        return send_from_directory(str(web_dir), "validation_runs.html")
+
+    @app.get("/model-card")
+    def era_model_card_page_final():
+        from pathlib import Path
+        from flask import send_from_directory
+
+        web_dir = Path(__file__).resolve().parent / "web"
+        return send_from_directory(str(web_dir), "model_card.html")
+
+    @app.get("/pilot-success-guide")
+    def era_pilot_success_guide_page_final():
+        from pathlib import Path
+        from flask import send_from_directory
+
+        web_dir = Path(__file__).resolve().parent / "web"
+        return send_from_directory(str(web_dir), "pilot_success_guide.html")
+
+    @app.get("/validation-evidence/model-card.md")
+    def era_model_card_markdown_final():
+        from pathlib import Path
+        from flask import Response
+
+        root_dir = Path(__file__).resolve().parent.parent
+        p = root_dir / "docs" / "validation" / "model_card.md"
+        if not p.exists():
+            return Response("Model card not found.", status=404, mimetype="text/plain")
+        return Response(p.read_text(encoding="utf-8"), mimetype="text/markdown")
+
+    @app.get("/validation-evidence/pilot-success-guide.md")
+    def era_pilot_success_guide_markdown_final():
+        from pathlib import Path
+        from flask import Response
+
+        root_dir = Path(__file__).resolve().parent.parent
+        p = root_dir / "docs" / "validation" / "pilot_success_guide.md"
+        if not p.exists():
+            return Response("Pilot success guide not found.", status=404, mimetype="text/plain")
+        return Response(p.read_text(encoding="utf-8"), mimetype="text/markdown")
+
+    @app.get("/api/validation/final-frontend-polish")
+    def era_final_frontend_polish_manifest_api():
+        import json
+        from pathlib import Path
+        from flask import jsonify
+
+        root_dir = Path(__file__).resolve().parent.parent
+        p = root_dir / "data" / "validation" / "final_frontend_evidence_polish_manifest.json"
+        if not p.exists():
+            return jsonify({"ok": False, "error": "Final frontend polish manifest not found."}), 404
+        data = json.loads(p.read_text(encoding="utf-8"))
+        data["ok"] = True
+        return jsonify(data)
+    # ERA_FINAL_FRONTEND_EVIDENCE_POLISH_ROUTES_V1_END
+
     return app
 
 
