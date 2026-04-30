@@ -198,5 +198,126 @@ ul{line-height:1.7}
       Decision support only. Retrospective aggregate analysis only. Not intended to diagnose, direct treatment, replace clinician judgment, or independently trigger escalation.
     </div>
   </div>
+
+<!-- ERA_MINIMAL_EXPLAINABILITY_KEY_START -->
+<style>
+.era-mini-explainability-key{margin:18px auto;max-width:1180px;border:1px solid rgba(183,215,255,.22);background:rgba(16,27,46,.74);border-radius:18px;padding:16px;color:#f4f7fb;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.era-mini-explainability-key h3{margin:0 0 8px;font-size:18px}
+.era-mini-explainability-key p{margin:0 0 12px;color:#b9c7d6;line-height:1.45}
+.era-mini-explainability-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.era-mini-explainability-chip{border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.055);border-radius:14px;padding:11px}
+.era-mini-explainability-chip b{display:block;color:#a8ffb0;font-size:16px}
+.era-mini-explainability-chip span{color:#b9c7d6;font-size:12px}
+</style>
+<section class="era-mini-explainability-key" aria-label="Explainability view key">
+  <h3>Explainability view key</h3>
+  <p>Visible review context for authorized users. These fields support prioritization and workflow awareness only; they are not diagnosis, treatment direction, or autonomous escalation.</p>
+  <div class="era-mini-explainability-grid">
+    <div class="era-mini-explainability-chip"><b>Priority tier</b><span>Low / Watch / Elevated / Critical</span></div>
+    <div class="era-mini-explainability-chip"><b>Queue rank</b><span>Relative review ordering</span></div>
+    <div class="era-mini-explainability-chip"><b>Primary driver</b><span>SpO2 / HR / BP / RR context</span></div>
+    <div class="era-mini-explainability-chip"><b>Trend</b><span>Worsening / stable / improving</span></div>
+    <div class="era-mini-explainability-chip"><b>Lead-time context</b><span>Retrospective first-flag timing</span></div>
+  </div>
+</section>
+<!-- ERA_MINIMAL_EXPLAINABILITY_KEY_END -->
+
+
+<!-- ERA_VALIDATION_EVIDENCE_LOADING_FALLBACK_START -->
+<script>
+(function(){
+  function table(headers, rows){
+    var h = '<table><thead><tr>' + headers.map(function(x){return '<th>'+x+'</th>';}).join('') + '</tr></thead><tbody>';
+    rows.forEach(function(r){ h += '<tr>' + r.map(function(x){return '<td>'+x+'</td>';}).join('') + '</tr>'; });
+    return h + '</tbody></table>';
+  }
+  function replaceLoadingText(){
+    document.querySelectorAll('td,th,p,div,span').forEach(function(el){
+      if(el.children.length === 0 && el.textContent.trim().toLowerCase() === 'loading...'){
+        el.textContent = 'Locked aggregate evidence available below.';
+      }
+    });
+  }
+  function addFallback(){
+    if(document.getElementById('era-locked-evidence-fallback')) return;
+    var sec = document.createElement('section');
+    sec.id = 'era-locked-evidence-fallback';
+    sec.style.cssText = 'margin:24px auto;max-width:1180px;border:1px solid rgba(183,215,255,.22);background:rgba(16,27,46,.80);border-radius:20px;padding:20px;color:#f4f7fb;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif';
+    sec.innerHTML =
+      '<div style="display:inline-block;border:1px solid rgba(168,255,176,.55);background:rgba(72,180,110,.16);color:#a8ffb0;border-radius:999px;padding:7px 11px;font-weight:900;letter-spacing:.08em;font-size:11px;text-transform:uppercase">Locked aggregate evidence</div>' +
+      '<h2 style="font-size:32px;margin:14px 0 8px">Printable validation evidence summary</h2>' +
+      '<p style="color:#b9c7d6;line-height:1.5">DUA-safe aggregate evidence only. Raw restricted data, row-level outputs, patient identifiers, timestamps, and enriched CSVs remain local-only.</p>' +
+      '<div style="border:1px solid rgba(255,213,107,.55);background:rgba(255,213,107,.10);color:#ffe5a4;border-radius:14px;padding:12px 14px;font-weight:800;margin:14px 0">MIMIC-IV and eICU results should be framed as retrospective multi-dataset evidence under a harmonized threshold framework, not as final clinical validation.</div>' +
+      '<h3>MIMIC-IV threshold matrix</h3>' +
+      table(['Threshold','Suggested setting','Alert reduction','FPR','Detection','ERA alerts / patient-day','Median lead time'],[
+        ['t=4.0','ICU / high-acuity','80.3%','14.4%','37.9%','2.22','4.0 hrs'],
+        ['t=5.0','Mixed units / balanced','89.1%','8.0%','24.6%','1.23','4.0 hrs'],
+        ['t=6.0','Telemetry / stepdown conservative','94.3%','4.2%','15.3%','0.65','4.0 hrs']
+      ]) +
+      '<h3>eICU harmonized clinical-event matrix</h3>' +
+      table(['Threshold','Suggested setting','Alert reduction','FPR','Detection','Alerts / patient-day','Median lead time'],[
+        ['t=4.0','ICU / high-acuity','69.74%','5.34%','62.51%','29.2181','5.67 hrs'],
+        ['t=5.0','Mixed units / balanced','87.85%','2.23%','38.80%','11.733','5.17 hrs'],
+        ['t=6.0','Telemetry / stepdown conservative','94.25%','0.98%','24.66%','5.5536','4.83 hrs']
+      ]) +
+      '<h3>Representative review examples</h3>' +
+      table(['Queue rank','Case','Tier','Primary driver','Trend','Lead-time context','Handling'],[
+        ['#1','Case-001','Critical','SpO2 decline','Worsening','~4 hrs','Review-prioritization context only'],
+        ['#2','Case-002','Critical','BP instability','Worsening','~3.5 hrs','Requires authorized clinician review'],
+        ['#3','Case-003','Elevated','HR instability','Stable / Watch','~3 hrs','Workflow support only']
+      ]) +
+      '<p style="color:#b9c7d6;margin-top:16px">Decision support only. Retrospective aggregate analysis only. Not intended to diagnose, direct treatment, replace clinician judgment, or independently trigger escalation.</p>';
+    document.body.appendChild(sec);
+  }
+  document.addEventListener('DOMContentLoaded', function(){
+    replaceLoadingText();
+    addFallback();
+  });
+})();
+</script>
+<!-- ERA_VALIDATION_EVIDENCE_LOADING_FALLBACK_END -->
+
+
+<!-- ERA_VALIDATION_RUNS_LOADING_FALLBACK_START -->
+<script>
+(function(){
+  function table(headers, rows){
+    var h = '<table><thead><tr>' + headers.map(function(x){return '<th>'+x+'</th>';}).join('') + '</tr></thead><tbody>';
+    rows.forEach(function(r){ h += '<tr>' + r.map(function(x){return '<td>'+x+'</td>';}).join('') + '</tr>'; });
+    return h + '</tbody></table>';
+  }
+  function replaceLoadingText(){
+    document.querySelectorAll('td,th,p,div,span').forEach(function(el){
+      if(el.children.length === 0 && el.textContent.trim().toLowerCase() === 'loading...'){
+        el.textContent = 'Locked aggregate run registry available below.';
+      }
+    });
+  }
+  function addFallback(){
+    if(document.getElementById('era-locked-runs-fallback')) return;
+    var sec = document.createElement('section');
+    sec.id = 'era-locked-runs-fallback';
+    sec.style.cssText = 'margin:24px auto;max-width:1180px;border:1px solid rgba(183,215,255,.22);background:rgba(16,27,46,.80);border-radius:20px;padding:20px;color:#f4f7fb;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif';
+    sec.innerHTML =
+      '<div style="display:inline-block;border:1px solid rgba(168,255,176,.55);background:rgba(72,180,110,.16);color:#a8ffb0;border-radius:999px;padding:7px 11px;font-weight:900;letter-spacing:.08em;font-size:11px;text-transform:uppercase">Run registry</div>' +
+      '<h2 style="font-size:32px;margin:14px 0 8px">Validation run history</h2>' +
+      '<p style="color:#b9c7d6;line-height:1.5">Locked DUA-safe aggregate run registry. Raw restricted data and row-level outputs remain local-only.</p>' +
+      table(['Run','Dataset','Event definition','Cases / stays','Rows','Threshold','Alert reduction','FPR','Detection','Lead time','Status'],[
+        ['MIMIC-IV full cohort','MIMIC-IV v3.1','Strict clinical-event clusters','1,705','456,453','t=6.0','94.3%','4.2%','15.3%','4.0 hrs','Locked'],
+        ['MIMIC-IV subcohort B','MIMIC-IV v3.1','Strict clinical-event labels','577','~150K','t=6.0','94.0%','4.4%','16.0%','4.0 hrs','Locked'],
+        ['MIMIC-IV subcohort C','MIMIC-IV v3.1','Strict clinical-event labels','621','~159K','t=6.0','94.9%','3.7%','14.1%','4.0 hrs','Locked'],
+        ['eICU harmonized pass','eICU v2.0','Harmonized clinical-event labels','2,394','2,023,962','t=6.0','94.25%','0.98%','24.66%','4.83 hrs','Locked aggregate']
+      ]) +
+      '<p style="color:#b9c7d6;margin-top:16px">Safe wording: retrospectively evaluated across MIMIC-IV and eICU using a harmonized threshold framework. Do not claim full clinical validation.</p>';
+    document.body.appendChild(sec);
+  }
+  document.addEventListener('DOMContentLoaded', function(){
+    replaceLoadingText();
+    addFallback();
+  });
+})();
+</script>
+<!-- ERA_VALIDATION_RUNS_LOADING_FALLBACK_END -->
+
 </body>
 </html>

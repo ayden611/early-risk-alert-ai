@@ -300,7 +300,7 @@ PILOT_RELEASE_NOTES = [
             "Added /deck inline pitch deck HTML page — no PDF dependency, always resolves.",
             "Upgraded admin review page with notes field, follow-up date, and inline email compose per lead.",
             "Upgraded explainability to show delta from last observation (HR was X, now Y — rising/falling trend).",
-            "Defined all 18 previously missing governance variables.",
+            "Defined all 18 previously ready governance variables.",
             "Fixed broken api_system_health_legacy alias.",
             "Added /api/v2/patients clean REST endpoint.",
             "SESSION_COOKIE_SECURE enforcement via environment variable.",

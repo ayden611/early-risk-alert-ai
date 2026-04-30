@@ -1,0 +1,37 @@
+{
+  "ok": true,
+  "generated_at_utc": "2026-04-30T15:05:16.879198+00:00",
+  "purpose": "Stability-first platform polish without redesigning the Command Center.",
+  "changes": [
+    "Protected/restored existing Command Center layout by avoiding forced frontend overrides.",
+    "Fixed Model Card and Pilot Success Guide readiness by ensuring pages/routes exist where missing.",
+    "Replaced fragile Loading... states on Validation Evidence and Validation Runs with static locked aggregate fallbacks.",
+    "Added minimal explainability visibility key to existing Command Center HTML only.",
+    "Maintained conservative DUA-safe claims and avoided fully validated language."
+  ],
+  "safe_public_wording": "Early Risk Alert AI has retrospective multi-dataset evidence across MIMIC-IV and eICU using a harmonized threshold framework, with consistent conservative-threshold behavior across datasets. Decision support only; not intended to diagnose, direct treatment, replace clinician judgment, or independently trigger escalation.",
+  "changed_files": [
+    "era/web/validation_intelligence.html",
+    "era/web/model_card.html",
+    "era/web/validation_evidence.html",
+    "era/web/validation_runs.html",
+    "era/web/pilot_success_guide.html",
+    "era/web/retro_upload.html",
+    "era/web/validation_evidence_packet.html",
+    "era/web/data_ingest.html",
+    "era/__init__.py",
+    "era/web/validation_intelligence.html",
+    "era/web/model_card.html",
+    "era/web/validation_evidence.html",
+    "era/web/validation_runs.html",
+    "era/web/pilot_success_guide.html",
+    "era/web/validation_evidence_packet.html",
+    "era/web/data_ingest.html",
+    "era/web/validation_intelligence.html",
+    "era/web/model_card.html",
+    "era/web/validation_evidence.html",
+    "era/web/validation_runs.html",
+    "era/web/pilot_success_guide.html",
+    "era/web/data_ingest.html"
+  ]
+}

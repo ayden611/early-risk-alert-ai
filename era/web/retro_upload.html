@@ -350,5 +350,29 @@
 
   loadUploadHistory();
 </script>
+
+<!-- ERA_MINIMAL_EXPLAINABILITY_KEY_START -->
+<style>
+.era-mini-explainability-key{margin:18px auto;max-width:1180px;border:1px solid rgba(183,215,255,.22);background:rgba(16,27,46,.74);border-radius:18px;padding:16px;color:#f4f7fb;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.era-mini-explainability-key h3{margin:0 0 8px;font-size:18px}
+.era-mini-explainability-key p{margin:0 0 12px;color:#b9c7d6;line-height:1.45}
+.era-mini-explainability-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.era-mini-explainability-chip{border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.055);border-radius:14px;padding:11px}
+.era-mini-explainability-chip b{display:block;color:#a8ffb0;font-size:16px}
+.era-mini-explainability-chip span{color:#b9c7d6;font-size:12px}
+</style>
+<section class="era-mini-explainability-key" aria-label="Explainability view key">
+  <h3>Explainability view key</h3>
+  <p>Visible review context for authorized users. These fields support prioritization and workflow awareness only; they are not diagnosis, treatment direction, or autonomous escalation.</p>
+  <div class="era-mini-explainability-grid">
+    <div class="era-mini-explainability-chip"><b>Priority tier</b><span>Low / Watch / Elevated / Critical</span></div>
+    <div class="era-mini-explainability-chip"><b>Queue rank</b><span>Relative review ordering</span></div>
+    <div class="era-mini-explainability-chip"><b>Primary driver</b><span>SpO2 / HR / BP / RR context</span></div>
+    <div class="era-mini-explainability-chip"><b>Trend</b><span>Worsening / stable / improving</span></div>
+    <div class="era-mini-explainability-chip"><b>Lead-time context</b><span>Retrospective first-flag timing</span></div>
+  </div>
+</section>
+<!-- ERA_MINIMAL_EXPLAINABILITY_KEY_END -->
+
 </body>
 </html>
