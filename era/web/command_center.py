@@ -615,6 +615,9 @@ COMMAND_CENTER_HTML = r"""
 <!-- ERA_REALISTIC_DEMO_QUEUE_ASSETS_HEAD_START -->
 <link rel="stylesheet" href="/era-static/era_realistic_demo_queue.css?v=realistic2">
 <!-- ERA_REALISTIC_DEMO_QUEUE_ASSETS_HEAD_END -->
+<!-- ERA_SCORE_LABEL_CLARITY_HEAD_START -->
+<link rel="stylesheet" href="/era-static/era_score_label_clarity.css?v=score-label1">
+<!-- ERA_SCORE_LABEL_CLARITY_HEAD_END -->
 </head>
 <body>
   <div class="topbar">
@@ -3738,6 +3741,9 @@ function renderRouteStatusModule(){
 <!-- ERA_REALISTIC_DEMO_QUEUE_ASSETS_BODY_START -->
 <script src="/era-static/era_realistic_demo_queue.js?v=realistic2"></script>
 <!-- ERA_REALISTIC_DEMO_QUEUE_ASSETS_BODY_END -->
+<!-- ERA_SCORE_LABEL_CLARITY_BODY_START -->
+<script src="/era-static/era_score_label_clarity.js?v=score-label1"></script>
+<!-- ERA_SCORE_LABEL_CLARITY_BODY_END -->
 </body>
 </html>
 """

@@ -1,0 +1,21 @@
+{
+  "timestamp_utc": "2026-04-30T16:54:50.018710+00:00",
+  "target_file": "era/web/command_center.py",
+  "css_file": "era/static/era_score_label_clarity.css",
+  "js_file": "era/static/era_score_label_clarity.js",
+  "actions": {
+    "head_tags": "inserted",
+    "body_tags": "inserted"
+  },
+  "static_route": {
+    "status": "already_present",
+    "file": "era/__init__.py"
+  },
+  "purpose": "Clarify that case-level review scores are 0-10 and validation percentages are aggregate alert-reduction metrics.",
+  "claim_policy": [
+    "Review score is not patient risk percent.",
+    "Alert reduction percent is aggregate validation evidence.",
+    "Decision support only.",
+    "No diagnosis, treatment direction, clinician replacement, or independent escalation."
+  ]
+}

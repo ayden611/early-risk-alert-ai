@@ -1,0 +1,35 @@
+.era-metric-clarity-banner{
+  margin:12px 0 14px 0;
+  padding:10px 12px;
+  border-radius:14px;
+  border:1px solid rgba(132,255,180,.26);
+  background:linear-gradient(90deg, rgba(132,255,180,.12), rgba(126,190,255,.08));
+  font-size:13px;
+  line-height:1.45;
+  font-weight:750;
+}
+.era-metric-clarity-banner strong{
+  color:#b8ffcc;
+}
+.era-review-score-chip{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:4px 8px;
+  border-radius:999px;
+  border:1px solid rgba(132,255,180,.28);
+  background:rgba(132,255,180,.10);
+  font-weight:900;
+  white-space:nowrap;
+}
+.era-validation-metric-chip{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:4px 8px;
+  border-radius:999px;
+  border:1px solid rgba(126,190,255,.30);
+  background:rgba(126,190,255,.10);
+  font-weight:900;
+  white-space:nowrap;
+}
