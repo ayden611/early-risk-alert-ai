@@ -3764,6 +3764,10 @@ function renderRouteStatusModule(){
 <link rel="stylesheet" href="/static/era_validation_public_alignment_safe.css?v=publicalign1">
 <script src="/static/era_validation_public_alignment_safe.js?v=publicalign1"></script>
 <!-- ERA_PUBLIC_ALIGNMENT_SAFE_END -->
+<!-- ERA_COMMAND_CENTER_TOOL_MODE_START -->
+<link rel="stylesheet" href="/static/era_command_center_tool_mode.css?v=toolmode1">
+<script src="/static/era_command_center_tool_mode.js?v=toolmode1"></script>
+<!-- ERA_COMMAND_CENTER_TOOL_MODE_END -->
 </body>
 </html>
 """

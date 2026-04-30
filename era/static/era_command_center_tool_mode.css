@@ -1,0 +1,551 @@
+/* ERA Command Center Tool Mode
+   Non-invasive: adds a compact operational workboard and normalizes existing visible review scores.
+   Does not replace the original Command Center layout.
+*/
+
+#era-live-unit-rotation-root,
+#era-demo-review-queue-root,
+.era-live-unit-shell,
+.era-demo-shell {
+  display: none !important;
+}
+
+#era-command-tool-mode {
+  margin: 18px auto 20px auto;
+  max-width: 1500px;
+  border: 1px solid rgba(148, 190, 255, 0.22);
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at top left, rgba(132, 255, 180, 0.12), transparent 30%),
+    linear-gradient(180deg, rgba(18, 29, 52, 0.96), rgba(8, 14, 28, 0.96));
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.28);
+  color: #f4f7ff;
+  overflow: hidden;
+  position: relative;
+  z-index: 2;
+}
+
+#era-command-tool-mode * {
+  box-sizing: border-box;
+}
+
+.era-cc-topbar {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) auto;
+  gap: 14px;
+  align-items: center;
+  padding: 16px 18px 10px 18px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.era-cc-kicker {
+  display: inline-flex;
+  width: fit-content;
+  padding: 6px 9px;
+  border-radius: 999px;
+  background: rgba(132, 255, 180, 0.10);
+  border: 1px solid rgba(132, 255, 180, 0.28);
+  color: #cfff9e;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 950;
+}
+
+.era-cc-title {
+  margin: 8px 0 4px 0;
+  font-size: clamp(24px, 3vw, 42px);
+  line-height: 0.98;
+  letter-spacing: -0.05em;
+  font-weight: 950;
+}
+
+.era-cc-subtitle {
+  margin: 0;
+  max-width: 920px;
+  color: #d9e6ff;
+  font-size: 13px;
+  line-height: 1.4;
+  font-weight: 750;
+}
+
+.era-cc-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.era-cc-btn,
+.era-cc-select {
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.07);
+  color: #eef5ff;
+  border-radius: 999px;
+  padding: 9px 11px;
+  font-size: 12px;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.era-cc-btn:hover,
+.era-cc-select:hover {
+  background: rgba(132, 255, 180, 0.13);
+  border-color: rgba(132, 255, 180, 0.26);
+}
+
+.era-cc-btn.active {
+  background: rgba(132, 255, 180, 0.16);
+  border-color: rgba(132, 255, 180, 0.44);
+  color: #d8ffc3;
+}
+
+.era-cc-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(130px, 1fr));
+  gap: 10px;
+  padding: 12px 18px;
+}
+
+.era-cc-metric {
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.045);
+  border-radius: 16px;
+  padding: 12px;
+}
+
+.era-cc-metric-label {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #b9c8ea;
+  font-weight: 950;
+  margin-bottom: 3px;
+}
+
+.era-cc-metric-value {
+  font-size: 26px;
+  line-height: 1;
+  font-weight: 950;
+  color: #b8ff7a;
+}
+
+.era-cc-metric-note {
+  margin-top: 4px;
+  color: #d7e3ff;
+  font-size: 11px;
+  line-height: 1.25;
+  font-weight: 750;
+}
+
+.era-cc-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(300px, 0.9fr);
+  gap: 14px;
+  padding: 0 18px 16px 18px;
+}
+
+.era-cc-panel {
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.04);
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+.era-cc-panel-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+  padding: 12px 13px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.era-cc-panel-title {
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.05;
+  font-weight: 950;
+}
+
+.era-cc-timestamp {
+  color: #cbd8fb;
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.era-cc-cards {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(180px, 1fr));
+  gap: 10px;
+  padding: 12px;
+}
+
+.era-cc-card {
+  border: 1px solid rgba(255,255,255,0.11);
+  background: rgba(12, 20, 38, 0.76);
+  border-radius: 16px;
+  padding: 12px;
+  cursor: pointer;
+  min-height: 150px;
+  transition: transform .14s ease, border-color .14s ease, background .14s ease;
+}
+
+.era-cc-card:hover,
+.era-cc-card.selected {
+  transform: translateY(-1px);
+  border-color: rgba(132,255,180,.42);
+  background: rgba(20, 34, 58, 0.88);
+}
+
+.era-cc-card.selected {
+  box-shadow: inset 0 0 0 1px rgba(132,255,180,.18);
+}
+
+.era-cc-card-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.era-cc-rank {
+  color: #cbd8fb;
+  font-size: 11px;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+
+.era-cc-patient {
+  margin-top: 3px;
+  font-size: 19px;
+  font-weight: 950;
+  line-height: 1;
+}
+
+.era-cc-unit {
+  color: #d7e3ff;
+  font-size: 12px;
+  font-weight: 850;
+  margin-top: 2px;
+}
+
+.era-tier {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 5px 8px;
+  font-size: 10px;
+  font-weight: 950;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  border: 1px solid rgba(255,255,255,.12);
+}
+
+.era-tier-critical {
+  background: rgba(255, 109, 124, .14);
+  color: #ffd7dd;
+  border-color: rgba(255, 109, 124, .40);
+}
+
+.era-tier-elevated {
+  background: rgba(255, 204, 92, .14);
+  color: #ffecb8;
+  border-color: rgba(255, 204, 92, .38);
+}
+
+.era-tier-watch {
+  background: rgba(125, 176, 255, .13);
+  color: #d5e6ff;
+  border-color: rgba(125, 176, 255, .32);
+}
+
+.era-tier-low {
+  background: rgba(132, 255, 180, .12);
+  color: #d8ffc3;
+  border-color: rgba(132, 255, 180, .28);
+}
+
+.era-cc-score-row {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  margin: 12px 0 8px 0;
+}
+
+.era-cc-score {
+  color: #b8ff7a;
+  font-size: 34px;
+  line-height: 0.9;
+  font-weight: 950;
+  letter-spacing: -0.04em;
+}
+
+.era-cc-score-scale {
+  color: #d9e6ff;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.era-cc-driver-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 5px;
+}
+
+.era-cc-mini {
+  color: #e7eeff;
+  font-size: 12px;
+  line-height: 1.25;
+  font-weight: 850;
+}
+
+.era-cc-mini span {
+  color: #b9c8ea;
+  font-weight: 800;
+}
+
+.era-cc-table-wrap {
+  padding: 0 12px 12px 12px;
+  overflow-x: auto;
+}
+
+.era-cc-table {
+  width: 100%;
+  min-width: 920px;
+  border-collapse: collapse;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.era-cc-table th,
+.era-cc-table td {
+  padding: 10px 9px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  text-align: left;
+  font-size: 12px;
+  color: #eef3ff;
+  vertical-align: middle;
+}
+
+.era-cc-table th {
+  background: rgba(126, 154, 210, 0.20);
+  color: #dce7ff;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  font-size: 10px;
+  font-weight: 950;
+}
+
+.era-cc-table tr {
+  cursor: pointer;
+}
+
+.era-cc-table tr:hover {
+  background: rgba(132,255,180,.06);
+}
+
+.era-cc-table-score {
+  color: #b8ff7a !important;
+  font-weight: 950;
+}
+
+.era-cc-detail {
+  padding: 13px;
+}
+
+.era-cc-detail-title {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: flex-start;
+  margin-bottom: 10px;
+}
+
+.era-cc-detail-title h3 {
+  margin: 0;
+  font-size: 22px;
+  line-height: 1.05;
+  font-weight: 950;
+}
+
+.era-cc-detail-sub {
+  color: #cbd8fb;
+  font-size: 12px;
+  line-height: 1.3;
+  font-weight: 800;
+  margin-top: 4px;
+}
+
+.era-cc-vitals {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0,1fr));
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.era-cc-vital {
+  border: 1px solid rgba(255,255,255,.09);
+  background: rgba(255,255,255,.045);
+  border-radius: 14px;
+  padding: 10px;
+}
+
+.era-cc-vital-label {
+  color: #b9c8ea;
+  font-size: 10px;
+  font-weight: 950;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.era-cc-vital-value {
+  color: #f5f8ff;
+  margin-top: 4px;
+  font-size: 18px;
+  line-height: 1;
+  font-weight: 950;
+}
+
+.era-cc-timeline {
+  border-left: 2px solid rgba(132,255,180,.36);
+  margin: 12px 0 12px 6px;
+  padding-left: 12px;
+}
+
+.era-cc-timeline-item {
+  margin: 0 0 9px 0;
+  color: #e8efff;
+  font-size: 12px;
+  line-height: 1.32;
+  font-weight: 800;
+}
+
+.era-cc-timeline-item strong {
+  color: #b8ff7a;
+}
+
+.era-cc-actions {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0,1fr));
+  gap: 7px;
+  margin-top: 10px;
+}
+
+.era-cc-action {
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.07);
+  color: #eef5ff;
+  border-radius: 10px;
+  padding: 9px 6px;
+  font-size: 11px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.era-cc-action:hover {
+  background: rgba(132,255,180,.12);
+  border-color: rgba(132,255,180,.30);
+}
+
+.era-cc-feed {
+  padding: 0 13px 13px 13px;
+}
+
+.era-cc-feed-item {
+  border: 1px solid rgba(255,255,255,.08);
+  background: rgba(255,255,255,.035);
+  border-radius: 12px;
+  padding: 10px;
+  margin-bottom: 8px;
+  color: #e9f0ff;
+  font-size: 12px;
+  line-height: 1.35;
+  font-weight: 800;
+}
+
+.era-cc-feed-item strong {
+  color: #b8ff7a;
+}
+
+.era-cc-guardrail {
+  margin: 0 18px 16px 18px;
+  border: 1px solid rgba(255, 204, 92, .30);
+  background: rgba(255, 204, 92, .08);
+  color: #ffecb8;
+  border-radius: 15px;
+  padding: 11px 12px;
+  font-size: 12px;
+  line-height: 1.42;
+  font-weight: 850;
+}
+
+.era-cc-existing-note {
+  margin: 8px 0;
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(132,255,180,.24);
+  background: rgba(132,255,180,.08);
+  color: #dfffd2;
+  font-size: 12px;
+  line-height: 1.35;
+  font-weight: 850;
+}
+
+.era-score-fixed {
+  color: #b8ff7a !important;
+  font-weight: 950 !important;
+}
+
+.era-long-explainability-compact {
+  max-height: 92px !important;
+  overflow: hidden !important;
+  position: relative;
+}
+
+.era-long-explainability-compact::after {
+  content: "Condensed for Command Center view — full governance detail remains available in Pilot Docs / Evidence Packet.";
+  display: block;
+  margin-top: 8px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(126,190,255,.22);
+  background: rgba(126,190,255,.08);
+  color: #dce8ff;
+  font-size: 11px;
+  font-weight: 850;
+}
+
+@media (max-width: 1100px) {
+  .era-cc-topbar,
+  .era-cc-body {
+    grid-template-columns: 1fr;
+  }
+
+  .era-cc-controls {
+    justify-content: flex-start;
+  }
+
+  .era-cc-cards {
+    grid-template-columns: repeat(2, minmax(180px, 1fr));
+  }
+
+  .era-cc-metrics {
+    grid-template-columns: repeat(2, minmax(130px, 1fr));
+  }
+}
+
+@media (max-width: 680px) {
+  .era-cc-cards,
+  .era-cc-metrics,
+  .era-cc-vitals,
+  .era-cc-actions {
+    grid-template-columns: 1fr;
+  }
+
+  #era-command-tool-mode {
+    border-radius: 16px;
+  }
+}

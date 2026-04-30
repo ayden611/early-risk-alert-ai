@@ -1,0 +1,20 @@
+{
+  "timestamp_utc": "2026-04-30T18:53:43.352968+00:00",
+  "command_center_file": "era/web/command_center.py",
+  "patched_files": [
+    "era/web/command_center.py"
+  ],
+  "static_files": [
+    "era/static/era_command_center_tool_mode.css",
+    "era/static/era_command_center_tool_mode.js"
+  ],
+  "purpose": [
+    "Add compact operational review workboard.",
+    "Fix static ICU-12 99% display by rotating case-level Review Score on 0-10 scale.",
+    "Make priority tier, primary driver, trend, lead-time context, and workflow state visible.",
+    "Keep original Command Center layout underneath.",
+    "Avoid patient-risk percentage wording for case-level demo queue."
+  ],
+  "claim_guardrail": "Decision support only; no diagnosis, treatment direction, clinician replacement, or independent escalation.",
+  "raw_data_policy": "No raw, row-level, or restricted local dataset files committed."
+}
