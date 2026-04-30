@@ -1,400 +1,50 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Pilot Success Guide — Early Risk Alert AI</title>
-  
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pilot Success Guide — Early Risk Alert AI</title>
 <style>
-:root{
-  --bg:#07101f;
-  --panel:#101b2e;
-  --panel2:#0d1626;
-  --line:rgba(170,205,255,.22);
-  --text:#f6fbff;
-  --muted:#b8c6d8;
-  --green:#8fffd2;
-  --blue:#8bb8ff;
-  --gold:#ffe2a5;
-  --red:#ff9da8;
-}
-*{box-sizing:border-box}
-body{
-  margin:0;
-  font-family:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  background:
-    radial-gradient(circle at 10% 0%, rgba(139,184,255,.16), transparent 28%),
-    radial-gradient(circle at 90% 10%, rgba(143,255,210,.12), transparent 28%),
-    var(--bg);
-  color:var(--text);
-}
-a{color:var(--green);text-decoration:none;font-weight:850}
-.wrapper{width:min(1180px, calc(100% - 28px));margin:0 auto;padding:28px 0 52px}
-.eyebrow{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--green);font-weight:950}
-h1{font-size:clamp(34px,6vw,64px);letter-spacing:-.07em;line-height:.95;margin:8px 0 14px}
-h2{font-size:clamp(24px,3vw,36px);letter-spacing:-.05em;margin:0 0 12px}
-h3{margin:22px 0 10px;letter-spacing:-.03em}
-p{line-height:1.56}
-.muted{color:var(--muted)}
-.hero,.card{
-  border:1px solid var(--line);
-  background:linear-gradient(145deg, rgba(16,27,46,.95), rgba(7,16,31,.95));
-  border-radius:28px;
-  padding:24px;
-  box-shadow:0 22px 65px rgba(0,0,0,.28);
-}
-.hero{margin-top:20px}
-.grid{display:grid;gap:14px}
-.grid.cols4{grid-template-columns:repeat(4,1fr)}
-.grid.cols3{grid-template-columns:repeat(3,1fr)}
-.grid.cols2{grid-template-columns:repeat(2,1fr)}
-.metric{
-  border:1px solid rgba(170,205,255,.18);
-  background:rgba(255,255,255,.055);
-  border-radius:20px;
-  padding:18px;
-}
-.metric span{display:block;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.13em;font-weight:950}
-.metric strong{display:block;font-size:clamp(26px,4vw,44px);margin-top:8px;color:var(--green);letter-spacing:-.06em}
-.metric em{display:block;color:var(--muted);font-style:normal;font-size:12px;margin-top:6px}
-.callout{
-  border-left:4px solid var(--green);
-  background:rgba(143,255,210,.09);
-  border-radius:16px;
-  padding:14px 16px;
-  font-weight:850;
-}
-.guardrail{
-  border:1px solid rgba(255,226,165,.35);
-  background:rgba(255,226,165,.09);
-  color:var(--gold);
-  border-radius:18px;
-  padding:14px 16px;
-  font-weight:780;
-}
-table{
-  width:100%;
-  border-collapse:collapse;
-  overflow:hidden;
-  border-radius:18px;
-  border:1px solid rgba(170,205,255,.20);
-  background:rgba(255,255,255,.035);
-  margin-top:12px;
-}
-th,td{
-  text-align:left;
-  padding:12px 14px;
-  border-bottom:1px solid rgba(170,205,255,.14);
-  vertical-align:top;
-  font-size:14px;
-}
-th{
-  color:#dce9ff;
-  background:rgba(139,184,255,.12);
-  font-size:11px;
-  text-transform:uppercase;
-  letter-spacing:.12em;
-}
-tr:last-child td{border-bottom:0}
-.pill{
-  display:inline-flex;
-  align-items:center;
-  gap:6px;
-  padding:6px 10px;
-  border-radius:999px;
-  border:1px solid rgba(143,255,210,.35);
-  background:rgba(143,255,210,.11);
-  color:var(--green);
-  font-size:11px;
-  font-weight:950;
-  letter-spacing:.08em;
-  text-transform:uppercase;
-}
-.warn{border-color:rgba(255,226,165,.35);background:rgba(255,226,165,.10);color:var(--gold)}
-.topnav{
-  display:flex;
-  flex-wrap:wrap;
-  gap:8px;
-  margin:18px 0;
-}
-.topnav a{
-  color:#eaf4ff;
-  border:1px solid rgba(170,205,255,.18);
-  background:rgba(255,255,255,.06);
-  border-radius:999px;
-  padding:9px 12px;
-  font-size:12px;
-}
-.section{margin-top:18px}
-ul{line-height:1.7}
-.footer{margin-top:24px;color:var(--muted);font-size:12px}
-@media(max-width:900px){
-  .grid.cols4,.grid.cols3,.grid.cols2{grid-template-columns:1fr}
-  table{display:block;overflow-x:auto;white-space:nowrap}
-}
-@media print{
-  body{background:#fff;color:#111}
-  .hero,.card,.metric{box-shadow:none;background:#fff;color:#111;border-color:#ccc}
-  .topnav{display:none}
-  a{color:#111}
-}
+body{margin:0;background:#07101f;color:#f6fbff;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.wrap{width:min(1050px,calc(100% - 28px));margin:auto;padding:32px 0 60px}
+a{color:#8fffd2;text-decoration:none;font-weight:800}
+nav{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0}
+nav a{border:1px solid rgba(170,205,255,.22);border-radius:999px;padding:9px 12px;color:#f6fbff}
+.card{border:1px solid rgba(170,205,255,.22);border-radius:24px;background:linear-gradient(145deg,rgba(16,27,46,.96),rgba(7,16,31,.96));padding:22px;margin-top:16px}
+h1{font-size:clamp(34px,5vw,58px);letter-spacing:-.06em;line-height:1;margin:0 0 12px}
+p,li{line-height:1.6}
+.guard{border-left:4px solid #ffe2a5;background:rgba(255,226,165,.09);border-radius:14px;padding:12px 14px;color:#ffe2a5;font-weight:800}
+.pill{display:inline-block;border:1px solid rgba(143,255,210,.35);background:rgba(143,255,210,.1);color:#8fffd2;border-radius:999px;padding:6px 10px;font-size:11px;font-weight:900;letter-spacing:.1em;text-transform:uppercase}
 </style>
-
 </head>
 <body>
-  <div class="wrapper">
-    <div class="eyebrow">Early Risk Alert AI · Pilot Readiness</div>
-    <h1>Pilot Success Guide</h1>
-    
-<nav class="topnav">
-  <a href="/command-center">Command Center</a>
-  <a href="/validation-intelligence">Validation Intelligence</a>
-  <a href="/validation-evidence">Evidence Packet</a>
-  <a href="/validation-runs">Validation Runs</a>
-  <a href="/model-card">Model Card</a>
-  <a href="/pilot-success-guide">Pilot Success Guide</a>
+<div class="wrap">
+<span class="pill">Pilot Success Guide · Ready</span>
+<h1>Pilot Success Guide</h1>
+<nav>
+<a href="/command-center">Command Center</a>
+<a href="/validation-intelligence">Validation Intelligence</a>
+<a href="/validation-evidence">Evidence Packet</a>
+<a href="/validation-runs">Validation Runs</a>
+<a href="/model-card">Model Card</a>
 </nav>
 
-    
-<section class="hero">
-  <span class="pill">Pilot Success Guide</span>
-  <h2 style="margin-top:18px;">Hospital pilot readiness framework</h2>
-  <p class="callout">The goal is to evaluate explainable patient prioritization, review-burden reduction, and command-center workflow visibility.</p>
-  <p class="guardrail">Pilot success should be measured with pre-agreed workflow and review metrics, not unsupported outcome or ROI claims.</p>
+<section class="card">
+<h2>Pilot Purpose</h2>
+<p>Evaluate whether Early Risk Alert AI can support authorized healthcare professionals with explainable patient prioritization, review-burden reduction, and command-center workflow visibility.</p>
+<p class="guard">Pilot success should be measured with pre-agreed workflow and review metrics, not unsupported outcome or hard-dollar ROI claims.</p>
 </section>
 
-<section class="card section">
-  <h2>Suggested Pilot Success Metrics</h2>
-  <table>
-    <thead><tr><th>Area</th><th>Metric</th></tr></thead>
-    <tbody>
-      <tr><td>Review burden</td><td>Alerts or reviews per patient-day</td></tr>
-      <tr><td>Prioritization clarity</td><td>Priority tier, primary driver, trend, queue rank, and lead-time context visible</td></tr>
-      <tr><td>Explainability</td><td>Reviewer can understand why a patient may warrant review</td></tr>
-      <tr><td>Workflow</td><td>Acknowledge, assign, escalate, resolve workflow-state tracking</td></tr>
-      <tr><td>Safety</td><td>No autonomous escalation, diagnosis, or treatment direction</td></tr>
-    </tbody>
-  </table>
+<section class="card">
+<h2>Suggested Pilot Success Metrics</h2>
+<ul>
+<li>Alerts or reviews per patient-day.</li>
+<li>Visibility of priority tier, primary driver, trend direction, queue rank, and lead-time context.</li>
+<li>Reviewer understanding of why a case may warrant review.</li>
+<li>Workflow-state completion.</li>
+<li>Safety: no autonomous escalation, diagnosis, or treatment direction.</li>
+</ul>
 </section>
-
-<section class="card section">
-  <h2>Pilot Readiness Checklist</h2>
-  <ul>
-    <li>Hospital/site name identified.</li>
-    <li>Site sponsor or clinical champion identified.</li>
-    <li>Pilot unit/scope defined.</li>
-    <li>Named pilot users and roles defined.</li>
-    <li>IT/security contact defined.</li>
-    <li>Data-use pathway reviewed.</li>
-    <li>Success metrics agreed before launch.</li>
-  </ul>
-</section>
-
-    <div class="footer">
-      Decision support only. Retrospective aggregate analysis only. Not intended to diagnose, direct treatment, replace clinician judgment, or independently trigger escalation.
-    </div>
-  </div>
-
-
-<!-- ERA_FRONTEND_EVIDENCE_QA_FIX_V1_START -->
-<script>
-(function() {
-  const mimicRows = `
-<tr>
-  <td><strong>t=4.0</strong></td>
-  <td>ICU / high-acuity</td>
-  <td>80.3%</td>
-  <td>14.4%</td>
-  <td>37.9%</td>
-  <td>2.22</td>
-  <td>4.0 hrs</td>
-</tr>
-<tr>
-  <td><strong>t=5.0</strong></td>
-  <td>Mixed units / balanced</td>
-  <td>89.1%</td>
-  <td>8.0%</td>
-  <td>24.6%</td>
-  <td>1.23</td>
-  <td>4.0 hrs</td>
-</tr>
-<tr>
-  <td><strong>t=6.0</strong></td>
-  <td>Telemetry / stepdown conservative</td>
-  <td>94.3%</td>
-  <td>4.2%</td>
-  <td>15.3%</td>
-  <td>0.65</td>
-  <td>4.0 hrs</td>
-</tr>
-`;
-  const eicuRows = `
-<tr>
-  <td><strong>t=4.0</strong></td>
-  <td>ICU / high-acuity</td>
-  <td>87.7%</td>
-  <td>7.3%</td>
-  <td>81.3%</td>
-  <td>—</td>
-  <td>4.89 hrs</td>
-</tr>
-<tr>
-  <td><strong>t=5.0</strong></td>
-  <td>Mixed units / balanced</td>
-  <td>93.5%</td>
-  <td>3.7%</td>
-  <td>75.1%</td>
-  <td>—</td>
-  <td>4.32 hrs</td>
-</tr>
-<tr>
-  <td><strong>t=6.0</strong></td>
-  <td>Telemetry / stepdown conservative</td>
-  <td>96.8%</td>
-  <td>1.8%</td>
-  <td>66.6%</td>
-  <td>—</td>
-  <td>3.41 hrs</td>
-</tr>
-`;
-
-  function txt(el) {
-    return (el && el.textContent ? el.textContent : "").toLowerCase();
-  }
-
-  function closestBlock(table) {
-    return table.closest("section, article, .card, .hero, .panel, div") || document.body;
-  }
-
-  function replaceLoadingThresholdRows() {
-    document.querySelectorAll("table").forEach(function(table) {
-      const tableText = txt(table);
-      const blockText = txt(closestBlock(table));
-
-      const hasLoading = tableText.includes("loading");
-      const isThresholdTable =
-        tableText.includes("threshold") ||
-        blockText.includes("threshold matrix") ||
-        blockText.includes("stable 4-hour lead time") ||
-        blockText.includes("mimic") ||
-        blockText.includes("eicu");
-
-      if (!hasLoading || !isThresholdTable) return;
-
-      const tbody = table.querySelector("tbody") || table;
-      if (blockText.includes("eicu")) {
-        tbody.innerHTML = eicuRows;
-      } else {
-        tbody.innerHTML = mimicRows;
-      }
-    });
-  }
-
-  function removeRemainingLoadingText() {
-    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
-    const nodes = [];
-    while (walker.nextNode()) nodes.push(walker.currentNode);
-
-    nodes.forEach(function(node) {
-      if ((node.nodeValue || "").toLowerCase().includes("loading")) {
-        node.nodeValue = node.nodeValue.replace(/Loading\.\.\./gi, "Loaded from locked aggregate summary");
-        node.nodeValue = node.nodeValue.replace(/Loading/gi, "Loaded");
-      }
-    });
-  }
-
-  function fixCommandCenterStatusBadges() {
-    const labels = ["model card", "pilot success guide"];
-
-    document.querySelectorAll("div, li, tr, section, article").forEach(function(el) {
-      const content = txt(el);
-      if (!labels.some(label => content.includes(label))) return;
-      if (!content.includes("missing")) return;
-
-      el.innerHTML = el.innerHTML
-        .replace(/MISSING/g, "READY")
-        .replace(/Missing/g, "Ready")
-        .replace(/missing/g, "ready");
-
-      el.querySelectorAll("*").forEach(function(child) {
-        const childText = txt(child);
-        if (childText.includes("ready")) {
-          child.style.background = "rgba(143,255,210,.18)";
-          child.style.borderColor = "rgba(143,255,210,.45)";
-          child.style.color = "#8fffd2";
-        }
-      });
-    });
-
-    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
-    const nodes = [];
-    while (walker.nextNode()) nodes.push(walker.currentNode);
-
-    nodes.forEach(function(node) {
-      const value = node.nodeValue || "";
-      if (value.includes("8/7")) node.nodeValue = value.replace(/8\/7/g, "9/9");
-      if (value.includes("7/7")) node.nodeValue = value.replace(/7\/7/g, "9/9");
-    });
-  }
-
-  function addEvidenceQaBanner() {
-    if (document.getElementById("era-evidence-qa-banner")) return;
-
-    const bodyText = txt(document.body);
-    const isRelevant =
-      bodyText.includes("validation intelligence") ||
-      bodyText.includes("evidence packet") ||
-      bodyText.includes("validation runs") ||
-      bodyText.includes("command center");
-
-    if (!isRelevant) return;
-
-    const banner = document.createElement("div");
-    banner.id = "era-evidence-qa-banner";
-    banner.style.cssText = [
-      "width:min(1180px,calc(100% - 28px))",
-      "margin:14px auto",
-      "padding:12px 14px",
-      "border:1px solid rgba(143,255,210,.35)",
-      "border-left:5px solid #8fffd2",
-      "border-radius:18px",
-      "background:rgba(143,255,210,.08)",
-      "color:#eaf4ff",
-      "font:800 13px/1.45 Inter,system-ui,sans-serif",
-      "position:relative",
-      "z-index:20"
-    ].join(";");
-
-    banner.innerHTML =
-      "Frontend evidence QA complete: populated threshold matrices, model card, pilot success guide, and validation-run registry now reflect locked aggregate evidence. " +
-      "<span style='color:#ffe2a5'>Decision support only; event definitions differ between MIMIC-IV and eICU.</span>";
-
-    const first = document.body.firstElementChild;
-    if (first) {
-      document.body.insertBefore(banner, first.nextSibling);
-    } else {
-      document.body.appendChild(banner);
-    }
-  }
-
-  function runPatch() {
-    replaceLoadingThresholdRows();
-    removeRemainingLoadingText();
-    fixCommandCenterStatusBadges();
-    addEvidenceQaBanner();
-  }
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", runPatch);
-  } else {
-    runPatch();
-  }
-
-  setTimeout(runPatch, 500);
-  setTimeout(runPatch, 1500);
-})();
-</script>
-<!-- ERA_FRONTEND_EVIDENCE_QA_FIX_V1_END -->
-
+</div>
 </body>
 </html>
