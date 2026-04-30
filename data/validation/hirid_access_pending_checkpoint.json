@@ -1,0 +1,18 @@
+{
+  "ok": true,
+  "dataset": "HiRID",
+  "dataset_version_requested": "v1.1.1",
+  "status": "access_pending",
+  "submitted_date": "2026-04-30",
+  "purpose": "Planned third-dataset retrospective robustness evaluation under a harmonized clinical-event framework.",
+  "current_locked_evidence_before_hirid": [
+    "MIMIC-IV v3.1 strict clinical-event retrospective validation",
+    "eICU v2.0 harmonized clinical-event labeling pass"
+  ],
+  "safe_current_wording": "Early Risk Alert AI has retrospective multi-dataset evidence across MIMIC-IV and eICU, with HiRID access pending for a planned third-dataset robustness evaluation.",
+  "claim_boundary": [
+    "Do not claim three-dataset validation until HiRID access, extraction, scoring, harmonized labeling, and aggregate review are complete.",
+    "Do not claim fully clinically validated without prospective pilot evidence or independent clinical/statistical review."
+  ],
+  "dua_safety": "Raw files, row-level outputs, patient identifiers, timestamps, and enriched restricted-data outputs remain local-only."
+}
