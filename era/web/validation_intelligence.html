@@ -679,6 +679,101 @@ tr:last-child td { border-bottom: 0; }
 </section>
 <!-- ERA_EICU_SECOND_DATASET_PUBLIC_V1_END -->
 
+
+
+<!-- ERA_MULTI_DATASET_ROBUSTNESS_V1_START -->
+<section class="card full" style="
+  border:1px solid rgba(143,255,210,.34);
+  border-left:5px solid #8fffd2;
+  background:linear-gradient(145deg, rgba(13,24,42,.94), rgba(6,11,21,.94));
+  border-radius:28px;
+  padding:24px;
+  margin-top:18px;
+">
+  <div style="color:#8fffd2;text-transform:uppercase;letter-spacing:.14em;font-size:11px;font-weight:950;margin-bottom:8px;">
+    Multi-Dataset Robustness Summary
+  </div>
+
+  <h2 style="margin:0 0 12px;">MIMIC-IV + eICU evidence now support a stronger cross-dataset story.</h2>
+
+  <p class="callout" style="
+    border-left:4px solid #8fffd2;
+    padding:12px 16px;
+    border-radius:14px;
+    background:rgba(143,255,210,.09);
+    color:#eaf4ff;
+    font-weight:800;
+  ">
+    MIMIC-IV established strict clinical-event cross-cohort retrospective stability, while eICU added a separate second-dataset outcome-proxy check; across both datasets, ERA preserved the same threshold-direction behavior: lower thresholds increased detection, while conservative thresholds reduced review burden and false positives.
+  </p>
+
+  <p class="muted">
+    At the conservative t=6.0 operating point, MIMIC-IV showed 4 hrs median lead-time context across locked cross-cohort evidence, while eICU showed 3.41 hrs median lead-time context in the outcome-proxy check.
+  </p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Dataset</th>
+        <th>Evidence Role</th>
+        <th>Cases</th>
+        <th>Rows</th>
+        <th>Event Context</th>
+        <th>Threshold</th>
+        <th>Alert Reduction</th>
+        <th>FPR</th>
+        <th>Detection</th>
+        <th>Lead Time</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>MIMIC-IV v3.1</strong></td>
+        <td>Locked strict clinical-event cross-cohort validation release</td>
+        <td>577–1,705</td>
+        <td>456,453 in full validation cohort</td>
+        <td>event clusters / clinical-event labels</td>
+        <td>t=6.0</td>
+        <td>94%–94.9%</td>
+        <td>3.7%–4.4%</td>
+        <td>14.1%–16%</td>
+        <td>4 hrs</td>
+      </tr>
+      <tr>
+        <td><strong>eICU Collaborative Research Database v2.0</strong></td>
+        <td>Second-dataset retrospective outcome-proxy check</td>
+        <td>2394</td>
+        <td>2023962</td>
+        <td>772</td>
+        <td>t=6.0</td>
+        <td>96.8%</td>
+        <td>1.8%</td>
+        <td>66.6%</td>
+        <td>3.41 hrs</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p class="muted" style="margin-top:14px;">
+    Important interpretation: MIMIC-IV uses stricter clinical-event labels, while eICU uses outcome-proxy labels from mortality/discharge-derived event context. Detection rates should not be treated as equivalent endpoint definitions.
+  </p>
+
+  <h3 style="margin-top:18px;">Citation Story</h3>
+  <ul class="muted">
+    <li><strong>MIMIC-IV:</strong> Johnson et al., MIMIC-IV v3.1, PhysioNet, DOI 10.13026/kpb9-mt58; original Scientific Data publication DOI 10.1038/s41597-022-01899-x.</li>
+    <li><strong>eICU:</strong> Pollard et al., eICU Collaborative Research Database v2.0, PhysioNet, DOI 10.13026/C2WM1R; original Scientific Data publication DOI 10.1038/sdata.2018.178.</li>
+    <li><strong>DUA boundary:</strong> aggregate public evidence only; raw restricted files and row-level derived outputs remain local-only.</li>
+  </ul>
+
+  <div class="era-release-lock-links" style="margin-top:12px;">
+    <a href="/api/validation/multi-dataset-robustness">Multi-Dataset JSON</a>
+    <a href="/validation-evidence/multi-dataset-robustness.json">Download Summary</a>
+    <a href="/api/validation/eicu-validation">eICU JSON</a>
+    <a href="/api/validation/cross-cohort-validation">MIMIC Cross-Cohort JSON</a>
+  </div>
+</section>
+<!-- ERA_MULTI_DATASET_ROBUSTNESS_V1_END -->
+
 </main>
 </body>
 </html>

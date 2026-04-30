@@ -401,3 +401,33 @@ Aggregate DUA-safe evidence only. Row-level MIMIC-derived exports, raw restricte
 Decision support only. Retrospective aggregate analysis only.
 <!-- ERA_CROSS_COHORT_RELEASE_README_V1_END -->
 
+
+<!-- ERA_MULTI_DATASET_ROBUSTNESS_README_V1_START -->
+## Multi-Dataset Robustness Summary
+
+**MIMIC-IV established strict clinical-event cross-cohort retrospective stability, while eICU added a separate second-dataset outcome-proxy check; across both datasets, ERA preserved the same threshold-direction behavior: lower thresholds increased detection, while conservative thresholds reduced review burden and false positives.**
+
+At the conservative t=6.0 operating point, MIMIC-IV showed 4 hrs median lead-time context across locked cross-cohort evidence, while eICU showed 3.41 hrs median lead-time context in the outcome-proxy check.
+
+### Evidence Roles
+
+| Dataset | Role |
+|---|---|
+| MIMIC-IV v3.1 | Locked strict clinical-event cross-cohort retrospective validation release |
+| eICU Collaborative Research Database v2.0 | Separate second-dataset retrospective outcome-proxy check |
+
+### Citation Story
+
+- MIMIC-IV v3.1: Johnson et al. (2024), PhysioNet, DOI 10.13026/kpb9-mt58.
+- MIMIC-IV Scientific Data: Johnson et al. (2023), DOI 10.1038/s41597-022-01899-x.
+- eICU v2.0: Pollard et al. (2019), PhysioNet, DOI 10.13026/C2WM1R.
+- eICU Scientific Data: Pollard et al. (2018), DOI 10.1038/sdata.2018.178.
+- PhysioNet standard citation: Goldberger et al. (2000), Circulation.
+
+### Public Boundary
+
+Aggregate DUA-safe evidence only. Raw restricted files and row-level outputs remain local-only.
+
+Decision support only. Retrospective aggregate analysis only.
+<!-- ERA_MULTI_DATASET_ROBUSTNESS_README_V1_END -->
+

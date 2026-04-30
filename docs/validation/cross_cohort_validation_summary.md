@@ -60,3 +60,39 @@ Use this report to show that ERA’s operating-point story can be evaluated acro
 Retrospective DUA-safe cross-cohort comparison supports review of ERA operating-point behavior across the full validation cohort and different deterministic case-level subcohorts.
 
 Decision support only. Retrospective analysis only. Not intended to diagnose, direct treatment, replace clinician judgment, or independently trigger escalation.
+
+
+<!-- ERA_MULTI_DATASET_ROBUSTNESS_V1_START -->
+
+## Multi-Dataset Robustness Summary
+
+**MIMIC-IV established strict clinical-event cross-cohort retrospective stability, while eICU added a separate second-dataset outcome-proxy check; across both datasets, ERA preserved the same threshold-direction behavior: lower thresholds increased detection, while conservative thresholds reduced review burden and false positives.**
+
+At the conservative t=6.0 operating point, MIMIC-IV showed 4 hrs median lead-time context across locked cross-cohort evidence, while eICU showed 3.41 hrs median lead-time context in the outcome-proxy check.
+
+| Dataset | Evidence Role | Cases | Rows | Event Context | Threshold | Alert Reduction | FPR | Detection | Lead Time |
+|---|---|---:|---:|---|---:|---:|---:|---:|---:|
+| MIMIC-IV v3.1 | Locked strict clinical-event cross-cohort validation release | 577–1,705 | 456,453 in full validation cohort | event clusters / clinical-event labels | t=6.0 | 94%–94.9% | 3.7%–4.4% | 14.1%–16% | 4 hrs |
+| eICU Collaborative Research Database v2.0 | Second-dataset retrospective outcome-proxy check | 2394 | 2023962 | 772 | t=6.0 | 96.8% | 1.8% | 66.6% | 3.41 hrs |
+
+### Interpretation Guardrail
+
+MIMIC-IV uses stricter clinical-event labels, while eICU uses outcome-proxy labels from mortality/discharge-derived event context. Detection rates should not be treated as equivalent endpoint definitions.
+
+### Safe Claim
+
+Cross-dataset retrospective robustness evidence across de-identified ICU datasets.
+
+### Avoid
+
+- proven generalizability
+- prospective validation
+- diagnosis
+- treatment direction
+- prevention of adverse events
+- replacement of clinician judgment
+- autonomous escalation
+- direct superiority over standard monitoring
+
+<!-- ERA_MULTI_DATASET_ROBUSTNESS_V1_END -->
+
