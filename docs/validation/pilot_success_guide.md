@@ -10,7 +10,7 @@ Evaluate explainable patient prioritization, review-burden reduction, and comman
 - Visibility of priority tier, primary driver, trend direction, queue rank, and lead-time context.
 - Reviewer understanding of why a case may warrant review.
 - Workflow-state completion.
-- Safety: no autonomous escalation, diagnosis, or treatment direction.
+- Safety: no autonomous escalation, diagnosis, treatment direction, or independent escalation.
 
 ## Guardrail
 

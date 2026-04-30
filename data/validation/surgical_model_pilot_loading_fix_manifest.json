@@ -1,0 +1,20 @@
+{
+  "ok": true,
+  "generated_at_utc": "2026-04-30T13:18:44.585579+00:00",
+  "purpose": "Surgical fix after command-center restore.",
+  "changed": [
+    "Added Model Card page",
+    "Added Pilot Success Guide page",
+    "Added markdown downloads",
+    "Patched model card / pilot success guide status labels only",
+    "Patched leftover Loading placeholder row/text only"
+  ],
+  "not_changed": [
+    "No command-center forced route override",
+    "No validation page replacement",
+    "No validation metric changes",
+    "No raw or row-level restricted data exposed",
+    "No hard ROI claims",
+    "No unqualified two-dataset validation claim"
+  ]
+}

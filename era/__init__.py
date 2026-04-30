@@ -3383,6 +3383,32 @@ _CHUNK_STORE: Dict[str, Dict] = {}
 
 def create_app() -> Flask:
     app = Flask(__name__)
+
+    # ERA_MODEL_PILOT_PUBLIC_ONLY_V3_START
+    @app.before_request
+    def era_model_pilot_public_only_v3():
+        from pathlib import Path
+        from flask import request, send_from_directory, Response
+
+        path = request.path.rstrip("/") or "/"
+        root_dir = Path(__file__).resolve().parent.parent
+        web_dir = Path(__file__).resolve().parent / "web"
+
+        if path in ("/model-card", "/model_card"):
+            return send_from_directory(str(web_dir), "model_card.html")
+
+        if path in ("/pilot-success-guide", "/pilot_success_guide"):
+            return send_from_directory(str(web_dir), "pilot_success_guide.html")
+
+        if path == "/validation-evidence/model-card.md":
+            p = root_dir / "docs" / "validation" / "model_card.md"
+            return Response(p.read_text(encoding="utf-8"), mimetype="text/markdown")
+
+        if path == "/validation-evidence/pilot-success-guide.md":
+            p = root_dir / "docs" / "validation" / "pilot_success_guide.md"
+            return Response(p.read_text(encoding="utf-8"), mimetype="text/markdown")
+    # ERA_MODEL_PILOT_PUBLIC_ONLY_V3_END
+
     # In-memory state for retro upload pipeline
     RETRO_STATE = {
         "uploads": [],
@@ -7062,30 +7088,7 @@ def create_app() -> Flask:
     # ERA_FINAL_FRONTEND_EVIDENCE_POLISH_ROUTES_V1_END
 
 
-    # ERA_ONLY_MODEL_PILOT_GUIDE_ROUTES_V2_START
-    @app.before_request
-    def era_only_model_pilot_guide_routes_v2():
-        from pathlib import Path
-        from flask import request, send_from_directory, Response
-
-        path = request.path.rstrip("/") or "/"
-        root_dir = Path(__file__).resolve().parent.parent
-        web_dir = Path(__file__).resolve().parent / "web"
-
-        if path == "/model-card":
-            return send_from_directory(str(web_dir), "model_card.html")
-
-        if path == "/pilot-success-guide":
-            return send_from_directory(str(web_dir), "pilot_success_guide.html")
-
-        if path == "/validation-evidence/model-card.md":
-            p = root_dir / "docs" / "validation" / "model_card.md"
-            return Response(p.read_text(encoding="utf-8"), mimetype="text/markdown")
-
-        if path == "/validation-evidence/pilot-success-guide.md":
-            p = root_dir / "docs" / "validation" / "pilot_success_guide.md"
-            return Response(p.read_text(encoding="utf-8"), mimetype="text/markdown")
-    # ERA_ONLY_MODEL_PILOT_GUIDE_ROUTES_V2_END
+    
 
     return app
 
