@@ -1,0 +1,12 @@
+{
+  "ok": true,
+  "generated_at_utc": "2026-04-30T15:15:42.201833+00:00",
+  "purpose": "Surgically mark Model Card and Pilot Success Guide as READY in the existing Command Center status registry.",
+  "scope": [
+    "No Command Center redesign",
+    "No public validation claim changes",
+    "No dataset or raw-data changes",
+    "No validation page rewrite"
+  ],
+  "changed_files": []
+}
