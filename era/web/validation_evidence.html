@@ -555,6 +555,139 @@ tr:last-child td { border-bottom: 0; }
     </section>
 
     <p class="footer">Generated 2026-04-25T20:14:38.634935+00:00 · Aggregate DUA-safe evidence packet only.</p>
-  </main>
+  
+
+<!-- ERA_EICU_SECOND_DATASET_PUBLIC_V1_START -->
+<section class="card full" style="
+  border:1px solid rgba(139,184,255,.30);
+  border-left:5px solid #8bb8ff;
+  background:linear-gradient(145deg, rgba(13,24,42,.92), rgba(6,11,21,.92));
+  border-radius:26px;
+  padding:24px;
+  margin-top:18px;
+">
+  <div style="
+    color:#8bb8ff;
+    text-transform:uppercase;
+    letter-spacing:.14em;
+    font-size:11px;
+    font-weight:950;
+    margin-bottom:8px;
+  ">Second-Dataset Outcome-Proxy Check</div>
+
+  <h2 style="margin:0 0 12px;">eICU Retrospective Outcome-Proxy Validation</h2>
+
+  <p class="callout" style="
+    border-left:4px solid #8bb8ff;
+    padding:12px 16px;
+    border-radius:14px;
+    background:rgba(139,184,255,.09);
+    color:#eaf4ff;
+    font-weight:800;
+  ">
+    On a separate eICU outcome-proxy cohort, ERA preserved the same threshold pattern: lower thresholds produced higher detection, while the conservative t=6.0 setting emphasized low-burden review behavior.
+  </p>
+
+  <p class="muted">
+    This eICU run is intentionally framed separately from the locked MIMIC-IV evidence release because it uses outcome-proxy event labels from eICU mortality/discharge status fields and relative ICU offsets.
+  </p>
+
+  <div class="metrics" style="margin-top:16px;">
+    <div class="metric">
+      <span>t=6.0 Alert Reduction</span>
+      <strong>96.8%</strong>
+      <em>eICU outcome-proxy cohort</em>
+    </div>
+    <div class="metric">
+      <span>t=6.0 ERA FPR</span>
+      <strong>1.8%</strong>
+      <em>conservative setting</em>
+    </div>
+    <div class="metric">
+      <span>t=6.0 Detection</span>
+      <strong>66.6%</strong>
+      <em>outcome-proxy event context</em>
+    </div>
+    <div class="metric">
+      <span>t=6.0 Lead-Time Context</span>
+      <strong>3.41 hrs</strong>
+      <em>retrospective timing context</em>
+    </div>
+  </div>
+
+  <h3 style="margin-top:20px;">eICU Threshold Matrix</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Threshold</th>
+        <th>Setting</th>
+        <th>Rows</th>
+        <th>Cases</th>
+        <th>Event-Proxy Rows</th>
+        <th>Alert Reduction</th>
+        <th>ERA FPR</th>
+        <th>Detection</th>
+        <th>Lead Time</th>
+        <th>Alerts / Patient-Day</th>
+      </tr>
+    </thead>
+    <tbody>
+      
+      <tr>
+        <td><strong>t=4</strong></td>
+        <td>ICU / high-acuity</td>
+        <td>2023962</td>
+        <td>2394</td>
+        <td>772</td>
+        <td>87.7%</td>
+        <td>7.3%</td>
+        <td>81.3%</td>
+        <td>4.89 hrs</td>
+        <td>21.8</td>
+      </tr>
+    
+
+      <tr>
+        <td><strong>t=5</strong></td>
+        <td>Mixed units / balanced</td>
+        <td>2023962</td>
+        <td>2394</td>
+        <td>772</td>
+        <td>93.5%</td>
+        <td>3.7%</td>
+        <td>75.1%</td>
+        <td>4.32 hrs</td>
+        <td>11.44</td>
+      </tr>
+    
+
+      <tr>
+        <td><strong>t=6</strong></td>
+        <td>Telemetry / stepdown conservative</td>
+        <td>2023962</td>
+        <td>2394</td>
+        <td>772</td>
+        <td>96.8%</td>
+        <td>1.8%</td>
+        <td>66.6%</td>
+        <td>3.41 hrs</td>
+        <td>5.75</td>
+      </tr>
+    
+    </tbody>
+  </table>
+
+  <p class="muted" style="margin-top:14px;">
+    Safe claim: cross-dataset retrospective outcome-proxy evaluation on de-identified ICU data. Avoid claiming proven generalizability, prospective validation, diagnosis, treatment direction, prevention, or autonomous escalation.
+  </p>
+
+  <div class="era-release-lock-links" style="margin-top:12px;">
+    <a href="/api/validation/eicu-validation">eICU Validation JSON</a>
+    <a href="/validation-evidence/eicu-validation.json">Download eICU Summary</a>
+  </div>
+</section>
+<!-- ERA_EICU_SECOND_DATASET_PUBLIC_V1_END -->
+
+</main>
 </body>
 </html>
