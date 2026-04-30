@@ -6846,6 +6846,44 @@ def create_app() -> Flask:
         )
     # ERA_CROSS_COHORT_VALIDATION_ROUTES_V1_END
 
+
+    # ERA_EICU_VALIDATION_ROUTES_V1_START
+    @app.get("/api/validation/eicu-validation")
+    def era_validation_eicu_validation_api():
+        import json
+        from pathlib import Path
+        from flask import jsonify
+
+        root_dir = Path(__file__).resolve().parent.parent
+        p = root_dir / "data" / "validation" / "eicu_validation_summary.json"
+
+        if not p.exists():
+            return jsonify({"ok": False, "error": "eICU validation summary not found."}), 404
+
+        data = json.loads(p.read_text(encoding="utf-8"))
+        data["ok"] = True
+        return jsonify(data)
+
+    @app.get("/validation-evidence/eicu-validation.json")
+    def era_validation_eicu_validation_download_json():
+        from pathlib import Path
+        from flask import Response
+
+        root_dir = Path(__file__).resolve().parent.parent
+        p = root_dir / "data" / "validation" / "eicu_validation_summary.json"
+
+        if not p.exists():
+            return Response("eICU validation summary not found.", status=404, mimetype="text/plain")
+
+        return Response(
+            p.read_text(encoding="utf-8"),
+            mimetype="application/json",
+            headers={
+                "Content-Disposition": "attachment; filename=early-risk-alert-ai-eicu-validation-summary.json"
+            }
+        )
+    # ERA_EICU_VALIDATION_ROUTES_V1_END
+
     return app
 
 

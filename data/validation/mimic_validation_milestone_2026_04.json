@@ -376,10 +376,10 @@
     "era_alerts_per_patient_day_official_alert_volume": 0.72,
     "standard_threshold_alerts_per_patient_day_approx": 3.77,
     "method_note": "Standard threshold-only alerts per patient-day is approximated from standard threshold total alerts divided by total patient-days from the row-level retrospective lead-time analysis.",
-    "pilot_safe_summary": "ERA generated approximately 0.6777 alerts per patient-day versus approximately 13.2665 alerts per patient-day under standard threshold-only alerting, for an alert reduction of 94.9%.",
-    "era_alerts_per_patient_day_exact": 0.6777,
-    "standard_threshold_alerts_per_patient_day_exact": 13.2665,
-    "alert_reduction_pct_exact": 94.9
+    "pilot_safe_summary": "ERA generated approximately 5.7468 alerts per patient-day versus approximately 177.2131 alerts per patient-day under standard threshold-only alerting, for an alert reduction of 96.8%.",
+    "era_alerts_per_patient_day_exact": 5.7468,
+    "standard_threshold_alerts_per_patient_day_exact": 177.2131,
+    "alert_reduction_pct_exact": 96.8
   },
   "polished_validation_summary_v2": {
     "status": "Implemented",
@@ -456,8 +456,8 @@
   },
   "real_era_validation_export": {
     "status": "Generated",
-    "latest_run_id": "era_mimic_20260425_195945_t6_0",
-    "generated_at_utc": "2026-04-25T19:59:46.225774+00:00",
+    "latest_run_id": "era_mimic_20260430_014241_t6_0",
+    "generated_at_utc": "2026-04-30T01:42:48.518421+00:00",
     "enriched_csv": "local-only-not-public",
     "summary_file": "local-only-not-public",
     "columns_added": [
@@ -472,134 +472,134 @@
     ],
     "selected_threshold_metrics": {
       "threshold": 6.0,
-      "rows": 159397,
-      "patients": 621,
-      "events": 602,
-      "event_patients": 600,
-      "era_total_alerts": 5936,
-      "standard_total_alerts": 116208,
-      "alert_reduction_pct": 94.9,
-      "era_fpr_pct": 3.7,
-      "standard_fpr_pct": 73.0,
-      "era_patient_detection_pct": 14.2,
-      "era_event_cluster_detection_pct": 14.1,
-      "era_reading_sensitivity_pct": 4.7,
-      "standard_reading_sensitivity_pct": 70.3,
-      "median_lead_time_hours": 4.0,
-      "pct_detected_events_flagged_over_1h": 97.6,
-      "pct_detected_events_flagged_over_2h": 85.9,
-      "pct_detected_events_flagged_over_3h": 65.9,
-      "total_patient_days": 8759.485,
-      "era_alerts_per_patient_day": 0.6777,
-      "standard_alerts_per_patient_day": 13.2665,
+      "rows": 2023962,
+      "patients": 2394,
+      "events": 772,
+      "event_patients": 772,
+      "era_total_alerts": 41391,
+      "standard_total_alerts": 1276364,
+      "alert_reduction_pct": 96.8,
+      "era_fpr_pct": 1.8,
+      "standard_fpr_pct": 62.7,
+      "era_patient_detection_pct": 66.6,
+      "era_event_cluster_detection_pct": 66.6,
+      "era_reading_sensitivity_pct": 13.4,
+      "standard_reading_sensitivity_pct": 80.6,
+      "median_lead_time_hours": 3.41,
+      "pct_detected_events_flagged_over_1h": 83.5,
+      "pct_detected_events_flagged_over_2h": 69.6,
+      "pct_detected_events_flagged_over_3h": 57.2,
+      "total_patient_days": 7202.424,
+      "era_alerts_per_patient_day": 5.7468,
+      "standard_alerts_per_patient_day": 177.2131,
       "detected_examples": [
         {
           "case_id": "Case-021",
           "lead_hours": 6.0,
           "priority_tier": "Critical",
-          "primary_driver": "SpO2 decline",
+          "primary_driver": "severe SpO2 decline",
           "trend_direction": "Worsening",
           "score": 9.9,
           "queue_rank": 1
         },
         {
           "case_id": "Case-022",
-          "lead_hours": 1.0,
+          "lead_hours": 0.1,
           "priority_tier": "Critical",
-          "primary_driver": "SpO2 decline",
+          "primary_driver": "severe SpO2 decline",
           "trend_direction": "Worsening",
           "score": 9.9,
           "queue_rank": 1
         },
         {
           "case_id": "Case-023",
-          "lead_hours": 3.0,
+          "lead_hours": 0.1,
           "priority_tier": "Critical",
-          "primary_driver": "SpO2 decline",
+          "primary_driver": "severe SpO2 decline",
           "trend_direction": "Worsening",
-          "score": 9.0,
-          "queue_rank": 1
+          "score": 9.9,
+          "queue_rank": 8
         },
         {
           "case_id": "Case-024",
-          "lead_hours": 4.0,
+          "lead_hours": 0.3,
           "priority_tier": "Critical",
-          "primary_driver": "SpO2 decline",
+          "primary_driver": "severe HR instability",
           "trend_direction": "Worsening",
-          "score": 9.0,
+          "score": 9.5,
           "queue_rank": 1
         },
         {
           "case_id": "Case-025",
-          "lead_hours": 2.5,
+          "lead_hours": 0.1,
           "priority_tier": "Critical",
-          "primary_driver": "borderline SpO2",
+          "primary_driver": "severe SpO2 decline",
           "trend_direction": "Worsening",
           "score": 9.0,
-          "queue_rank": 1
+          "queue_rank": 60
         },
         {
           "case_id": "Case-026",
-          "lead_hours": 6.0,
+          "lead_hours": 5.8,
           "priority_tier": "Critical",
-          "primary_driver": "borderline SpO2",
+          "primary_driver": "severe SpO2 decline",
           "trend_direction": "Worsening",
           "score": 9.0,
-          "queue_rank": 1
+          "queue_rank": 21
         },
         {
           "case_id": "Case-027",
-          "lead_hours": 5.0,
+          "lead_hours": 0.5,
           "priority_tier": "Critical",
-          "primary_driver": "SpO2 decline",
+          "primary_driver": "severe SpO2 decline",
           "trend_direction": "Worsening",
           "score": 8.5,
-          "queue_rank": 1
+          "queue_rank": 92
         },
         {
           "case_id": "Case-028",
-          "lead_hours": 5.0,
+          "lead_hours": 1.1,
           "priority_tier": "Critical",
-          "primary_driver": "SpO2 decline",
+          "primary_driver": "severe SpO2 decline",
           "trend_direction": "Worsening",
-          "score": 8.5,
-          "queue_rank": 1
+          "score": 8.0,
+          "queue_rank": 134
         },
         {
           "case_id": "Case-029",
-          "lead_hours": 6.0,
+          "lead_hours": 1.7,
           "priority_tier": "Critical",
           "primary_driver": "SpO2 decline",
           "trend_direction": "Worsening",
-          "score": 8.5,
-          "queue_rank": 1
+          "score": 8.0,
+          "queue_rank": 5
         },
         {
           "case_id": "Case-030",
-          "lead_hours": 6.0,
+          "lead_hours": 1.0,
           "priority_tier": "Critical",
-          "primary_driver": "SpO2 decline",
+          "primary_driver": "severe SpO2 decline",
           "trend_direction": "Worsening",
           "score": 8.0,
-          "queue_rank": 1
+          "queue_rank": 6
         },
         {
           "case_id": "Case-031",
-          "lead_hours": 3.0,
+          "lead_hours": 4.0,
           "priority_tier": "Critical",
-          "primary_driver": "severe BP instability",
+          "primary_driver": "SpO2 decline",
           "trend_direction": "Worsening",
-          "score": 8.0,
-          "queue_rank": 1
+          "score": 7.5,
+          "queue_rank": 76
         },
         {
           "case_id": "Case-032",
-          "lead_hours": 3.0,
+          "lead_hours": 5.9,
           "priority_tier": "Critical",
-          "primary_driver": "borderline SpO2",
+          "primary_driver": "severe SpO2 decline",
           "trend_direction": "Worsening",
-          "score": 8.0,
-          "queue_rank": 1
+          "score": 7.0,
+          "queue_rank": 91
         },
         {
           "case_id": "Case-033",
@@ -607,71 +607,71 @@
           "priority_tier": "Critical",
           "primary_driver": "severe SpO2 decline",
           "trend_direction": "Worsening",
-          "score": 8.0,
-          "queue_rank": 1
+          "score": 7.0,
+          "queue_rank": 271
         },
         {
           "case_id": "Case-034",
-          "lead_hours": 4.5,
-          "priority_tier": "Critical",
-          "primary_driver": "SpO2 decline",
-          "trend_direction": "Worsening",
-          "score": 8.0,
-          "queue_rank": 1
-        },
-        {
-          "case_id": "Case-035",
-          "lead_hours": 2.0,
-          "priority_tier": "Critical",
-          "primary_driver": "severe SpO2 decline",
-          "trend_direction": "Worsening",
-          "score": 8.0,
-          "queue_rank": 1
-        },
-        {
-          "case_id": "Case-036",
-          "lead_hours": 5.0,
-          "priority_tier": "Critical",
-          "primary_driver": "HR elevation/depression",
-          "trend_direction": "Worsening",
-          "score": 7.5,
-          "queue_rank": 1
-        },
-        {
-          "case_id": "Case-037",
-          "lead_hours": 2.0,
-          "priority_tier": "Critical",
-          "primary_driver": "borderline SpO2",
-          "trend_direction": "Worsening",
-          "score": 7.5,
-          "queue_rank": 1
-        },
-        {
-          "case_id": "Case-038",
-          "lead_hours": 3.5,
-          "priority_tier": "Critical",
-          "primary_driver": "SpO2 decline",
-          "trend_direction": "Worsening",
-          "score": 7.5,
-          "queue_rank": 1
-        },
-        {
-          "case_id": "Case-039",
           "lead_hours": 6.0,
           "priority_tier": "Critical",
           "primary_driver": "SpO2 decline",
           "trend_direction": "Worsening",
-          "score": 7.5,
-          "queue_rank": 1
+          "score": 7.0,
+          "queue_rank": 274
+        },
+        {
+          "case_id": "Case-035",
+          "lead_hours": 1.4,
+          "priority_tier": "Critical",
+          "primary_driver": "severe SpO2 decline",
+          "trend_direction": "Worsening",
+          "score": 7.0,
+          "queue_rank": 217
+        },
+        {
+          "case_id": "Case-036",
+          "lead_hours": 0.1,
+          "priority_tier": "Critical",
+          "primary_driver": "severe SpO2 decline",
+          "trend_direction": "Worsening",
+          "score": 7.0,
+          "queue_rank": 68
+        },
+        {
+          "case_id": "Case-037",
+          "lead_hours": 3.9,
+          "priority_tier": "Critical",
+          "primary_driver": "severe SpO2 decline",
+          "trend_direction": "Worsening",
+          "score": 7.0,
+          "queue_rank": 88
+        },
+        {
+          "case_id": "Case-038",
+          "lead_hours": 3.8,
+          "priority_tier": "Elevated",
+          "primary_driver": "borderline SpO2",
+          "trend_direction": "Worsening",
+          "score": 6.5,
+          "queue_rank": 167
+        },
+        {
+          "case_id": "Case-039",
+          "lead_hours": 2.4,
+          "priority_tier": "Elevated",
+          "primary_driver": "severe SpO2 decline",
+          "trend_direction": "Worsening",
+          "score": 6.5,
+          "queue_rank": 187
         },
         {
           "case_id": "Case-040",
-          "lead_hours": 2.0,
-          "priority_tier": "Critical",
+          "lead_hours": 5.3,
+          "priority_tier": "Elevated",
           "primary_driver": "SpO2 decline",
           "trend_direction": "Worsening",
-          "score": 7.5,
-          "queue_rank": 1
+          "score": 6.5,
+          "queue_rank": 18
         }
       ]
     }
@@ -679,11 +679,11 @@
   "validation_run_registry": {
     "status": "Available",
     "registry_file": "data/validation/validation_run_registry.json",
-    "latest_run_id": "era_mimic_20260425_195945_t6_0"
+    "latest_run_id": "era_mimic_20260430_014241_t6_0"
   },
   "mimic_dua_public_safety": {
     "status": "Applied",
-    "applied_at_utc": "2026-04-25T20:06:57.314278+00:00",
+    "applied_at_utc": "2026-04-30T01:42:50.528001+00:00",
     "public_policy": "Only aggregate metrics, sanitized case examples, validation methodology, and code are public-facing. Row-level MIMIC-derived exports remain local-only.",
     "removed_from_public_outputs": [
       "raw MIMIC files",
@@ -1105,10 +1105,10 @@
     "caution": "Retrospective timing behavior should not be described as prospective proof."
   },
   "latest_progress_update": {
-    "status": "Stable cross-cohort validation release locked",
-    "updated_at_utc": "2026-04-25T20:26:53.599060+00:00",
-    "summary": "Cross-cohort evidence release locked and Command Center aligned to t=6.0 aggregate range story.",
-    "public_takeaway": "Across the full validation cohort and two deterministic patient-level subcohorts (577\u20131,705 cases each), the conservative t=6.0 ERA setting showed consistent low-burden review-queue performance, with 94.0%\u201394.9% alert reduction, 3.7%\u20134.4% ERA FPR, 14.1%\u201316.0% event-cluster detection, and a stable 4.0 hours median lead-time context across all cohorts."
+    "status": "eICU second-dataset outcome-proxy validation completed",
+    "updated_at_utc": "2026-04-30T01:42:50.604531+00:00",
+    "summary": "DUA-safe aggregate threshold matrix completed on local-only ERA-format eICU cohort.",
+    "public_takeaway": "MIMIC-IV evidence can now be compared with a second ICU dataset using conservative outcome-proxy framing."
   },
   "event_cluster_robustness": {
     "status": "Completed",
@@ -1863,5 +1863,106 @@
     "command_center_aligned": true,
     "public_policy": "Aggregate DUA-safe evidence only. Row-level MIMIC-derived data remains local-only.",
     "pilot_safe_note": "Decision support only. Retrospective aggregate analysis only."
+  },
+  "eicu_outcome_proxy_validation": {
+    "status": "Completed",
+    "updated_at_utc": "2026-04-30T01:42:50.604525+00:00",
+    "summary_file": "data/validation/eicu_validation_summary.json",
+    "report_file": "docs/validation/eicu_validation_summary.md",
+    "dataset": "eICU Collaborative Research Database",
+    "thresholds_tested": [
+      4.0,
+      5.0,
+      6.0
+    ],
+    "event_window_hours": 6,
+    "event_gap_hours": 6,
+    "event_definition": "Outcome-proxy event labels from mortality/discharge status fields using relative ICU offset timing.",
+    "public_policy": "Aggregate metrics only; raw eICU files and row-level ERA-format cohort remain local-only.",
+    "runs": [
+      {
+        "run_id": "eicu_outcome_proxy_t4_0_2026_04_29",
+        "dataset": "eICU Collaborative Research Database",
+        "cohort_type": "local-only ERA-format eICU outcome-proxy cohort",
+        "threshold": 4.0,
+        "suggested_setting": "ICU / high-acuity",
+        "event_window_hours": 6,
+        "event_gap_hours": 6,
+        "rows": 2023962,
+        "case_count": 2394,
+        "event_count": 772,
+        "event_cluster_count": null,
+        "alert_reduction_pct": 87.7,
+        "era_fpr_pct": 7.3,
+        "standard_fpr_pct": 62.7,
+        "detection_pct": 81.3,
+        "median_lead_time_hours": 4.89,
+        "era_alerts_per_patient_day": 21.7953,
+        "standard_alerts_per_patient_day": 177.2131,
+        "date_generated": "2026-04-30T01:41:08.520100+00:00",
+        "validation_status": "DUA-safe aggregate eICU outcome-proxy validation run",
+        "claim_guardrail": "Outcome-proxy retrospective check only; not direct deterioration-event validation."
+      },
+      {
+        "run_id": "eicu_outcome_proxy_t5_0_2026_04_29",
+        "dataset": "eICU Collaborative Research Database",
+        "cohort_type": "local-only ERA-format eICU outcome-proxy cohort",
+        "threshold": 5.0,
+        "suggested_setting": "Mixed units / balanced",
+        "event_window_hours": 6,
+        "event_gap_hours": 6,
+        "rows": 2023962,
+        "case_count": 2394,
+        "event_count": 772,
+        "event_cluster_count": null,
+        "alert_reduction_pct": 93.5,
+        "era_fpr_pct": 3.7,
+        "standard_fpr_pct": 62.7,
+        "detection_pct": 75.1,
+        "median_lead_time_hours": 4.32,
+        "era_alerts_per_patient_day": 11.4405,
+        "standard_alerts_per_patient_day": 177.2131,
+        "date_generated": "2026-04-30T01:41:58.871330+00:00",
+        "validation_status": "DUA-safe aggregate eICU outcome-proxy validation run",
+        "claim_guardrail": "Outcome-proxy retrospective check only; not direct deterioration-event validation."
+      },
+      {
+        "run_id": "eicu_outcome_proxy_t6_0_2026_04_29",
+        "dataset": "eICU Collaborative Research Database",
+        "cohort_type": "local-only ERA-format eICU outcome-proxy cohort",
+        "threshold": 6.0,
+        "suggested_setting": "Telemetry / stepdown conservative",
+        "event_window_hours": 6,
+        "event_gap_hours": 6,
+        "rows": 2023962,
+        "case_count": 2394,
+        "event_count": 772,
+        "event_cluster_count": null,
+        "alert_reduction_pct": 96.8,
+        "era_fpr_pct": 1.8,
+        "standard_fpr_pct": 62.7,
+        "detection_pct": 66.6,
+        "median_lead_time_hours": 3.41,
+        "era_alerts_per_patient_day": 5.7468,
+        "standard_alerts_per_patient_day": 177.2131,
+        "date_generated": "2026-04-30T01:42:48.518421+00:00",
+        "validation_status": "DUA-safe aggregate eICU outcome-proxy validation run",
+        "claim_guardrail": "Outcome-proxy retrospective check only; not direct deterioration-event validation."
+      }
+    ],
+    "interpretation_guidance": {
+      "main_question": "Does ERA threshold behavior remain directionally understandable on a second ICU dataset using outcome-proxy events?",
+      "comparison": {
+        "t4_detection_pct": 81.3,
+        "t4_alert_reduction_pct": 87.7,
+        "t6_detection_pct": 66.6,
+        "t6_alert_reduction_pct": 96.8,
+        "t6_era_fpr_pct": 1.8,
+        "t6_median_lead_time_hours": 3.41,
+        "directional_pattern": "t=4.0 should be interpreted as higher-detection/high-acuity; t=6.0 as conservative low-burden review queue."
+      },
+      "caution": "This is retrospective outcome-proxy testing, not prospective clinical validation."
+    },
+    "pilot_safe_note": "Decision support only. Retrospective outcome-proxy aggregate analysis only."
   }
 }
