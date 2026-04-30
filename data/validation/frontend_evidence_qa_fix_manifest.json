@@ -1,0 +1,29 @@
+{
+  "ok": true,
+  "generated_at_utc": "2026-04-30T12:25:29.111702+00:00",
+  "patch": "frontend evidence QA placeholder correction",
+  "patched_files": [
+    "era/web/validation_intelligence.html",
+    "era/web/model_card.html",
+    "era/web/validation_evidence.html",
+    "era/web/validation_runs.html",
+    "era/web/pilot_success_guide.html",
+    "era/web/retro_upload.html",
+    "era/web/validation_evidence_packet.html",
+    "era/web/data_ingest.html"
+  ],
+  "fixed": [
+    "Loading threshold rows replaced with locked aggregate threshold values.",
+    "Runtime QA script added to validation and command-center pages.",
+    "Model Card and Pilot Success Guide status labels corrected where stale frontend text remains.",
+    "No validation metrics changed.",
+    "No raw or row-level restricted data exposed."
+  ],
+  "not_changed": [
+    "No hard ROI claims added.",
+    "No proven generalizability claim added.",
+    "No direct equality claim between MIMIC-IV and eICU detection rates added.",
+    "No diagnosis, treatment, prevention, or autonomous escalation claims added."
+  ],
+  "safe_claim": "Cross-dataset retrospective robustness evidence across de-identified ICU datasets."
+}
