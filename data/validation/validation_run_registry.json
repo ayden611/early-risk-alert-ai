@@ -542,7 +542,7 @@
     }
   ],
   "latest_run_id": "era_mimic_20260425_182102_t6_0",
-  "updated_at_utc": "2026-04-25T18:21:03.966167+00:00",
+  "updated_at_utc": "2026-04-30T15:30:25.762340+00:00",
   "mimic_dua_public_safety": {
     "status": "Applied",
     "applied_at_utc": "2026-04-25T18:21:10.379314+00:00",
@@ -569,5 +569,22 @@
       "code used to produce results"
     ],
     "notice": "Decision support only. Retrospective analysis only. Not intended to diagnose, direct treatment, replace clinician judgment, or independently trigger escalation."
-  }
+  },
+  "internal_checkpoints": [
+    {
+      "id": "mimic-eicu-conservative-t6-aggregate-rollup-2026-04-30",
+      "created_at_utc": "2026-04-30T15:30:25.762340+00:00",
+      "type": "aggregate_rollup",
+      "scope": "MIMIC-IV strict clinical-event cohorts plus eICU harmonized clinical-event cohorts at t=6.0",
+      "public_claim_boundary": "Retrospective aggregate robustness under harmonized threshold framework; event-definition differences labeled; not full clinical validation.",
+      "docs": [
+        "docs/validation/eicu_bc_internal_robustness_checkpoint.md",
+        "docs/validation/mimic_eicu_conservative_t6_aggregate_rollup.md"
+      ],
+      "data": [
+        "data/validation/eicu_bc_internal_robustness_checkpoint.json",
+        "data/validation/mimic_eicu_conservative_t6_aggregate_rollup.json"
+      ]
+    }
+  ]
 }

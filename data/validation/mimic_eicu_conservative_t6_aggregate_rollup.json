@@ -1,0 +1,138 @@
+{
+  "ok": true,
+  "rollup_id": "mimic-eicu-conservative-t6-aggregate-rollup-2026-04-30",
+  "generated_at_utc": "2026-04-30T15:30:25.762340+00:00",
+  "purpose": "Create one conservative aggregate t=6.0 rollup across MIMIC-IV and eICU while clearly separating event-definition differences.",
+  "claim_boundary": [
+    "MIMIC-IV and eICU are not treated as identical endpoint definitions.",
+    "Detection rates should not be compared as equivalent endpoints unless harmonized event definitions are demonstrably identical.",
+    "This supports retrospective multi-dataset robustness under a harmonized threshold framework.",
+    "This does not establish prospective clinical performance or full clinical validation."
+  ],
+  "safe_cross_dataset_sentence": "Across MIMIC-IV strict clinical-event cohorts and eICU harmonized clinical-event cohorts, the conservative t=6.0 operating point showed directionally consistent aggregate behavior: high alert-reduction, low false-positive burden, and measurable retrospective lead-time context, while detection rates are not treated as directly equivalent because the datasets use different event-definition methods.",
+  "threshold": 6.0,
+  "mimic_strict_clinical_event_range": {
+    "alert_reduction_pct": {
+      "min": 94.0,
+      "max": 94.9,
+      "mean": 94.4
+    },
+    "fpr_pct": {
+      "min": 3.7,
+      "max": 4.4,
+      "mean": 4.1
+    },
+    "detection_pct": {
+      "min": 14.1,
+      "max": 16.0,
+      "mean": 15.13
+    },
+    "median_lead_time_hours": {
+      "min": 4.0,
+      "max": 4.0,
+      "mean": 4.0
+    }
+  },
+  "eicu_harmonized_clinical_event_range": {
+    "alert_reduction_pct": {
+      "min": 94.25,
+      "max": 95.64,
+      "mean": 95.05
+    },
+    "fpr_pct": {
+      "min": 0.98,
+      "max": 2.02,
+      "mean": 1.59
+    },
+    "detection_pct": {
+      "min": 24.66,
+      "max": 64.49,
+      "mean": 51.06
+    },
+    "median_lead_time_hours": {
+      "min": 3.13,
+      "max": 4.83,
+      "mean": 3.88
+    }
+  },
+  "runs": [
+    {
+      "run": "MIMIC-IV full cohort",
+      "dataset": "MIMIC-IV v3.1",
+      "event_definition": "Strict clinical-event labels / event clusters",
+      "cases": 1705,
+      "rows": 456453,
+      "threshold": 6.0,
+      "alert_reduction_pct": 94.3,
+      "fpr_pct": 4.2,
+      "detection_pct": 15.3,
+      "median_lead_time_hours": 4.0,
+      "status": "locked aggregate"
+    },
+    {
+      "run": "MIMIC-IV subcohort B",
+      "dataset": "MIMIC-IV v3.1",
+      "event_definition": "Strict clinical-event labels / event clusters",
+      "cases": 577,
+      "rows": "~159K",
+      "threshold": 6.0,
+      "alert_reduction_pct": 94.0,
+      "fpr_pct": 4.4,
+      "detection_pct": 16.0,
+      "median_lead_time_hours": 4.0,
+      "status": "locked aggregate"
+    },
+    {
+      "run": "MIMIC-IV subcohort C",
+      "dataset": "MIMIC-IV v3.1",
+      "event_definition": "Strict clinical-event labels / event clusters",
+      "cases": 621,
+      "rows": "~159K",
+      "threshold": 6.0,
+      "alert_reduction_pct": 94.9,
+      "fpr_pct": 3.7,
+      "detection_pct": 14.1,
+      "median_lead_time_hours": 4.0,
+      "status": "locked aggregate"
+    },
+    {
+      "run": "eICU harmonized full pass",
+      "dataset": "eICU v2.0",
+      "event_definition": "Harmonized clinical-event labels derived from eICU available fields",
+      "cases": 2394,
+      "rows": 2023962,
+      "threshold": 6.0,
+      "alert_reduction_pct": 94.25,
+      "fpr_pct": 0.98,
+      "detection_pct": 24.66,
+      "median_lead_time_hours": 4.83,
+      "status": "locked aggregate"
+    },
+    {
+      "run": "eICU harmonized subcohort B",
+      "dataset": "eICU v2.0",
+      "event_definition": "Harmonized clinical-event labels derived from eICU available fields",
+      "cases": null,
+      "rows": null,
+      "threshold": 6.0,
+      "alert_reduction_pct": 95.64,
+      "fpr_pct": 1.78,
+      "detection_pct": 64.49,
+      "median_lead_time_hours": 3.69,
+      "status": "locked aggregate"
+    },
+    {
+      "run": "eICU harmonized subcohort C",
+      "dataset": "eICU v2.0",
+      "event_definition": "Harmonized clinical-event labels derived from eICU available fields",
+      "cases": null,
+      "rows": null,
+      "threshold": 6.0,
+      "alert_reduction_pct": 95.26,
+      "fpr_pct": 2.02,
+      "detection_pct": 64.03,
+      "median_lead_time_hours": 3.13,
+      "status": "locked aggregate"
+    }
+  ]
+}

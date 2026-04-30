@@ -1,0 +1,64 @@
+{
+  "ok": true,
+  "checkpoint_id": "eicu-harmonized-subcohort-bc-robustness-checkpoint-2026-04-30",
+  "generated_at_utc": "2026-04-30T15:30:25.762340+00:00",
+  "purpose": "Lock DUA-safe eICU harmonized clinical-event subcohort B/C robustness as an internal validation checkpoint.",
+  "claim_boundary": [
+    "Aggregate retrospective robustness only.",
+    "Raw eICU files and row-level outputs remain local-only.",
+    "Do not claim full clinical validation.",
+    "Do not imply diagnosis, treatment direction, clinician replacement, or autonomous escalation."
+  ],
+  "conservative_sentence": "Across eICU harmonized clinical-event subcohorts B and C, the conservative t=6.0 operating point showed stable aggregate behavior, with 95.26%\u201395.64% alert reduction, 1.78%\u20132.02% FPR, 64.03%\u201364.49% detection, and 3.13\u20133.69 hours of retrospective lead-time context.",
+  "threshold": 6.0,
+  "subcohort_range_at_t6": {
+    "alert_reduction_pct": {
+      "min": 95.26,
+      "max": 95.64,
+      "mean": 95.45
+    },
+    "fpr_pct": {
+      "min": 1.78,
+      "max": 2.02,
+      "mean": 1.9
+    },
+    "detection_pct": {
+      "min": 64.03,
+      "max": 64.49,
+      "mean": 64.26
+    },
+    "median_lead_time_hours": {
+      "min": 3.13,
+      "max": 3.69,
+      "mean": 3.41
+    }
+  },
+  "runs": [
+    {
+      "run": "eICU harmonized subcohort B",
+      "dataset": "eICU v2.0",
+      "event_definition": "Harmonized clinical-event labels derived from eICU available fields",
+      "cases": null,
+      "rows": null,
+      "threshold": 6.0,
+      "alert_reduction_pct": 95.64,
+      "fpr_pct": 1.78,
+      "detection_pct": 64.49,
+      "median_lead_time_hours": 3.69,
+      "status": "locked aggregate"
+    },
+    {
+      "run": "eICU harmonized subcohort C",
+      "dataset": "eICU v2.0",
+      "event_definition": "Harmonized clinical-event labels derived from eICU available fields",
+      "cases": null,
+      "rows": null,
+      "threshold": 6.0,
+      "alert_reduction_pct": 95.26,
+      "fpr_pct": 2.02,
+      "detection_pct": 64.03,
+      "median_lead_time_hours": 3.13,
+      "status": "locked aggregate"
+    }
+  ]
+}
