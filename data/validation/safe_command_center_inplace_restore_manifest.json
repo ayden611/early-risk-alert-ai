@@ -1,0 +1,25 @@
+{
+  "timestamp_utc": "2026-04-30T18:37:56.654272+00:00",
+  "command_center_file": "era/web/command_center.py",
+  "patched_files": [
+    "era/web/command_center.py",
+    "era/__init__.py",
+    "era/web/command_center.py",
+    "era/web/data_ingest.html",
+    "era/web/model_card.html",
+    "era/web/pilot_success_guide.html",
+    "era/web/validation_evidence.html",
+    "era/web/validation_evidence_packet.html",
+    "era/web/validation_intelligence.html",
+    "era/web/validation_runs.html"
+  ],
+  "fixes": [
+    "Removed top-injected rotating snapshot block from Command Center.",
+    "Removed prior demo queue top injection blocks.",
+    "Added non-invasive in-place Command Center score correction script.",
+    "Added validation public alignment panel without redesigning pages.",
+    "Kept original Command Center layout intact."
+  ],
+  "score_rule": "Command Center case-level values use Review Score 0-10, not patient-level risk percentage.",
+  "raw_data_policy": "No raw row-level or restricted data files are committed."
+}

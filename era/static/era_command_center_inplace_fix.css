@@ -1,0 +1,50 @@
+/* Safe in-place Command Center fix.
+   Does not create a new top page section.
+   It only cleans up prior injected blocks and adds compact badges inside existing cards. */
+
+#era-live-unit-rotation-root,
+#era-demo-review-queue-root {
+  display: none !important;
+}
+
+.era-inline-review-badge {
+  margin: 8px 0 10px 0;
+  padding: 9px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(132, 255, 180, 0.26);
+  background: rgba(132, 255, 180, 0.09);
+  color: #eaffd8;
+  font-size: 12px;
+  line-height: 1.35;
+  font-weight: 800;
+}
+
+.era-inline-review-badge strong {
+  color: #b8ff7a;
+}
+
+.era-inline-review-badge .era-mini-muted {
+  color: #cbd7f4;
+  font-weight: 700;
+}
+
+.era-inline-review-warning {
+  margin: 8px 0;
+  padding: 9px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 204, 92, 0.28);
+  background: rgba(255, 204, 92, 0.08);
+  color: #ffecb8;
+  font-size: 12px;
+  line-height: 1.35;
+  font-weight: 800;
+}
+
+.era-score-text-fixed {
+  color: #b8ff7a !important;
+  font-weight: 950 !important;
+}
+
+.era-risk-label-fixed {
+  color: #dce8ff !important;
+}

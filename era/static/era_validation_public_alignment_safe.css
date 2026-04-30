@@ -1,0 +1,75 @@
+.era-public-alignment-box {
+  margin: 18px 0;
+  padding: 18px;
+  border-radius: 18px;
+  border: 1px solid rgba(126, 190, 255, 0.22);
+  background: linear-gradient(180deg, rgba(126, 190, 255, 0.09), rgba(255,255,255,0.035));
+}
+
+.era-public-alignment-box h2 {
+  margin: 8px 0;
+  color: #f4f7ff;
+  font-size: 26px;
+  line-height: 1.1;
+}
+
+.era-public-alignment-box p {
+  color: #dce8ff;
+  line-height: 1.45;
+}
+
+.era-public-alignment-kicker {
+  display: inline-flex;
+  padding: 7px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(132,255,180,.30);
+  background: rgba(132,255,180,.11);
+  color: #d8ffc3;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  font-weight: 950;
+}
+
+.era-public-alignment-table-wrap {
+  overflow-x: auto;
+  margin-top: 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.10);
+}
+
+.era-public-alignment-table {
+  width: 100%;
+  min-width: 900px;
+  border-collapse: collapse;
+}
+
+.era-public-alignment-table th,
+.era-public-alignment-table td {
+  padding: 10px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  color: #eef3ff;
+  font-size: 12px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.era-public-alignment-table th {
+  color: #cbd8fb;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  font-size: 11px;
+  background: rgba(255,255,255,.035);
+}
+
+.era-public-alignment-note {
+  margin-top: 12px;
+  border-radius: 14px;
+  padding: 11px 12px;
+  border: 1px solid rgba(255,204,92,.28);
+  background: rgba(255,204,92,.08);
+  color: #ffecb8;
+  font-size: 12px;
+  line-height: 1.45;
+  font-weight: 800;
+}
