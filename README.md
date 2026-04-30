@@ -431,3 +431,38 @@ Aggregate DUA-safe evidence only. Raw restricted files and row-level outputs rem
 Decision support only. Retrospective aggregate analysis only.
 <!-- ERA_MULTI_DATASET_ROBUSTNESS_README_V1_END -->
 
+
+<!-- ERA_MULTI_DATASET_CHECKPOINT_README_V1_START -->
+## Multi-Dataset Retrospective Robustness Checkpoint
+
+Checkpoint ID: `multi-dataset-retrospective-robustness-checkpoint-2026-04-30`
+
+**MIMIC-IV established strict clinical-event cross-cohort retrospective stability, while eICU added a separate second-dataset outcome-proxy check; across both datasets, ERA preserved the same threshold-direction behavior: lower thresholds increased detection, while conservative thresholds reduced review burden and false positives.**
+
+At the conservative t=6.0 operating point, MIMIC-IV showed 4 hrs median lead-time context across locked cross-cohort evidence, while eICU showed 3.41 hrs median lead-time context in the outcome-proxy check.
+
+### Evidence Roles
+
+| Dataset | Role |
+|---|---|
+| MIMIC-IV v3.1 | Locked strict clinical-event cross-cohort retrospective validation release |
+| eICU Collaborative Research Database v2.0 | Separate second-dataset retrospective outcome-proxy check |
+
+### Public Routes
+
+| Route | Purpose |
+|---|---|
+| `/validation-intelligence` | Public validation story |
+| `/validation-evidence` | Printable/downloadable evidence packet |
+| `/api/validation/multi-dataset-robustness` | Multi-dataset aggregate summary |
+| `/api/validation/multi-dataset-checkpoint` | Locked multi-dataset checkpoint |
+| `/api/validation/eicu-validation` | eICU aggregate outcome-proxy summary |
+| `/api/validation/cross-cohort-validation` | MIMIC-IV cross-cohort aggregate summary |
+
+### Public Boundary
+
+Aggregate DUA-safe evidence only. Raw restricted files and row-level outputs remain local-only.
+
+Decision support only. Retrospective aggregate analysis only.
+<!-- ERA_MULTI_DATASET_CHECKPOINT_README_V1_END -->
+

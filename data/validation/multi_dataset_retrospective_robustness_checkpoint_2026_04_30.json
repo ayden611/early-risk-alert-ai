@@ -1,0 +1,68 @@
+{
+  "ok": true,
+  "checkpoint_id": "multi-dataset-retrospective-robustness-checkpoint-2026-04-30",
+  "title": "Multi-Dataset Retrospective Robustness Checkpoint \u2014 April 30, 2026",
+  "locked_at_utc": "2026-04-30T02:08:35.804164+00:00",
+  "checkpoint_type": "Validation evidence checkpoint",
+  "top_line": "MIMIC-IV established strict clinical-event cross-cohort retrospective stability, while eICU added a separate second-dataset outcome-proxy check; across both datasets, ERA preserved the same threshold-direction behavior: lower thresholds increased detection, while conservative thresholds reduced review burden and false positives.",
+  "lead_time_context": "At the conservative t=6.0 operating point, MIMIC-IV showed 4 hrs median lead-time context across locked cross-cohort evidence, while eICU showed 3.41 hrs median lead-time context in the outcome-proxy check.",
+  "datasets": {
+    "mimic_iv": {
+      "dataset": "MIMIC-IV v3.1",
+      "role": "Locked strict clinical-event cross-cohort validation release",
+      "cohort_label": "Full validation cohort + two deterministic case-level subcohorts",
+      "cases": "577\u20131,705",
+      "rows": "456,453 in full validation cohort",
+      "events": "event clusters / clinical-event labels",
+      "threshold": "t=6.0",
+      "alert_reduction": "94%\u201394.9%",
+      "fpr": "3.7%\u20134.4%",
+      "detection": "14.1%\u201316%",
+      "lead_time": "4 hrs",
+      "interpretation": "Strict clinical-event retrospective validation; conservative setting optimized for low-burden review queues."
+    },
+    "eicu": {
+      "dataset": "eICU Collaborative Research Database v2.0",
+      "role": "Second-dataset retrospective outcome-proxy check",
+      "cohort_label": "Local-only ERA-format eICU outcome-proxy cohort",
+      "cases": "2394",
+      "rows": "2023962",
+      "events": "772",
+      "threshold": "t=6.0",
+      "alert_reduction": "96.8%",
+      "fpr": "1.8%",
+      "detection": "66.6%",
+      "lead_time": "3.41 hrs",
+      "interpretation": "Outcome-proxy retrospective check using mortality/discharge-derived event context; not directly comparable to MIMIC clinical-event detection."
+    }
+  },
+  "evidence_roles": {
+    "mimic_iv": "Locked strict clinical-event cross-cohort retrospective validation release.",
+    "eicu": "Separate second-dataset retrospective outcome-proxy check."
+  },
+  "public_routes": [
+    "/validation-intelligence",
+    "/validation-evidence",
+    "/validation-runs",
+    "/api/validation/multi-dataset-robustness",
+    "/validation-evidence/multi-dataset-robustness.json",
+    "/api/validation/eicu-validation",
+    "/api/validation/cross-cohort-validation",
+    "/api/validation/multi-dataset-checkpoint",
+    "/validation-evidence/multi-dataset-checkpoint.json"
+  ],
+  "safe_claim": "Cross-dataset retrospective robustness evidence across de-identified ICU datasets.",
+  "interpretation_guardrail": "MIMIC-IV uses stricter clinical-event labels. eICU uses outcome-proxy labels from mortality/discharge-derived event context. Detection rates should not be treated as equivalent endpoint definitions.",
+  "avoid_claims": [
+    "proven generalizability",
+    "prospective validation",
+    "diagnosis",
+    "treatment direction",
+    "prevention of adverse events",
+    "replacement of clinician judgment",
+    "autonomous escalation",
+    "direct superiority over standard monitoring"
+  ],
+  "public_policy": "Aggregate DUA-safe evidence only. Raw restricted files and row-level outputs remain local-only.",
+  "notice": "Decision support only. Retrospective aggregate analysis only. Not intended to diagnose, direct treatment, replace clinician judgment, or independently trigger escalation."
+}

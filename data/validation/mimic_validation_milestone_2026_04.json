@@ -1105,9 +1105,9 @@
     "caution": "Retrospective timing behavior should not be described as prospective proof."
   },
   "latest_progress_update": {
-    "status": "Multi-dataset robustness summary completed",
-    "updated_at_utc": "2026-04-30T02:05:47.393959+00:00",
-    "summary": "MIMIC-IV strict clinical-event evidence and eICU second-dataset outcome-proxy evidence are now summarized together with updated citation story.",
+    "status": "Multi-dataset retrospective robustness checkpoint locked",
+    "updated_at_utc": "2026-04-30T02:08:35.805282+00:00",
+    "summary": "MIMIC-IV strict clinical-event evidence and eICU second-dataset outcome-proxy evidence are now locked as a formal validation checkpoint.",
     "public_takeaway": "MIMIC-IV established strict clinical-event cross-cohort retrospective stability, while eICU added a separate second-dataset outcome-proxy check; across both datasets, ERA preserved the same threshold-direction behavior: lower thresholds increased detection, while conservative thresholds reduced review burden and false positives."
   },
   "event_cluster_robustness": {
@@ -1974,5 +1974,18 @@
     "top_line": "MIMIC-IV established strict clinical-event cross-cohort retrospective stability, while eICU added a separate second-dataset outcome-proxy check; across both datasets, ERA preserved the same threshold-direction behavior: lower thresholds increased detection, while conservative thresholds reduced review burden and false positives.",
     "lead_time_context": "At the conservative t=6.0 operating point, MIMIC-IV showed 4 hrs median lead-time context across locked cross-cohort evidence, while eICU showed 3.41 hrs median lead-time context in the outcome-proxy check.",
     "claim_guardrail": "Cross-dataset retrospective robustness evidence across de-identified ICU datasets; not prospective validation or proven generalizability."
+  },
+  "multi_dataset_retrospective_robustness_checkpoint": {
+    "status": "Locked",
+    "checkpoint_id": "multi-dataset-retrospective-robustness-checkpoint-2026-04-30",
+    "title": "Multi-Dataset Retrospective Robustness Checkpoint \u2014 April 30, 2026",
+    "locked_at_utc": "2026-04-30T02:08:35.805278+00:00",
+    "checkpoint_json": "data/validation/multi_dataset_retrospective_robustness_checkpoint_2026_04_30.json",
+    "checkpoint_report": "docs/validation/multi_dataset_retrospective_robustness_checkpoint_2026_04_30.md",
+    "top_line": "MIMIC-IV established strict clinical-event cross-cohort retrospective stability, while eICU added a separate second-dataset outcome-proxy check; across both datasets, ERA preserved the same threshold-direction behavior: lower thresholds increased detection, while conservative thresholds reduced review burden and false positives.",
+    "lead_time_context": "At the conservative t=6.0 operating point, MIMIC-IV showed 4 hrs median lead-time context across locked cross-cohort evidence, while eICU showed 3.41 hrs median lead-time context in the outcome-proxy check.",
+    "safe_claim": "Cross-dataset retrospective robustness evidence across de-identified ICU datasets.",
+    "interpretation_guardrail": "MIMIC-IV uses stricter clinical-event labels. eICU uses outcome-proxy labels from mortality/discharge-derived event context. Detection rates should not be treated as equivalent endpoint definitions.",
+    "public_policy": "Aggregate DUA-safe evidence only. Raw restricted files and row-level outputs remain local-only."
   }
 }
