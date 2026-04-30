@@ -1,0 +1,23 @@
+{
+  "timestamp_utc": "2026-04-30T16:33:34Z",
+  "target_file": "era/web/command_center.py",
+  "style_action": "inserted",
+  "script_action": "inserted",
+  "purpose": "Make Command Center feel more like a compact, glanceable review tool while preserving original layout.",
+  "claim_policy": [
+    "Decision support only.",
+    "Retrospective aggregate evidence only.",
+    "No diagnosis, treatment direction, clinician replacement, or independent escalation."
+  ],
+  "visible_features_added": [
+    "Top priority patient card",
+    "Compact review queue",
+    "Queue rank",
+    "Priority tier",
+    "Primary driver",
+    "Trend direction",
+    "Lead-time context",
+    "Simple tier filters",
+    "Demo workflow buttons"
+  ]
+}
