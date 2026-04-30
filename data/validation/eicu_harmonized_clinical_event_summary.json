@@ -1,0 +1,77 @@
+{
+  "ok": true,
+  "generated_at_utc": "2026-04-30T14:21:29.960154+00:00",
+  "dataset": "eICU",
+  "validation_type": "harmonized clinical-event labeling attempt",
+  "public_safety": "Aggregate summary only. Row-level eICU files remain local-only.",
+  "input_rows": 2023962,
+  "patients_or_stays": 2394,
+  "harmonized_clinical_event_clusters": 12948,
+  "event_gap_hours": 6.0,
+  "pre_event_window_hours": 6.0,
+  "risk_score_column_used": "risk_score",
+  "event_definition": {
+    "summary": "Clinical-event labels are generated from severe physiologic deterioration patterns rather than mortality/discharge outcome proxy.",
+    "candidate_rule": "An event candidate is created when at least one extreme physiologic signal is present or at least two severe physiologic signals occur together.",
+    "cluster_rule": "Candidate rows are collapsed into event clusters separated by the configured event-gap window.",
+    "signals": [
+      "oxygenation decline",
+      "heart-rate instability",
+      "respiratory-rate instability",
+      "blood-pressure instability",
+      "temperature instability"
+    ]
+  },
+  "signal_counts_aggregate": {
+    "oxygenation_event_rows": 50244,
+    "heart_rate_event_rows": 38375,
+    "respiratory_rate_event_rows": 219968,
+    "blood_pressure_event_rows": 53051,
+    "temperature_event_rows": 220218,
+    "multi_signal_candidate_rows": 70559
+  },
+  "threshold_matrix": [
+    {
+      "threshold": 4.0,
+      "alert_reduction_pct": 69.74,
+      "fpr_pct_outside_event_windows": 5.34,
+      "event_detection_pct": 62.51,
+      "events_detected": 8094,
+      "events_total": 12948,
+      "median_lead_time_hours": 5.67,
+      "era_alerts_per_patient_day": 29.2181,
+      "standard_alerts_per_patient_day": 96.5661,
+      "era_alert_rows": 210640,
+      "standard_threshold_alert_rows": 696168
+    },
+    {
+      "threshold": 5.0,
+      "alert_reduction_pct": 87.85,
+      "fpr_pct_outside_event_windows": 2.23,
+      "event_detection_pct": 38.8,
+      "events_detected": 5024,
+      "events_total": 12948,
+      "median_lead_time_hours": 5.17,
+      "era_alerts_per_patient_day": 11.733,
+      "standard_alerts_per_patient_day": 96.5661,
+      "era_alert_rows": 84586,
+      "standard_threshold_alert_rows": 696168
+    },
+    {
+      "threshold": 6.0,
+      "alert_reduction_pct": 94.25,
+      "fpr_pct_outside_event_windows": 0.98,
+      "event_detection_pct": 24.66,
+      "events_detected": 3193,
+      "events_total": 12948,
+      "median_lead_time_hours": 4.83,
+      "era_alerts_per_patient_day": 5.5536,
+      "standard_alerts_per_patient_day": 96.5661,
+      "era_alert_rows": 40037,
+      "standard_threshold_alert_rows": 696168
+    }
+  ],
+  "interpretation_boundary": "This is the first harmonized eICU clinical-event labeling pass. It is closer to the MIMIC-IV clinical-event question than the prior outcome-proxy check, but should be reviewed before using unqualified two-dataset validation language.",
+  "safe_public_claim": "eICU now has a harmonized clinical-event labeling pass that can be compared against MIMIC-IV using the same threshold matrix and pre-event window.",
+  "claim_to_avoid_until_review": "Do not claim fully validated on two datasets without qualification until event definitions, denominators, and metric logic are reviewed and locked."
+}

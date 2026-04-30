@@ -1,0 +1,24 @@
+{
+  "ok": true,
+  "generated_at_utc": "2026-04-30T13:40:09.916893+00:00",
+  "purpose": "Local-only eICU ERA scoring adapter before harmonized clinical-event labeling.",
+  "public_safety": "Aggregate audit only. Scored row-level eICU cohort remains local-only.",
+  "rows_scored": 2023962,
+  "stays_scored": 2394,
+  "risk_score_summary": {
+    "min": 0.5,
+    "median": 0.5,
+    "mean": 1.359,
+    "max": 10.0,
+    "era_alert_rows_at_t6": 40037
+  },
+  "explainability_columns_added": [
+    "risk_score",
+    "era_alert",
+    "priority_tier",
+    "primary_driver",
+    "trend_direction",
+    "queue_rank"
+  ],
+  "validation_boundary": "This adapter creates explainable rules-based ERA scores for local eICU harmonized clinical-event testing. Do not use unqualified two-dataset validation wording until the harmonized output is reviewed."
+}
