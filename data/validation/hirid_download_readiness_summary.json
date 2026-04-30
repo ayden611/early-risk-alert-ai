@@ -1,0 +1,13 @@
+{
+  "ok": true,
+  "generated_at_utc": "2026-04-30T14:45:16.682225+00:00",
+  "dataset": "HiRID",
+  "purpose": "Third-dataset retrospective validation readiness audit",
+  "public_safety": "Aggregate file-readiness summary only. Raw HiRID files remain local-only.",
+  "total_files_detected": 0,
+  "total_size_mb": 0,
+  "file_kinds_detected": [],
+  "ready_for_extractor": false,
+  "next_step": "Download/access complete files, then build HiRID-to-ERA cohort extractor.",
+  "claim_boundary": "Do not claim three-dataset validation until HiRID extraction, scoring, harmonized labeling, and aggregate review are complete."
+}
