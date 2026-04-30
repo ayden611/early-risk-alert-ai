@@ -1,0 +1,95 @@
+{
+  "timestamp_utc": "2026-04-30T18:11:21.218140+00:00",
+  "patched_files": [
+    {
+      "file": "era/__init__.py",
+      "actions": {
+        "head": "inserted",
+        "body": "inserted"
+      }
+    },
+    {
+      "file": "era/web/command_center.py",
+      "actions": {
+        "head": "inserted",
+        "body": "inserted"
+      }
+    },
+    {
+      "file": "era/web/data_ingest.html",
+      "actions": {
+        "head": "inserted",
+        "body": "inserted"
+      }
+    },
+    {
+      "file": "era/web/model_card.html",
+      "actions": {
+        "head": "inserted",
+        "body": "inserted"
+      }
+    },
+    {
+      "file": "era/web/pilot_success_guide.html",
+      "actions": {
+        "head": "inserted",
+        "body": "inserted"
+      }
+    },
+    {
+      "file": "era/web/retro_upload.html",
+      "actions": {
+        "head": "inserted",
+        "body": "inserted"
+      }
+    },
+    {
+      "file": "era/web/routes.py",
+      "actions": {
+        "head": "inserted",
+        "body": "inserted"
+      }
+    },
+    {
+      "file": "era/web/validation_evidence.html",
+      "actions": {
+        "head": "inserted",
+        "body": "inserted"
+      }
+    },
+    {
+      "file": "era/web/validation_evidence_packet.html",
+      "actions": {
+        "head": "inserted",
+        "body": "inserted"
+      }
+    },
+    {
+      "file": "era/web/validation_intelligence.html",
+      "actions": {
+        "head": "inserted",
+        "body": "inserted"
+      }
+    },
+    {
+      "file": "era/web/validation_runs.html",
+      "actions": {
+        "head": "inserted",
+        "body": "inserted"
+      }
+    }
+  ],
+  "static_route": {
+    "status": "already_present",
+    "file": "era/__init__.py"
+  },
+  "purpose": "Make Command Center review queue realistic and internally consistent.",
+  "fixes": [
+    "ICU-12 no longer stays permanently first with an unrealistic static risk percent.",
+    "Top review cards rotate across synthetic snapshots.",
+    "All queue scores use one scale: Review Score 0-10.",
+    "94%, 86%, and 72% are removed from the review-score column/card context.",
+    "Queue remains decision-support only and DUA-safe."
+  ],
+  "claim_guardrail": "Review Score is not patient risk percent, diagnosis, treatment direction, or autonomous escalation."
+}
