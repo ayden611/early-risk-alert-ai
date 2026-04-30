@@ -142,6 +142,45 @@ ul{line-height:1.7}
 
 </head>
 <body>
+<!-- ERA_LOCKED_RUNS_NO_LOADING_V2_START -->
+
+<section id="locked-validation-run-history" style="margin: 28px 0; padding: 22px; border: 1px solid rgba(164,255,190,.32); border-radius: 24px; background: rgba(9,18,32,.72);">
+  <div style="display:inline-block; padding: 6px 12px; border-radius:999px; border:1px solid rgba(164,255,190,.45); color:#b8ffc8; font-weight:800; letter-spacing:.08em; font-size:.75rem; text-transform:uppercase;">Run registry</div>
+  <h2 style="margin:12px 0 8px; font-size: clamp(1.6rem, 3vw, 2.6rem); line-height:1.05;">Current locked validation run history</h2>
+  <p style="max-width:1060px; opacity:.92;">Locked DUA-safe aggregate run registry. Raw restricted data and row-level outputs remain local-only.</p>
+
+  <div style="overflow-x:auto;">
+    <table style="width:100%; border-collapse:collapse; min-width:980px;">
+      <thead>
+        <tr style="background:rgba(120,160,220,.18);">
+          <th style="text-align:left; padding:12px;">Run</th>
+          <th style="text-align:left; padding:12px;">Dataset</th>
+          <th style="text-align:left; padding:12px;">Event Definition</th>
+          <th style="text-align:left; padding:12px;">Cases</th>
+          <th style="text-align:left; padding:12px;">Rows</th>
+          <th style="text-align:left; padding:12px;">Threshold</th>
+          <th style="text-align:left; padding:12px;">Alert Reduction</th>
+          <th style="text-align:left; padding:12px;">FPR</th>
+          <th style="text-align:left; padding:12px;">Detection</th>
+          <th style="text-align:left; padding:12px;">Lead Time</th>
+          <th style="text-align:left; padding:12px;">Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td style="padding:12px;">MIMIC-IV full cohort</td><td style="padding:12px;">MIMIC-IV v3.1</td><td style="padding:12px;">Strict clinical-event labels</td><td style="padding:12px;">1,705</td><td style="padding:12px;">456,453</td><td style="padding:12px;">t=6.0</td><td style="padding:12px;">94.3%</td><td style="padding:12px;">4.2%</td><td style="padding:12px;">15.3%</td><td style="padding:12px;">4.0 hrs</td><td style="padding:12px;">Locked</td></tr>
+        <tr><td style="padding:12px;">MIMIC-IV subcohort B</td><td style="padding:12px;">MIMIC-IV v3.1</td><td style="padding:12px;">Strict clinical-event labels</td><td style="padding:12px;">577</td><td style="padding:12px;">~159K</td><td style="padding:12px;">t=6.0</td><td style="padding:12px;">94.0%</td><td style="padding:12px;">4.4%</td><td style="padding:12px;">16.0%</td><td style="padding:12px;">4.0 hrs</td><td style="padding:12px;">Locked</td></tr>
+        <tr><td style="padding:12px;">MIMIC-IV subcohort C</td><td style="padding:12px;">MIMIC-IV v3.1</td><td style="padding:12px;">Strict clinical-event labels</td><td style="padding:12px;">621</td><td style="padding:12px;">~159K</td><td style="padding:12px;">t=6.0</td><td style="padding:12px;">94.9%</td><td style="padding:12px;">3.7%</td><td style="padding:12px;">14.1%</td><td style="padding:12px;">4.0 hrs</td><td style="padding:12px;">Locked</td></tr>
+        <tr><td style="padding:12px;">eICU harmonized full pass</td><td style="padding:12px;">eICU v2.0</td><td style="padding:12px;">Harmonized clinical-event labels</td><td style="padding:12px;">2,394</td><td style="padding:12px;">2,023,962</td><td style="padding:12px;">t=6.0</td><td style="padding:12px;">94.25%</td><td style="padding:12px;">0.98%</td><td style="padding:12px;">24.66%</td><td style="padding:12px;">4.83 hrs</td><td style="padding:12px;">Locked aggregate</td></tr>
+        <tr><td style="padding:12px;">eICU harmonized subcohort B</td><td style="padding:12px;">eICU v2.0</td><td style="padding:12px;">Harmonized clinical-event labels</td><td style="padding:12px;">Aggregate</td><td style="padding:12px;">Aggregate</td><td style="padding:12px;">t=6.0</td><td style="padding:12px;">95.64%</td><td style="padding:12px;">1.78%</td><td style="padding:12px;">64.49%</td><td style="padding:12px;">3.69 hrs</td><td style="padding:12px;">Locked aggregate</td></tr>
+        <tr><td style="padding:12px;">eICU harmonized subcohort C</td><td style="padding:12px;">eICU v2.0</td><td style="padding:12px;">Harmonized clinical-event labels</td><td style="padding:12px;">Aggregate</td><td style="padding:12px;">Aggregate</td><td style="padding:12px;">t=6.0</td><td style="padding:12px;">95.26%</td><td style="padding:12px;">2.02%</td><td style="padding:12px;">64.03%</td><td style="padding:12px;">3.13 hrs</td><td style="padding:12px;">Locked aggregate</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p style="margin-top:14px;">Safe wording: retrospectively evaluated across MIMIC-IV and eICU under a harmonized threshold framework. Do not claim full clinical validation.</p>
+</section>
+<!-- ERA_LOCKED_RUNS_NO_LOADING_V2_END -->
+
   <div class="wrapper">
     <div class="eyebrow">Early Risk Alert AI · Run Registry</div>
     <h1>Validation Runs</h1>
@@ -159,7 +198,7 @@ ul{line-height:1.7}
 <section class="hero">
   <span class="pill">Run Registry</span>
   <h2 style="margin-top:18px;">Validation run history</h2>
-  <p class="muted">This page replaces placeholder “Loading…” views with the current locked evidence registry.</p>
+  <p class="muted">This page replaces placeholder “Locked aggregate evidence available.” views with the current locked evidence registry.</p>
   <p class="callout">Across both datasets, ERA preserved the same threshold-direction behavior: lower thresholds increased detection, while conservative thresholds reduced review burden and false positives.</p>
 </section>
 
@@ -273,7 +312,7 @@ ul{line-height:1.7}
   }
   function replaceLoadingText(){
     document.querySelectorAll('td,th,p,div,span').forEach(function(el){
-      if(el.children.length === 0 && el.textContent.trim().toLowerCase() === 'loading...'){
+      if(el.children.length === 0 && el.textContent.trim().toLowerCase() === 'locked aggregate evidence available.'){
         el.textContent = 'Locked aggregate evidence available below.';
       }
     });
@@ -328,7 +367,7 @@ ul{line-height:1.7}
   }
   function replaceLoadingText(){
     document.querySelectorAll('td,th,p,div,span').forEach(function(el){
-      if(el.children.length === 0 && el.textContent.trim().toLowerCase() === 'loading...'){
+      if(el.children.length === 0 && el.textContent.trim().toLowerCase() === 'locked aggregate evidence available.'){
         el.textContent = 'Locked aggregate run registry available below.';
       }
     });

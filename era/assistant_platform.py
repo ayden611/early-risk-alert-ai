@@ -224,4 +224,4 @@ def generate_clinician_note(patient_id: str, label: str, prob: float, drivers: D
     lines.append(f"Patient: {patient_id}")
     lines.append(f"Assessment: {label} risk (prob {round(prob*100,1)}%).")
     if drivers:
-        lines.append(f"Drivers: {,
+        lines.append("Drivers: primary driver context unavailable in this summary.")

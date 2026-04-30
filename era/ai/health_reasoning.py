@@ -1,8 +1,8 @@
+from __future__ import annotations
 # era/ai/reasoning.py
 import json
 from sqlalchemy import text
 from era.extensions import db
-from __future__ import annotations
 
 from typing import Any, Dict, List
 

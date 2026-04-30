@@ -3480,6 +3480,81 @@ function renderRouteStatusModule(){
     // ERA_COMMAND_PATIENT_EXPLAINABILITY_V2_END
 
   </script>
+
+<!-- ERA_MINIMAL_EXPLAINABILITY_VISIBILITY_V2_START -->
+
+<section id="explainability-review-queue" style="margin: 28px 0; padding: 22px; border: 1px solid rgba(164,255,190,.32); border-radius: 24px; background: rgba(9,18,32,.72);">
+  <div style="display:inline-block; padding: 6px 12px; border-radius:999px; border:1px solid rgba(164,255,190,.45); color:#b8ffc8; font-weight:800; letter-spacing:.08em; font-size:.75rem; text-transform:uppercase;">Explainability visibility</div>
+  <h2 style="margin:12px 0 8px; font-size: clamp(1.6rem, 3vw, 2.6rem); line-height:1.05;">Explainable review queue</h2>
+  <p style="max-width:980px; opacity:.9; margin-bottom:18px;">This command-center view shows review prioritization context: queue rank, priority tier, primary driver, trend direction, lead-time context, and workflow state. It is decision-support only and does not diagnose, direct treatment, or independently trigger escalation.</p>
+
+  <div style="overflow-x:auto;">
+    <table style="width:100%; border-collapse:collapse; min-width:960px;">
+      <thead>
+        <tr style="background:rgba(120,160,220,.18);">
+          <th style="text-align:left; padding:12px;">Queue Rank</th>
+          <th style="text-align:left; padding:12px;">Case</th>
+          <th style="text-align:left; padding:12px;">Unit</th>
+          <th style="text-align:left; padding:12px;">Priority Tier</th>
+          <th style="text-align:left; padding:12px;">Risk Score</th>
+          <th style="text-align:left; padding:12px;">Primary Driver</th>
+          <th style="text-align:left; padding:12px;">Trend</th>
+          <th style="text-align:left; padding:12px;">Lead-Time Context</th>
+          <th style="text-align:left; padding:12px;">First Threshold Crossing</th>
+          <th style="text-align:left; padding:12px;">Workflow State</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="padding:12px; border-top:1px solid rgba(255,255,255,.12); font-weight:800;">#1</td>
+          <td style="padding:12px; border-top:1px solid rgba(255,255,255,.12);">Demo-001</td>
+          <td style="padding:12px; border-top:1px solid rgba(255,255,255,.12);">ICU</td>
+          <td style="padding:12px; border-top:1px solid rgba(255,255,255,.12);">Critical</td>
+          <td style="padding:12px; border-top:1px solid rgba(255,255,255,.12);">9.2</td>
+          <td style="padding:12px; border-top:1px solid rgba(255,255,255,.12);">SpO2 decline</td>
+          <td style="padding:12px; border-top:1px solid rgba(255,255,255,.12);">Worsening</td>
+          <td style="padding:12px; border-top:1px solid rgba(255,255,255,.12);">~4.0 hrs</td>
+          <td style="padding:12px; border-top:1px solid rgba(255,255,255,.12);">t=6.0 crossed</td>
+          <td style="padding:12px; border-top:1px solid rgba(255,255,255,.12);">Needs review</td>
+        </tr>
+        <tr>
+          <td style="padding:12px; border-top:1px solid rgba(255,255,255,.12); font-weight:800;">#2</td>
+          <td style="padding:12px; border-top:1px solid rgba(255,255,255,.12);">Demo-002</td>
+          <td style="padding:12px; border-top:1px solid rgba(255,255,255,.12);">Telemetry</td>
+          <td style="padding:12px; border-top:1px solid rgba(255,255,255,.12);">Critical</td>
+          <td style="padding:12px; border-top:1px solid rgba(255,255,255,.12);">8.7</td>
+          <td style="padding:12px; border-top:1px solid rgba(255,255,255,.12);">BP instability</td>
+          <td style="padding:12px; border-top:1px solid rgba(255,255,255,.12);">Worsening</td>
+          <td style="padding:12px; border-top:1px solid rgba(255,255,255,.12);">~3.5 hrs</td>
+          <td style="padding:12px; border-top:1px solid rgba(255,255,255,.12);">t=6.0 crossed</td>
+          <td style="padding:12px; border-top:1px solid rgba(255,255,255,.12);">Acknowledged</td>
+        </tr>
+        <tr>
+          <td style="padding:12px; border-top:1px solid rgba(255,255,255,.12); font-weight:800;">#3</td>
+          <td style="padding:12px; border-top:1px solid rgba(255,255,255,.12);">Demo-003</td>
+          <td style="padding:12px; border-top:1px solid rgba(255,255,255,.12);">Stepdown</td>
+          <td style="padding:12px; border-top:1px solid rgba(255,255,255,.12);">Elevated</td>
+          <td style="padding:12px; border-top:1px solid rgba(255,255,255,.12);">7.9</td>
+          <td style="padding:12px; border-top:1px solid rgba(255,255,255,.12);">HR instability</td>
+          <td style="padding:12px; border-top:1px solid rgba(255,255,255,.12);">Stable / Watch</td>
+          <td style="padding:12px; border-top:1px solid rgba(255,255,255,.12);">~3.0 hrs</td>
+          <td style="padding:12px; border-top:1px solid rgba(255,255,255,.12);">t=5.0 crossed</td>
+          <td style="padding:12px; border-top:1px solid rgba(255,255,255,.12);">Assigned</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; margin-top:16px;">
+    <div style="padding:14px; border-radius:18px; background:rgba(255,255,255,.06);"><strong>Priority Tier</strong><br>Low / Watch / Elevated / Critical</div>
+    <div style="padding:14px; border-radius:18px; background:rgba(255,255,255,.06);"><strong>Queue Rank</strong><br>Relative review ordering</div>
+    <div style="padding:14px; border-radius:18px; background:rgba(255,255,255,.06);"><strong>Primary Driver</strong><br>SpO2 / HR / BP / RR context</div>
+    <div style="padding:14px; border-radius:18px; background:rgba(255,255,255,.06);"><strong>Lead-Time Context</strong><br>Retrospective timing context</div>
+  </div>
+
+  <p style="margin-top:14px; padding:12px 14px; border-radius:16px; border:1px solid rgba(255,205,110,.45); color:#ffd778; background:rgba(255,205,110,.08);">Guardrail: simulated examples only. No real patient IDs, no row-level timestamps, and no raw MIMIC/eICU data are displayed.</p>
+</section>
+<!-- ERA_MINIMAL_EXPLAINABILITY_VISIBILITY_V2_END -->
 </body>
 </html>
 """

@@ -1,0 +1,33 @@
+{
+  "ok": true,
+  "generated_at_utc": "2026-04-30T15:45:24.521535+00:00",
+  "purpose": "Polish frontend presentation without redesigning or replacing the Command Center.",
+  "scope": [
+    "Minimal Command Center explainability visibility",
+    "Model Card and Pilot Success Guide status correction where stale",
+    "Validation Evidence and Validation Runs loading-placeholder cleanup",
+    "Validation Intelligence conservative MIMIC/eICU comparison",
+    "Pilot sponsor summary document"
+  ],
+  "claim_boundary": [
+    "Retrospective aggregate evidence only",
+    "MIMIC-IV and eICU event definitions remain separated",
+    "Do not claim unqualified two-dataset validation",
+    "Do not claim diagnosis, treatment direction, clinician replacement, or autonomous escalation"
+  ],
+  "safe_sentence": "Retrospectively evaluated across MIMIC-IV strict clinical-event cohorts and eICU harmonized clinical-event cohorts under a harmonized threshold framework, with event-definition differences clearly labeled.",
+  "changed_files": [
+    "era/web/command_center.py",
+    "era/web/validation_intelligence.html",
+    "era/web/validation_evidence.html",
+    "era/web/validation_runs.html",
+    "era/web/validation_evidence_packet.html",
+    "docs/validation/pilot_sponsor_summary.md"
+  ],
+  "candidate_counts": {
+    "command_center": 1,
+    "validation_intelligence": 1,
+    "validation_evidence": 2,
+    "validation_runs": 1
+  }
+}

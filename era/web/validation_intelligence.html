@@ -142,6 +142,50 @@ ul{line-height:1.7}
 
 </head>
 <body>
+<!-- ERA_SAFE_MULTI_DATASET_INTELLIGENCE_V2_START -->
+
+<section id="multi-dataset-retrospective-evidence" style="margin: 28px 0; padding: 22px; border: 1px solid rgba(164,255,190,.32); border-radius: 24px; background: rgba(9,18,32,.72);">
+  <div style="display:inline-block; padding: 6px 12px; border-radius:999px; border:1px solid rgba(164,255,190,.45); color:#b8ffc8; font-weight:800; letter-spacing:.08em; font-size:.75rem; text-transform:uppercase;">DUA-safe aggregate evidence</div>
+  <h2 style="margin:12px 0 8px; font-size: clamp(1.8rem, 3vw, 2.8rem); line-height:1.05;">Multi-dataset retrospective evidence: MIMIC-IV + eICU</h2>
+  <p style="max-width:1060px; opacity:.92;">Early Risk Alert AI has retrospective aggregate evidence across MIMIC-IV strict clinical-event cohorts and eICU harmonized clinical-event cohorts. Across conservative t=6.0 operating points, alert reduction remained high and false-positive burden remained low. Event definitions differ, so detection rates are reported separately and are not treated as equivalent endpoints.</p>
+
+  <div style="overflow-x:auto; margin-top:16px;">
+    <table style="width:100%; border-collapse:collapse; min-width:920px;">
+      <thead>
+        <tr style="background:rgba(120,160,220,.18);">
+          <th style="text-align:left; padding:12px;">Evidence Family</th>
+          <th style="text-align:left; padding:12px;">Event Definition</th>
+          <th style="text-align:left; padding:12px;">t=6.0 Alert Reduction</th>
+          <th style="text-align:left; padding:12px;">t=6.0 FPR</th>
+          <th style="text-align:left; padding:12px;">Detection</th>
+          <th style="text-align:left; padding:12px;">Lead-Time Context</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="padding:12px; border-top:1px solid rgba(255,255,255,.12);">MIMIC-IV v3.1</td>
+          <td style="padding:12px; border-top:1px solid rgba(255,255,255,.12);">Strict clinical-event cohorts</td>
+          <td style="padding:12px; border-top:1px solid rgba(255,255,255,.12);">94.0%–94.9%</td>
+          <td style="padding:12px; border-top:1px solid rgba(255,255,255,.12);">3.7%–4.4%</td>
+          <td style="padding:12px; border-top:1px solid rgba(255,255,255,.12);">14.1%–16.0%</td>
+          <td style="padding:12px; border-top:1px solid rgba(255,255,255,.12);">4.0 hrs</td>
+        </tr>
+        <tr>
+          <td style="padding:12px; border-top:1px solid rgba(255,255,255,.12);">eICU v2.0</td>
+          <td style="padding:12px; border-top:1px solid rgba(255,255,255,.12);">Harmonized clinical-event cohorts</td>
+          <td style="padding:12px; border-top:1px solid rgba(255,255,255,.12);">94.25%–95.64%</td>
+          <td style="padding:12px; border-top:1px solid rgba(255,255,255,.12);">0.98%–2.02%</td>
+          <td style="padding:12px; border-top:1px solid rgba(255,255,255,.12);">24.66%–64.49%</td>
+          <td style="padding:12px; border-top:1px solid rgba(255,255,255,.12);">3.13–4.83 hrs</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p style="margin-top:14px; padding:12px 14px; border-radius:16px; border:1px solid rgba(255,205,110,.45); color:#ffd778; background:rgba(255,205,110,.08);">Approved framing: retrospectively evaluated across MIMIC-IV and eICU under a harmonized threshold framework. Avoid unqualified claims such as “clinically validated on two datasets” until the same validation question and endpoint definition are applied equivalently.</p>
+</section>
+<!-- ERA_SAFE_MULTI_DATASET_INTELLIGENCE_V2_END -->
+
   <div class="wrapper">
     <div class="eyebrow">Early Risk Alert AI · Retrospective Evidence</div>
     <h1>Validation Intelligence</h1>
@@ -233,7 +277,7 @@ ul{line-height:1.7}
   }
   function replaceLoadingText(){
     document.querySelectorAll('td,th,p,div,span').forEach(function(el){
-      if(el.children.length === 0 && el.textContent.trim().toLowerCase() === 'loading...'){
+      if(el.children.length === 0 && el.textContent.trim().toLowerCase() === 'locked aggregate evidence available.'){
         el.textContent = 'Locked aggregate evidence available below.';
       }
     });
@@ -288,7 +332,7 @@ ul{line-height:1.7}
   }
   function replaceLoadingText(){
     document.querySelectorAll('td,th,p,div,span').forEach(function(el){
-      if(el.children.length === 0 && el.textContent.trim().toLowerCase() === 'loading...'){
+      if(el.children.length === 0 && el.textContent.trim().toLowerCase() === 'locked aggregate evidence available.'){
         el.textContent = 'Locked aggregate run registry available below.';
       }
     });

@@ -142,6 +142,41 @@ ul{line-height:1.7}
 
 </head>
 <body>
+<!-- ERA_LOCKED_EVIDENCE_NO_LOADING_V2_START -->
+
+<section id="locked-validation-evidence" style="margin: 28px 0; padding: 22px; border: 1px solid rgba(164,255,190,.32); border-radius: 24px; background: rgba(9,18,32,.72);">
+  <div style="display:inline-block; padding: 6px 12px; border-radius:999px; border:1px solid rgba(164,255,190,.45); color:#b8ffc8; font-weight:800; letter-spacing:.08em; font-size:.75rem; text-transform:uppercase;">No loading placeholders</div>
+  <h2 style="margin:12px 0 8px; font-size: clamp(1.6rem, 3vw, 2.6rem); line-height:1.05;">Locked aggregate validation evidence</h2>
+  <p style="max-width:1060px; opacity:.92;">This evidence packet shows locked DUA-safe aggregate summaries. Raw restricted data and row-level outputs remain local-only.</p>
+
+  <h3 style="margin-top:18px;">MIMIC-IV strict clinical-event threshold matrix</h3>
+  <div style="overflow-x:auto;">
+    <table style="width:100%; border-collapse:collapse; min-width:900px;">
+      <thead><tr style="background:rgba(120,160,220,.18);"><th style="text-align:left; padding:12px;">Threshold</th><th style="text-align:left; padding:12px;">Setting</th><th style="text-align:left; padding:12px;">Alert Reduction</th><th style="text-align:left; padding:12px;">FPR</th><th style="text-align:left; padding:12px;">Detection</th><th style="text-align:left; padding:12px;">ERA Alerts / Patient-Day</th><th style="text-align:left; padding:12px;">Median Lead Time</th></tr></thead>
+      <tbody>
+        <tr><td style="padding:12px;">t=4.0</td><td style="padding:12px;">ICU / high-acuity</td><td style="padding:12px;">80.3%</td><td style="padding:12px;">14.4%</td><td style="padding:12px;">37.9%</td><td style="padding:12px;">2.22</td><td style="padding:12px;">4.0 hrs</td></tr>
+        <tr><td style="padding:12px;">t=5.0</td><td style="padding:12px;">Mixed units / balanced</td><td style="padding:12px;">89.1%</td><td style="padding:12px;">8.0%</td><td style="padding:12px;">24.6%</td><td style="padding:12px;">1.23</td><td style="padding:12px;">4.0 hrs</td></tr>
+        <tr><td style="padding:12px;">t=6.0</td><td style="padding:12px;">Telemetry / stepdown conservative</td><td style="padding:12px;">94.3%</td><td style="padding:12px;">4.2%</td><td style="padding:12px;">15.3%</td><td style="padding:12px;">0.65</td><td style="padding:12px;">4.0 hrs</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 style="margin-top:18px;">eICU harmonized clinical-event threshold matrix</h3>
+  <div style="overflow-x:auto;">
+    <table style="width:100%; border-collapse:collapse; min-width:900px;">
+      <thead><tr style="background:rgba(120,160,220,.18);"><th style="text-align:left; padding:12px;">Threshold</th><th style="text-align:left; padding:12px;">Setting</th><th style="text-align:left; padding:12px;">Alert Reduction</th><th style="text-align:left; padding:12px;">FPR</th><th style="text-align:left; padding:12px;">Detection</th><th style="text-align:left; padding:12px;">ERA Alerts / Patient-Day</th><th style="text-align:left; padding:12px;">Median Lead Time</th></tr></thead>
+      <tbody>
+        <tr><td style="padding:12px;">t=4.0</td><td style="padding:12px;">ICU / high-acuity</td><td style="padding:12px;">69.74%</td><td style="padding:12px;">5.34%</td><td style="padding:12px;">62.51%</td><td style="padding:12px;">29.22</td><td style="padding:12px;">5.67 hrs</td></tr>
+        <tr><td style="padding:12px;">t=5.0</td><td style="padding:12px;">Mixed units / balanced</td><td style="padding:12px;">87.85%</td><td style="padding:12px;">2.23%</td><td style="padding:12px;">38.8%</td><td style="padding:12px;">11.73</td><td style="padding:12px;">5.17 hrs</td></tr>
+        <tr><td style="padding:12px;">t=6.0</td><td style="padding:12px;">Telemetry / stepdown conservative</td><td style="padding:12px;">94.25%</td><td style="padding:12px;">0.98%</td><td style="padding:12px;">24.66%</td><td style="padding:12px;">5.55</td><td style="padding:12px;">4.83 hrs</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p style="margin-top:14px; padding:12px 14px; border-radius:16px; border:1px solid rgba(255,205,110,.45); color:#ffd778; background:rgba(255,205,110,.08);">Detection rates should not be treated as equivalent endpoints across datasets. MIMIC-IV and eICU use different event-definition methods. Alert reduction, false-positive burden, and lead-time context are the safer cross-dataset comparison points.</p>
+</section>
+<!-- ERA_LOCKED_EVIDENCE_NO_LOADING_V2_END -->
+
   <div class="wrapper">
     <div class="eyebrow">Early Risk Alert AI · Validation Evidence</div>
     <h1>Pilot Evidence Packet</h1>
@@ -305,7 +340,7 @@ ul{line-height:1.7}
   }
   function replaceLoadingText(){
     document.querySelectorAll('td,th,p,div,span').forEach(function(el){
-      if(el.children.length === 0 && el.textContent.trim().toLowerCase() === 'loading...'){
+      if(el.children.length === 0 && el.textContent.trim().toLowerCase() === 'locked aggregate evidence available.'){
         el.textContent = 'Locked aggregate evidence available below.';
       }
     });
@@ -360,7 +395,7 @@ ul{line-height:1.7}
   }
   function replaceLoadingText(){
     document.querySelectorAll('td,th,p,div,span').forEach(function(el){
-      if(el.children.length === 0 && el.textContent.trim().toLowerCase() === 'loading...'){
+      if(el.children.length === 0 && el.textContent.trim().toLowerCase() === 'locked aggregate evidence available.'){
         el.textContent = 'Locked aggregate run registry available below.';
       }
     });
