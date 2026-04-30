@@ -137,6 +137,9 @@ MAIN_HTML = f"""
       .alert-top,.kv{{flex-direction:column}}
     }}
   </style>
+<!-- ERA_METRIC_GUARDRAIL_CLARITY_HEAD_START -->
+<link rel="stylesheet" href="/era-static/era_metric_guardrail_clarity.css?v=guardrail1">
+<!-- ERA_METRIC_GUARDRAIL_CLARITY_HEAD_END -->
 </head>
 <body>
   <div class="nav">
@@ -453,6 +456,9 @@ MAIN_HTML = f"""
     refreshDashboard();
     setInterval(refreshDashboard, 5000);
   </script>
+<!-- ERA_METRIC_GUARDRAIL_CLARITY_BODY_START -->
+<script src="/era-static/era_metric_guardrail_clarity.js?v=guardrail1"></script>
+<!-- ERA_METRIC_GUARDRAIL_CLARITY_BODY_END -->
 </body>
 </html>
 """

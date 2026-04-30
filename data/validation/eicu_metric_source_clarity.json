@@ -1,0 +1,38 @@
+{
+  "checkpoint": "eicu_metric_source_clarity",
+  "purpose": "Separate case-level review scores, aggregate validation percentages, eICU outcome-proxy metrics, and eICU harmonized clinical-event metrics.",
+  "case_level_review_score": {
+    "display_format": "8.7 / 10",
+    "meaning": "Case-level queue ranking / review-prioritization score",
+    "not_meaning": "Not a patient-risk percentage and not a diagnosis"
+  },
+  "aggregate_validation_percentages": {
+    "examples": ["alert reduction", "FPR", "detection"],
+    "meaning": "Retrospective aggregate evidence metrics",
+    "not_meaning": "Not individual patient-risk percentages"
+  },
+  "eicu_outcome_proxy_t6": {
+    "evidence_role": "Earlier eICU outcome-proxy check",
+    "event_definition": "Mortality/discharge-derived outcome-proxy event context",
+    "alert_reduction_percent": 96.8,
+    "fpr_percent": 1.8,
+    "detection_percent": 66.6,
+    "median_lead_time_hours": 3.41
+  },
+  "eicu_harmonized_clinical_event_t6": {
+    "evidence_role": "Newer eICU harmonized clinical-event labeling pass",
+    "event_definition": "Harmonized clinical-event labeling intended to better align with the MIMIC clinical-event framework",
+    "alert_reduction_percent": 94.25,
+    "fpr_percent": 0.98,
+    "detection_percent": 24.66,
+    "median_lead_time_hours": 4.83
+  },
+  "public_framing": "Do not merge these into one unlabeled eICU metric. Clearly label outcome-proxy versus harmonized clinical-event results.",
+  "guardrails": [
+    "Retrospective aggregate evidence only",
+    "No raw row-level data",
+    "No prospective performance claim",
+    "Decision support only",
+    "No diagnosis, treatment direction, clinician replacement, or independent escalation"
+  ]
+}

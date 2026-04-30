@@ -618,6 +618,9 @@ COMMAND_CENTER_HTML = r"""
 <!-- ERA_SCORE_LABEL_CLARITY_HEAD_START -->
 <link rel="stylesheet" href="/era-static/era_score_label_clarity.css?v=score-label1">
 <!-- ERA_SCORE_LABEL_CLARITY_HEAD_END -->
+<!-- ERA_METRIC_GUARDRAIL_CLARITY_HEAD_START -->
+<link rel="stylesheet" href="/era-static/era_metric_guardrail_clarity.css?v=guardrail1">
+<!-- ERA_METRIC_GUARDRAIL_CLARITY_HEAD_END -->
 </head>
 <body>
   <div class="topbar">
@@ -3744,6 +3747,9 @@ function renderRouteStatusModule(){
 <!-- ERA_SCORE_LABEL_CLARITY_BODY_START -->
 <script src="/era-static/era_score_label_clarity.js?v=score-label1"></script>
 <!-- ERA_SCORE_LABEL_CLARITY_BODY_END -->
+<!-- ERA_METRIC_GUARDRAIL_CLARITY_BODY_START -->
+<script src="/era-static/era_metric_guardrail_clarity.js?v=guardrail1"></script>
+<!-- ERA_METRIC_GUARDRAIL_CLARITY_BODY_END -->
 </body>
 </html>
 """

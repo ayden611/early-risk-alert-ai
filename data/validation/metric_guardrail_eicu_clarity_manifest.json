@@ -1,0 +1,104 @@
+{
+  "timestamp_utc": "2026-04-30T17:47:00.556972+00:00",
+  "patched_files": [
+    {
+      "file": "era/__init__.py",
+      "actions": {
+        "head": "inserted",
+        "body": "inserted"
+      }
+    },
+    {
+      "file": "era/web/command_center.py",
+      "actions": {
+        "head": "inserted",
+        "body": "inserted"
+      }
+    },
+    {
+      "file": "era/web/data_ingest.html",
+      "actions": {
+        "head": "inserted",
+        "body": "inserted"
+      }
+    },
+    {
+      "file": "era/web/model_card.html",
+      "actions": {
+        "head": "inserted",
+        "body": "inserted"
+      }
+    },
+    {
+      "file": "era/web/pilot_success_guide.html",
+      "actions": {
+        "head": "inserted",
+        "body": "inserted"
+      }
+    },
+    {
+      "file": "era/web/retro_upload.html",
+      "actions": {
+        "head": "inserted",
+        "body": "inserted"
+      }
+    },
+    {
+      "file": "era/web/routes.py",
+      "actions": {
+        "head": "inserted",
+        "body": "inserted"
+      }
+    },
+    {
+      "file": "era/web/validation_evidence.html",
+      "actions": {
+        "head": "inserted",
+        "body": "inserted"
+      }
+    },
+    {
+      "file": "era/web/validation_evidence_packet.html",
+      "actions": {
+        "head": "inserted",
+        "body": "inserted"
+      }
+    },
+    {
+      "file": "era/web/validation_intelligence.html",
+      "actions": {
+        "head": "inserted",
+        "body": "inserted"
+      }
+    },
+    {
+      "file": "era/web/validation_runs.html",
+      "actions": {
+        "head": "inserted",
+        "body": "inserted"
+      }
+    }
+  ],
+  "static_route": {
+    "status": "already_present",
+    "file": "era/__init__.py"
+  },
+  "purpose": "Clarify review score vs risk percentage and separate eICU outcome-proxy from harmonized clinical-event metrics.",
+  "decision": "Do not force 96.8% over 94.25%. Preserve both eICU evidence tracks with explicit labels.",
+  "ui_guardrail": "Case-level queue score should display as Review Score 8.x / 10, not patient-risk percent.",
+  "validation_guardrail": "Validation percentages are aggregate evidence metrics, not individual patient-risk percentages.",
+  "authoritative_values": {
+    "eicu_outcome_proxy_t6": {
+      "alert_reduction": "96.8%",
+      "fpr": "1.8%",
+      "detection": "66.6%",
+      "lead_time": "3.41 hrs"
+    },
+    "eicu_harmonized_clinical_event_t6": {
+      "alert_reduction": "94.25%",
+      "fpr": "0.98%",
+      "detection": "24.66%",
+      "lead_time": "4.83 hrs"
+    }
+  }
+}
