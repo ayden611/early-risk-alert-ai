@@ -1,0 +1,48 @@
+{
+  "ok": true,
+  "generated_at_utc": "2026-04-30T02:26:23.204191+00:00",
+  "title": "Multi-Dataset Public Framing Polish",
+  "top_line": "Early Risk Alert AI now has retrospective evidence across two de-identified ICU datasets: MIMIC-IV strict clinical-event cross-cohort validation plus a separate eICU outcome-proxy check.",
+  "behavior_line": "Across both datasets, ERA preserved the same threshold-direction behavior: lower thresholds increased detection, while conservative thresholds reduced review burden and false positives.",
+  "lead_time_context": "At the conservative t=6.0 setting, MIMIC-IV showed 4 hrs median lead-time context across the locked cross-cohort release, while eICU showed 3.41 hrs median lead-time context in the outcome-proxy check.",
+  "event_definition_guardrail": "MIMIC-IV and eICU detection rates should not be treated as equivalent endpoint definitions because MIMIC-IV uses stricter clinical-event labels, while eICU uses outcome-proxy event labels derived from mortality/discharge context.",
+  "mimic_iv": {
+    "evidence_role": "Strict clinical-event cross-cohort retrospective validation release",
+    "cases": "577\u20131,705",
+    "rows": "456,453 in full validation cohort",
+    "event_definition": "Strict clinical-event labels / event clusters",
+    "threshold": "t=6.0",
+    "alert_reduction": "94%\u201394.9%",
+    "fpr": "3.7%\u20134.4%",
+    "detection": "14.1%\u201316%",
+    "lead_time": "4 hrs"
+  },
+  "eicu": {
+    "evidence_role": "Second-dataset retrospective outcome-proxy check",
+    "cases": "2394",
+    "rows": "2023962",
+    "event_definition": "Outcome-proxy labels from mortality/discharge-derived event context",
+    "event_proxy_rows": "772",
+    "threshold": "t=6.0",
+    "alert_reduction": "96.8%",
+    "fpr": "1.8%",
+    "detection": "66.6%",
+    "lead_time": "3.41 hrs"
+  },
+  "approved_claim": "Cross-dataset retrospective robustness evidence across de-identified ICU datasets.",
+  "avoid_claims": [
+    "validated on two datasets without qualification",
+    "proven generalizability",
+    "prospective validation",
+    "ERA predicts deterioration",
+    "ERA detects crises early",
+    "ERA prevents adverse events",
+    "ERA diagnoses",
+    "ERA directs treatment",
+    "ERA replaces clinician judgment",
+    "ERA independently triggers escalation",
+    "direct superiority over standard monitoring"
+  ],
+  "public_policy": "Aggregate DUA-safe evidence only. Raw restricted files and row-level outputs remain local-only.",
+  "notice": "Decision support only. Retrospective aggregate analysis only."
+}

@@ -466,3 +466,31 @@ Aggregate DUA-safe evidence only. Raw restricted files and row-level outputs rem
 Decision support only. Retrospective aggregate analysis only.
 <!-- ERA_MULTI_DATASET_CHECKPOINT_README_V1_END -->
 
+
+<!-- ERA_MULTI_DATASET_PUBLIC_FRAMING_POLISH_README_V1_START -->
+## Multi-Dataset Public Framing
+
+**Early Risk Alert AI now has retrospective evidence across two de-identified ICU datasets: MIMIC-IV strict clinical-event cross-cohort validation plus a separate eICU outcome-proxy check.**
+
+Across both datasets, ERA preserved the same threshold-direction behavior: lower thresholds increased detection, while conservative thresholds reduced review burden and false positives.
+
+At the conservative t=6.0 setting, MIMIC-IV showed 4 hrs median lead-time context across the locked cross-cohort release, while eICU showed 3.41 hrs median lead-time context in the outcome-proxy check.
+
+### Critical Interpretation Guardrail
+
+MIMIC-IV and eICU detection rates should not be treated as equivalent endpoint definitions because MIMIC-IV uses stricter clinical-event labels, while eICU uses outcome-proxy event labels derived from mortality/discharge context.
+
+### Approved Claim
+
+Cross-dataset retrospective robustness evidence across de-identified ICU datasets.
+
+### Do Not Claim
+
+- validated on two datasets without qualification
+- proven generalizability
+- prospective validation
+- diagnosis, treatment direction, prevention, or autonomous escalation
+
+Public evidence remains aggregate-only. Raw restricted files and row-level outputs remain local-only.
+<!-- ERA_MULTI_DATASET_PUBLIC_FRAMING_POLISH_README_V1_END -->
+

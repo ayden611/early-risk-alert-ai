@@ -1168,5 +1168,62 @@
 /* ERA_LEAD_TIME_ROBUSTNESS_PROGRESS_V1_SCRIPT_END */
 </script>
 
+
+
+<!-- ERA_COMMAND_CENTER_MULTI_DATASET_EXPLAINABILITY_V1_START -->
+<section id="era-command-center-explainability-alignment" class="era-release-lock-panel" style="
+  width:min(1180px, calc(100% - 28px));
+  margin:16px auto;
+  border:1px solid rgba(139,184,255,.34);
+  border-left:5px solid #8bb8ff;
+  border-radius:24px;
+  background:linear-gradient(145deg, rgba(13,24,42,.96), rgba(6,11,21,.96));
+  box-shadow:0 22px 65px rgba(0,0,0,.32);
+  color:#f7fbff;
+  padding:18px;
+  position:relative;
+  z-index:5;
+">
+  <div style="color:#8bb8ff;text-transform:uppercase;letter-spacing:.14em;font-size:11px;font-weight:950;margin-bottom:6px;">
+    Command Center Explainability Alignment
+  </div>
+
+  <h2 style="margin:0;font-size:clamp(20px,2.5vw,30px);letter-spacing:-.04em;">
+    Live demo aligned to multi-dataset robustness evidence.
+  </h2>
+
+  <p style="margin:10px 0 0;color:#dbe8fb;font-size:14px;line-height:1.55;font-weight:750;">
+    Across both datasets, ERA preserved the same threshold-direction behavior: lower thresholds increased detection, while conservative thresholds reduced review burden and false positives. The live view should emphasize prioritization context, not raw score alone.
+  </p>
+
+  <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:14px;">
+    <div style="border:1px solid rgba(155,190,255,.22);background:rgba(255,255,255,.055);border-radius:16px;padding:12px;">
+      <span style="display:block;color:#b8c6d8;font-size:10px;letter-spacing:.12em;text-transform:uppercase;font-weight:900;">Priority Tier</span>
+      <b style="display:block;font-size:20px;margin-top:8px;">Critical / Elevated / Watch</b>
+    </div>
+    <div style="border:1px solid rgba(155,190,255,.22);background:rgba(255,255,255,.055);border-radius:16px;padding:12px;">
+      <span style="display:block;color:#b8c6d8;font-size:10px;letter-spacing:.12em;text-transform:uppercase;font-weight:900;">Queue Rank</span>
+      <b style="display:block;font-size:20px;margin-top:8px;">#1, #2, #3</b>
+    </div>
+    <div style="border:1px solid rgba(155,190,255,.22);background:rgba(255,255,255,.055);border-radius:16px;padding:12px;">
+      <span style="display:block;color:#b8c6d8;font-size:10px;letter-spacing:.12em;text-transform:uppercase;font-weight:900;">Primary Driver</span>
+      <b style="display:block;font-size:20px;margin-top:8px;">SpO₂ / HR / BP / RR</b>
+    </div>
+    <div style="border:1px solid rgba(155,190,255,.22);background:rgba(255,255,255,.055);border-radius:16px;padding:12px;">
+      <span style="display:block;color:#b8c6d8;font-size:10px;letter-spacing:.12em;text-transform:uppercase;font-weight:900;">Trend Direction</span>
+      <b style="display:block;font-size:20px;margin-top:8px;">Worsening / Stable</b>
+    </div>
+    <div style="border:1px solid rgba(155,190,255,.22);background:rgba(255,255,255,.055);border-radius:16px;padding:12px;">
+      <span style="display:block;color:#b8c6d8;font-size:10px;letter-spacing:.12em;text-transform:uppercase;font-weight:900;">Lead-Time Context</span>
+      <b style="display:block;font-size:20px;margin-top:8px;">3.4–4.0 hrs</b>
+    </div>
+  </div>
+
+  <div style="margin-top:12px;border:1px solid rgba(255,215,138,.35);background:rgba(255,215,138,.095);color:#ffe2a5;border-radius:14px;padding:10px 12px;font-size:12px;font-weight:780;line-height:1.45;">
+    Guardrail: MIMIC-IV and eICU use different event definitions. Use this module to explain threshold-direction behavior and review-queue prioritization, not diagnosis, treatment direction, or autonomous escalation.
+  </div>
+</section>
+<!-- ERA_COMMAND_CENTER_MULTI_DATASET_EXPLAINABILITY_V1_END -->
+
 </body>
 </html>

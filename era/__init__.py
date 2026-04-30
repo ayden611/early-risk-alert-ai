@@ -6960,6 +6960,44 @@ def create_app() -> Flask:
         )
     # ERA_MULTI_DATASET_CHECKPOINT_ROUTES_V1_END
 
+
+    # ERA_MULTI_DATASET_PUBLIC_FRAMING_POLISH_ROUTES_V1_START
+    @app.get("/api/validation/multi-dataset-public-framing")
+    def era_validation_multi_dataset_public_framing_api():
+        import json
+        from pathlib import Path
+        from flask import jsonify
+
+        root_dir = Path(__file__).resolve().parent.parent
+        p = root_dir / "data" / "validation" / "multi_dataset_public_framing_polish.json"
+
+        if not p.exists():
+            return jsonify({"ok": False, "error": "Multi-dataset public framing summary not found."}), 404
+
+        data = json.loads(p.read_text(encoding="utf-8"))
+        data["ok"] = True
+        return jsonify(data)
+
+    @app.get("/validation-evidence/multi-dataset-pilot-summary.md")
+    def era_validation_multi_dataset_pilot_summary_md():
+        from pathlib import Path
+        from flask import Response
+
+        root_dir = Path(__file__).resolve().parent.parent
+        p = root_dir / "docs" / "validation" / "multi_dataset_pilot_summary.md"
+
+        if not p.exists():
+            return Response("Multi-dataset pilot summary not found.", status=404, mimetype="text/plain")
+
+        return Response(
+            p.read_text(encoding="utf-8"),
+            mimetype="text/markdown",
+            headers={
+                "Content-Disposition": "inline; filename=early-risk-alert-ai-multi-dataset-pilot-summary.md"
+            }
+        )
+    # ERA_MULTI_DATASET_PUBLIC_FRAMING_POLISH_ROUTES_V1_END
+
     return app
 
 
