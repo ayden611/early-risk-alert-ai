@@ -1,0 +1,22 @@
+{
+  "timestamp_utc": "2026-04-30T19:28:28.913952+00:00",
+  "changed_files": [
+    "era/web/command_center.py"
+  ],
+  "static_script": "era/static/era_command_center_score_safety.js",
+  "purpose": [
+    "Restore safer Command Center layout after recent override modules.",
+    "Remove command-center takeover / visibility rescue injections.",
+    "Stop static ICU-12 / P101 99% risk display from appearing as a patient-risk percentage.",
+    "Use 0\u201310 Review Score wording for simulated queue prioritization.",
+    "Preserve original Command Center sections instead of replacing the full page."
+  ],
+  "guardrails": [
+    "Decision support only.",
+    "No diagnosis.",
+    "No treatment direction.",
+    "No clinician replacement.",
+    "No independent escalation.",
+    "No raw row-level files."
+  ]
+}
