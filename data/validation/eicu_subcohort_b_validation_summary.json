@@ -1,0 +1,62 @@
+{
+  "ok": true,
+  "generated_at_utc": "2026-04-30T15:21:16.414468+00:00",
+  "title": "eICU Harmonized Clinical-Event Subcohort B Robustness Summary",
+  "dataset": "eICU v2.0",
+  "subcohort": "B",
+  "split_method": "Deterministic patient-level SHA1 bucket split; public output contains aggregate metrics only.",
+  "claim_boundary": "Retrospective aggregate robustness only; not full clinical validation.",
+  "cases": 795,
+  "rows": 668278,
+  "event_rows": 245,
+  "threshold_matrix": [
+    {
+      "threshold": 4.0,
+      "suggested_setting": "ICU / high-acuity",
+      "rows": 668278,
+      "cases": 795,
+      "event_rows": 245,
+      "event_clusters": 245,
+      "detected_event_clusters": 204,
+      "alert_rows": 64822,
+      "standard_threshold_alert_rows": 273741,
+      "alert_reduction_pct": 76.32,
+      "fpr_pct": 9.69,
+      "detection_pct": 83.27,
+      "median_lead_time_hours": 5.19,
+      "era_alerts_per_patient_day": 27.3079
+    },
+    {
+      "threshold": 5.0,
+      "suggested_setting": "Mixed units / balanced",
+      "rows": 668278,
+      "cases": 795,
+      "event_rows": 245,
+      "event_clusters": 245,
+      "detected_event_clusters": 181,
+      "alert_rows": 24562,
+      "standard_threshold_alert_rows": 273741,
+      "alert_reduction_pct": 91.03,
+      "fpr_pct": 3.67,
+      "detection_pct": 73.88,
+      "median_lead_time_hours": 4.5,
+      "era_alerts_per_patient_day": 10.3474
+    },
+    {
+      "threshold": 6.0,
+      "suggested_setting": "Telemetry / stepdown conservative",
+      "rows": 668278,
+      "cases": 795,
+      "event_rows": 245,
+      "event_clusters": 245,
+      "detected_event_clusters": 158,
+      "alert_rows": 11939,
+      "standard_threshold_alert_rows": 273741,
+      "alert_reduction_pct": 95.64,
+      "fpr_pct": 1.78,
+      "detection_pct": 64.49,
+      "median_lead_time_hours": 3.69,
+      "era_alerts_per_patient_day": 5.0296
+    }
+  ]
+}
