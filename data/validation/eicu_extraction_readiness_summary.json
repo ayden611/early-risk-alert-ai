@@ -1,0 +1,21 @@
+{
+  "ok": true,
+  "generated_at_utc": "2026-04-30T01:36:39.119647+00:00",
+  "purpose": "DUA-safe aggregate eICU extraction readiness summary.",
+  "dataset": "eICU Collaborative Research Database",
+  "extraction_status": "ERA-format local-only cohort created",
+  "selected_stays_total": 2500,
+  "selected_event_stays": 800,
+  "selected_control_stays": 1700,
+  "selected_stays_with_vitals": 2394,
+  "era_format_rows_written": 2023962,
+  "event_proxy_rows_written": 772,
+  "event_stays_with_vitals": 772,
+  "vital_periodic_rows_scanned": 146671642,
+  "spo2_source_column_detected": "sao2",
+  "temperature_handling": "Auto-normalized to Fahrenheit when values appear Celsius; Fahrenheit-like values preserved.",
+  "bp_source": "Periodic BP columns when available; aperiodic non-invasive BP used as fallback at matching offsets.",
+  "event_definition_public": "Outcome-proxy event labels from mortality/discharge status fields using relative ICU offset timing.",
+  "claim_guardrail": "This is extraction readiness for retrospective outcome-proxy validation, not prospective clinical validation.",
+  "public_policy": "Aggregate summary only. Raw eICU files and row-level outputs remain local-only."
+}
