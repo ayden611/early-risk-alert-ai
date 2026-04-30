@@ -667,6 +667,181 @@ COMMAND_CENTER_HTML = r"""
         </div>
       </div>
     </section>
+<!-- ERA_COMMAND_CENTER_INTERACTIVE_QUEUE_V1_START -->
+<section id="era-live-review-queue" class="era-live-review-queue" style="margin:22px 0 28px; padding:18px; border:1px solid rgba(166,255,194,.34); border-radius:24px; background:linear-gradient(180deg,rgba(9,18,32,.86),rgba(9,18,32,.68)); box-shadow:0 18px 45px rgba(0,0,0,.22);">
+  <div style="display:flex; flex-wrap:wrap; align-items:flex-start; justify-content:space-between; gap:14px; margin-bottom:14px;">
+    <div>
+      <div style="display:inline-flex; align-items:center; gap:8px; padding:6px 11px; border-radius:999px; border:1px solid rgba(166,255,194,.42); color:#b8ffc8; font-weight:900; letter-spacing:.08em; text-transform:uppercase; font-size:.72rem;">Live Review Queue • Simulated Pilot View</div>
+      <h2 style="margin:10px 0 5px; font-size:clamp(1.65rem,3vw,2.7rem); line-height:1.02;">Prioritized patient review queue</h2>
+      <p style="margin:0; max-width:900px; opacity:.86;">Compact command-center view showing queue rank, priority tier, primary driver, trend, lead-time context, and workflow state. Decision-support only; not diagnosis or treatment direction.</p>
+    </div>
+    <div style="display:flex; flex-wrap:wrap; gap:8px;">
+      <button type="button" data-era-filter="all" class="era-q-btn era-q-active" style="border:1px solid rgba(255,255,255,.22); border-radius:999px; padding:9px 12px; background:rgba(166,255,194,.16); color:inherit; font-weight:800; cursor:pointer;">All</button>
+      <button type="button" data-era-filter="critical" class="era-q-btn" style="border:1px solid rgba(255,255,255,.22); border-radius:999px; padding:9px 12px; background:rgba(255,255,255,.06); color:inherit; font-weight:800; cursor:pointer;">Critical</button>
+      <button type="button" data-era-filter="elevated" class="era-q-btn" style="border:1px solid rgba(255,255,255,.22); border-radius:999px; padding:9px 12px; background:rgba(255,255,255,.06); color:inherit; font-weight:800; cursor:pointer;">Elevated</button>
+      <select id="era-q-sort" style="border:1px solid rgba(255,255,255,.22); border-radius:999px; padding:9px 12px; background:rgba(255,255,255,.08); color:inherit; font-weight:800;">
+        <option value="rank">Sort: Queue Rank</option>
+        <option value="risk">Sort: Risk Score</option>
+        <option value="lead">Sort: Lead Time</option>
+      </select>
+    </div>
+  </div>
+
+  <div id="era-q-cards" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:12px; margin-bottom:14px;"></div>
+
+  <div style="overflow-x:auto; border:1px solid rgba(255,255,255,.10); border-radius:18px;">
+    <table style="width:100%; min-width:980px; border-collapse:collapse;">
+      <thead>
+        <tr style="background:rgba(120,160,220,.18);">
+          <th style="text-align:left; padding:11px;">Rank</th>
+          <th style="text-align:left; padding:11px;">Patient</th>
+          <th style="text-align:left; padding:11px;">Unit</th>
+          <th style="text-align:left; padding:11px;">Priority Tier</th>
+          <th style="text-align:left; padding:11px;">Risk</th>
+          <th style="text-align:left; padding:11px;">Primary Driver</th>
+          <th style="text-align:left; padding:11px;">Trend</th>
+          <th style="text-align:left; padding:11px;">Lead Time</th>
+          <th style="text-align:left; padding:11px;">Workflow</th>
+          <th style="text-align:left; padding:11px;">Action</th>
+        </tr>
+      </thead>
+      <tbody id="era-q-table"></tbody>
+    </table>
+  </div>
+
+  <div id="era-q-detail" style="margin-top:14px; padding:14px; border-radius:18px; background:rgba(255,255,255,.055); border:1px solid rgba(255,255,255,.10);">
+    <strong>Selected review basis:</strong>
+    <span id="era-q-detail-text">Select a row or card to view a concise explainability summary.</span>
+  </div>
+
+  <p style="margin:13px 0 0; padding:11px 13px; border-radius:16px; border:1px solid rgba(255,207,117,.45); color:#ffd977; background:rgba(255,207,117,.08); font-weight:700;">
+    Guardrail: simulated de-identified demonstration queue. Workflow actions are review-state examples only. No diagnosis, treatment direction, clinician replacement, or autonomous escalation.
+  </p>
+</section>
+
+<script>
+(function(){
+  if (window.__ERA_INTERACTIVE_QUEUE_V1__) return;
+  window.__ERA_INTERACTIVE_QUEUE_V1__ = true;
+
+  const patients = [
+    {rank:1, id:"ICU-12", unit:"ICU", tier:"Critical", risk:99, driver:"SpO₂ decline", trend:"Worsening", lead:4.8, state:"Needs review", basis:"ICU-12 is queue-ranked first because the score is high, oxygenation is the primary driver, the trend is worsening, and the alert appears within retrospective lead-time context."},
+    {rank:2, id:"ICU-07", unit:"ICU", tier:"Critical", risk:94, driver:"BP instability", trend:"Worsening", lead:4.1, state:"Acknowledged", basis:"ICU-07 remains high priority because blood-pressure instability is the dominant driver with worsening trend and conservative-threshold crossing context."},
+    {rank:3, id:"TEL-18", unit:"Telemetry", tier:"Elevated", risk:86, driver:"HR instability", trend:"Stable / Watch", lead:3.6, state:"Assigned", basis:"TEL-18 is elevated rather than critical because the primary driver is heart-rate instability with a watchful but less severe trend pattern."},
+    {rank:4, id:"SDU-04", unit:"Stepdown", tier:"Watch", risk:72, driver:"RR elevation", trend:"Stable", lead:2.9, state:"Monitoring", basis:"SDU-04 is monitored because respiratory-rate elevation contributes to risk, but the trend is currently stable and the queue rank is lower."}
+  ];
+
+  const tierStyle = {
+    "Critical":"background:rgba(255,107,107,.16);border:1px solid rgba(255,107,107,.45);color:#ffd0d0;",
+    "Elevated":"background:rgba(255,207,117,.14);border:1px solid rgba(255,207,117,.45);color:#ffdf91;",
+    "Watch":"background:rgba(145,197,255,.14);border:1px solid rgba(145,197,255,.42);color:#cfe4ff;",
+    "Low":"background:rgba(166,255,194,.12);border:1px solid rgba(166,255,194,.42);color:#caffd8;"
+  };
+
+  const cards = document.getElementById("era-q-cards");
+  const tbody = document.getElementById("era-q-table");
+  const detail = document.getElementById("era-q-detail-text");
+  const sortEl = document.getElementById("era-q-sort");
+  const buttons = Array.from(document.querySelectorAll("[data-era-filter]"));
+  let filter = "all";
+
+  function badge(text, style) {
+    return '<span style="display:inline-flex;align-items:center;padding:5px 9px;border-radius:999px;font-weight:900;font-size:.78rem;white-space:nowrap;' + style + '">' + text + '</span>';
+  }
+
+  function workflowButton(label, id) {
+    return '<button type="button" data-era-action="' + id + '" style="border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:7px 10px;background:rgba(255,255,255,.07);color:inherit;font-weight:800;cursor:pointer;">' + label + '</button>';
+  }
+
+  function sortedRows() {
+    let rows = patients.slice();
+    if (filter !== "all") rows = rows.filter(p => p.tier.toLowerCase() === filter);
+    const sort = sortEl ? sortEl.value : "rank";
+    if (sort === "risk") rows.sort((a,b) => b.risk - a.risk);
+    else if (sort === "lead") rows.sort((a,b) => b.lead - a.lead);
+    else rows.sort((a,b) => a.rank - b.rank);
+    return rows;
+  }
+
+  function render() {
+    const rows = sortedRows();
+
+    if (cards) {
+      cards.innerHTML = rows.slice(0,3).map(p => `
+        <button type="button" data-era-select="${p.id}" style="text-align:left; border:1px solid rgba(255,255,255,.13); border-radius:18px; padding:14px; background:rgba(255,255,255,.055); color:inherit; cursor:pointer;">
+          <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:10px;">
+            <strong style="font-size:1.25rem;">#${p.rank} ${p.id}</strong>
+            ${badge(p.tier, tierStyle[p.tier] || "")}
+          </div>
+          <div style="font-size:2rem;line-height:1;font-weight:950;color:#b8ffc8;">${p.risk}%</div>
+          <div style="margin-top:8px;"><strong>Driver:</strong> ${p.driver}</div>
+          <div><strong>Trend:</strong> ${p.trend}</div>
+          <div><strong>Lead time:</strong> ~${p.lead} hrs</div>
+        </button>
+      `).join("");
+    }
+
+    if (tbody) {
+      tbody.innerHTML = rows.map(p => `
+        <tr data-era-select="${p.id}" style="cursor:pointer;">
+          <td style="padding:11px;border-top:1px solid rgba(255,255,255,.10);font-weight:950;">#${p.rank}</td>
+          <td style="padding:11px;border-top:1px solid rgba(255,255,255,.10);font-weight:900;">${p.id}</td>
+          <td style="padding:11px;border-top:1px solid rgba(255,255,255,.10);">${p.unit}</td>
+          <td style="padding:11px;border-top:1px solid rgba(255,255,255,.10);">${badge(p.tier, tierStyle[p.tier] || "")}</td>
+          <td style="padding:11px;border-top:1px solid rgba(255,255,255,.10);font-weight:950;color:#b8ffc8;">${p.risk}%</td>
+          <td style="padding:11px;border-top:1px solid rgba(255,255,255,.10);font-weight:850;">${p.driver}</td>
+          <td style="padding:11px;border-top:1px solid rgba(255,255,255,.10);">${p.trend}</td>
+          <td style="padding:11px;border-top:1px solid rgba(255,255,255,.10);font-weight:900;">~${p.lead} hrs</td>
+          <td style="padding:11px;border-top:1px solid rgba(255,255,255,.10);">${p.state}</td>
+          <td style="padding:11px;border-top:1px solid rgba(255,255,255,.10);">${workflowButton("Acknowledge", p.id)}</td>
+        </tr>
+      `).join("");
+    }
+  }
+
+  function selectPatient(id) {
+    const p = patients.find(x => x.id === id);
+    if (!p || !detail) return;
+    detail.textContent = p.basis;
+  }
+
+  buttons.forEach(btn => {
+    btn.addEventListener("click", () => {
+      filter = btn.getAttribute("data-era-filter") || "all";
+      buttons.forEach(b => {
+        b.classList.remove("era-q-active");
+        b.style.background = "rgba(255,255,255,.06)";
+      });
+      btn.classList.add("era-q-active");
+      btn.style.background = "rgba(166,255,194,.16)";
+      render();
+    });
+  });
+
+  if (sortEl) sortEl.addEventListener("change", render);
+
+  document.addEventListener("click", function(e){
+    const action = e.target.closest("[data-era-action]");
+    if (action) {
+      const id = action.getAttribute("data-era-action");
+      const p = patients.find(x => x.id === id);
+      if (p) {
+        p.state = p.state === "Acknowledged" ? "Assigned" : "Acknowledged";
+        selectPatient(id);
+        render();
+      }
+      return;
+    }
+    const row = e.target.closest("[data-era-select]");
+    if (row) selectPatient(row.getAttribute("data-era-select"));
+  });
+
+  render();
+  selectPatient("ICU-12");
+})();
+</script>
+<!-- ERA_COMMAND_CENTER_INTERACTIVE_QUEUE_V1_END -->
+
 
     <section class="hero">
       <div class="hero-grid">

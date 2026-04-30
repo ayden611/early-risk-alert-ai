@@ -1,0 +1,28 @@
+{
+  "ok": true,
+  "generated_at_utc": "2026-04-30T16:17:12.566885+00:00",
+  "patched_command_center_file": "era/web/command_center.py",
+  "purpose": "Make the Command Center feel more like a live review queue while preserving the existing layout.",
+  "added": [
+    "Compact interactive review queue",
+    "Filter controls for all/critical/elevated",
+    "Sort control for queue rank/risk/lead time",
+    "Priority tier badges",
+    "Primary driver visibility",
+    "Trend and lead-time context",
+    "Workflow-state demonstration buttons",
+    "Concise selected-review-basis panel"
+  ],
+  "guardrails": [
+    "Simulated de-identified demonstration queue only",
+    "Decision support only",
+    "No diagnosis",
+    "No treatment direction",
+    "No clinician replacement",
+    "No autonomous escalation",
+    "No row-level data committed"
+  ],
+  "changed_files": [
+    "era/web/command_center.py"
+  ]
+}
