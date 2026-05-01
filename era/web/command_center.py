@@ -227,6 +227,47 @@ COMMAND_CENTER_HTML = r"""
       background:rgba(216,180,254,.13);
       border-color:rgba(216,180,254,.35);
     }
+
+    .scope-controls{
+      align-items:center;
+      gap:7px;
+    }
+    .control-label{
+      color:#cfe0f4;
+      font-size:10px;
+      letter-spacing:.13em;
+      text-transform:uppercase;
+      font-weight:1000;
+      padding:0 2px;
+      opacity:.9;
+      white-space:nowrap;
+    }
+    .control-sep{
+      width:1px;
+      min-height:26px;
+      background:rgba(184,211,255,.22);
+      margin:0 2px;
+      display:inline-block;
+    }
+    .scope-note{
+      margin:10px 0 12px;
+      border:1px solid rgba(155,215,255,.34);
+      background:rgba(155,215,255,.08);
+      color:#dceeff;
+      border-radius:14px;
+      padding:9px 11px;
+      font-size:12px;
+      line-height:1.35;
+      font-weight:850;
+    }
+    .scope-note strong{
+      color:#bfe8ff;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+      font-size:10px;
+      margin-right:5px;
+    }
+
     .mini-metrics{
       display:grid;
       grid-template-columns:repeat(auto-fit,minmax(165px,1fr));
@@ -822,14 +863,27 @@ td {
               trend, lead-time context, and workflow state in one glanceable view.
             </p>
           </div>
-          <div class="controls">
-            <button class="btn active" data-filter="all">All</button>
+          <div class="controls scope-controls" aria-label="Demo queue filters">
+            <span class="control-label">View scope</span>
+            <button class="btn active" data-unit-filter="all">All Units</button>
+            <button class="btn" data-unit-filter="ICU">ICU</button>
+            <button class="btn" data-unit-filter="Telemetry">Telemetry</button>
+            <button class="btn" data-unit-filter="Stepdown">Stepdown</button>
+            <button class="btn" data-unit-filter="Ward">Ward</button>
+            <span class="control-sep" aria-hidden="true"></span>
+            <span class="control-label">Priority</span>
+            <button class="btn active" data-filter="all">All Priorities</button>
             <button class="btn" data-filter="Critical">Critical</button>
             <button class="btn" data-filter="Elevated">Elevated</button>
             <button class="btn" data-filter="Watch">Watch</button>
+            <span class="control-sep" aria-hidden="true"></span>
             <button class="btn purple" id="rotateBtn">Rotate snapshot</button>
             <button class="btn" id="pauseBtn">Pause</button>
           </div>
+        </div>
+
+        <div class="scope-note" id="scopeNote">
+          <strong>View scope</strong>View scope: simulated unit filter for pilot demonstration. Production pilot access should be tied to authorized role and unit permissions.
         </div>
 
         <div class="mini-metrics">
@@ -1010,6 +1064,7 @@ td {
 
     let snapshotIndex = 0;
     let currentFilter = "all";
+    let currentUnitScope = "all";
     let paused = false;
     let selectedPatient = null;
 
@@ -1020,9 +1075,22 @@ td {
       return "tier-low";
     }
 
+    function normalizeUnit(unit){
+      const u = String(unit || "").toLowerCase();
+      if(u.includes("icu")) return "ICU";
+      if(u.includes("tele")) return "Telemetry";
+      if(u.includes("step")) return "Stepdown";
+      if(u.includes("ward")) return "Ward";
+      return unit || "Unknown";
+    }
+
     function rows(){
       const all = snapshots[snapshotIndex].rows;
-      return currentFilter === "all" ? all : all.filter(r => r.tier === currentFilter);
+      return all.filter(r => {
+        const tierOk = currentFilter === "all" || r.tier === currentFilter;
+        const unitOk = currentUnitScope === "all" || normalizeUnit(r.unit) === currentUnitScope;
+        return tierOk && unitOk;
+      });
     }
 
     function averageScore(list){
@@ -1034,7 +1102,7 @@ td {
     function render(){
       const snap = snapshots[snapshotIndex];
       const visible = rows();
-      const displayRows = visible.length ? visible : snap.rows;
+      const displayRows = visible;
 
       if(!selectedPatient || !displayRows.some(r => r.patient === selectedPatient)){
         selectedPatient = displayRows[0].patient;
@@ -1043,7 +1111,9 @@ td {
       const critical = snap.rows.filter(r => r.tier === "Critical").length;
 
       document.getElementById("snapshotLabel").textContent = snap.label;
-      document.getElementById("filterLabel").textContent = currentFilter === "all" ? "All Units" : currentFilter;
+      const priorityText = currentFilter === "all" ? "All Priorities" : currentFilter;
+      const unitText = currentUnitScope === "all" ? "All Units" : currentUnitScope;
+      document.getElementById("filterLabel").textContent = unitText + " / " + priorityText;
       document.getElementById("statOpen").textContent = snap.rows.length;
       document.getElementById("statCritical").textContent = critical;
       document.getElementById("statAverage").textContent = averageScore(snap.rows);
@@ -1054,6 +1124,9 @@ td {
 
       const cards = document.getElementById("cards");
       cards.innerHTML = "";
+      if(!displayRows.length){
+        cards.innerHTML = `<div class="scope-note" style="grid-column:1/-1"><strong>No visible items</strong>No review items match the current view scope and priority filter.</div>`;
+      }
       displayRows.forEach((r, idx) => {
         const card = document.createElement("article");
         card.className = "patient-card" + (r.patient === selectedPatient ? " selected" : "");
@@ -1078,6 +1151,9 @@ td {
 
       const body = document.getElementById("queueBody");
       body.innerHTML = "";
+      if(!displayRows.length){
+        body.innerHTML = `<tr><td colspan="8">No rows match the selected unit scope and priority filter.</td></tr>`;
+      }
       displayRows.forEach((r, idx) => {
         const tr = document.createElement("tr");
         tr.onclick = () => { selectedPatient = r.patient; render(); };
@@ -1128,6 +1204,16 @@ td {
       selectedPatient = null;
       render();
     }
+
+    document.querySelectorAll("[data-unit-filter]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll("[data-unit-filter]").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        currentUnitScope = btn.dataset.unitFilter;
+        selectedPatient = null;
+        render();
+      });
+    });
 
     document.querySelectorAll("[data-filter]").forEach(btn => {
       btn.addEventListener("click", () => {

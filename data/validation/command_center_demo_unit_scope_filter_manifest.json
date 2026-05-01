@@ -1,0 +1,22 @@
+{
+  "timestamp_utc": "2026-05-01T11:01:19.039546+00:00",
+  "purpose": "Added demo unit-scope filters to the Command Center without replacing the existing command-center workboard.",
+  "unit_scope_buttons": [
+    "All Units",
+    "ICU",
+    "Telemetry",
+    "Stepdown",
+    "Ward"
+  ],
+  "priority_buttons": [
+    "All Priorities",
+    "Critical",
+    "Elevated",
+    "Watch"
+  ],
+  "ui_wording": "View scope: simulated unit filter for pilot demonstration. Production pilot access should be tied to authorized role and unit permissions.",
+  "future_pilot_note": "Production pilot access should be connected to login role and authorized unit permissions.",
+  "score_policy": "Review Score remains 0-10; no patient-risk percentage display.",
+  "claim_guardrail": "Decision support only; no diagnosis, treatment direction, clinician replacement, or independent escalation.",
+  "raw_data_policy": "No raw MIMIC, eICU, HiRID, CSV, parquet, zip, or local_private files committed."
+}
