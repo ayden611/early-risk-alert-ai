@@ -1,0 +1,15 @@
+{
+  "timestamp_utc": "2026-05-01T11:17:00.561727+00:00",
+  "purpose": "Final pilot polish for Command Center UI: stronger top-patient hierarchy, tighter queue cards, collapsible explanatory sections, and clearer clinical tool feel.",
+  "changes": [
+    "Top review card receives stronger visual hierarchy and larger review score",
+    "Queue cards use tighter text and badge containment",
+    "Selected patient detail panel is more prominent and less wordy",
+    "Long explanatory sections move into a collapsible About this demo area",
+    "Tier badges and Review Score styling are strengthened",
+    "Conservative decision-support guardrails remain visible"
+  ],
+  "score_policy": "Review Score remains 0-10 only; no patient-risk percentage display.",
+  "claim_guardrail": "Decision support only. No diagnosis, treatment direction, clinician replacement, or independent escalation.",
+  "raw_data_policy": "No raw MIMIC, eICU, HiRID, CSV, parquet, zip, or local_private files committed."
+}
