@@ -32,11 +32,13 @@ COMMAND_CENTER_HTML = r"""
     *{box-sizing:border-box}
     body{
       margin:0;
+      min-height:100vh;
+      overflow-x:hidden;
       font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
       background:
-        radial-gradient(circle at 10% 0%,rgba(78,166,255,.18),transparent 32%),
-        radial-gradient(circle at 7.6/10 5%,rgba(167,255,154,.12),transparent 26%),
-        linear-gradient(180deg,#06101d 0%,#07111f 48%,#050912 100%);
+        radial-gradient(circle at 10% 0%,rgba(78,166,255,.12),transparent 28%),
+        radial-gradient(circle at 88% 6%,rgba(167,255,154,.08),transparent 22%),
+        linear-gradient(180deg,#050b14 0%,#07111c 46%,#050913 100%);
       color:var(--text);
     }
     a{color:inherit;text-decoration:none}
@@ -44,9 +46,10 @@ COMMAND_CENTER_HTML = r"""
       position:sticky;
       top:0;
       z-index:50;
-      background:rgba(6,16,29,.88);
+      background:rgba(5,12,22,.96);
       backdrop-filter:blur(16px);
-      border-bottom:1px solid var(--line);
+      border-bottom:1px solid rgba(184,211,255,.14);
+      box-shadow:0 8px 28px rgba(0,0,0,.18);
     }
     .topbar-inner{
       max-width:1540px;
@@ -111,24 +114,26 @@ COMMAND_CENTER_HTML = r"""
       gap:12px;
       align-items:center;
       padding:12px 14px;
-      border:1px solid rgba(255,211,109,.34);
-      background:linear-gradient(90deg,rgba(255,211,109,.10),rgba(167,255,154,.06));
+      border:1px solid rgba(255,211,109,.26);
+      background:linear-gradient(180deg,rgba(13,23,38,.98),rgba(10,18,31,.98));
       border-radius:18px;
       margin-bottom:14px;
-      box-shadow:0 10px 35px rgba(0,0,0,.18);
+      box-shadow:0 12px 34px rgba(0,0,0,.22);
     }
     .pilot-banner strong{
-      color:#ffe7a3;
-      font-size:12px;
+      color:#ffe29a;
+      font-size:11px;
       letter-spacing:.14em;
       text-transform:uppercase;
+      font-weight:1000;
     }
     .pilot-banner p{
       margin:4px 0 0;
-      color:#dfe9f8;
+      color:#f4f8ff;
       font-size:13px;
-      line-height:1.35;
-      font-weight:760;
+      line-height:1.42;
+      font-weight:850;
+      max-width:960px;
     }
     .status-pills{
       display:flex;
@@ -147,8 +152,9 @@ COMMAND_CENTER_HTML = r"""
       letter-spacing:.08em;
       font-weight:1000;
       border:1px solid var(--line);
-      background:rgba(255,255,255,.055);
+      background:rgba(255,255,255,.08);
       white-space:nowrap;
+      max-width:100%;
     }
     .pill.green{color:#d7ffd1;border-color:rgba(167,255,154,.42);background:rgba(167,255,154,.10)}
     .pill.amber{color:#ffe6a2;border-color:rgba(255,211,109,.52);background:rgba(255,211,109,.12)}
@@ -160,8 +166,8 @@ COMMAND_CENTER_HTML = r"""
       align-items:start;
     }
     .panel{
-      background:linear-gradient(180deg,rgba(20,34,56,.94),rgba(11,20,35,.94));
-      border:1px solid var(--line);
+      background:linear-gradient(180deg,rgba(16,27,45,.97),rgba(10,18,31,.97));
+      border:1px solid rgba(184,211,255,.15);
       border-radius:22px;
       box-shadow:var(--shadow);
     }
@@ -223,7 +229,7 @@ COMMAND_CENTER_HTML = r"""
     }
     .mini-metrics{
       display:grid;
-      grid-template-columns:repeat(4,minmax(0,1fr));
+      grid-template-columns:repeat(auto-fit,minmax(165px,1fr));
       gap:10px;
       margin:12px 0;
     }
@@ -265,7 +271,7 @@ COMMAND_CENTER_HTML = r"""
       align-items:start;
     }
     .queue-box{
-      background:rgba(255,255,255,.035);
+      background:rgba(255,255,255,.03);
       border:1px solid var(--line);
       border-radius:18px;
       padding:12px;
@@ -284,9 +290,10 @@ COMMAND_CENTER_HTML = r"""
     }
     .card-row{
       display:grid;
-      grid-template-columns:repeat(4,minmax(0,1fr));
-      gap:9px;
+      grid-template-columns:repeat(auto-fit,minmax(165px,1fr));
+      gap:10px;
       margin-bottom:10px;
+      align-items:stretch;
     }
     .patient-card{
       border:1px solid var(--line);
@@ -294,7 +301,8 @@ COMMAND_CENTER_HTML = r"""
       border-radius:16px;
       padding:12px;
       cursor:pointer;
-      min-height:146px;
+      min-height:0;
+      overflow:hidden;
       transition:.15s ease;
     }
     .patient-card:hover,.patient-card.selected{
@@ -303,16 +311,27 @@ COMMAND_CENTER_HTML = r"""
       box-shadow:0 0 0 1px rgba(167,255,154,.16),0 16px 45px rgba(0,0,0,.25);
     }
     .patient-top{
-      display:flex;
-      justify-content:space-between;
-      gap:10px;
-      align-items:flex-start;
+      display:grid;
+      grid-template-columns:minmax(0,1fr) auto;
+      gap:8px;
+      align-items:start;
+    }
+    .patient-top > div{
+      min-width:0;
+    }
+    .patient-top .pill{
+      align-self:start;
+      font-size:9px;
+      padding:5px 8px;
+      line-height:1;
+      max-width:100%;
     }
     .rank-title{
-      font-size:18px;
+      font-size:16px;
       font-weight:1000;
       letter-spacing:-.04em;
       line-height:1.05;
+      word-break:break-word;
     }
     .unit{
       color:#c6d6e8;
@@ -336,7 +355,7 @@ COMMAND_CENTER_HTML = r"""
     .mini{
       margin-top:8px;
       color:#dbe7f5;
-      font-size:12px;
+      font-size:11px;
       font-weight:850;
       line-height:1.35;
     }
@@ -549,6 +568,8 @@ COMMAND_CENTER_HTML = r"""
       .pilot-banner{grid-template-columns:1fr}
       .status-pills,.controls{justify-content:flex-start}
       .wrap{padding:12px}
+      .patient-top{grid-template-columns:1fr}
+      .patient-top .pill{justify-self:start}
     }
   
 /* ERA_COMMAND_CENTER_VISIBILITY_FIX_START */
@@ -757,7 +778,7 @@ td {
       <div>
         <div class="brand-kicker">HCP-facing decision support • rules-based • explainable • CITI certified</div>
         <div class="brand-title">Early Risk Alert AI</div>
-        <div class="brand-sub">Explainable Rules-Based Command Center</div>
+        <div class="brand-sub">Clinical Command Center</div>
       </div>
       <nav class="nav" aria-label="Platform navigation">
         <a href="/command-center">Command Center</a>
