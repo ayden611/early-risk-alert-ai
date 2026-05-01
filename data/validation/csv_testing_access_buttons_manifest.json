@@ -1,0 +1,14 @@
+{
+  "timestamp_utc": "2026-05-01T11:47:55.315191+00:00",
+  "purpose": "Add visible direct access to existing CSV testing and retrospective upload routes.",
+  "routes_added_to_command_center_navigation": [
+    "/data-ingest",
+    "/retro-upload"
+  ],
+  "button_labels": [
+    "CSV Upload / Data Testing",
+    "Retrospective Upload"
+  ],
+  "safety_wording": "Do not upload PHI, live patient data, or restricted row-level validation exports outside an approved pilot, data-use agreement, and security review.",
+  "backend_change": "None. Existing upload routes remain unchanged."
+}
