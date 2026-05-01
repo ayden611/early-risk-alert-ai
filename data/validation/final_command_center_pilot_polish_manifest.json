@@ -1,15 +1,14 @@
 {
-  "timestamp_utc": "2026-05-01T11:17:00.561727+00:00",
-  "purpose": "Final pilot polish for Command Center UI: stronger top-patient hierarchy, tighter queue cards, collapsible explanatory sections, and clearer clinical tool feel.",
+  "timestamp_utc": "2026-05-01T11:55:53.261634+00:00",
+  "purpose": "Final Command Center pilot polish based on assessment feedback.",
   "changes": [
-    "Top review card receives stronger visual hierarchy and larger review score",
-    "Queue cards use tighter text and badge containment",
-    "Selected patient detail panel is more prominent and less wordy",
-    "Long explanatory sections move into a collapsible About this demo area",
-    "Tier badges and Review Score styling are strengthened",
-    "Conservative decision-support guardrails remain visible"
+    "Makes the #1 patient card visually dominant with TOP PRIORITY label.",
+    "Keeps tier badges inside cards and makes tier visually primary.",
+    "Tightens queue card text and selected-patient detail panel.",
+    "Moves lower explanatory/demo sections into a collapsible About this demo area.",
+    "Keeps Review Score on a 0-10 scale.",
+    "Preserves conservative decision-support guardrail wording."
   ],
-  "score_policy": "Review Score remains 0-10 only; no patient-risk percentage display.",
-  "claim_guardrail": "Decision support only. No diagnosis, treatment direction, clinician replacement, or independent escalation.",
-  "raw_data_policy": "No raw MIMIC, eICU, HiRID, CSV, parquet, zip, or local_private files committed."
+  "claims_guardrail": "No diagnosis. No treatment direction. Does not replace clinician judgment. Does not independently trigger escalation.",
+  "raw_data_policy": "No raw MIMIC/eICU/HiRID files, local_private files, CSVs, parquet, archives, or row-level outputs committed."
 }

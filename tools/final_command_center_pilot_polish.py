@@ -1,376 +1,452 @@
+from __future__ import annotations
+
 from pathlib import Path
 import re
 import json
+import py_compile
 from datetime import datetime, timezone
 
 p = Path("era/web/command_center.py")
+if not p.exists():
+    raise SystemExit("ERROR: era/web/command_center.py not found.")
+
 s = p.read_text(encoding="utf-8")
+original = s
 
-def target_is_f_string(text: str) -> bool:
-    m = re.search(r"COMMAND_CENTER_HTML\s*=\s*([rubfRUBF]*)[\"']{3}", text)
-    return bool(m and "f" in m.group(1).lower())
+# Remove previous final polish markers if this is rerun.
+s = re.sub(
+    r"/\* ERA_FINAL_COMMAND_CENTER_POLISH_V4_START \*/.*?/\* ERA_FINAL_COMMAND_CENTER_POLISH_V4_END \*/",
+    "",
+    s,
+    flags=re.S,
+)
+s = re.sub(
+    r"<script>\s*// ERA_FINAL_COMMAND_CENTER_POLISH_JS_V4_START.*?// ERA_FINAL_COMMAND_CENTER_POLISH_JS_V4_END\s*</script>",
+    "",
+    s,
+    flags=re.S,
+)
 
-IS_F = target_is_f_string(s)
+# Correct accidental brand corruption if it exists.
+s = s.replace("Early Review Score Alert AI", "Early Risk Alert AI")
+s = s.replace("EarlyReview ScoreAlert AI", "Early Risk Alert AI")
 
-def safe_block(block: str) -> str:
-    # If the HTML lives inside a Python f-string, inserted CSS/JS braces must be escaped.
-    return block.replace("{", "{{").replace("}", "}}") if IS_F else block
+# Remove the old unrealistic static ICU-12 99% display if any leftover text remains.
+s = s.replace("99% risk", "9.2/10 review score")
+s = s.replace("Risk 99%", "Review Score 9.2/10")
+s = s.replace("RISK 99%", "REVIEW SCORE 9.2/10")
+s = s.replace(">99%<", ">9.2/10<")
+s = s.replace("Review score 99%", "Review Score 9.2/10")
+s = s.replace("Review Score 99%", "Review Score 9.2/10")
 
-POLISH_CSS = r"""
-/* === ERA FINAL PILOT POLISH: compact clinical workboard hierarchy === */
-.pilot-polish-marker{display:none}
+css = r"""
+/* ERA_FINAL_COMMAND_CENTER_POLISH_V4_START */
 
-.queue-panel{
-  max-width:100%;
-}
-
-.queue-head h1{
-  max-width:860px;
-}
-
-.queue-head p{
-  max-width:760px;
-}
-
-.card-row{
-  align-items:stretch;
-}
-
-.patient-card{
-  position:relative;
-  overflow:hidden;
-  padding:10px 10px 11px;
-  min-height:132px;
-}
-
-.patient-card .pill,
-.patient-top .pill{
-  position:relative;
-  z-index:2;
-  flex-shrink:0;
-  max-width:104px;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  white-space:nowrap;
-  padding:5px 7px;
-  font-size:9px;
-}
-
-.rank-title{
-  font-size:16px;
-  line-height:1.02;
-  max-width:130px;
-  overflow-wrap:anywhere;
-}
-
-.unit{
-  font-size:11px;
-}
-
-.patient-card .score{
-  font-size:30px;
-  margin-top:8px;
-}
-
-.patient-card .score small{
-  font-size:12px;
-}
-
-.patient-card .mini{
-  font-size:11px;
-  line-height:1.22;
-  margin-top:6px;
-}
-
-.patient-card .mini b{
-  color:#eaf3ff;
-}
-
-.card-row .patient-card:first-child{
-  border-color:rgba(167,255,154,.78);
+/* Final pilot polish: make the tool feel like a live workboard, not a brochure. */
+body{
   background:
-    radial-gradient(circle at 8% 0%,rgba(167,255,154,.18),transparent 36%),
-    linear-gradient(180deg,rgba(30,48,73,.98),rgba(12,22,38,.98));
+    radial-gradient(circle at 10% 0%,rgba(78,166,255,.14),transparent 30%),
+    radial-gradient(circle at 88% 4%,rgba(167,255,154,.10),transparent 24%),
+    linear-gradient(180deg,#06101d 0%,#07111f 46%,#050912 100%) !important;
+}
+
+/* Keep pilot banner readable and professional. */
+.pilot-banner{
+  background:linear-gradient(90deg,rgba(255,211,109,.08),rgba(167,255,154,.045)) !important;
+  border-color:rgba(255,211,109,.32) !important;
+  color:#f7fbff !important;
+}
+.pilot-banner strong,
+.pilot-banner p{
+  color:#f7fbff !important;
+  text-shadow:none !important;
+}
+.pilot-banner p{
+  max-width:980px;
+}
+
+/* Make the main queue feel like the hero. */
+.queue-panel{
+  border-color:rgba(167,255,154,.34) !important;
+  box-shadow:0 22px 80px rgba(0,0,0,.42) !important;
+}
+.queue-head h1{
+  letter-spacing:-.06em !important;
+}
+.queue-head p{
+  max-width:760px !important;
+  font-size:13px !important;
+}
+
+/* Reduce density in summary metrics. */
+.mini-metrics{
+  gap:8px !important;
+  margin:10px 0 !important;
+}
+.metric{
+  min-height:74px !important;
+  padding:10px !important;
+}
+.metric b{
+  font-size:24px !important;
+}
+.metric span{
+  font-size:11px !important;
+}
+
+/* Stronger card hierarchy. First visible card becomes dominant. */
+.card-row{
+  grid-template-columns:1.55fr 1fr 1fr !important;
+  align-items:stretch !important;
+  gap:10px !important;
+}
+.patient-card{
+  position:relative !important;
+  overflow:hidden !important;
+  min-height:118px !important;
+  padding:12px !important;
+  border-radius:17px !important;
+}
+.patient-card:first-child{
+  grid-row:span 2 !important;
+  min-height:210px !important;
+  border:2px solid rgba(167,255,154,.78) !important;
+  background:
+    radial-gradient(circle at 20% 0%,rgba(167,255,154,.16),transparent 44%),
+    linear-gradient(180deg,rgba(20,42,58,.98),rgba(10,22,37,.98)) !important;
   box-shadow:
-    0 0 0 1px rgba(167,255,154,.24),
-    0 18px 48px rgba(0,0,0,.34);
+    0 0 0 1px rgba(167,255,154,.18),
+    0 20px 55px rgba(0,0,0,.38) !important;
 }
-
-.card-row .patient-card:first-child::before{
-  content:"TOP REVIEW";
-  position:absolute;
-  top:8px;
-  right:10px;
-  border:1px solid rgba(167,255,154,.45);
-  color:#d7ffd1;
-  background:rgba(167,255,154,.12);
+.patient-card:first-child:before{
+  content:"TOP PRIORITY";
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  margin-bottom:8px;
+  padding:5px 8px;
   border-radius:999px;
-  padding:4px 7px;
-  font-size:8px;
+  color:#d8ffd4;
+  background:rgba(167,255,154,.14);
+  border:1px solid rgba(167,255,154,.46);
+  font-size:10px;
+  letter-spacing:.14em;
   font-weight:1000;
-  letter-spacing:.11em;
-  z-index:1;
+}
+.patient-card:first-child .rank-title{
+  font-size:24px !important;
+  line-height:1 !important;
+}
+.patient-card:first-child .score{
+  font-size:42px !important;
+  margin-top:10px !important;
+}
+.patient-card:first-child .mini{
+  font-size:12px !important;
+  line-height:1.32 !important;
 }
 
-.card-row .patient-card:first-child .rank-title{
-  font-size:21px;
-  max-width:170px;
+/* Keep tier badges inside the cards and make tier primary. */
+.patient-top{
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) auto !important;
+  align-items:start !important;
+  gap:8px !important;
 }
-
-.card-row .patient-card:first-child .score{
-  font-size:40px;
-  text-shadow:0 0 24px rgba(167,255,154,.22);
+.patient-card .pill,
+.detail .pill,
+td .pill{
+  position:static !important;
+  transform:none !important;
+  max-width:100% !important;
+  white-space:nowrap !important;
+  flex-shrink:0 !important;
+  font-size:11px !important;
+  line-height:1 !important;
+  padding:7px 9px !important;
+  box-shadow:0 8px 22px rgba(0,0,0,.20) !important;
 }
-
-.card-row .patient-card:first-child .pill{
-  margin-top:22px;
+.patient-card:first-child .pill{
+  font-size:12px !important;
+  padding:8px 10px !important;
 }
-
-.detail{
-  box-shadow:inset 4px 0 0 rgba(167,255,154,.35);
-}
-
-.detail-title h3{
-  font-size:30px;
-}
-
-.detail .score{
-  font-size:42px;
-  margin:4px 0 8px;
-}
-
-.reason{
-  font-size:12px;
-  line-height:1.28;
-  padding:10px;
-}
-
-.detail ul{
-  font-size:11px;
-  line-height:1.38;
-  margin-top:8px;
-}
-
-.vital{
-  padding:8px;
-}
-
-.vital b{
-  font-size:16px;
-}
-
 .tier-critical{
-  box-shadow:0 0 0 1px rgba(255,143,163,.18);
+  background:rgba(255,143,163,.20) !important;
+  border-color:rgba(255,143,163,.76) !important;
+  color:#ffe3e8 !important;
 }
-
 .tier-elevated{
-  box-shadow:0 0 0 1px rgba(255,211,109,.18);
+  background:rgba(255,211,109,.20) !important;
+  border-color:rgba(255,211,109,.76) !important;
+  color:#fff0bf !important;
 }
-
 .tier-watch{
-  box-shadow:0 0 0 1px rgba(155,215,255,.15);
+  background:rgba(155,215,255,.17) !important;
+  border-color:rgba(155,215,255,.62) !important;
+  color:#d6f0ff !important;
 }
 
-.lower{
-  margin-top:10px;
+/* Shorter, punchier queue-card text. */
+.mini{
+  font-size:11px !important;
+  line-height:1.24 !important;
+  margin-top:6px !important;
+}
+.rank-title{
+  overflow-wrap:anywhere !important;
+}
+.score{
+  margin-top:8px !important;
 }
 
-.about-demo{
+/* Make selected patient panel scan faster. */
+.detail{
+  padding:13px !important;
+}
+.detail-title h3{
+  font-size:25px !important;
+}
+.detail-sub{
+  font-size:11px !important;
+}
+.detail .score{
+  font-size:34px !important;
+  margin:8px 0 !important;
+}
+.vitals{
+  gap:7px !important;
+  margin:8px 0 !important;
+}
+.vital{
+  padding:8px !important;
+}
+.vital b{
+  font-size:16px !important;
+}
+.reason{
+  font-size:12px !important;
+  line-height:1.28 !important;
+  padding:10px !important;
+  margin-top:8px !important;
+}
+.detail ul{
+  margin-top:7px !important;
+  font-size:11.5px !important;
+  line-height:1.36 !important;
+}
+.detail li:nth-child(n+4){
+  display:none !important;
+}
+
+/* Keep explanatory sections available but reduce brochure feel. */
+details.about-demo{
   margin-top:12px;
   border:1px solid rgba(184,211,255,.16);
   background:rgba(255,255,255,.035);
   border-radius:18px;
-  overflow:hidden;
+  padding:10px 12px;
 }
-
-.about-demo summary{
+details.about-demo > summary{
   cursor:pointer;
-  list-style:none;
-  padding:12px 14px;
-  color:#dfeaff;
+  color:#d9e7f7;
   font-size:12px;
   font-weight:1000;
-  letter-spacing:.08em;
+  letter-spacing:.12em;
   text-transform:uppercase;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
+}
+details.about-demo .lower{
+  margin-top:10px !important;
+}
+details.about-demo:not([open]) .lower{
+  display:none !important;
 }
 
-.about-demo summary::-webkit-details-marker{
-  display:none;
+/* Cleaner guardrails. */
+.footer-guardrail,
+.guardrail{
+  font-size:11.5px !important;
+  line-height:1.34 !important;
 }
-
-.about-demo summary::after{
-  content:"Open";
-  border:1px solid rgba(184,211,255,.22);
-  background:rgba(255,255,255,.06);
-  border-radius:999px;
-  padding:5px 9px;
-  color:#cfe0f4;
-  font-size:10px;
-  letter-spacing:.08em;
-}
-
-.about-demo[open] summary::after{
-  content:"Close";
-}
-
-.about-demo .lower{
-  padding:0 12px 12px;
-}
-
-.about-demo .panel{
-  box-shadow:none;
-}
-
 .footer-guardrail{
-  margin-top:10px;
-  padding:10px 12px;
-  font-size:11px;
+  padding:10px 12px !important;
 }
 
-@media(min-width:1000px){
-  .card-row .patient-card:first-child{
-    grid-column:span 2;
+/* Keep table compact. */
+table{
+  font-size:11.5px !important;
+}
+th{
+  font-size:9.5px !important;
+  padding:9px 8px !important;
+}
+td{
+  padding:9px 8px !important;
+}
+
+/* Responsive behavior: no broken badges/cards on smaller screens. */
+@media(max-width:1200px){
+  .card-row{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  }
+  .patient-card:first-child{
+    grid-column:1 / -1 !important;
+    grid-row:auto !important;
+    min-height:170px !important;
+  }
+}
+@media(max-width:760px){
+  .card-row{
+    grid-template-columns:1fr !important;
+  }
+  .patient-card:first-child{
+    grid-column:auto !important;
+    min-height:150px !important;
   }
 }
 
-@media(max-width:1150px){
-  .card-row .patient-card:first-child{
-    grid-column:auto;
-  }
-  .card-row .patient-card:first-child .rank-title{
-    font-size:18px;
-  }
-  .card-row .patient-card:first-child .score{
-    font-size:34px;
-  }
-}
+/* ERA_FINAL_COMMAND_CENTER_POLISH_V4_END */
 """
 
-POLISH_JS = r"""
-/* === ERA FINAL PILOT POLISH RUNTIME === */
+js = r"""
+<script>
+// ERA_FINAL_COMMAND_CENTER_POLISH_JS_V4_START
 (function(){
-  function polishCommandCenter(){
+  function tightenCommandCenter(){
     try{
-      var cards = Array.prototype.slice.call(document.querySelectorAll(".patient-card"));
-      cards.forEach(function(card, index){
-        card.classList.toggle("top-review-card", index === 0);
-        var mini = card.querySelector(".mini");
-        if(mini){
-          mini.innerHTML = mini.innerHTML
-            .replace(/<b>Driver:<\/b>/g, "<b>Driver</b>")
-            .replace(/<b>Trend:<\/b>/g, "<b>Trend</b>")
-            .replace(/<b>Lead:<\/b>/g, "<b>Lead</b>");
-        }
-      });
+      document.title = "Early Risk Alert AI — Command Center";
 
-      var reason = document.getElementById("reason");
-      if(reason){
-        reason.innerHTML = reason.innerHTML
-          .replace("is the selected primary driver.", "drives this review position.")
-          .replace("Lead-time context:", "Lead:");
-      }
-
-      var lower = document.querySelector("section.lower");
-      if(lower && !lower.closest("details.about-demo")){
-        var details = document.createElement("details");
+      // Collapse explanatory blocks into a small footer-style area if present.
+      const lower = document.querySelector("section.lower");
+      if(lower && !document.querySelector("details.about-demo")){
+        const details = document.createElement("details");
         details.className = "about-demo";
-        var summary = document.createElement("summary");
+        const summary = document.createElement("summary");
         summary.textContent = "About this demo, metric clarity, and governance links";
         lower.parentNode.insertBefore(details, lower);
         details.appendChild(summary);
         details.appendChild(lower);
       }
 
-      document.querySelectorAll(".patient-card .score, .score-cell, #detailScore").forEach(function(el){
-        el.innerHTML = el.innerHTML
-          .replace(/(\d{1,2}(?:\.\d)?)\s*\/\s*10/g, "$1<small>/10</small>")
-          .replace(/%/g, "");
+      // Make guardrail wording explicit and short.
+      const footer = document.querySelector(".footer-guardrail");
+      if(footer){
+        footer.textContent = "No diagnosis. No treatment direction. Does not replace clinician judgment. Does not independently trigger escalation. Simulated demo queue only; validation evidence remains aggregate and DUA-safe.";
+      }
+
+      // Add a visible top-priority label to the first active card without duplicating it.
+      const firstCard = document.querySelector(".patient-card");
+      if(firstCard && !firstCard.dataset.finalPolished){
+        firstCard.dataset.finalPolished = "true";
+      }
+
+      // Keep selected panel bullets tight.
+      const detailList = document.querySelectorAll(".detail li");
+      detailList.forEach((li, index) => {
+        if(index > 2){ li.style.display = "none"; }
       });
-    }catch(e){}
+
+      // Ensure no remaining visible percent scoring in queue cards.
+      document.querySelectorAll(".score, .score-cell").forEach(el => {
+        const text = (el.textContent || "").trim();
+        if(/^\d{2,3}%$/.test(text)){
+          el.textContent = text.replace("%","") + "/10";
+        }
+      });
+    }catch(e){
+      console.warn("ERA final command-center polish skipped:", e);
+    }
   }
 
-  var originalRender = window.render;
-  if(typeof originalRender === "function" && !window.__eraPilotPolishWrapped){
-    window.render = function(){
-      var result = originalRender.apply(this, arguments);
-      setTimeout(polishCommandCenter, 0);
-      return result;
+  if(typeof render === "function" && !window.__eraFinalPolishWrapped){
+    const previousRender = render;
+    render = function(){
+      previousRender();
+      tightenCommandCenter();
     };
-    window.__eraPilotPolishWrapped = true;
+    window.__eraFinalPolishWrapped = true;
   }
 
-  polishCommandCenter();
-  setInterval(polishCommandCenter, 1200);
+  if(document.readyState === "loading"){
+    document.addEventListener("DOMContentLoaded", tightenCommandCenter);
+  }else{
+    tightenCommandCenter();
+  }
+
+  setTimeout(tightenCommandCenter, 250);
+  setTimeout(tightenCommandCenter, 1000);
 })();
+// ERA_FINAL_COMMAND_CENTER_POLISH_JS_V4_END
+</script>
 """
 
-# 1) Insert CSS before </style>
-if "ERA FINAL PILOT POLISH: compact clinical workboard hierarchy" not in s:
+if "ERA_FINAL_COMMAND_CENTER_POLISH_V4_START" not in s:
     if "</style>" not in s:
-        raise SystemExit("Could not find </style> for CSS insertion.")
-    s = s.replace("</style>", safe_block(POLISH_CSS) + "\n</style>", 1)
+        raise SystemExit("ERROR: Could not find </style> in command_center.py")
+    s = s.replace("</style>", css + "\n</style>", 1)
 
-# 2) Insert JS before final </script>
-if "ERA FINAL PILOT POLISH RUNTIME" not in s:
-    if "</script>" not in s:
-        raise SystemExit("Could not find </script> for JS insertion.")
-    idx = s.rfind("</script>")
-    s = s[:idx] + safe_block(POLISH_JS) + "\n" + s[idx:]
+if "ERA_FINAL_COMMAND_CENTER_POLISH_JS_V4_START" not in s:
+    if "</body>" in s:
+        s = s.replace("</body>", js + "\n</body>", 1)
+    else:
+        s += "\n" + js + "\n"
 
-# 3) If lower section exists and is not already wrapped, do a source-level wrap too.
-if '<details class="about-demo"' not in s and '<section class="lower">' in s:
-    s = re.sub(
-        r'(<section class="lower">.*?</section>)',
-        r'<details class="about-demo">\n  <summary>About this demo, metric clarity, and governance links</summary>\n  \1\n</details>',
-        s,
-        count=1,
-        flags=re.S
+# Ensure there is explicit safe wording.
+if "No diagnosis" not in s:
+    s = s.replace(
+        "Decision support only.",
+        "No diagnosis. Decision support only.",
+        1
     )
 
-# 4) Tighten visible copy where exact strings exist.
-replacements = {
-    "Compact workboard showing rank, unit, priority tier, review score, primary driver, trend, lead-time context, and workflow state in one glanceable view.":
-    "Compact workboard for rank, tier, driver, trend, lead time, and workflow state.",
-
-    "Decision support only. Does not diagnose, direct treatment, replace clinician judgment, or independently trigger escalation. Simulated demo data only. Retrospective MIMIC-IV + eICU validation remains aggregate and DUA-safe.":
-    "Decision support only. No diagnosis, treatment direction, clinician replacement, or independent escalation. Simulated demo data only; validation evidence remains aggregate and DUA-safe.",
-
-    "Workflow buttons are audit/workflow-state examples only: acknowledge, assign, escalate review, resolve.":
-    "Workflow buttons are audit/workflow-state examples only."
-}
-
-for old, new in replacements.items():
-    s = s.replace(old, new)
-
-# 5) Keep brand correct.
-s = s.replace("Early Review Score Alert AI", "Early Risk Alert AI")
-s = s.replace("EarlyReview ScoreAlert AI", "Early Risk Alert AI")
-
-# 6) Write updated module.
 p.write_text(s, encoding="utf-8")
+py_compile.compile(str(p), doraise=True)
+
+s2 = p.read_text(encoding="utf-8")
+
+required = [
+    "ERA_FINAL_COMMAND_CENTER_POLISH_V4_START",
+    "TOP PRIORITY",
+    "About this demo, metric clarity, and governance links",
+    "No diagnosis",
+    "Review Score",
+    "0–10",
+    "patient-card:first-child",
+    "tier-critical",
+]
+
+missing = [x for x in required if x not in s2]
+if missing:
+    raise SystemExit(f"Missing required final polish content: {missing}")
+
+bad_brand = ["Early Review Score Alert AI", "EarlyReview ScoreAlert AI"]
+found_brand = [x for x in bad_brand if x in s2]
+if found_brand:
+    raise SystemExit(f"Bad brand text still found: {found_brand}")
+
+bad_static = ["Risk 99%", "RISK 99%", ">99%<", "ICU-12 99%"]
+found_static = [x for x in bad_static if x in s2]
+if found_static:
+    raise SystemExit(f"Old static ICU-12 risk text still found: {found_static}")
 
 manifest = {
     "timestamp_utc": datetime.now(timezone.utc).isoformat(),
-    "purpose": "Final pilot polish for Command Center UI: stronger top-patient hierarchy, tighter queue cards, collapsible explanatory sections, and clearer clinical tool feel.",
+    "purpose": "Final Command Center pilot polish based on assessment feedback.",
     "changes": [
-        "Top review card receives stronger visual hierarchy and larger review score",
-        "Queue cards use tighter text and badge containment",
-        "Selected patient detail panel is more prominent and less wordy",
-        "Long explanatory sections move into a collapsible About this demo area",
-        "Tier badges and Review Score styling are strengthened",
-        "Conservative decision-support guardrails remain visible"
+        "Makes the #1 patient card visually dominant with TOP PRIORITY label.",
+        "Keeps tier badges inside cards and makes tier visually primary.",
+        "Tightens queue card text and selected-patient detail panel.",
+        "Moves lower explanatory/demo sections into a collapsible About this demo area.",
+        "Keeps Review Score on a 0-10 scale.",
+        "Preserves conservative decision-support guardrail wording."
     ],
-    "score_policy": "Review Score remains 0-10 only; no patient-risk percentage display.",
-    "claim_guardrail": "Decision support only. No diagnosis, treatment direction, clinician replacement, or independent escalation.",
-    "raw_data_policy": "No raw MIMIC, eICU, HiRID, CSV, parquet, zip, or local_private files committed."
+    "claims_guardrail": "No diagnosis. No treatment direction. Does not replace clinician judgment. Does not independently trigger escalation.",
+    "raw_data_policy": "No raw MIMIC/eICU/HiRID files, local_private files, CSVs, parquet, archives, or row-level outputs committed."
 }
-
 Path("data/validation/final_command_center_pilot_polish_manifest.json").write_text(
     json.dumps(manifest, indent=2),
     encoding="utf-8"
 )
 
-print("PATCHED: final Command Center pilot polish applied.")
+print("PATCHED: era/web/command_center.py")
+print("PYTHON SYNTAX OK")
+print("FINAL PILOT POLISH CHECK OK")
