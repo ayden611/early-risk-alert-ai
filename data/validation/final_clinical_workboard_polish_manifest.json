@@ -1,0 +1,22 @@
+{
+  "timestamp_utc": "2026-05-01T12:12:53.188671+00:00",
+  "purpose": "Final clinical workboard polish for the Command Center.",
+  "assessment_agreement": [
+    "The #1 patient needed stronger visual hierarchy.",
+    "Queue card text needed to be shorter.",
+    "Tier badges should be the primary visual cue and Review Score should remain secondary.",
+    "Long explanatory sections should be collapsed so the queue feels more clinical and less brochure-like."
+  ],
+  "changes": [
+    "Adds TOP PRIORITY visual treatment to the first queue card.",
+    "Shortens queue header copy.",
+    "Tightens queue-card microcopy.",
+    "Strengthens Critical/Elevated/Watch badge styling.",
+    "Shortens selected-patient explanation.",
+    "Collapses lower explanatory sections into About this demo.",
+    "Keeps View Scope disclaimer visible but visually smaller.",
+    "Keeps conservative decision-support-only guardrail."
+  ],
+  "claim_guardrail": "No diagnosis. No treatment direction. Does not replace clinician judgment. Does not independently trigger escalation.",
+  "raw_data_policy": "No raw MIMIC/eICU/HiRID/local_private/CSV/parquet/archive files committed."
+}
