@@ -1,4 +1,67 @@
-<!doctype html>
+from __future__ import annotations
+
+from pathlib import Path
+import json
+from datetime import datetime, timezone
+
+WEB = Path("era/web")
+DOCS = Path("docs/validation")
+DATA = Path("data/validation")
+
+runs_path = WEB / "validation_runs.html"
+
+if not runs_path.exists():
+    raise SystemExit("ERROR: era/web/validation_runs.html not found.")
+
+canonical = {
+    "timestamp_utc": datetime.now(timezone.utc).isoformat(),
+    "status": "validation_runs_metric_alignment_resolved",
+    "authoritative_public_eicu_track": {
+        "track": "eICU outcome-proxy check",
+        "threshold": "t=6.0",
+        "alert_reduction": "96.8%",
+        "fpr": "1.8%",
+        "detection": "66.6%",
+        "lead_time": "3.41 hrs",
+        "source_note": "Authoritative terminal/evidence output for the eICU outcome-proxy track."
+    },
+    "separate_eicu_harmonized_track": {
+        "track": "eICU harmonized clinical-event labeling pass",
+        "threshold": "t=6.0",
+        "alert_reduction": "94.25%",
+        "fpr": "0.98%",
+        "detection": "24.66%",
+        "lead_time": "4.83 hrs",
+        "source_note": "Separate harmonized clinical-event alignment track. Not merged with the outcome-proxy track."
+    },
+    "eicu_subcohort_bc_internal_robustness": {
+        "track": "eICU harmonized subcohorts B/C",
+        "threshold": "t=6.0",
+        "alert_reduction_range": "95.26%–95.64%",
+        "fpr_range": "1.78%–2.02%",
+        "detection_range": "64.03%–64.49%",
+        "lead_time_range": "3.13–3.69 hrs",
+        "source_note": "Internal robustness checkpoint; aggregate only."
+    },
+    "mimic_track": {
+        "track": "MIMIC-IV strict clinical-event evidence",
+        "threshold": "t=6.0",
+        "alert_reduction_range": "94.0%–94.9%",
+        "fpr_range": "3.7%–4.4%",
+        "detection_range": "14.1%–16.0%",
+        "lead_time": "4.0 hrs",
+        "source_note": "Strict clinical-event label/event-cluster retrospective track."
+    },
+    "guardrail": "Detection rates must not be merged across event-definition tracks. These are retrospective aggregate results only and are not prospective clinical validation."
+}
+
+DATA.mkdir(parents=True, exist_ok=True)
+(DATA / "validation_runs_authoritative_metric_alignment.json").write_text(
+    json.dumps(canonical, indent=2),
+    encoding="utf-8"
+)
+
+html = """<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -349,3 +412,73 @@
   </main>
 </body>
 </html>
+"""
+
+runs_path.write_text(html, encoding="utf-8")
+
+DOCS.mkdir(parents=True, exist_ok=True)
+(DOCS / "validation_runs_discrepancy_resolved.md").write_text(
+    """# Validation Runs Page Discrepancy Resolved
+
+## Status
+
+Resolved.
+
+The `/validation-runs` page has been corrected so the eICU outcome-proxy row matches the authoritative terminal/evidence output:
+
+- t=6.0 alert reduction: 96.8%
+- t=6.0 FPR: 1.8%
+- t=6.0 detection: 66.6%
+- t=6.0 lead-time context: 3.41 hours
+
+## Important Separation
+
+The prior issue occurred because the page displayed eICU harmonized clinical-event numbers as if they were the same as the eICU outcome-proxy terminal/evidence output.
+
+The corrected page now separates:
+
+1. MIMIC-IV strict clinical-event evidence.
+2. eICU outcome-proxy check.
+3. eICU harmonized clinical-event pass.
+4. eICU harmonized subcohort B/C robustness checkpoint.
+
+## Guardrail
+
+Detection rates must not be merged across event-definition tracks. These are retrospective aggregate results only and are not prospective clinical validation.
+
+## Public Wording
+
+Approved conservative wording:
+
+Early Risk Alert AI has retrospective aggregate evidence across MIMIC-IV and eICU, with event-definition tracks clearly separated. Alert-reduction and lead-time behavior are directionally consistent, while detection rates should be interpreted only within their respective event-definition context.
+""",
+    encoding="utf-8"
+)
+
+print("WROTE: era/web/validation_runs.html")
+print("WROTE: data/validation/validation_runs_authoritative_metric_alignment.json")
+print("WROTE: docs/validation/validation_runs_discrepancy_resolved.md")
+
+# Content checks
+s = runs_path.read_text(encoding="utf-8")
+required = [
+    "96.8%",
+    "1.8%",
+    "66.6%",
+    "3.41 hrs",
+    "94.25%",
+    "0.98%",
+    "24.66%",
+    "4.83 hrs",
+    "Detection rates must not be merged",
+    "Discrepancy resolved",
+    "Corrected primary eICU public row"
+]
+missing = [x for x in required if x not in s]
+if missing:
+    raise SystemExit(f"ERROR: missing required corrected content: {missing}")
+
+if "Loading..." in s:
+    raise SystemExit("ERROR: validation_runs.html still contains Loading...")
+
+print("VALIDATION RUNS CONTENT CHECK OK")
