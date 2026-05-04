@@ -17,3 +17,13 @@ mimic_event_maps/
 data/eicu/
 *.crdownload
 *.csv.gz
+# ERA local-only restricted dataset workspace
+data/hirid/
+*.parquet
+*.zip
+*.tar.gz
+*.h5
+*.hdf5
+*.feather
+*.pkl
+*.pickle

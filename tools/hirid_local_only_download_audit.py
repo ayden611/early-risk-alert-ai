@@ -2,242 +2,181 @@
 from __future__ import annotations
 
 import argparse
-import csv
-import gzip
+import hashlib
 import json
-import shutil
-import time
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Dict, List
 
-LOCAL_RAW = Path("data/validation/local_private/hirid/raw")
-LOCAL_MANIFESTS = Path("data/validation/local_private/hirid/manifests")
-PUBLIC_SUMMARY = Path("data/validation/hirid_download_readiness_summary.json")
+ROOT = Path(".").resolve()
+RAW = ROOT / "data" / "validation" / "local_private" / "hirid" / "raw"
+AUDIT = ROOT / "data" / "validation" / "local_private" / "hirid" / "audit"
+PUBLIC_SUMMARY = ROOT / "data" / "validation" / "hirid_download_audit_public_summary.json"
+PUBLIC_MD = ROOT / "docs" / "validation" / "hirid_download_readiness_summary.md"
 
-DOWNLOAD_SUFFIXES = (
-    ".csv", ".csv.gz", ".tsv", ".tsv.gz",
-    ".parquet", ".parquet.gzip", ".zip", ".tar.gz", ".tgz",
-    ".json", ".txt", ".pdf"
-)
+RESTRICTED_SUFFIXES = {
+    ".csv",
+    ".gz",
+    ".zip",
+    ".parquet",
+    ".h5",
+    ".hdf5",
+    ".feather",
+    ".pkl",
+    ".pickle",
+    ".tar",
+}
 
-INCOMPLETE_SUFFIXES = (
-    ".crdownload", ".download", ".part", ".tmp"
-)
-
-KEY_HINTS = (
-    "hirid",
+EXPECTED_HINTS = [
     "observation",
-    "observations",
     "pharma",
     "general",
-    "variable_reference",
-    "ordinal",
-    "imputed",
-    "merged",
-    "index",
-    "schemata"
-)
+    "apache",
+    "patient",
+    "variable",
+    "hirid",
+]
 
 
-def size_mb(p: Path) -> float:
-    return round(p.stat().st_size / (1024 * 1024), 3)
+def sha256_short(path: Path) -> str:
+    h = hashlib.sha256()
+    with path.open("rb") as f:
+        for chunk in iter(lambda: f.read(1024 * 1024), b""):
+            h.update(chunk)
+    return h.hexdigest()[:16]
 
 
-def is_incomplete(p: Path) -> bool:
-    name = p.name.lower()
-    return any(name.endswith(s) for s in INCOMPLETE_SUFFIXES)
-
-
-def stable_size(p: Path, pause: float = 1.5) -> bool:
-    try:
-        s1 = p.stat().st_size
-        time.sleep(pause)
-        s2 = p.stat().st_size
-        return s1 == s2 and s1 > 0
-    except FileNotFoundError:
-        return False
-
-
-def looks_like_hirid_file(p: Path) -> bool:
-    name = p.name.lower()
-    if is_incomplete(p):
-        return False
-    if not name.endswith(DOWNLOAD_SUFFIXES):
-        return False
-    return any(h in name for h in KEY_HINTS)
-
-
-def read_header(path: Path) -> dict:
+def is_restricted_file(path: Path) -> bool:
     name = path.name.lower()
-    result = {"header_readable": False, "columns": None, "first_columns": []}
-
-    try:
-        if name.endswith(".csv.gz"):
-            f = gzip.open(path, "rt", encoding="utf-8", errors="ignore", newline="")
-        elif name.endswith(".csv"):
-            f = open(path, "r", encoding="utf-8", errors="ignore", newline="")
-        elif name.endswith(".tsv.gz"):
-            f = gzip.open(path, "rt", encoding="utf-8", errors="ignore", newline="")
-        elif name.endswith(".tsv"):
-            f = open(path, "r", encoding="utf-8", errors="ignore", newline="")
-        else:
-            return result
-
-        with f:
-            sample = f.readline()
-            if not sample:
-                return result
-            delimiter = "\t" if name.endswith(".tsv") or name.endswith(".tsv.gz") else ","
-            row = next(csv.reader([sample], delimiter=delimiter))
-            result["header_readable"] = True
-            result["columns"] = len(row)
-            result["first_columns"] = row[:12]
-            return result
-    except Exception as exc:
-        result["error"] = str(exc)
-        return result
+    suffixes = "".join(path.suffixes).lower()
+    if any(name.endswith(x) for x in [".csv.gz", ".tar.gz"]):
+        return True
+    if path.suffix.lower() in RESTRICTED_SUFFIXES:
+        return True
+    if suffixes.endswith(".csv.gz") or suffixes.endswith(".tar.gz"):
+        return True
+    return False
 
 
-def copy_completed_downloads(download_dir: Path, local_raw: Path) -> list[dict]:
-    copied = []
-    if not download_dir.exists():
-        return copied
+def scan_raw() -> Dict:
+    RAW.mkdir(parents=True, exist_ok=True)
+    AUDIT.mkdir(parents=True, exist_ok=True)
 
-    local_raw.mkdir(parents=True, exist_ok=True)
+    files: List[Path] = [p for p in RAW.rglob("*") if p.is_file()]
+    restricted = [p for p in files if is_restricted_file(p)]
 
-    candidates = [p for p in download_dir.iterdir() if p.is_file() and looks_like_hirid_file(p)]
-    for src in candidates:
-        if not stable_size(src):
-            continue
-        dst = local_raw / src.name
-        if dst.exists() and dst.stat().st_size == src.stat().st_size:
-            copied.append({"file": src.name, "status": "already_present", "size_mb": size_mb(dst)})
-            continue
-        shutil.copy2(src, dst)
-        copied.append({"file": src.name, "status": "copied", "size_mb": size_mb(dst)})
-    return copied
+    total_bytes = sum(p.stat().st_size for p in files)
+    restricted_bytes = sum(p.stat().st_size for p in restricted)
 
-
-def audit_local_raw(local_raw: Path) -> list[dict]:
-    local_raw.mkdir(parents=True, exist_ok=True)
-
-    rows = []
-    files = sorted([p for p in local_raw.iterdir() if p.is_file()])
-    for p in files:
-        row = {
-            "file": p.name,
-            "size_mb": size_mb(p),
-            "incomplete": is_incomplete(p),
-            "kind": "unknown",
+    detected_hints = sorted(
+        {
+            hint
+            for hint in EXPECTED_HINTS
+            for p in files
+            if hint in p.name.lower()
         }
-
-        n = p.name.lower()
-        if "general" in n:
-            row["kind"] = "general"
-        elif "observation" in n or "observations" in n:
-            row["kind"] = "observations"
-        elif "pharma" in n:
-            row["kind"] = "pharma"
-        elif "variable_reference" in n:
-            row["kind"] = "variable_reference"
-        elif "ordinal" in n:
-            row["kind"] = "ordinal_reference"
-        elif "imputed" in n:
-            row["kind"] = "preprocessed_imputed"
-        elif "merged" in n:
-            row["kind"] = "preprocessed_merged"
-        elif "index" in n:
-            row["kind"] = "index"
-        elif "schemata" in n:
-            row["kind"] = "schema"
-
-        row.update(read_header(p))
-        rows.append(row)
-
-    return rows
-
-
-def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--downloads", default=str(Path.home() / "Downloads"))
-    ap.add_argument("--copy-complete", action="store_true")
-    args = ap.parse_args()
-
-    downloads = Path(args.downloads)
-    LOCAL_RAW.mkdir(parents=True, exist_ok=True)
-    LOCAL_MANIFESTS.mkdir(parents=True, exist_ok=True)
-
-    copied = []
-    if args.copy_complete:
-        copied = copy_completed_downloads(downloads, LOCAL_RAW)
-
-    rows = audit_local_raw(LOCAL_RAW)
-
-    total_size = round(sum(r["size_mb"] for r in rows), 3)
-    kinds = sorted(set(r["kind"] for r in rows if not r["incomplete"]))
-
-    has_reference = any(r["kind"] in {"variable_reference", "ordinal_reference", "schema"} for r in rows)
-    has_core_data = any(r["kind"] in {"observations", "preprocessed_imputed", "preprocessed_merged", "general"} for r in rows)
-    ready_for_extractor = bool(rows) and has_reference and has_core_data and not any(r["incomplete"] for r in rows)
+    )
 
     private_manifest = {
-        "ok": True,
-        "generated_at_utc": datetime.now(timezone.utc).isoformat(),
-        "download_source_checked": str(downloads),
-        "local_raw_dir": str(LOCAL_RAW),
-        "copied": copied,
-        "files": rows,
-        "total_files": len(rows),
-        "total_size_mb": total_size,
-        "ready_for_extractor": ready_for_extractor,
-        "notes": [
-            "This private manifest may contain local paths and should remain local-only.",
-            "Raw HiRID files and row-level outputs must not be committed."
-        ]
+        "timestamp_utc": datetime.now(timezone.utc).isoformat(),
+        "raw_folder": str(RAW),
+        "file_count": len(files),
+        "restricted_file_count": len(restricted),
+        "total_bytes": total_bytes,
+        "restricted_bytes": restricted_bytes,
+        "detected_name_hints": detected_hints,
+        "files_private_local_only": [
+            {
+                "relative_path": str(p.relative_to(RAW)),
+                "size_bytes": p.stat().st_size,
+                "sha256_short": sha256_short(p),
+            }
+            for p in files
+        ],
+        "raw_data_policy": "Private local-only audit manifest. Do not commit this file."
     }
 
-    private_path = LOCAL_MANIFESTS / "hirid_download_audit_private_manifest.json"
+    private_path = AUDIT / "hirid_private_download_manifest.json"
     private_path.write_text(json.dumps(private_manifest, indent=2), encoding="utf-8")
 
     public_summary = {
-        "ok": True,
-        "generated_at_utc": datetime.now(timezone.utc).isoformat(),
-        "dataset": "HiRID",
-        "purpose": "Third-dataset retrospective validation readiness audit",
-        "public_safety": "Aggregate file-readiness summary only. Raw HiRID files remain local-only.",
-        "total_files_detected": len(rows),
-        "total_size_mb": total_size,
-        "file_kinds_detected": kinds,
-        "ready_for_extractor": ready_for_extractor,
-        "next_step": "Download/access complete files, then build HiRID-to-ERA cohort extractor.",
-        "claim_boundary": "Do not claim three-dataset validation until HiRID extraction, scoring, harmonized labeling, and aggregate review are complete."
+        "timestamp_utc": datetime.now(timezone.utc).isoformat(),
+        "dataset": "HiRID v1.1.1",
+        "status": "local_download_audit_completed" if files else "awaiting_local_download",
+        "local_raw_file_count": len(files),
+        "local_restricted_file_count": len(restricted),
+        "local_total_size_mb": round(total_bytes / (1024 * 1024), 2),
+        "detected_name_hints": detected_hints,
+        "public_safety": "This public summary contains only aggregate file counts and size totals. It does not include filenames, paths, row-level data, timestamps, identifiers, or patient-level outputs.",
+        "validation_status": "HiRID validation not yet completed."
     }
 
     PUBLIC_SUMMARY.write_text(json.dumps(public_summary, indent=2), encoding="utf-8")
 
-    print("")
-    print("HiRID DOWNLOAD READINESS AUDIT")
-    print("==============================")
-    print(f"Files detected locally: {len(rows)}")
-    print(f"Total local size: {total_size} MB")
-    print(f"Kinds detected: {', '.join(kinds) if kinds else 'none yet'}")
-    print(f"Ready for extractor: {ready_for_extractor}")
-    print("")
-    if copied:
-        print("Copied completed files:")
-        for item in copied:
-            print(f" - {item['file']} | {item['status']} | {item['size_mb']} MB")
+    md = f"""# HiRID Download Readiness Summary
+
+## Status
+
+**{public_summary["status"]}**
+
+HiRID v1.1.1 access has been approved. This summary records only aggregate local download readiness information.
+
+## Local Audit Summary
+
+| Field | Value |
+|---|---:|
+| Local raw file count | {public_summary["local_raw_file_count"]} |
+| Local restricted file count | {public_summary["local_restricted_file_count"]} |
+| Local total size MB | {public_summary["local_total_size_mb"]} |
+
+## Safety Statement
+
+This public summary contains only aggregate file counts and size totals. It does not include filenames, raw rows, timestamps, identifiers, patient-level outputs, or restricted data.
+
+## Validation Status
+
+HiRID validation has **not** been completed yet. Current public validation evidence remains MIMIC-IV + eICU retrospective aggregate evidence only.
+"""
+    PUBLIC_MD.write_text(md, encoding="utf-8")
+
+    return {
+        "private_manifest": str(private_path),
+        "public_summary": str(PUBLIC_SUMMARY),
+        "public_markdown": str(PUBLIC_MD),
+        "file_count": len(files),
+        "restricted_file_count": len(restricted),
+        "total_mb": round(total_bytes / (1024 * 1024), 2),
+    }
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--copy-complete", action="store_true", help="Run after HiRID files are copied into the local raw folder.")
+    args = parser.parse_args()
+
+    result = scan_raw()
+
+    print("HIRID LOCAL-ONLY DOWNLOAD AUDIT")
+    print(f"Raw folder: {RAW}")
+    print(f"Local file count: {result['file_count']}")
+    print(f"Restricted file count: {result['restricted_file_count']}")
+    print(f"Total size MB: {result['total_mb']}")
+    print(f"Private manifest: {result['private_manifest']}")
+    print(f"Public aggregate summary: {result['public_summary']}")
+    print(f"Public markdown summary: {result['public_markdown']}")
+
+    if result["file_count"] == 0:
         print("")
-    print("Local-only raw folder:")
-    print(f" - {LOCAL_RAW}")
-    print("Private manifest:")
-    print(f" - {private_path}")
-    print("Public aggregate summary:")
-    print(f" - {PUBLIC_SUMMARY}")
-    print("")
-    if not ready_for_extractor:
-        print("NEXT: Finish PhysioNet HiRID access/downloads, then rerun:")
-        print("python3 tools/hirid_local_only_download_audit.py --copy-complete")
+        print("NEXT: Download approved HiRID files through PhysioNet, then copy them into:")
+        print(f"  {RAW}")
+        print("")
+        print("After copying files, rerun:")
+        print("  python3 tools/hirid_local_only_download_audit.py --copy-complete")
+    else:
+        print("")
+        print("DOWNLOAD AUDIT COMPLETE.")
+        print("Do not commit the private manifest or raw files.")
+        print("Next step after review: run HiRID harmonized retrospective aggregate evaluation.")
 
 
 if __name__ == "__main__":

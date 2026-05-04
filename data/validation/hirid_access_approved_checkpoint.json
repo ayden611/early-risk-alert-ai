@@ -1,0 +1,9 @@
+{
+  "timestamp_utc": "2026-05-04T14:43:30Z",
+  "dataset": "HiRID v1.1.1",
+  "status": "access_approved_not_yet_validated",
+  "current_public_validation_status": "MIMIC-IV + eICU retrospective aggregate evidence only",
+  "next_step": "Download approved HiRID files locally, run local-only download audit, then run harmonized retrospective aggregate evaluation.",
+  "raw_data_policy": "No raw HiRID files, row-level records, timestamps, identifiers, patient-level outputs, or restricted files may be committed, uploaded, or published.",
+  "public_claim_guardrail": "Do not claim completed HiRID validation until aggregate outputs are generated, reviewed, and locked."
+}

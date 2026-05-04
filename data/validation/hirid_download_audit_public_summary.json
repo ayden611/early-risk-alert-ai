@@ -1,0 +1,11 @@
+{
+  "timestamp_utc": "2026-05-04T14:43:30.162657+00:00",
+  "dataset": "HiRID v1.1.1",
+  "status": "awaiting_local_download",
+  "local_raw_file_count": 0,
+  "local_restricted_file_count": 0,
+  "local_total_size_mb": 0.0,
+  "detected_name_hints": [],
+  "public_safety": "This public summary contains only aggregate file counts and size totals. It does not include filenames, paths, row-level data, timestamps, identifiers, or patient-level outputs.",
+  "validation_status": "HiRID validation not yet completed."
+}
