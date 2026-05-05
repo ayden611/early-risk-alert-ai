@@ -2,7 +2,7 @@
 
 ## Status
 
-**awaiting_local_download**
+**local_download_audit_completed**
 
 HiRID v1.1.1 access has been approved. This summary records only aggregate local download readiness information.
 
@@ -10,9 +10,9 @@ HiRID v1.1.1 access has been approved. This summary records only aggregate local
 
 | Field | Value |
 |---|---:|
-| Local raw file count | 0 |
-| Local restricted file count | 0 |
-| Local total size MB | 0.0 |
+| Local raw file count | 13 |
+| Local restricted file count | 9 |
+| Local total size MB | 17189.87 |
 
 ## Safety Statement
 

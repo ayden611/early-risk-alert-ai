@@ -27,3 +27,4 @@ data/hirid/
 *.feather
 *.pkl
 *.pickle
+# Local/private restricted validation data — never commit
