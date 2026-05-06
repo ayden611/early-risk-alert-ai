@@ -28,3 +28,10 @@ data/hirid/
 *.pkl
 *.pickle
 # Local/private restricted validation data — never commit
+
+# ERA local-only restricted validation data — never commit
+hirid/raw/
+*.csv
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
