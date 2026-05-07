@@ -93,3 +93,14 @@ Complete the pending evidence items:
 | Claims-control review | Evidence Lock / Claims Control Lock | Required before publication |
 | Public HiRID validation claim | Not authorized | Not allowed |
 
+## HiRID Public Language AI Review
+
+| Readiness Item | Evidence Source | Status |
+|---|---|---|
+| AI-assisted HiRID language review | Governance-controlled note | Completed |
+| Live Wix/public update | Current approved wording | Not updated |
+| RN advisor review | Private advisor response | Pending |
+| Legal/privacy/site review | Future review if applicable | Pending |
+| IRB/QI review | Future review if applicable | Pending |
+| Final claims-control approval | Evidence Lock / Claims Control Lock | Pending |
+

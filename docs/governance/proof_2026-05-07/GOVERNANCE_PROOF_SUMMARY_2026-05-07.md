@@ -119,3 +119,12 @@ Do not use public claims that imply clinical validation, diagnosis, treatment di
 - Candidate language is pending RN advisor feedback, legal/privacy/site review if applicable, and claims-control review.
 - No public HiRID validation, prospective validation, final performance, FPR, detection, lead-time, diagnosis, treatment-direction, outcome-improvement, or independent-escalation claim is authorized.
 
+## HiRID Public Language AI Review Note — 2026-05-07
+
+- AI-assisted methodology/language review completed.
+- Proposed HiRID candidate language appears conservative and aligned with claims-control boundaries.
+- This is not final human/legal/RN approval.
+- Live Wix/public wording remains unchanged.
+- Current approved public wording remains: HiRID access approved; HiRID retrospective aggregate validation pending local evaluation.
+- Public update remains pending RN advisor feedback, legal/privacy/site review if applicable, IRB/QI review if applicable, and final claims-control review.
+
