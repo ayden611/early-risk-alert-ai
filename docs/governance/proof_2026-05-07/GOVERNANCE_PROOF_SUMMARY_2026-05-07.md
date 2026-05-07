@@ -101,3 +101,12 @@ Do not use public claims that imply clinical validation, diagnosis, treatment di
 - No live shadow-mode, EHR integration, or ambient scribe activity is authorized by these documents.
 - No public prospective, clinical validation, HiRID validation, FPR, detection, or lead-time claims are authorized.
 
+## Redacted Pilot Evidence Packet Update — 2026-05-07
+
+- Redacted Pilot Evidence Packet v1.0 prepared privately/local-only.
+- Packet status: Draft / RN Advisor Feedback Pending.
+- Packet includes company overview, intended-use statement, Command Center workflow summary, retrospective aggregate evidence summary, governance proof, claims-control, security/admin proof, backup/restore proof, semi-prospective readiness, draft shadow-mode pathway, and pilot next-step options.
+- Packet is not for public posting.
+- Packet does not include raw data, patient-level outputs, secret screenshots, environment values, private HiRID validation claims, or advisor endorsement language without written permission.
+- Next version: v1.1 after written RN advisor feedback is received.
+

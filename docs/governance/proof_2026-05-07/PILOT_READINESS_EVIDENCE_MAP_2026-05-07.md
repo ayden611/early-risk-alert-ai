@@ -68,3 +68,16 @@ Complete the pending evidence items:
 | EHR integration | Site-approved agreement required | Not started |
 | Ambient scribe integration | Future phase only | Not started |
 
+## Redacted Pilot Evidence Packet
+
+| Readiness Item | Evidence Source | Status |
+|---|---|---|
+| Redacted Pilot Evidence Packet v1.0 | Private/local Word + PDF packet | Prepared |
+| RN advisor written feedback | Private advisor response | Pending |
+| Permission to use advisor name/title externally | Private advisor response | Pending |
+| Reference-call willingness | Private advisor response | Pending |
+| FDA Q-Sub feedback | FDA feedback cycle | Pending |
+| Pilot LOI / hospital agreement | External agreement | Pending |
+| Prospective data | Future approved pilot/shadow-mode activity | Not started |
+| Redacted Pilot Evidence Packet v1.1 | Future update after RN feedback | Pending |
+
