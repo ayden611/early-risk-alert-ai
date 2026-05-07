@@ -1,0 +1,645 @@
+{
+  "evidence_baseline": {
+    "lock_id": "stable-evidence-lock-2026-05-07",
+    "lock_title": "Early Risk Alert AI Stable Evidence Lock \u2014 May 7, 2026",
+    "date": "2026-05-07",
+    "generated_at_utc": "2026-05-07T12:03:49.261147+00:00",
+    "product_stage": "Pilot-stage command-center platform.",
+    "regulatory_posture": "Conservative HCP-facing decision-support/workflow-support framing. Not diagnosis, treatment direction, independent escalation, FDA clearance, FDA approval, or prospective clinical validation.",
+    "intended_use_lock": "Early Risk Alert AI is an HCP-facing decision-support and workflow-support platform designed to help authorized health care professionals identify patients who may warrant further clinical evaluation, support patient prioritization, and improve command-center operational awareness. It does not replace clinician judgment and is not intended to diagnose, direct treatment, or independently trigger escalation.",
+    "evidence_state": {
+      "current_status": "Retrospective aggregate evidence only.",
+      "not_currently_claimed": [
+        "Prospective clinical validation",
+        "Clinical outcome improvement",
+        "Real-time clinical deployment validation",
+        "FDA clearance or approval",
+        "Final HiRID performance"
+      ],
+      "source_of_truth_rule": "Public or external-facing evidence numbers should be reconciled against the locked validation registry and aggregate evidence files before publication."
+    },
+    "datasets": {
+      "MIMIC_IV": {
+        "status": "Retrospective de-identified dataset used for aggregate-only evidence.",
+        "safe_framing": "Can be described as retrospective aggregate evidence supporting operational-burden and prioritization analysis.",
+        "current_conservative_headlines_to_verify_before_publication": [
+          "Median retrospective lead-time context around 4.0 hours among detected clusters across locked threshold views.",
+          "Conservative t=6.0 operating point has been used as a lower-burden posture.",
+          "Prior internal summaries referenced approximately 0.65 ERA alerts per patient-day versus approximately 11.27 standard threshold-rule alerts per patient-day, roughly 94.3% operational alert reduction.",
+          "Prior internal summaries referenced approximately 4.2% false-positive behavior and approximately 15.3% patient-level detection under strict MIMIC t=6.0 framing."
+        ],
+        "guardrail": "Verify exact figures against local aggregate validation registry before external publication."
+      },
+      "eICU": {
+        "status": "Second retrospective de-identified dataset used for aggregate-only robustness framing.",
+        "safe_framing": "Can be described as supporting cross-dataset robustness of the operational-burden/prioritization story when presented as aggregate-only retrospective analysis.",
+        "guardrail": "Use harmonized/outcome-proxy framing carefully. Do not overstate as prospective clinical validation."
+      },
+      "HiRID": {
+        "status": "Access approved; local/private retrospective aggregate evaluation pending or in progress.",
+        "only_safe_public_wording": "HiRID access approved; HiRID retrospective aggregate validation pending local evaluation.",
+        "guardrail": "No public HiRID performance, FPR, detection rate, lead-time, final validation, diagnosis, treatment, or escalation claim."
+      }
+    },
+    "approved_public_claims": [
+      "HCP-facing decision-support and workflow-support platform.",
+      "Designed to support authorized health care professionals with patient prioritization and command-center operational awareness.",
+      "Provides explainable context such as priority tier, queue rank, primary driver, trend direction, and retrospective lead-time context.",
+      "Supports controlled pilot evaluation and operational review workflows.",
+      "Uses retrospective, aggregate-only validation evidence for current evidence materials.",
+      "Workflow actions are operational state tracking only and do not independently trigger clinical escalation.",
+      "HiRID access approved; HiRID retrospective aggregate validation pending local evaluation."
+    ],
+    "banned_or_restricted_claims": [
+      "Do not say the platform is clinically validated.",
+      "Do not say the platform predicts deterioration as a clinical claim.",
+      "Do not say the platform prevents adverse events.",
+      "Do not say the platform replaces standard monitoring.",
+      "Do not say the platform replaces clinician judgment.",
+      "Do not say the platform independently triggers escalation.",
+      "Do not say the platform diagnoses, treats, or directs treatment.",
+      "Do not say the platform is FDA cleared, FDA approved, or FDA exempt.",
+      "Do not publish HiRID performance, FPR, detection rate, lead time, or final validation language until local evaluation is complete and reviewed.",
+      "Do not upload raw rows, patient-level outputs, timestamps, identifiers, or restricted dataset files to any public site, repo, demo, investor page, or production platform."
+    ],
+    "rn_pilot_review_boundary": {
+      "purpose": "Private clinical-advisor and pilot-readiness review only.",
+      "allowed": [
+        "Clinical framing review",
+        "Decision-support-only clarity review",
+        "Workflow clarity review",
+        "Limitations and guardrails review",
+        "RN/pilot operations feedback"
+      ],
+      "not_allowed": [
+        "Public clinical validation claim",
+        "Final HiRID claim",
+        "Clinical performance guarantee",
+        "Diagnosis/treatment/escalation instruction"
+      ]
+    }
+  },
+  "public_safe_manifest": [
+    {
+      "path": "data/validation/cohort_split_stability_summary.json",
+      "size_bytes": 10270,
+      "sha256": "5d3b207951fd933426759ce7b44962ea20963c4eceeacba5be0a8d083a607356"
+    },
+    {
+      "path": "data/validation/command_center_demo_unit_scope_filter_manifest.json",
+      "size_bytes": 975,
+      "sha256": "f72ba7ac27c1292536eb025639043cf08c43b7203633512244ebaf2bb95d7a73"
+    },
+    {
+      "path": "data/validation/command_center_document_status_fix_manifest.json",
+      "size_bytes": 386,
+      "sha256": "41bc424107c531b51e130b62ab2306a6bad4d4b00324437ecdbe1d02ddbca3af"
+    },
+    {
+      "path": "data/validation/command_center_interactive_queue_manifest.json",
+      "size_bytes": 903,
+      "sha256": "62581cbba65c889289750ce3821265f0eada67b14b0b9afb4f8f27231ad87982"
+    },
+    {
+      "path": "data/validation/command_center_tool_mode_manifest.json",
+      "size_bytes": 895,
+      "sha256": "a681176d328462c0458e668544ed67f1873e27c0fe0e3b59d0f187b1c835d6f2"
+    },
+    {
+      "path": "data/validation/command_center_tool_polish_manifest.json",
+      "size_bytes": 723,
+      "sha256": "261cd610396444e9b35be831f5835322829cd6498ae828331cac4be5baa0a951"
+    },
+    {
+      "path": "data/validation/command_center_visibility_rescue_manifest.json",
+      "size_bytes": 968,
+      "sha256": "e7200d1fd118a140eb6ccb2550d86a10b40f6a335ec3330437db4171112db134"
+    },
+    {
+      "path": "data/validation/command_queue_consistency_patch_manifest.json",
+      "size_bytes": 2280,
+      "sha256": "0cebf8a3797e7f3f0f57675a2038e5ccb2aa1fc41d502fa4bf4669c1882ef8b9"
+    },
+    {
+      "path": "data/validation/cross_cohort_validation_summary.json",
+      "size_bytes": 8868,
+      "sha256": "0258b5967b5577a790912e2c2d41f90685522568705e6426b75232ebbea2d980"
+    },
+    {
+      "path": "data/validation/csv_testing_access_buttons_manifest.json",
+      "size_bytes": 578,
+      "sha256": "6198bad24f64c7b3c03b4a9dc4de9e4e3cf6239efe48ea974a2497ef92730fd2"
+    },
+    {
+      "path": "data/validation/data_quality_temporal_audit_summary.json",
+      "size_bytes": 4129,
+      "sha256": "d512d2afe35e60e50683de23b7e2f08ddf00e436e2d75cd8ffbb69f16e28ce24"
+    },
+    {
+      "path": "data/validation/driver_subgroup_summary.json",
+      "size_bytes": 6208,
+      "sha256": "097621e4ca1162abc76100e42bf283ed29fe7fafffdbff842d425a74a84d6b36"
+    },
+    {
+      "path": "data/validation/eicu_bc_internal_robustness_checkpoint.json",
+      "size_bytes": 2135,
+      "sha256": "334c8b4f90695e5de87a0b00f8b7352a2cdf76f41411e300fddc1b8fb6f3029a"
+    },
+    {
+      "path": "data/validation/eicu_extraction_readiness_summary.json",
+      "size_bytes": 1194,
+      "sha256": "890ce2c6eeabe22142637d3b4e441a451709a783fae51c0e128db2cc1ede81bb"
+    },
+    {
+      "path": "data/validation/eicu_harmonized_clinical_event_summary.json",
+      "size_bytes": 3297,
+      "sha256": "1a2f2e866fc686197e08dd7701db64660e3880341f6d0dd50ea888994353d585"
+    },
+    {
+      "path": "data/validation/eicu_local_scoring_adapter_audit_summary.json",
+      "size_bytes": 836,
+      "sha256": "803beb7e341717416d92b36d77c89c033455cc2989a4158431dcced841529dce"
+    },
+    {
+      "path": "data/validation/eicu_metric_source_clarity.json",
+      "size_bytes": 1721,
+      "sha256": "6316900b9b8c8939596a9c9e43b7b0c62e7ad613b08de226861e175c8ff296c6"
+    },
+    {
+      "path": "data/validation/eicu_subcohort_b_validation_summary.json",
+      "size_bytes": 1899,
+      "sha256": "515ff278ada48c14c7b5d4378af07a3efa68a405800fd4b7d702ef8c9e27a4a5"
+    },
+    {
+      "path": "data/validation/eicu_subcohort_bc_robustness_summary.json",
+      "size_bytes": 4744,
+      "sha256": "544a290614dce90adfef0529e78f61a715632f557bf3cdf879589702159eaf18"
+    },
+    {
+      "path": "data/validation/eicu_subcohort_c_validation_summary.json",
+      "size_bytes": 1899,
+      "sha256": "e4154d528f87ad0fe64121fcf8aa39af4883c532a5322a2879dcdf6e8657e9d5"
+    },
+    {
+      "path": "data/validation/eicu_validation_summary.json",
+      "size_bytes": 4579,
+      "sha256": "0c7554828e26e514d2b8e491f39fcdcdce7a7a232868728ee83cdafbd7488b9f"
+    },
+    {
+      "path": "data/validation/emergency_command_center_restore_manifest.json",
+      "size_bytes": 807,
+      "sha256": "5fcb2ce5eb2df3c1c73da2d0a62a4fcc1b25162b1352ef72f7b159de9c83c1ef"
+    },
+    {
+      "path": "data/validation/event_cluster_robustness_summary.json",
+      "size_bytes": 9761,
+      "sha256": "5b4e3d16a1cc4d7935aa1f924e219131247a989ca4393f38b8ded8c034cc0dff"
+    },
+    {
+      "path": "data/validation/final_clinical_workboard_polish_manifest.json",
+      "size_bytes": 1160,
+      "sha256": "e8960076a83d74ad8a30f6dde79e2040c6d24d8ad5f169e6858e28de71cb92a8"
+    },
+    {
+      "path": "data/validation/final_command_center_pilot_polish_manifest.json",
+      "size_bytes": 841,
+      "sha256": "789627643b6b04b49d8c7c0d188950b4f5b2a4e779cb25d5907792cc1060507d"
+    },
+    {
+      "path": "data/validation/final_frontend_evidence_polish_manifest.json",
+      "size_bytes": 964,
+      "sha256": "f43ac3151c9d174c9dd878f953552a9f682ed55fb33fdb62eb1d611501cc8253"
+    },
+    {
+      "path": "data/validation/fstring_safe_realistic_demo_queue_manifest.json",
+      "size_bytes": 949,
+      "sha256": "e0245966f04da4d89bc20af4e354f1f4b2c99c3fb104711285c7882bba3ea931"
+    },
+    {
+      "path": "data/validation/harmonized_mimic_eicu_comparison_summary.json",
+      "size_bytes": 2073,
+      "sha256": "a11c7cd8b113049187c536dbcfc0c55a93a73a9452738c94b80aeecf1448f4c3"
+    },
+    {
+      "path": "data/validation/hirid_access_approved_checkpoint.json",
+      "size_bytes": 668,
+      "sha256": "13e41c4fb3fe98c701df3b66a0fbf89f4a7afad53e56739651771c2a0db6e378"
+    },
+    {
+      "path": "data/validation/hirid_access_pending_checkpoint.json",
+      "size_bytes": 1061,
+      "sha256": "5318a01df913154841155f8d4782e5e5cdf34bc280dff562022b9b50802e91c8"
+    },
+    {
+      "path": "data/validation/hirid_download_audit_public_summary.json",
+      "size_bytes": 559,
+      "sha256": "b8a37828d17b9005e93a961d417bab3144fe205e18d1cf5953711124b581a0e5"
+    },
+    {
+      "path": "data/validation/hirid_download_readiness_summary.json",
+      "size_bytes": 617,
+      "sha256": "579f4c73a86da4607cc24f30881ceab98124a334edcbc81f8d97e1e0080c9f5d"
+    },
+    {
+      "path": "data/validation/latest_era_validation_summary.json",
+      "size_bytes": 25759,
+      "sha256": "01dcfb6e85b8a0322f87a78bcb6dc48dfd0f1229b32a37283c5ca3a0dbc4c8fc"
+    },
+    {
+      "path": "data/validation/lead_time_before_event_t6.json",
+      "size_bytes": 1067,
+      "sha256": "5b058b0ec0de0166ad99449f528a9ef881c6468e49e07416e7de0a354e01758e"
+    },
+    {
+      "path": "data/validation/lead_time_window_sensitivity_summary.json",
+      "size_bytes": 10484,
+      "sha256": "155369615e6c2573fc060dc92e19802c10d2da28925cd5401d4f69adb7211ac3"
+    },
+    {
+      "path": "data/validation/live_unit_validation_alignment_v2_manifest.json",
+      "size_bytes": 907,
+      "sha256": "8122eae2f121479c48feae4d01bf7c79f1a268c796559a1ea4e277f801a8eddd"
+    },
+    {
+      "path": "data/validation/metric_guardrail_eicu_clarity_manifest.json",
+      "size_bytes": 2529,
+      "sha256": "20e2abaac580954d8e890553fe5a8dc217d7f6a469a94770a9b28e90f4af590d"
+    },
+    {
+      "path": "data/validation/mimic_eicu_conservative_t6_aggregate_rollup.json",
+      "size_bytes": 4386,
+      "sha256": "714650c769f6eafbf051e825f59c79bd494173473e92d978f78b167e3270a9ef"
+    },
+    {
+      "path": "data/validation/mimic_validation_milestone_2026_04.json",
+      "size_bytes": 79680,
+      "sha256": "dde33426a63650f1f52eb5a1c2e43726911ba58a6d742631b3352ef2540bba10"
+    },
+    {
+      "path": "data/validation/multi_dataset_public_framing_polish.json",
+      "size_bytes": 2569,
+      "sha256": "d75024ba913e5ad074c7fd2409aa953015085c150840c6bf02b3be27c70462e1"
+    },
+    {
+      "path": "data/validation/multi_dataset_retrospective_robustness_checkpoint_2026_04_30.json",
+      "size_bytes": 3696,
+      "sha256": "07409a1cf687be751e66c45d39517a0613b80ef13bc24eca710d98aaf851605b"
+    },
+    {
+      "path": "data/validation/multi_dataset_robustness_summary.json",
+      "size_bytes": 5568,
+      "sha256": "bad8f6cf1ba5f0ac356d6fa7b6f37dfcaf86423a0fe958a967c07e0ff6b9e15b"
+    },
+    {
+      "path": "data/validation/platform_metric_alignment_rollup.json",
+      "size_bytes": 1936,
+      "sha256": "a50912afed5efa87f6503e1de7465192d2ce4b92471c487c80213cae226ad6fc"
+    },
+    {
+      "path": "data/validation/polished_command_center_tool_ui_manifest.json",
+      "size_bytes": 1113,
+      "sha256": "bd9a18967dce3e0c9382c7566e08a4dee8413a100cb29caa6f3b4745a5da3dd2"
+    },
+    {
+      "path": "data/validation/polished_command_center_workboard_manifest.json",
+      "size_bytes": 938,
+      "sha256": "6d55a7fd0bdf93ddabf3f89bf1dc744c1979f60ba90969ad3bb5a9ee67cf6c03"
+    },
+    {
+      "path": "data/validation/polished_platform_presentation_patch_manifest.json",
+      "size_bytes": 1427,
+      "sha256": "3d45686438795d453f3189a4e87cfd8a8d9511d4e7b50cd825f63e1f4903fa37"
+    },
+    {
+      "path": "data/validation/public_representative_examples.json",
+      "size_bytes": 4905,
+      "sha256": "ad275ba3ecb824c28f6ccef08b58e300a61d90d98e16a2371ee9c6276e555f19"
+    },
+    {
+      "path": "data/validation/safe_command_center_inplace_restore_manifest.json",
+      "size_bytes": 1031,
+      "sha256": "4415c974dc9450166f199dda14211f187286c4c5ea1a9817ba6edc3abf40caa8"
+    },
+    {
+      "path": "data/validation/score_label_clarity_patch_manifest.json",
+      "size_bytes": 768,
+      "sha256": "6c90c2460220b94c5facca71b756982509ef3a0473b6378f512d0a359c597d73"
+    },
+    {
+      "path": "data/validation/score_saturation_queue_audit_summary.json",
+      "size_bytes": 5235,
+      "sha256": "298e1a7706fb67c7d0bb69f74d2239fae3aa7ba9440dacdc60afbcce8268158f"
+    },
+    {
+      "path": "data/validation/stability_first_platform_polish_manifest.json",
+      "size_bytes": 1875,
+      "sha256": "05e79236de551ca21e2b4ed128d9a69c5ce072294f54e9e28bb7d240a22a32fb"
+    },
+    {
+      "path": "data/validation/stable_cross_cohort_validation_release_2026_04_25.json",
+      "size_bytes": 2089,
+      "sha256": "25cfa59125c3ee25af55626e74d492262bcf2fa5a7ca8eb3b7c6d03f3fb6c3ca"
+    },
+    {
+      "path": "data/validation/subcohort_c_validation_summary.json",
+      "size_bytes": 4013,
+      "sha256": "516420783872bfdbe2a1fa08f10e21757a63c3f0c0eaebb16701e76949ce65a2"
+    },
+    {
+      "path": "data/validation/subcohort_validation_summary.json",
+      "size_bytes": 3999,
+      "sha256": "d1c97c263d42f15c64ac98140015bfcadc3c89825a0773609893feaee0d404d4"
+    },
+    {
+      "path": "data/validation/surgical_model_pilot_loading_fix_manifest.json",
+      "size_bytes": 648,
+      "sha256": "a2f51e0a7b36371171ea76d736c55b5c3c878755f20b864a103108b2a5beadea"
+    },
+    {
+      "path": "data/validation/threshold_matrix_summary.json",
+      "size_bytes": 3072,
+      "sha256": "a52835602f9e2ac944cdc3a47bd418f72e6f48949392baf35ff779a87e5040e4"
+    },
+    {
+      "path": "data/validation/validation_run_registry.json",
+      "size_bytes": 22602,
+      "sha256": "5f2e8744d661c937e1e61384cd48de94feecb97895f0da0752f465f35e39dfb8"
+    },
+    {
+      "path": "data/validation/validation_runs_authoritative_metric_alignment.json",
+      "size_bytes": 1670,
+      "sha256": "079d874d9e18244950adaff00440607d0d88c54e0f321d604f98386de6aca408"
+    },
+    {
+      "path": "docs/validation/cohort_split_stability_summary.md",
+      "size_bytes": 2719,
+      "sha256": "babe9bbaf9f531c75f3f072c8010040115fe8c610a72899446e73092e7736f3a"
+    },
+    {
+      "path": "docs/validation/command_center_document_status_fix.md",
+      "size_bytes": 521,
+      "sha256": "9b67e33c305f851af7144b336de90f1f0530aa9c934bd64821b3846c1c421f72"
+    },
+    {
+      "path": "docs/validation/command_center_explainability_polish.md",
+      "size_bytes": 647,
+      "sha256": "4a6b6f3b216f4a0ab2c932ff3b81a1581b6d7c3412fcbacccd9ae41eb21fded2"
+    },
+    {
+      "path": "docs/validation/cross_cohort_public_page_polish.md",
+      "size_bytes": 632,
+      "sha256": "977bb9fdfb069204dade986faa216189009f7daadd76bedc517953902a1ebf5a"
+    },
+    {
+      "path": "docs/validation/cross_cohort_range_headline_update.md",
+      "size_bytes": 816,
+      "sha256": "06bac2ef1074bf5c40192f48a905220e964344ec812257e4e20b64ee9936204a"
+    },
+    {
+      "path": "docs/validation/cross_cohort_validation_summary.md",
+      "size_bytes": 5110,
+      "sha256": "ea3a02191f9f156a6ceefe9969a2127be81d1271b6120e1f28c63cf44c0b51cf"
+    },
+    {
+      "path": "docs/validation/data_quality_temporal_audit_summary.md",
+      "size_bytes": 2670,
+      "sha256": "1ee080dc26bd5d989654298d30e771a4325b9924b97ff4899e8f883fd126bd56"
+    },
+    {
+      "path": "docs/validation/dataset_citation_story.md",
+      "size_bytes": 1794,
+      "sha256": "cb3d5e0b38ce276df0f384e9fee2cf8f00ef6e47980c0999772d56eafa63251d"
+    },
+    {
+      "path": "docs/validation/driver_subgroup_summary.md",
+      "size_bytes": 2771,
+      "sha256": "bd8f32fff43711a4cb6aaa831d68ba9ef2e119a29eb9d682ed3c8794306f9f9e"
+    },
+    {
+      "path": "docs/validation/eicu_bc_internal_robustness_checkpoint.md",
+      "size_bytes": 1801,
+      "sha256": "45cc16b5272541b9f51169432675483af44202c7aae5d36c228b84fde08b60cb"
+    },
+    {
+      "path": "docs/validation/eicu_extraction_readiness_summary.md",
+      "size_bytes": 1025,
+      "sha256": "533ea6afbfa5dadea3f5e967f6ea15fb333a8a7acaa4d03ad6d2de160c6a25b2"
+    },
+    {
+      "path": "docs/validation/eicu_harmonized_clinical_event_summary.md",
+      "size_bytes": 1942,
+      "sha256": "604b60430becabe66a613a3cc55e83502a2950706a1e69a7be79c303e727fde2"
+    },
+    {
+      "path": "docs/validation/eicu_metric_source_clarity.md",
+      "size_bytes": 2270,
+      "sha256": "3461cd1187030659259d513216c820fe405afcaf8e138f6ee9f4e5c80329bf6d"
+    },
+    {
+      "path": "docs/validation/eicu_second_dataset_public_section.md",
+      "size_bytes": 534,
+      "sha256": "e62e988d2c81223137c6d0ae0d7a0f9ce35dc074af21adc81a895d12c42910cf"
+    },
+    {
+      "path": "docs/validation/eicu_subcohort_b_validation_summary.md",
+      "size_bytes": 1574,
+      "sha256": "3813bdefde92d955fbeaf49619daf9feb9d955d9e41097bedba7c17fa52fe934"
+    },
+    {
+      "path": "docs/validation/eicu_subcohort_bc_robustness_summary.md",
+      "size_bytes": 1446,
+      "sha256": "5e152b6ca18becb15689739c55dbf4e5e2308b90e39d5a00995ff9b46c28652d"
+    },
+    {
+      "path": "docs/validation/eicu_subcohort_c_validation_summary.md",
+      "size_bytes": 1574,
+      "sha256": "ca2d6af2b30457413d4ba7406bcb2ebff9384c9e49af57667f8fc228273bcb56"
+    },
+    {
+      "path": "docs/validation/eicu_validation_preparation.md",
+      "size_bytes": 1229,
+      "sha256": "ed0d2757b8758985231dc74e5cd4e29169ec451be83d3409e37032c37f46bb53"
+    },
+    {
+      "path": "docs/validation/eicu_validation_summary.md",
+      "size_bytes": 4909,
+      "sha256": "03a4d73e0e3d7a376b20d562a5c66a5f72161c0606a0aef21840db2476adf36a"
+    },
+    {
+      "path": "docs/validation/event_cluster_robustness_summary.md",
+      "size_bytes": 2350,
+      "sha256": "169f797aa18abbb11d8cceb480a62c25d055a0b8593a4028412959f8a0cf907a"
+    },
+    {
+      "path": "docs/validation/explainability_display_upgrade.md",
+      "size_bytes": 1274,
+      "sha256": "d8f77c7866c80e743026de6e49c29f642899d910797c8b9185f0ac694ce454bd"
+    },
+    {
+      "path": "docs/validation/harmonized_mimic_eicu_comparison_summary.md",
+      "size_bytes": 3473,
+      "sha256": "62818feaf5f36039cccf864d5f4416139fe567790553ba18a479108d1f9ddb2a"
+    },
+    {
+      "path": "docs/validation/hirid_access_approved_research_plan.md",
+      "size_bytes": 2093,
+      "sha256": "473a7d147d07b5053efd631e26e852c1ad96207bfbfc683205869f4ece4e0e5e"
+    },
+    {
+      "path": "docs/validation/hirid_access_pending_checkpoint.md",
+      "size_bytes": 2177,
+      "sha256": "7ef21030e63e94dd1dbb4ab202dad02827f49cb9e38a33ad4ff087ecf6e25e87"
+    },
+    {
+      "path": "docs/validation/hirid_download_readiness_summary.md",
+      "size_bytes": 725,
+      "sha256": "019a6c146f80a12363784b2515de643b64fde5854157d0e72124f5339df17d21"
+    },
+    {
+      "path": "docs/validation/hirid_third_dataset_readiness_plan.md",
+      "size_bytes": 2104,
+      "sha256": "169072e6a5a258b1a219a05f447bbfc40ad870d2108055f29a280fba3487194c"
+    },
+    {
+      "path": "docs/validation/latest_real_era_validation_export.md",
+      "size_bytes": 953,
+      "sha256": "6c4817b69dce73a063a789c09f79506755717303aa6742f636699e8d8280ce64"
+    },
+    {
+      "path": "docs/validation/lead_time_before_event_t6.md",
+      "size_bytes": 1951,
+      "sha256": "d85642218153bd978028bbc7489a44f91bcbc1e2433d12706a0ba6a0a5e161f1"
+    },
+    {
+      "path": "docs/validation/lead_time_robustness_public_progress.md",
+      "size_bytes": 1615,
+      "sha256": "00ce3f3df1204564f89f53b9732153cf4f335ee453ed006c4aaf9b6743885be5"
+    },
+    {
+      "path": "docs/validation/lead_time_window_sensitivity_summary.md",
+      "size_bytes": 2393,
+      "sha256": "45bfd60fa8ced768c23cbd55bdae3ae9abe23ea9d184a4853db9ff9bff6b4008"
+    },
+    {
+      "path": "docs/validation/mimic_dua_public_safety.md",
+      "size_bytes": 1210,
+      "sha256": "d890f437f68926bf0293382e7eb6ff11ae4eefb8ec52b526293ec5bee1a64004"
+    },
+    {
+      "path": "docs/validation/mimic_eicu_conservative_t6_aggregate_rollup.md",
+      "size_bytes": 3752,
+      "sha256": "8586d4dee84aaf50d45c109f2c42c3c0b83c99756a4ad168242b4706b1576b74"
+    },
+    {
+      "path": "docs/validation/mimic_validation_milestone_2026_04.md",
+      "size_bytes": 2213,
+      "sha256": "586538b9d296040a95795d6f9f3a61fcb70736fa537ff4cf5df25c3aa3d2fabe"
+    },
+    {
+      "path": "docs/validation/model_card.md",
+      "size_bytes": 924,
+      "sha256": "5b83a174686dc429cb3fde166321719a3f1039676e362a89a739db9a195b067d"
+    },
+    {
+      "path": "docs/validation/multi_dataset_pilot_summary.md",
+      "size_bytes": 2469,
+      "sha256": "7aa99949e651e142284fd6291d6b0f83b4d5cf93d2028dde31f611435863bdbd"
+    },
+    {
+      "path": "docs/validation/multi_dataset_public_framing_update.md",
+      "size_bytes": 713,
+      "sha256": "39aafa0eae5be43343ada39425866c2da20c22f1a93f9d2ab441eb237f46e4f1"
+    },
+    {
+      "path": "docs/validation/multi_dataset_retrospective_robustness_checkpoint_2026_04_30.md",
+      "size_bytes": 2500,
+      "sha256": "8d5e3e2ec421bb47b0b1ce887b77638c444559c1bc2c01d6caea3c7772ae7966"
+    },
+    {
+      "path": "docs/validation/multi_dataset_robustness_summary.md",
+      "size_bytes": 3444,
+      "sha256": "2bce038953761f63113d48bc305ab6011fc1e2e27698dac4e50e1467a259e13b"
+    },
+    {
+      "path": "docs/validation/pilot_evidence_packet.md",
+      "size_bytes": 1350,
+      "sha256": "a57ae5c710ca31a41f91c938293bbef9dea09f0ca5f66f1d2a57eb3319b6a586"
+    },
+    {
+      "path": "docs/validation/pilot_sponsor_summary.md",
+      "size_bytes": 1814,
+      "sha256": "dc1a7702298770968bc327e34cd7434078c27d15a0fde9a4f4bd630b288d335f"
+    },
+    {
+      "path": "docs/validation/pilot_success_guide.md",
+      "size_bytes": 650,
+      "sha256": "e01dd21990d61a9ff722974dcc512c113bd95ba8588157f64f6e92e926c5c79d"
+    },
+    {
+      "path": "docs/validation/pilot_validation_routes.md",
+      "size_bytes": 1612,
+      "sha256": "6b2b50acd0781bd9b1ac260b54f2cd302a7b1669d14d03b3f50add4d76acdc6d"
+    },
+    {
+      "path": "docs/validation/platform_metric_alignment_rollup.md",
+      "size_bytes": 2018,
+      "sha256": "5e36177d2431ba393620cd072e9a9bcd937284eba87510782c8320450bd09c80"
+    },
+    {
+      "path": "docs/validation/public_validation_page_polish.md",
+      "size_bytes": 832,
+      "sha256": "43ae63331c5555fc362154fa429298c4342d6111179b05cfc7e05c8824d5c0dd"
+    },
+    {
+      "path": "docs/validation/real_engine_validation_public_framing.md",
+      "size_bytes": 1377,
+      "sha256": "9043d45bafbb403f139c7deffbfa92d1ef7e36371e8075295dcb851dccef0d89"
+    },
+    {
+      "path": "docs/validation/score_saturation_queue_audit_summary.md",
+      "size_bytes": 1884,
+      "sha256": "ccd1c595cbd61045cbe5549536210020806cfda709e89b89acaaefc2e6f0282c"
+    },
+    {
+      "path": "docs/validation/stability_first_platform_polish.md",
+      "size_bytes": 961,
+      "sha256": "d97c627c51486e3db5857137fa515de192798863374727faa80c4e2934c05d0a"
+    },
+    {
+      "path": "docs/validation/stable_cross_cohort_validation_release_2026_04_25.md",
+      "size_bytes": 2590,
+      "sha256": "2c8d6d7109634c0859d2527c880212f9cbb003046db93a5a936d4460a352ad7f"
+    },
+    {
+      "path": "docs/validation/subcohort_c_validation_summary.md",
+      "size_bytes": 1594,
+      "sha256": "85e3af17c406c7119b5022bd5fbe5cf2347f63273a4eda3e014c3c864e34f22d"
+    },
+    {
+      "path": "docs/validation/subcohort_validation_summary.md",
+      "size_bytes": 1588,
+      "sha256": "7322ee9173b46ca1103a95d002fc26b2d013c90371d8452cd16c4c9d0f6ec10c"
+    },
+    {
+      "path": "docs/validation/threshold_matrix_public_story.md",
+      "size_bytes": 1411,
+      "sha256": "7ac54bf514403fd2b880ce186304b6c5a8c865efcd23db06e4ba31c5618c82dc"
+    },
+    {
+      "path": "docs/validation/threshold_matrix_summary.md",
+      "size_bytes": 1558,
+      "sha256": "605eae70a1e04b8cc58efb62d95579464020c663d138673937774c3ec5bb4164"
+    },
+    {
+      "path": "docs/validation/validation_run_registry.md",
+      "size_bytes": 621,
+      "sha256": "3cfa0112adde55bf252f8a777864be0458449968c4092ac9b3ed172ed374a501"
+    },
+    {
+      "path": "docs/validation/validation_runs_discrepancy_resolved.md",
+      "size_bytes": 1233,
+      "sha256": "d2e655c0acc3611a881c59768785e418fde2378e6271b17071bb1ce0ce9d9085"
+    }
+  ],
+  "manifest_note": "Manifest intentionally excludes local_private, raw, row-level, patient-level, timestamp, identifier, and restricted dataset material."
+}
