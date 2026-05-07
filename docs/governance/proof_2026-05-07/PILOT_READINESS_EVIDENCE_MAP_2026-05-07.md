@@ -39,3 +39,18 @@ Complete the pending evidence items:
 | Permission to use advisor name, credentials, and title externally | Private advisor response | Pending |
 | Reference-call willingness | Private advisor response | Pending |
 
+## Final Pilot Readiness Checkpoint
+
+| Readiness Area | Evidence Source | Status |
+|---|---|---|
+| Evidence lock | Evidence lock docs | Complete |
+| Claims control | Claims Control Lock | Complete |
+| Homepage wording cleanup | Wix/live-site review retained privately | Complete |
+| Governance proof | Governance proof folder | Complete |
+| Restore test | Backup/restore test log | Complete |
+| Critical admin security | Private security proof rollup | Verified privately |
+| RN / clinical-advisor packet | Private email record retained outside GitHub | Sent / pending response |
+| Advisor name/title permission | Private advisor response | Pending |
+| Reference-call willingness | Private advisor response | Pending |
+| HiRID public wording | Evidence lock / claims control | Conservative wording only |
+

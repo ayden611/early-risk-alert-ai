@@ -77,3 +77,16 @@ Do not use public claims that imply clinical validation, diagnosis, treatment di
 - Reference-call willingness remains pending until written confirmation is received.
 - Actual emails and attachments remain private and are not committed to GitHub.
 
+## Final Pilot Readiness Checkpoint — 2026-05-07
+
+- Public-safe evidence lock complete.
+- Claims-control lock complete.
+- Homepage wording cleanup complete.
+- Governance proof docs complete.
+- Lightweight restore test complete.
+- Critical admin security review verified privately.
+- RN / clinical-advisor review sent and pending written response.
+- External use of advisor name, credentials, and title remains pending written permission.
+- Reference-call willingness remains pending written confirmation.
+- HiRID public wording remains: HiRID access approved; HiRID retrospective aggregate validation pending local evaluation.
+
