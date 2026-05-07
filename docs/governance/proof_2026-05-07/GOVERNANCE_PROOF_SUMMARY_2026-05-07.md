@@ -35,3 +35,12 @@ Do not use public claims that imply clinical validation, diagnosis, treatment di
 ## Safe HiRID Wording
 
 > HiRID access approved; HiRID retrospective aggregate validation pending local evaluation.
+
+
+## Wix Security Update — 2026-05-07
+
+- Wix Admin security controls verified privately.
+- Passkey added.
+- SMS 2-step verification enabled.
+- Authenticator app verification enabled.
+- Screenshot proof retained privately and not committed to GitHub.

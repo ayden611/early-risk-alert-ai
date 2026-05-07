@@ -24,3 +24,14 @@ Track security controls that support pilot readiness and insurance readiness.
 - Wix publish screenshot
 - Restore test note
 - Andrene Louison RN feedback email
+
+
+## Wix Admin Security Evidence
+
+| Control | Status | Evidence Needed | Owner |
+|---|---|---|---|
+| Wix Admin strong unique password | Verified privately | Password-manager proof retained privately | Milton Munroe |
+| Wix Admin passkey | Verified privately | Wix Account Settings screenshot retained privately | Milton Munroe |
+| Wix Admin SMS 2-step verification | Verified privately | Wix Account Settings screenshot retained privately | Milton Munroe |
+| Wix Admin authenticator app verification | Verified privately | Wix Account Settings screenshot retained privately | Milton Munroe |
+| Wix collaborator access policy | Draft | No shared passwords; collaborators only if needed | Milton Munroe |
