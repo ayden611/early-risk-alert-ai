@@ -27,3 +27,15 @@ Complete the pending evidence items:
 3. Perform one restore test.
 4. Save Andrene Louison RN feedback when received.
 5. Complete MFA/account screenshots privately.
+
+## RN / Clinical Advisor Review Evidence
+
+| Readiness Item | Evidence Source | Status |
+|---|---|---|
+| Private RN / clinical-advisor review request sent | Private email record retained outside GitHub | Sent / pending response |
+| MIMIC-IV / eICU private review request | Private email record retained outside GitHub | Sent / pending response |
+| HiRID / cross-dataset private review request | Private email record retained outside GitHub | Sent / pending response |
+| Written clinical-advisor statement | Private advisor response | Pending |
+| Permission to use advisor name, credentials, and title externally | Private advisor response | Pending |
+| Reference-call willingness | Private advisor response | Pending |
+

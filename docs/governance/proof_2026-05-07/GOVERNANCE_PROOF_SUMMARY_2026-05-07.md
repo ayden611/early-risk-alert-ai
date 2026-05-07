@@ -67,3 +67,13 @@ Do not use public claims that imply clinical validation, diagnosis, treatment di
 - GitHub-linked deploy flow reviewed.
 - Environment variable values confirmed masked.
 - Screenshot proof retained privately and not committed to GitHub.
+
+## RN / Clinical Advisor Review Update — 2026-05-07
+
+- Private RN / clinical-advisor review materials have been sent.
+- MIMIC-IV / eICU private review status: sent, pending written response.
+- HiRID / cross-dataset private review status: sent, pending written response.
+- External use of advisor name, credentials, and title remains pending until written permission is received.
+- Reference-call willingness remains pending until written confirmation is received.
+- Actual emails and attachments remain private and are not committed to GitHub.
+
