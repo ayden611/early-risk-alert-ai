@@ -23,5 +23,28 @@ Show that Early Risk Alert AI can recover key materials if files, code, or accou
 
 ## Result
 
-- Restore test status: Pending
-- Notes:
+- Restore test status: Passed for lightweight git restore test
+- Notes: Lightweight git restore test completed. Additional offsite/Wix/private-workspace backup evidence still needed.
+
+## Restore Test Record — 2026-05-07T13:33:44.642017+00:00
+
+**Test type:** Lightweight git restore test  
+**File tested:** `docs/governance/proof_2026-05-07/ACCESS_REVIEW_LOG_2026-05-07.md`  
+**Restore source:** `HEAD` commit in local git repository  
+**Result:** Passed  
+**Private/raw data involved:** No  
+**Patient-level data involved:** No  
+**Restricted dataset material involved:** No  
+
+### Procedure
+
+1. Confirmed the access review log was tracked in git.
+2. Captured the original SHA-256 checksum.
+3. Temporarily deleted the local file.
+4. Restored the file from `HEAD`.
+5. Confirmed the restored SHA-256 checksum matched the original file.
+
+### Interpretation
+
+This confirms that public-safe governance documentation can be restored from the committed repository state. This is a lightweight repository restore test only. Separate evidence is still needed for offsite backups, Wix site history, restricted local workspace backups, and account recovery.
+
