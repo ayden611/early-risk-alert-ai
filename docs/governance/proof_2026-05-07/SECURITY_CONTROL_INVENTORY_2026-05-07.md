@@ -35,3 +35,15 @@ Track security controls that support pilot readiness and insurance readiness.
 | Wix Admin SMS 2-step verification | Verified privately | Wix Account Settings screenshot retained privately | Milton Munroe |
 | Wix Admin authenticator app verification | Verified privately | Wix Account Settings screenshot retained privately | Milton Munroe |
 | Wix collaborator access policy | Draft | No shared passwords; collaborators only if needed | Milton Munroe |
+
+
+## GitHub Admin Security Evidence
+
+| Control | Status | Evidence Needed | Owner |
+|---|---|---|---|
+| GitHub 2FA | Verified privately | GitHub Password and authentication screenshot retained privately | Milton Munroe |
+| GitHub preferred 2FA method | Verified privately | Security keys preferred | Milton Munroe |
+| GitHub authenticator app | Verified privately | Configured; screenshot retained privately | Milton Munroe |
+| GitHub security keys | Verified privately | Two keys configured; screenshot retained privately | Milton Munroe |
+| GitHub recovery codes | Reviewed privately | Recovery codes viewed/saved privately; do not commit | Milton Munroe |
+| GitHub SMS/Text | Not enabled | Acceptable because security keys and authenticator app are configured | Milton Munroe |

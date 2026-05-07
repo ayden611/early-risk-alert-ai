@@ -44,3 +44,13 @@ Do not use public claims that imply clinical validation, diagnosis, treatment di
 - SMS 2-step verification enabled.
 - Authenticator app verification enabled.
 - Screenshot proof retained privately and not committed to GitHub.
+
+
+## GitHub Security Update — 2026-05-07
+
+- GitHub Admin security controls verified privately.
+- Preferred 2FA method set to security keys.
+- Authenticator app configured.
+- Two security keys configured.
+- Recovery codes reviewed privately.
+- Screenshot proof retained privately and not committed to GitHub.
