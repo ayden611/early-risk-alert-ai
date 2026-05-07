@@ -110,3 +110,12 @@ Do not use public claims that imply clinical validation, diagnosis, treatment di
 - Packet does not include raw data, patient-level outputs, secret screenshots, environment values, private HiRID validation claims, or advisor endorsement language without written permission.
 - Next version: v1.1 after written RN advisor feedback is received.
 
+## HiRID Public Language Candidate v0.1 — 2026-05-07
+
+- HiRID Public Language Candidate v0.1 created as a governance-controlled draft.
+- Status: Draft / Not Published.
+- Live website wording remains unchanged.
+- Current approved public wording remains: HiRID access approved; HiRID retrospective aggregate validation pending local evaluation.
+- Candidate language is pending RN advisor feedback, legal/privacy/site review if applicable, and claims-control review.
+- No public HiRID validation, prospective validation, final performance, FPR, detection, lead-time, diagnosis, treatment-direction, outcome-improvement, or independent-escalation claim is authorized.
+

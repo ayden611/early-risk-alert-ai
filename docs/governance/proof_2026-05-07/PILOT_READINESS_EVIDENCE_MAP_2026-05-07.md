@@ -81,3 +81,15 @@ Complete the pending evidence items:
 | Prospective data | Future approved pilot/shadow-mode activity | Not started |
 | Redacted Pilot Evidence Packet v1.1 | Future update after RN feedback | Pending |
 
+## HiRID Public Language Candidate
+
+| Readiness Item | Evidence Source | Status |
+|---|---|---|
+| HiRID Public Language Candidate v0.1 | Governance-controlled draft | Created |
+| Live website HiRID wording | Current approved wording | Unchanged |
+| RN advisor review | Private advisor response | Pending |
+| Legal/privacy/site review | Future review if applicable | Pending |
+| IRB/QI review | Future review if applicable | Pending |
+| Claims-control review | Evidence Lock / Claims Control Lock | Required before publication |
+| Public HiRID validation claim | Not authorized | Not allowed |
+
