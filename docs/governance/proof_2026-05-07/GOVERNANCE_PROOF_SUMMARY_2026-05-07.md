@@ -54,3 +54,16 @@ Do not use public claims that imply clinical validation, diagnosis, treatment di
 - Two security keys configured.
 - Recovery codes reviewed privately.
 - Screenshot proof retained privately and not committed to GitHub.
+
+
+## Render Security Update — 2026-05-07
+
+- Render Admin security controls verified privately.
+- Workspace member list reviewed.
+- Only one visible workspace member observed.
+- Admin role verified privately.
+- Production services reviewed.
+- Main production web service deployed.
+- GitHub-linked deploy flow reviewed.
+- Environment variable values confirmed masked.
+- Screenshot proof retained privately and not committed to GitHub.

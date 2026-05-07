@@ -47,3 +47,16 @@ Track security controls that support pilot readiness and insurance readiness.
 | GitHub security keys | Verified privately | Two keys configured; screenshot retained privately | Milton Munroe |
 | GitHub recovery codes | Reviewed privately | Recovery codes viewed/saved privately; do not commit | Milton Munroe |
 | GitHub SMS/Text | Not enabled | Acceptable because security keys and authenticator app are configured | Milton Munroe |
+
+
+## Render Admin Security Evidence
+
+| Control | Status | Evidence Needed | Owner |
+|---|---|---|---|
+| Render workspace access review | Verified privately | Workspace/team screenshot retained privately | Milton Munroe |
+| Render member list | Verified privately | One visible member; admin role retained privately | Milton Munroe |
+| Render production services | Verified privately | Service dashboard screenshot retained privately | Milton Munroe |
+| Render GitHub-linked deployment | Verified privately | Production service connected to GitHub repo/branch; screenshot retained privately | Milton Munroe |
+| Render deploy history | Verified privately | Recent successful deploys retained privately | Milton Munroe |
+| Render environment values masked | Verified privately | Environment page screenshot retained privately with values hidden | Milton Munroe |
+| Render logs | Reviewed cautiously | Do not commit logs; retain only redacted/private runtime proof if needed | Milton Munroe |

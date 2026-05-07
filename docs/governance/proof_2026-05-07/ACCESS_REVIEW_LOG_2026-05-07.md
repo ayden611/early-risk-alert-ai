@@ -10,7 +10,7 @@ Track who has access to Early Risk Alert AI systems and whether access is approp
 |---|---|---|---|---|---|---|
 | GitHub / GitHub Admin | Milton Munroe / Founder & CEO | Owner/Admin | Verified privately | Repository, evidence-lock, governance docs, and deployment-source control | 2026-05-07 | Complete; retain private screenshot proof |
 | Wix / Wix Admin | Milton Munroe / Founder & CEO | Owner/Admin | Verified privately | Public website management and publishing | 2026-05-07 | Complete; retain private screenshot proof |
-| Render | Milton Munroe / Founder | Owner/Admin | To verify | App hosting | 2026-05-07 | Confirm MFA screenshot |
+| Render / Render Admin | Milton Munroe / Founder & CEO | Owner/Admin | Verified privately through GitHub-protected access and workspace review | Hosting, deployment, service runtime, database/worker/Redis services | 2026-05-07 | Complete; retain private screenshot proof |
 | Domain / DNS | Milton Munroe / Founder | Owner/Admin | To verify | Domain control | 2026-05-07 | Confirm MFA screenshot |
 | Business email | Milton Munroe / Founder | Owner/Admin | To verify | Official communications | 2026-05-07 | Confirm MFA screenshot |
 
