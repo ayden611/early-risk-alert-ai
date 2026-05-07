@@ -90,3 +90,14 @@ Do not use public claims that imply clinical validation, diagnosis, treatment di
 - Reference-call willingness remains pending written confirmation.
 - HiRID public wording remains: HiRID access approved; HiRID retrospective aggregate validation pending local evaluation.
 
+## Semi-Prospective Evidence Readiness Update — 2026-05-07
+
+- Private Clinician Blinded Alert Review Form prepared.
+- Private RN Blinded Review Case Log Template prepared.
+- Private Tabletop Simulation Packet prepared.
+- Private Shadow-Mode Protocol Draft prepared for site / IRB / legal review.
+- Private IRB / QI / DUA Readiness Checklist prepared.
+- Private Semi-Prospective Claims Guardrail prepared.
+- No live shadow-mode, EHR integration, or ambient scribe activity is authorized by these documents.
+- No public prospective, clinical validation, HiRID validation, FPR, detection, or lead-time claims are authorized.
+

@@ -54,3 +54,17 @@ Complete the pending evidence items:
 | Reference-call willingness | Private advisor response | Pending |
 | HiRID public wording | Evidence lock / claims control | Conservative wording only |
 
+## Semi-Prospective Evidence Readiness
+
+| Readiness Item | Evidence Source | Status |
+|---|---|---|
+| Clinician blinded alert review form | Private/local packet | Prepared |
+| RN blinded review case log template | Private/local packet | Prepared |
+| Tabletop simulation packet | Private/local packet | Prepared |
+| Shadow-mode protocol draft | Private/local packet | Draft prepared for site / IRB / legal review |
+| IRB / QI / DUA readiness checklist | Private/local packet | Prepared |
+| Claims guardrail | Private/local packet | Prepared |
+| Live shadow-mode deployment | Site-approved protocol required | Not started |
+| EHR integration | Site-approved agreement required | Not started |
+| Ambient scribe integration | Future phase only | Not started |
+
