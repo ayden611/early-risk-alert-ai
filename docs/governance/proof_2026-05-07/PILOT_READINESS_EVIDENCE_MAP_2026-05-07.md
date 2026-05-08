@@ -104,3 +104,13 @@ Complete the pending evidence items:
 | IRB/QI review | Future review if applicable | Pending |
 | Final claims-control approval | Evidence Lock / Claims Control Lock | Pending |
 
+## Advisor Contribution & Founder-Risk Mitigation
+
+| Readiness Item | Evidence Source | Status |
+|---|---|---|
+| Clinical advisor contribution record | Advisor Contribution Addendum / private evidence record | Created |
+| Technical/security advisor contribution record | Advisor Contribution Addendum / private evidence record | Created |
+| Corrected founder-risk language | Advisor Contribution & Founder-Risk Mitigation Addendum | Created |
+| Written RN advisor review response | Private advisor response | Pending |
+| Future valuation assessment correction | Next assessment update | Pending |
+

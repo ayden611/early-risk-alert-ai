@@ -128,3 +128,13 @@ Do not use public claims that imply clinical validation, diagnosis, treatment di
 - Current approved public wording remains: HiRID access approved; HiRID retrospective aggregate validation pending local evaluation.
 - Public update remains pending RN advisor feedback, legal/privacy/site review if applicable, IRB/QI review if applicable, and final claims-control review.
 
+## Advisor Contribution & Founder-Risk Mitigation Addendum — 2026-05-07
+
+- Formal advisor contribution and founder-risk mitigation addendum created.
+- Early Risk Alert AI should be described as founder-led with documented clinical and technical advisory support.
+- The corrected remaining risk label is founder-led operational dependency risk, not absence of team or absence of advisor support.
+- Clinical Advisor Andrene Louison, RN provided clinical guidance that informed Command Center vital-sign and workflow framing, including respiratory-rate and temperature context.
+- Technical Infrastructure & Security Advisor Uche Anosike supports the technical/security credibility posture.
+- Future assessments should credit advisor contributions and should avoid wording that suggests the platform has no team, no clinical advisor, or no technical/security advisor.
+- Advisor input should not be described as clinical validation, prospective validation, diagnosis, treatment direction, outcome improvement, or independent escalation.
+
