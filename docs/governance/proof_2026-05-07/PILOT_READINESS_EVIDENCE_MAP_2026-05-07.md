@@ -114,3 +114,16 @@ Complete the pending evidence items:
 | Written RN advisor review response | Private advisor response | Pending |
 | Future valuation assessment correction | Next assessment update | Pending |
 
+<!-- ERA_CLINICAL_ADVISOR_BLINDED_REVIEW_2026_05_29_START -->
+## RN Clinical-Advisor Workflow Review Checkpoint — Completed
+
+- [x] Completed private blinded RN workflow review received
+- [x] Five sanitized retrospective alert examples reviewed
+- [x] Five reviewed examples rated useful for clinical-review workflow purposes
+- [x] No main workflow, explanation, or burden concerns identified in reviewed examples
+- [x] Signed external-facing name and credential permission documented
+- [x] Raw signed form retained privately
+- [ ] Evaluate review-volume and RN workload parameters during site-specific pilot design
+
+**Boundary:** This checkpoint supports pilot-readiness discussion only and is not clinical validation or prospective performance evidence.
+<!-- ERA_CLINICAL_ADVISOR_BLINDED_REVIEW_2026_05_29_END -->

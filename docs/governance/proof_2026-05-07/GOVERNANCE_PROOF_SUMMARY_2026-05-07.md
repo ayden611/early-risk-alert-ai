@@ -138,3 +138,12 @@ Do not use public claims that imply clinical validation, diagnosis, treatment di
 - Future assessments should credit advisor contributions and should avoid wording that suggests the platform has no team, no clinical advisor, or no technical/security advisor.
 - Advisor input should not be described as clinical validation, prospective validation, diagnosis, treatment direction, outcome improvement, or independent escalation.
 
+<!-- ERA_CLINICAL_ADVISOR_BLINDED_REVIEW_2026_05_29_START -->
+## Clinical Advisor Workflow Review Evidence — May 29, 2026
+
+Early Risk Alert AI has documented completion of a private blinded RN clinical-advisor workflow review involving five sanitized retrospective alert examples. The clinical advisor rated all five examples useful for clinical-review workflow purposes and identified no main workflow, explanation, or burden concerns in the reviewed examples.
+
+Signed permission was documented for external-facing use of the advisor's name and credentials in relation to the review form.
+
+This supports pilot-readiness discussion only. It does not constitute clinical validation, prospective validation, FDA review, outcome-improvement evidence, diagnosis, treatment direction, or authorization for autonomous escalation.
+<!-- ERA_CLINICAL_ADVISOR_BLINDED_REVIEW_2026_05_29_END -->
