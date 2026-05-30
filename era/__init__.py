@@ -4196,7 +4196,7 @@ def create_app() -> Flask:
   <title>Early Risk Alert AI — Pilot Docs</title>
   <style>
     :root {
-      --bg: #f5f7fb;
+      --bg: #071a33;
       --card: #ffffff;
       --ink: #172033;
       --muted: #5c667a;
@@ -4211,7 +4211,7 @@ def create_app() -> Flask:
 
     body {
       margin: 0;
-      background: var(--bg);
+      background: linear-gradient(180deg, #071a33 0%, #041224 100%);
       color: var(--ink);
       font-family: Arial, Helvetica, sans-serif;
       line-height: 1.55;
@@ -4243,6 +4243,14 @@ def create_app() -> Flask:
       gap: 10px;
     }
 
+    .topbar strong {
+      color: #eef5ff;
+    }
+
+    .topbar .eyebrow {
+      color: #b9d8ff;
+    }
+
     .button {
       display: inline-block;
       padding: 10px 14px;
@@ -4269,6 +4277,7 @@ def create_app() -> Flask:
 
     h2 {
       margin: 0 0 12px;
+      color: #eef5ff;
       font-size: 23px;
     }
 
@@ -4352,8 +4361,8 @@ def create_app() -> Flask:
     .footer {
       margin-top: 34px;
       padding-top: 20px;
-      border-top: 1px solid var(--line);
-      color: var(--muted);
+      border-top: 1px solid rgba(223, 229, 239, 0.35);
+      color: #c7d5e8;
       font-size: 13px;
     }
   </style>
