@@ -4188,44 +4188,429 @@ def create_app() -> Flask:
     @app.get("/pilot-docs")
     @_login_required
     def pilot_docs():
-        def simple_list(items):
-            return "".join(f"<div style='padding:10px 12px;border:1px solid rgba(255,255,255,.08);border-radius:14px;background:rgba(255,255,255,.03);margin-bottom:10px;color:#dce9ff'>{item}</div>" for item in items)
+        return """<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Early Risk Alert AI — Pilot Docs</title>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --ink: #172033;
+      --muted: #5c667a;
+      --line: #dfe5ef;
+      --accent: #163a68;
+      --soft: #edf4fb;
+      --safe: #eef8f1;
+      --safe-line: #b9dfc4;
+    }
 
-        def table(rows, headers):
-            out = ["<table style='width:100%;border-collapse:collapse'>", "<thead><tr>"]
-            for h in headers:
-                out.append(f"<th style='padding:12px;text-align:left;color:#9adfff;border-bottom:1px solid rgba(255,255,255,.08)'>{h.replace('_',' ').title()}</th>")
-            out.append("</tr></thead><tbody>")
-            for row in rows:
-                out.append("<tr>")
-                for h in headers:
-                    v = row.get(h, "")
-                    if isinstance(v, (dict, list)):
-                        v = json.dumps(v, ensure_ascii=False)
-                    out.append(f"<td style='padding:12px;vertical-align:top;border-bottom:1px solid rgba(255,255,255,.08);color:#dce9ff'>{v}</td>")
-                out.append("</tr>")
-            out.append("</tbody></table>")
-            return "".join(out)
+    * { box-sizing: border-box; }
 
-        html_out = f"""
-        <!doctype html><html lang='en'><head><meta charset='utf-8'><title>Pilot Docs — Early Risk Alert AI</title><meta name='viewport' content='width=device-width, initial-scale=1'>
-        <style>body{{margin:0;padding:24px;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#eef4ff;background:linear-gradient(180deg,#07101c,#0b1528)}}.wrap{{max-width:1280px;margin:0 auto}}.card{{border:1px solid rgba(255,255,255,.08);border-radius:24px;background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.018));padding:24px;margin-bottom:18px;box-shadow:0 20px 60px rgba(0,0,0,.28)}}.btn{{display:inline-flex;align-items:center;justify-content:center;padding:12px 16px;border-radius:16px;font-weight:900;background:linear-gradient(135deg,#7aa2ff,#5bd4ff);color:#07101c;text-decoration:none}}.sub{{color:#9fb4d6;line-height:1.7}}.grid{{display:grid;grid-template-columns:1fr 1fr;gap:16px}}.pill{{display:inline-flex;align-items:center;padding:10px 14px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);font-size:12px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;margin-right:8px;margin-bottom:8px}}@media (max-width:840px){{.grid{{grid-template-columns:1fr}}}}</style>
-        </head><body><div class='wrap'>
-        <div class='card'><div class='pill'>Pilot Docs</div><div class='pill'>Version {PILOT_VERSION}</div><h1 style='margin:12px 0 10px;font-size:42px;line-height:.95;letter-spacing:-.05em'>Stable Pilot Positioning Bundle</h1><div class='sub'>Freeze one intended-use statement everywhere, keep outputs supportive rather than directive, and keep explainability, limitations, scoping, and audit visibility easy to review.</div><div style='margin-top:16px;display:flex;gap:12px;flex-wrap:wrap'><a class='btn' href='/command-center'>Back to Command Center</a><a class='btn' href='/pilot-success-guide'>Pilot Success Guide</a><a class='btn' href='/model-card'>Model Card</a></div></div>
-        <div class='card'><h2 style='margin:0 0 10px;font-size:30px'>Frozen Intended Use</h2><div class='sub' style='font-size:18px;color:#eef4ff'>{INTENDED_USE_STATEMENT}</div><div style='margin-top:12px;display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:999px;background:rgba(181,140,255,.14);border:1px solid rgba(181,140,255,.28);font-weight:900;color:#f0e5ff'>{PILOT_BUILD_STATE} · {PILOT_VERSION}</div></div>
-        <div class='grid'><div class='card'><h2 style='margin:0 0 10px;font-size:26px'>Support Language</h2>{simple_list(PILOT_SUPPORT_LANGUAGE)}</div><div class='card'><h2 style='margin:0 0 10px;font-size:26px'>Visible Limitations</h2>{simple_list(PILOT_LIMITATIONS_TEXT)}</div></div>
-        <div class='grid'><div class='card'><h2 style='margin:0 0 10px;font-size:26px'>Supported Inputs</h2>{simple_list(PILOT_SUPPORTED_INPUTS)}</div><div class='card'><h2 style='margin:0 0 10px;font-size:26px'>Supported Outputs</h2>{simple_list(PILOT_SUPPORTED_OUTPUTS)}</div></div>
-        <div class='grid'><div class='card'><h2 style='margin:0 0 10px;font-size:26px'>Approved Claims</h2>{simple_list(PILOT_APPROVED_CLAIMS)}</div><div class='card'><h2 style='margin:0 0 10px;font-size:26px'>Banned / Avoid Claims</h2>{simple_list(PILOT_BANNED_CLAIMS + PILOT_AVOID_CLAIMS)}</div></div>
-        <div class='grid'><div class='card'><h2 style='margin:0 0 10px;font-size:26px'>Claims Control</h2>{table(PILOT_CLAIMS_CONTROL_SHEET, ['claim','status','category'])}</div><div class='card'><h2 style='margin:0 0 10px;font-size:26px'>Change Control</h2>{simple_list(PILOT_CHANGE_CONTROL)}</div></div>
-        <div class='card'><h2 style='margin:0 0 12px;font-size:28px'>Risk Register</h2>{table(PILOT_RISK_REGISTER, ['id','area','risk','mitigation','owner','status'])}</div>
-        <div class='card'><h2 style='margin:0 0 12px;font-size:28px'>V&amp;V-Lite Sheet</h2>{table(PILOT_VNV_LITE, ['id','check','method','evidence','status'])}</div>
-        <div class='card'><h2 style='margin:0 0 12px;font-size:28px'>Release Notes</h2>{table(PILOT_RELEASE_NOTES, ['version','date','summary'])}</div>
-        <div class='grid'><div class='card'><h2 style='margin:0 0 12px;font-size:28px'>Document Control Index</h2>{table(PILOT_DOCUMENT_CONTROL_INDEX, ['document_name','version'])}</div><div class='card'><h2 style='margin:0 0 12px;font-size:28px'>Validation Packet</h2>{table(PILOT_VALIDATION_EVIDENCE, ['date_tested','test_case_id','status'])}</div></div>
-        <div class='grid'><div class='card'><h2 style='margin:0 0 12px;font-size:28px'>Advisory Structure</h2>{table(PILOT_ADVISORY_STRUCTURE, ['name','title','status'])}</div><div class='card'><h2 style='margin:0 0 12px;font-size:28px'>Support Owners</h2>{table(PILOT_SUPPORT_OWNERS, ['area','owner','title','status'])}</div></div>
-        <div class='card'><h2 style='margin:0 0 12px;font-size:28px'>Training &amp; Use Instructions</h2>{table(PILOT_TRAINING_USE_INSTRUCTIONS, ['section','instruction'])}</div>
-        </div></body></html>
-        """
-        return render_template_string(html_out)
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Arial, Helvetica, sans-serif;
+      line-height: 1.55;
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .wrap {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 32px 20px 64px;
+    }
+
+    .topbar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 14px;
+      align-items: center;
+      margin-bottom: 22px;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .button {
+      display: inline-block;
+      padding: 10px 14px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: white;
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .eyebrow {
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 8px 0 12px;
+      font-size: clamp(30px, 5vw, 48px);
+      line-height: 1.08;
+    }
+
+    h2 {
+      margin: 0 0 12px;
+      font-size: 23px;
+    }
+
+    h3 {
+      margin: 0 0 8px;
+      font-size: 17px;
+    }
+
+    p {
+      margin: 0 0 12px;
+    }
+
+    section {
+      margin-top: 28px;
+    }
+
+    ul {
+      margin: 8px 0 0;
+      padding-left: 21px;
+    }
+
+    li {
+      margin-bottom: 7px;
+    }
+
+    .lead {
+      max-width: 900px;
+      color: var(--muted);
+      font-size: 18px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 14px;
+    }
+
+    .card {
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--card);
+      box-shadow: 0 5px 16px rgba(24, 42, 71, 0.05);
+    }
+
+    .version {
+      display: inline-block;
+      margin-top: 12px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: var(--soft);
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .boundary {
+      margin: 22px 0;
+      padding: 16px 18px;
+      border: 1px solid var(--safe-line);
+      border-radius: 14px;
+      background: var(--safe);
+      font-weight: 700;
+    }
+
+    .note {
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .status {
+      margin-top: 12px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: var(--soft);
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .footer {
+      margin-top: 34px;
+      padding-top: 20px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <div class="topbar">
+      <div>
+        <div class="eyebrow">Pilot Docs</div>
+        <strong>Early Risk Alert AI, LLC</strong>
+      </div>
+
+      <div class="actions">
+        <a class="button" href="/">Back to Command Center</a>
+        <a class="button" href="/pilot-success-guide">Pilot Success Guide</a>
+        <a class="button" href="/model-card">Model Card</a>
+      </div>
+    </div>
+
+    <section class="card">
+      <div class="eyebrow">Public-Safe Pilot Positioning Bundle</div>
+
+      <h1>Explainable Review Prioritization for Authorized Clinical Teams</h1>
+
+      <p class="lead">
+        Early Risk Alert AI is a pilot-readiness decision-support and workflow-support
+        software platform designed for adult hospital ICU and acute-care settings.
+        The platform analyzes already-acquired numeric vital-sign observations and
+        presents pattern-based review notifications to authorized healthcare
+        professionals for their independent review.
+      </p>
+
+      <span class="version">Locked public alignment · stable-pilot-1.0.9</span>
+    </section>
+
+    <div class="boundary">
+      Decision support only. Early Risk Alert AI does not diagnose, direct treatment,
+      replace clinician judgment, independently trigger escalation, or replace bedside
+      monitoring systems, immediate physiologic alarms, or hospital emergency-response
+      systems.
+    </div>
+
+    <section>
+      <h2>Command Center Review Interface</h2>
+
+      <div class="grid">
+        <article class="card">
+          <h3>Review Prioritization</h3>
+          <p>
+            Organizes pattern-based review notifications into a ranked queue to
+            support efficient clinical workflow review.
+          </p>
+        </article>
+
+        <article class="card">
+          <h3>Vital-Sign Aggregation</h3>
+          <p>
+            Displays already-acquired numeric vital-sign observations for authorized
+            professional review.
+          </p>
+        </article>
+
+        <article class="card">
+          <h3>Trend Context</h3>
+          <p>
+            Presents relevant trend context to help healthcare professionals
+            independently review the basis for each notification.
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <section>
+      <h2>Frozen Intended Use</h2>
+
+      <div class="card">
+        <p>
+          Early Risk Alert AI is intended to assist authorized healthcare professionals
+          in reviewing adult ICU and acute-care patients whose numeric vital-sign
+          trends may warrant closer clinical attention. The platform supports workflow
+          prioritization and independent clinical review.
+        </p>
+
+        <p>
+          It is not intended to provide a diagnosis, recommend a specific treatment,
+          direct escalation of care, function as a code-blue or cardiac-arrest alarm,
+          or serve as the sole or primary basis for time-critical clinical decisions.
+        </p>
+      </div>
+    </section>
+
+    <section>
+      <h2>Supported Inputs</h2>
+
+      <div class="card">
+        <ul>
+          <li>Already-acquired heart-rate observations</li>
+          <li>Already-acquired non-invasive blood-pressure observations</li>
+          <li>Already-acquired SpO₂ observations</li>
+          <li>Already-acquired respiratory-rate observations</li>
+          <li>Already-acquired temperature observations, where available as supplementary numeric context</li>
+          <li>Relevant review-context and workflow-state information</li>
+        </ul>
+
+        <p class="note">
+          Integration status: Interfaces are designed to support standard health-data
+          exchange protocols, including HL7 and FHIR, where applicable. Live hospital
+          integration is not currently active.
+        </p>
+      </div>
+    </section>
+
+    <section>
+      <h2>Supported Outputs</h2>
+
+      <div class="grid">
+        <article class="card">
+          <h3>Pattern-Based Review Notifications</h3>
+          <p>Surfaces review context for independent healthcare-professional assessment.</p>
+        </article>
+
+        <article class="card">
+          <h3>Explainable Review Context</h3>
+          <p>Presents contributing numeric variables and available trend context.</p>
+        </article>
+
+        <article class="card">
+          <h3>Workflow-Support Visibility</h3>
+          <p>Supports review-queue organization and accountable workflow-state tracking.</p>
+        </article>
+      </div>
+    </section>
+
+    <section>
+      <h2>Visible Limitations</h2>
+
+      <div class="card">
+        <ul>
+          <li>Output is decision support only and is not a diagnosis.</li>
+          <li>Incomplete, delayed, missing, or unexpected input information may limit the usefulness of review notifications.</li>
+          <li>Healthcare professionals must independently review the underlying numeric observations, the patient record, and the relevant clinical context.</li>
+          <li>Hospital policy governs escalation, response timing, and treatment decisions.</li>
+          <li>The platform does not replace bedside monitoring systems, immediate physiologic alarms, or hospital emergency-response systems.</li>
+          <li>The platform is not intended to function as a code-blue, cardiac-arrest, or other life-threatening-event alarm.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section>
+      <h2>Internal Retrospective Aggregate Evaluation</h2>
+
+      <div class="card">
+        <p>
+          Early Risk Alert AI has conducted internal retrospective aggregate testing
+          using publicly available critical-care datasets, including MIMIC-IV and eICU.
+        </p>
+
+        <p>
+          These internal analyses evaluated review-notification volume relative to
+          standard single-parameter threshold alerting and included retrospective
+          lead-time context relative to documented clinical events.
+        </p>
+
+        <p>
+          Performance characteristics vary by dataset, event definition, and operating
+          threshold. These findings are provided for informational purposes only. They
+          do not constitute prospective clinical validation, diagnostic-performance
+          claims, or proof of patient-outcome improvement.
+        </p>
+
+        <div class="status">
+          HiRID status: Access approved; local/private retrospective aggregate evaluation pending.
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Security and Governance</h2>
+
+      <div class="grid">
+        <article class="card">
+          <h3>Credentialed Access</h3>
+          <p>Role-based controls restrict access to authorized users.</p>
+        </article>
+
+        <article class="card">
+          <h3>Activity Logging</h3>
+          <p>Activity logging supports auditability and accountable platform use.</p>
+        </article>
+
+        <article class="card">
+          <h3>Controlled Pilot Use</h3>
+          <p>Current pilot portals are limited to de-identified data. No live PHI flows are active.</p>
+        </article>
+
+        <article class="card">
+          <h3>Change Control</h3>
+          <p>Stable version markers and release notes support consistent pilot-stage operation.</p>
+        </article>
+      </div>
+    </section>
+
+    <section>
+      <h2>Advisory Structure</h2>
+
+      <div class="grid">
+        <article class="card">
+          <h3>Milton Munroe</h3>
+          <p>Founder &amp; CEO</p>
+        </article>
+
+        <article class="card">
+          <h3>Uche Anosike</h3>
+          <p>Technical Infrastructure &amp; Security Advisor</p>
+        </article>
+
+        <article class="card">
+          <h3>Andrene Louison, RN, MSN</h3>
+          <p>Clinical Advisor</p>
+        </article>
+      </div>
+    </section>
+
+    <section>
+      <h2>Public-Safe Release Note</h2>
+
+      <div class="card">
+        <p>
+          The current stable pilot build includes role-based access, unit scoping,
+          activity logging, workflow-state controls, explainability fields,
+          trend-context displays, threshold configuration, and a retrospective CSV
+          evaluation pipeline.
+        </p>
+
+        <p>
+          Dataset-specific performance metrics, operating-point recommendations, and
+          detailed validation outputs are maintained in controlled private evidence
+          materials.
+        </p>
+      </div>
+    </section>
+
+    <div class="boundary">
+      Early Risk Alert AI is decision-support and workflow-support software only.
+      Healthcare professionals independently review the underlying numeric observations,
+      relevant context, and patient record before determining whether any action is
+      appropriate.
+    </div>
+
+    <footer class="footer">
+      <p><strong>Early Risk Alert AI, LLC</strong></p>
+      <p>info@earlyriskalertai.com · 732-724-7267</p>
+      <p>Pilot-stage retrospective aggregate analysis only. Decision support only.</p>
+    </footer>
+  </main>
+</body>
+</html>"""
 
     @app.get("/admin/review")
     def admin_review():
