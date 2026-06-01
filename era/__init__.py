@@ -4764,48 +4764,24 @@ def create_app() -> Flask:
 
   <div class="card">
     <div class="card-head">
-      <div class="card-title">Retrospective Validation Results</div>
-      <span class="pill op">Published</span>
-    </div>
-    <div class="meta-row">
-      <div class="meta"><strong>Alert Reduction</strong>71.6% vs standard thresholds (10,000-patient synthetic dataset, April 2026)</div>
-      <div class="meta"><strong>ERA False Positive Rate</strong>6.2% vs 20.4% for standard thresholds</div>
-      <div class="meta"><strong>Datasets</strong>500–10,000 patients · 12,873–260,765 readings · results consistent across all 5 cohort sizes</div>
-    </div>
-    <div class="meta-row" style="margin-top:8px">
-      <div class="meta"><strong>Data Type</strong>Synthetic — MIMIC-IV real de-identified ICU data validation is planned for Q2 2026, subject to data-access approval and completion of the evaluation. Results Results are intended to be published publicly upon completion.</div>
-      <div class="meta"><strong>Sensitivity Note</strong>14.6% reading sensitivity ERA vs 57.1% threshold — intentional trade for 71.6% alert reduction and 6.2% FPR. Patient-level detection 38.3% in 6-hr window</div>
-      <div class="meta"><strong>No-Commitment Analysis</strong>Hospitals may submit de-identified CSV for custom retrospective analysis</div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-head">
-      <div class="card-title">HIPAA &amp; BAA Readiness</div>
-      <span class="pill op">Ready</span>
-    </div>
-    <div class="meta-row">
-      <div class="meta"><strong>BAA</strong>Available upon request for live patient data engagements</div>
-      <div class="meta"><strong>Phase 1</strong>Retrospective validation on de-identified data — no BAA required</div>
-      <div class="meta"><strong>Phase 2</strong>BAA executed before any identifiable patient data is processed</div>
-    </div>
-    <div class="meta-row" style="margin-top:8px">
-      <div class="meta"><strong>Contact</strong>info@earlyriskalertai.com to request BAA or data use agreement</div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-head">
-      <div class="card-title">Retrospective Validation Data Ingestion</div>
+      <div class="card-title">Retrospective Evaluation Pipeline</div>
       <span class="pill op">Available</span>
     </div>
     <div class="meta-row">
       <div class="meta"><strong>Format</strong>CSV upload — structured vital-sign data</div>
       <div class="meta"><strong>Route</strong>/retro-upload (login required)</div>
-      <div class="meta"><strong>EHR Integration</strong>FHIR / HL7 roadmap — CSV ingestion available now. Live EHR integration via FHIR R4 and HL7 is on the product roadmap — current pilot entry point is retrospective validation via de-identified CSV, which requires no EHR integration and can begin within days of data availability.</div>
+      <div class="meta"><strong>Status</strong>Controlled pilot-stage evaluation. No live PHI flow active.</div>
     </div>
-    <div class="meta-row" style="margin-top:8px">
-      <div class="meta"><strong>Schema</strong>patient_id, timestamp, HR, SpO2, BP, RR, temp, clinical_event</div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <div class="card-title">Data Governance</div>
+      <span class="pill op">Ready</span>
+    </div>
+    <div class="meta-row">
+      <div class="meta"><strong>Phase 1</strong>Retrospective validation on de-identified data only</div>
+      <div class="meta"><strong>Contact</strong>info@earlyriskalertai.com for pilot and data governance inquiries</div>
     </div>
   </div>
 

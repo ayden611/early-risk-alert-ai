@@ -1,171 +1,68 @@
 # Early Risk Alert AI
-## Summary
 
-Early Risk Alert AI is a web-based machine learning application that predicts whether a person may be at low or high cardiovascular risk using health indicators such as age, BMI, exercise level, blood pressure, heart rate, and smoking status. The system provides a risk classification and probability score, stores predictions in a cloud database, and is deployed as a scalable web service.
+## Current Platform Summary
 
-Author: Milton Munroe  
-Course: Elements of AI – University of Helsinki  
-Project Type: Probabilistic Classification (Naive Bayes)
+Early Risk Alert AI is a pilot-stage, pre-commercial healthcare-professional-facing decision-support and workflow-support software platform.
 
-1. Your idea in a nutshell
-Project Name: Early Risk Alert AI
-Early Risk Alert AI is a web-based machine learning application that predicts whether a person may be at low or high cardiovascular risk based on health indicators such as age, BMI, exercise level, blood pressure, and heart rate. The system provides a risk classification and probability score and stores prediction history in a database.
+The platform is designed to organize already-acquired numeric vital-sign observations into pattern-based review notifications and explainable review context for authorized healthcare professionals. It supports independent professional review and monitored-workflow prioritization.
 
-2. Background
-Cardiovascular disease is one of the leading causes of death worldwide. Many individuals are unaware of their potential risk level until symptoms become serious.
-This project addresses the problem of early awareness. By using health indicators that people commonly know (age, blood pressure, heart rate, BMI), the system provides an immediate estimate of risk.
-The motivation behind this project is to demonstrate how AI can assist in preventative health awareness. Even simple models can help individuals better understand how lifestyle and measurable health metrics influence risk.
-This topic is important because early detection and awareness can lead to better health decisions and potentially prevent serious outcomes.
+### Current Input Boundary
 
-3. Data and AI Techniques
-This project uses a supervised machine learning classification model trained on structured health-related data.
-AI techniques used:
-Supervised learning
-Binary classification
-Probability prediction
-Feature-based modeling
-NumPy for feature arrays
-Joblib for model loading
-SQLAlchemy + PostgreSQL for storing prediction logs
-The model takes numerical inputs:
-Age
-BMI
-Exercise level
-Systolic blood pressure
-Diastolic blood pressure
-Heart rate
-The system outputs:
-Risk classification (Low / High)
-Probability score
-The application is implemented using:
-Python
-Flask (web framework)
-PostgreSQL (cloud database)
-Deployed on Render
+The pilot-stage software may display already-acquired numeric observations, including:
 
-4. How it is used
-The application is used through a web interface.
-A user:
-Enters their health metrics
-Submits the form
-Receives a risk classification and probability
-The prediction is stored in a database
-The user can view previous predictions in a history page
-The affected users are:
-Individuals interested in understanding cardiovascular risk
-Students learning about AI in healthcare
-Developers studying ML deployment
+* heart-rate observations
+* non-invasive blood-pressure observations
+* SpO2 observations
+* respiratory-rate observations
+* temperature observations, where available
+* relevant review-context and workflow-state information
 
-5. Challenges
-This project does not replace medical professionals. It is not a diagnostic tool.
-Limitations include:
-Model accuracy depends on training data quality
-Limited feature set
-No integration with real medical records
-No personalization beyond input variables
-Risk of over-reliance on simplified predictions
-AI models must be interpreted carefully and responsibly.
+The platform does not directly acquire physiologic signals from patients and is not intended to process raw continuous waveform data.
 
-6. Whats next?
-Future improvements could include:
-Larger and more diverse datasets
-Integration with wearable devices
-Personalized health tracking
-Mobile app version
-Improved UI/UX design
-Model retraining pipeline
-Security and authentication
-HIPAA-compliant architecture
-API for mobile apps
-Cloud scaling and monitoring
-The project could evolve into a full preventive health monitoring platform.
+### Current Output Boundary
 
-7. Acknowledgments
-This project was developed using:
-Python
-Flask
-SQLAlchemy
-NumPy
-Joblib
-PostgreSQL
-Render for deployment
-Open-source machine learning tools
-Inspiration from introductory AI coursework and machine learning education materials.
-## 8. Demo Code
+The pilot-stage software may present:
 
-A simple Python implementation using Gaussian Naive Bayes is included in `demo_model.py`.
+* pattern-based review notifications
+* contributing numeric variables
+* available trend context
+* review-queue organization
+* workflow-state visibility
+* data-freshness and limitation context
 
-This demonstrates:
-- Feature structuring
-- Model training
-- Risk classification
-- Probability estimation
+### Decision-Support Boundary
 
-## 9. How to Run This Project
+Decision support only. Early Risk Alert AI does not diagnose, direct treatment, replace clinician judgment, or independently trigger escalation.
 
-1. Clone the repository:
-   git clone https://github.com/ayden611/early-risk-alert-ai.git
+The platform is not intended to replace bedside monitoring systems, immediate physiologic alarms, code-blue systems, cardiac-arrest alarms, or hospital emergency-response systems. Healthcare professionals independently review the underlying numeric observations, relevant context, and patient record before determining whether any action is appropriate.
 
-2. Navigate into the folder:
-   cd early-risk-alert-ai
+### Evidence Boundary
 
-3. Install dependencies:
-   pip install -r requirements.txt
+Current evidence is retrospective, de-identified, and aggregate only.
 
-4. Run the demo model:
-   python demo_model.py
+Internal retrospective aggregate analyses have used critical-care datasets including MIMIC-IV and eICU. Performance characteristics vary by dataset, event definition, and operating threshold. Metrics must be interpreted within their respective evidence-track definitions and must not be merged across tracks.
 
-## 10. Model Evaluation
+These analyses do not constitute prospective clinical validation, diagnostic-performance claims, or proof of patient-outcome improvement.
 
-The model can be evaluated using:
+HiRID status: Access approved; local/private retrospective aggregate evaluation pending.
 
-- Accuracy score
-- Confusion matrix
-- Classification report (precision, recall, F1-score)
+### Pilot and Integration Boundary
 
-Future versions will include train/test split validation
-and performance metrics visualization.
+The current pilot portals are limited to de-identified evaluation data. No live PHI flows are active.
 
-Mermaid:
-flowchart LR
-  subgraph Clients
-    M[Mobile App / Devices]
-    W[Web Dashboard]
-  end
+Future integration planning may consider standard health-data exchange protocols, such as HL7 and FHIR, where appropriate. Live hospital integration is not currently active.
 
-  subgraph API[early-risk-alert-mobile-api]
-    V1[POST /vitals]
-    AL[GET /alerts]
-    SSE[GET /stream/alerts (SSE)]
-  end
+### Regulatory Status
 
-  subgraph Stream[Streaming Layer]
-    RS[(Redis Streams)]
-    PUB[(Redis PubSub)]
-    K[(Kafka - optional)]
-  end
+Early Risk Alert AI is preparing a Section 513(g) Request for Information to seek FDA information regarding classification and applicable regulatory requirements.
 
-  subgraph Worker[early-risk-alert-ai-worker]
-    C1[Consumer Group: vitals-workers]
-    DET[Anomaly Detection]
-    WR[Write Alerts]
-    PUSH[Publish Realtime Alerts]
-  end
+A Section 513(g) request is not FDA clearance, FDA approval, or a determination of clinical performance. Any future FDA Q-Submission or pre-submission engagement will be handled as a separate regulatory interaction.
 
-  subgraph DB[(Postgres)]
-    VE[vitals_events]
-    A[alerts]
-  end
+### Historical Repository Note
 
-  M --> V1
-  V1 --> VE
-  V1 --> RS
-  RS --> C1 --> DET --> WR --> A
-  WR --> PUSH --> PUB --> SSE --> W
-  AL --> A
+Earlier repository sections document the original educational prototype and the development history of the platform. They should be interpreted as historical records, not as the current intended-use statement or current public positioning.
 
-- Open-source Python libraries such as NumPy and scikit-learn
-
+---
 
 <!-- ERA_VALIDATION_ROUTES_V2_START -->
 ## Validation Intelligence and Pilot Evidence Routes

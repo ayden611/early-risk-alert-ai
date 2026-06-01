@@ -1657,7 +1657,7 @@ td{
       <div class="panel queue-panel">
         <div class="queue-head">
           <div>
-            <span class="eyebrow">Live review queue • simulated pilot view</span>
+            <span class="eyebrow">Simulated review queue • simulated pilot view</span>
             <h1>Prioritized patient review queue</h1>
             <p>
               Compact workboard showing rank, unit, priority tier, review score, primary driver,
@@ -1729,7 +1729,7 @@ td{
                     <th>Review Score</th>
                     <th>Primary Driver</th>
                     <th>Trend</th>
-                    <th>Lead Time</th>
+                    <th>Retrospective Context</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -1941,7 +1941,7 @@ td{
               <div class="rank-title">#${idx + 1} ${r.patient}</div>
               <div class="unit">${r.unit}</div>
             </div>
-            <span class="pill ${tierClass(r.tier)}">${r.tier}</span>
+            <span class="pill ${tierClass(r.tier)}">${r.tier === "Critical" ? "Priority 1" : r.tier}</span>
           </div>
           <div class="score">${r.score.toFixed(1)}<small>/10</small></div>
           <div class="mini">
@@ -1964,7 +1964,7 @@ td{
         tr.innerHTML = `
           <td>#${idx + 1}</td>
           <td><strong>${r.patient}</strong><br><span style="color:#a9b8cc">${r.unit}</span></td>
-          <td><span class="pill ${tierClass(r.tier)}">${r.tier}</span></td>
+          <td><span class="pill ${tierClass(r.tier)}">${r.tier === "Critical" ? "Priority 1" : r.tier}</span></td>
           <td class="score-cell">${r.score.toFixed(1)}/10</td>
           <td>${r.driver}</td>
           <td>${r.trend}</td>
@@ -1973,7 +1973,7 @@ td{
             <div class="action-row">
               <button class="small-action">Acknowledge</button>
               <button class="small-action">Assign</button>
-              <button class="small-action">Escalate Review</button>
+              <button class="small-action">Log Review Escalation</button>
             </div>
           </td>
         `;
