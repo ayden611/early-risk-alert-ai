@@ -282,7 +282,7 @@ PILOT_SUPPORTED_INPUTS = [
     "approved medical information available to the HCP",
     "respiratory rate (RR) as monitored context",
     "temperature as monitored context",
-    "CSV-based retrospective validation pipeline (FHIR R4 and HL7 integration on roadmap)",
+    "CSV-based retrospective evaluation pipeline. Interfaces are designed to support standard health-data exchange protocols, including HL7 and FHIR, where applicable. Live hospital integration is not currently active.",
 ]
 PILOT_SUPPORTED_OUTPUTS = [
     "patient prioritization support",
@@ -3874,7 +3874,7 @@ def create_app() -> Flask:
       <div class="card"><div class="k">Trend History</div><p>HR, SpO₂, RR, and temperature trend charts per patient. Stored history survives restarts.</p></div>
       <div class="card"><div class="k">Alert Notifications</div><p>Email and SMS alerts when patients cross critical thresholds — configurable cooldown per patient.</p></div>
       <div class="card"><div class="k">Governance Packet</div><p>Risk register, V&amp;V-lite, claims control, cybersecurity summary, and change approval log — all in-platform.</p></div>
-      <div class="card"><div class="k">EHR Integration Roadmap</div><p>Live EHR integration via FHIR R4 and HL7 is on the roadmap. Current pilot entry: retrospective validation via de-identified CSV — no EHR integration required to begin.</p></div>
+      <div class="card"><div class="k">Integration Roadmap</div><p>Future integration planning may consider standard health-data exchange protocols, including HL7 and FHIR, where applicable. Current pilot entry: retrospective validation via de-identified CSV — no live integration required to begin.</p></div>
     </div>
   </div>
 
@@ -4144,7 +4144,7 @@ def create_app() -> Flask:
     <h2>Limitations and known gaps</h2>
     <div class="row-item"><span class="row-k">Synthetic validation</span><span class="row-v">10,000-patient synthetic dataset (260,765 readings) engineered with clinically grounded deterioration trajectories (sepsis, respiratory failure, cardiac decompensation, hypertensive crisis). April 2026. Results: 38.3% patient detection in 6-hr pre-event window · 71.6% alert reduction · 6.2% ERA FPR vs 20.4% standard threshold alerting · 14.6% reading sensitivity at t=6.0. At t=4.0 (ICU): 61.4% patient detection / 9.6% FPR. At t=5.0 (mixed): 48.1% patient detection / 7.8% FPR. Validated consistently across 500, 1,000, 2,000, 5,000, and 10,000 patient cohorts. MIMIC-IV real de-identified ICU data validation is planned for Q2 2026, subject to data-access approval and completion of the evaluation. Results Results are intended to be published publicly upon completion. Prospective clinical validation has not yet been completed.</span></div>
     <div class="row-item"><span class="row-k">Rules-based only</span><span class="row-v">Current engine uses additive threshold rules, not machine learning. No training dataset, no AUC, no sensitivity/specificity from a held-out test set yet.</span></div>
-    <div class="row-item"><span class="row-k">No EHR integration</span><span class="row-v">Current deployment uses structured CSV input and simulated vitals. Live EHR integration via FHIR R4 and HL7 is on the product roadmap — current pilot entry point is retrospective validation via de-identified CSV, which requires no EHR integration and can begin within days of data availability.</span></div>
+    <div class="row-item"><span class="row-k">No EHR integration</span><span class="row-v">Current deployment uses structured CSV input and simulated vitals. Future integration planning may consider standard health-data exchange protocols, including HL7 and FHIR, where applicable. Current pilot entry point is retrospective validation via de-identified CSV — no live integration required to begin.</span></div>
     <div class="row-item"><span class="row-k">Simulated demo environment</span><span class="row-v">The public demo runs on simulated patient data. No real patient data is used in the demonstration environment.</span></div>
     <div class="row-item"><span class="row-k">Incomplete or delayed data</span><span class="row-v">Outputs may be affected by missing, delayed, or erroneous vital sign inputs. The platform does not validate source data quality.</span></div>
     <div class="row-item"><span class="row-k">Population generalizability</span><span class="row-v">Signal weights have not been validated across diverse patient populations, acuity levels, or care settings. Local validation is strongly recommended.</span></div>
