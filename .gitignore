@@ -35,3 +35,8 @@ hirid/raw/
 *.sqlite
 *.sqlite-wal
 *.sqlite-shm
+
+# ERA_PRIVATE_INSURANCE_RECORDS_START
+# Private insurance records must remain local only.
+docs/private/insurance/
+# ERA_PRIVATE_INSURANCE_RECORDS_END

@@ -61,3 +61,13 @@ A Section 513(g) request is not FDA clearance, FDA approval, or a determination 
 ---
 
 **Decision support only.** Early Risk Alert AI does not diagnose, direct treatment, replace clinician judgment, or independently trigger escalation.
+
+<!-- ERA_INSURANCE_READINESS_STATUS_START -->
+## Insurance Readiness
+
+Active Technology Errors & Omissions / Cyber Liability coverage is in place as part of the platform's pilot-readiness governance controls.
+
+Detailed policy documents, certificate records, premiums, private contact details, and insurer records are retained privately and are not published in this repository.
+
+Insurance readiness does not alter the platform boundary: decision support only; no diagnosis, treatment direction, replacement of clinician judgment, or autonomous escalation.
+<!-- ERA_INSURANCE_READINESS_STATUS_END -->
