@@ -2710,7 +2710,7 @@ def _score_row(r: Dict[str, Any], prev: Dict[str, Any] = None) -> float:
         risk += max(0, rr - 20)    * _W_RR
         risk += max(0, temp - 99.0)* _W_TEMP
 
-        # Compound deterioration rules — clinically validated patterns
+        # Compound deterioration rules — prespecified rules-based patterns
         if prev:
             try:
                 dhr  = hr   - float(prev.get("heart_rate", hr) or hr)
@@ -2726,14 +2726,14 @@ def _score_row(r: Dict[str, Any], prev: Dict[str, Any] = None) -> float:
                 temp_rising = dtemp > 0.3   # Fever developing
                 # Count deteriorating signals
                 det_count = sum([hr_rising, spo2_drop, rr_rising, sbp_drop, temp_rising])
-                # Compound rule bonuses — clinically validated multi-signal patterns
+                # Compound rule bonuses — prespecified multi-signal patterns
                 if det_count >= 3:
                     risk += 1.5   # 3+ signals: strong sepsis/deterioration pattern
                 elif det_count == 2:
                     risk += 0.9   # 2 signals: significant combined deterioration
                 elif det_count == 1:
                     risk += 0.4   # Single trend: early warning
-                # Specific high-risk compound patterns — clinically validated
+                # Specific high-priority compound patterns — prespecified rules-based logic
                 if hr_rising and spo2_drop:
                     risk += 0.6   # Tachycardia + hypoxia: respiratory failure pattern
                 if spo2_drop and rr_rising:
@@ -4056,7 +4056,7 @@ def create_app() -> Flask:
 
   <div class="card">
     <h2>Performance — retrospective validation</h2>
-    <div class="disclaimer" style="background:rgba(58,211,143,.07);border-color:rgba(58,211,143,.2);color:#b6f5d9"><strong>Retrospective validation — April 2026 (synthetic dataset).</strong> Results below are from a 10,000-patient synthetic dataset (260,765 readings) engineered with clinically grounded deterioration trajectories (sepsis, respiratory failure, cardiac decompensation, hypertensive crisis). Validated across 500, 1,000, 2,000, 5,000, and 10,000 patient cohorts. April 2026. MIMIC-IV real de-identified ICU data validation is planned for Q2 2026, subject to data-access approval and completion of the evaluation. Results Results are intended to be published publicly upon completion. Prospective clinical validation has not yet been completed. Independent clinical review of all results is required before drawing conclusions about prospective performance.</div>
+    <div class="disclaimer" style="background:rgba(58,211,143,.07);border-color:rgba(58,211,143,.2);color:#b6f5d9"><strong>Synthetic-data development context.</strong> Historical synthetic-data testing is maintained in controlled private evidence materials. These findings do not constitute prospective clinical validation, diagnostic-performance claims, or proof of patient-outcome improvement.</div>
     <div class="grid-3">
       <div class="stat-card"><div class="stat-k">ERA Sensitivity (t=6.0)</div><div class="stat-v" style="color:#3ad38f">18.8–19.3%</div><div class="stat-p">Clinical events flagged at t=6.0 across 2,000–10,000 patient datasets. Intentional trade for lower false positives. Threshold 4.0 yields 33–35% sensitivity for ICU.</div></div>
       <div class="stat-card"><div class="stat-k">False Positive Rate (t=6.0)</div><div class="stat-v" style="color:#3ad38f">4.2–4.5%</div><div class="stat-p">ERA false positive rate vs 27–28% for standard threshold alerting — a 22–24 percentage point reduction in unnecessary interruptions across all tested datasets.</div></div>
@@ -4142,7 +4142,7 @@ def create_app() -> Flask:
 
   <div class="card">
     <h2>Limitations and known gaps</h2>
-    <div class="row-item"><span class="row-k">Synthetic validation</span><span class="row-v">10,000-patient synthetic dataset (260,765 readings) engineered with clinically grounded deterioration trajectories (sepsis, respiratory failure, cardiac decompensation, hypertensive crisis). April 2026. Results: 38.3% patient detection in 6-hr pre-event window · 71.6% alert reduction · 6.2% ERA FPR vs 20.4% standard threshold alerting · 14.6% reading sensitivity at t=6.0. At t=4.0 (ICU): 61.4% patient detection / 9.6% FPR. At t=5.0 (mixed): 48.1% patient detection / 7.8% FPR. Validated consistently across 500, 1,000, 2,000, 5,000, and 10,000 patient cohorts. MIMIC-IV real de-identified ICU data validation is planned for Q2 2026, subject to data-access approval and completion of the evaluation. Results Results are intended to be published publicly upon completion. Prospective clinical validation has not yet been completed.</span></div>
+    <div class="row-item"><span class="row-k">Synthetic development context</span><span class="row-v">Historical synthetic-data development testing is maintained in controlled private evidence materials. These findings do not constitute prospective clinical validation, diagnostic-performance claims, or proof of patient-outcome improvement.</span></div>
     <div class="row-item"><span class="row-k">Rules-based only</span><span class="row-v">Current engine uses additive threshold rules, not machine learning. No training dataset, no AUC, no sensitivity/specificity from a held-out test set yet.</span></div>
     <div class="row-item"><span class="row-k">No EHR integration</span><span class="row-v">Current deployment uses structured CSV input and simulated vitals. Future integration planning may consider standard health-data exchange protocols, including HL7 and FHIR, where applicable. Current pilot entry point is retrospective validation via de-identified CSV — no live integration required to begin.</span></div>
     <div class="row-item"><span class="row-k">Simulated demo environment</span><span class="row-v">The public demo runs on simulated patient data. No real patient data is used in the demonstration environment.</span></div>
@@ -4440,7 +4440,7 @@ def create_app() -> Flask:
 
       <div class="card">
         <p>
-          Early Risk Alert AI is intended to assist authorized healthcare professionals
+          Early Risk Alert AI is intended to assist authorized health care professionals
           in reviewing adult ICU and acute-care patients whose numeric vital-sign
           trends may warrant closer clinical attention. The platform supports workflow
           prioritization and independent clinical review.

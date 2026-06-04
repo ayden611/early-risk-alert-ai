@@ -4,7 +4,7 @@
 
 Early Risk Alert AI is a **pilot-stage, pre-commercial** healthcare-professional-facing decision-support and workflow-support software platform.
 
-The platform is designed to organize **already-acquired numeric vital-sign observations** into pattern-based review notifications and explainable review context for authorized healthcare professionals. It supports independent professional review and monitored-workflow prioritization.
+The platform is designed to organize **already-acquired numeric vital-sign observations** into pattern-based review notifications and explainable review context for authorized health care professionals. It supports independent professional review and monitored-workflow prioritization.
 
 ### Input Boundary
 
