@@ -43,3 +43,6 @@ docs/private/insurance/
 
 # Local-only outreach and workflow-feedback records
 docs/private/outreach/
+
+# Private FDA regulatory records — local only
+docs/private/regulatory/
