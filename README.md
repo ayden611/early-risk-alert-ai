@@ -71,3 +71,11 @@ Detailed policy documents, certificate records, premiums, private contact detail
 
 Insurance readiness does not alter the platform boundary: decision support only; no diagnosis, treatment direction, replacement of clinician judgment, or autonomous escalation.
 <!-- ERA_INSURANCE_READINESS_STATUS_END -->
+
+## Future Integration Discovery Status
+
+Early Risk Alert AI is not currently connected to Epic or any live hospital EHR environment.
+
+Future institutional discussions may consider standards-based, read-only integration pathways for already-recorded numeric observations, including FHIR where applicable. No live PHI flow, production endpoint, write-back function, autonomous escalation function, or interruptive EHR alert is active.
+
+Retrospective bulk-data analysis is treated as a separate future discovery pathway and is not represented as an active operational integration.

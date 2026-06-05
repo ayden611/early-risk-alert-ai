@@ -40,3 +40,6 @@ hirid/raw/
 # Private insurance records must remain local only.
 docs/private/insurance/
 # ERA_PRIVATE_INSURANCE_RECORDS_END
+
+# Local-only outreach and workflow-feedback records
+docs/private/outreach/

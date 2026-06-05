@@ -1,0 +1,57 @@
+{
+  "document_type": "conceptual_mapping_only",
+  "implementation_status": "not_implemented",
+  "production_endpoint_active": false,
+  "live_phi_flow_active": false,
+  "write_back_active": false,
+  "autonomous_escalation_active": false,
+  "interruptive_ehr_alert_active": false,
+  "purpose": "Support future hospital-side integration-discovery discussions only.",
+  "current_preferred_posture": "standalone_controlled_workflow_demonstration",
+  "future_candidate_pathways": [
+    {
+      "pathway": "hospital_approved_read_only_fhir_access",
+      "status": "future_discovery_only",
+      "notes": "Potential authorized retrieval of already-recorded numeric observations. Requires institution-selected controls and approvals."
+    },
+    {
+      "pathway": "retrospective_bulk_data_export",
+      "status": "future_discovery_only",
+      "notes": "Separate retrospective-analysis pathway for larger approved datasets. Not the default operational-dashboard pathway."
+    },
+    {
+      "pathway": "ehr_adjacent_or_in_workflow_presentation",
+      "status": "future_discovery_only",
+      "notes": "Later-stage discussion topic requiring separate privacy, security, usability, contractual, and regulatory review."
+    }
+  ],
+  "conceptual_resources": [
+    {
+      "resource": "Observation",
+      "purpose": "Map already-recorded numeric vital-sign observations.",
+      "candidate_observation_types": [
+        "heart_rate",
+        "blood_pressure_systolic",
+        "blood_pressure_diastolic",
+        "oxygen_saturation",
+        "respiratory_rate",
+        "temperature"
+      ]
+    },
+    {
+      "resource": "Patient",
+      "purpose": "Support authorized patient-context association where permitted."
+    },
+    {
+      "resource": "Encounter",
+      "purpose": "Support authorized encounter or care-setting context where permitted."
+    }
+  ],
+  "prohibited_interpretations": [
+    "This file is not production integration code.",
+    "This file does not authorize PHI access.",
+    "This file does not claim active Epic integration.",
+    "This file does not establish regulatory classification.",
+    "This file does not authorize autonomous escalation or EHR write-back."
+  ]
+}
