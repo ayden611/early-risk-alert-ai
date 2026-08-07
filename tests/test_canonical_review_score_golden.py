@@ -6,14 +6,31 @@ from pathlib import Path
 import sys
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-if str(REPO_ROOT) not in sys.path:
-    sys.path.insert(0, str(REPO_ROOT))
 
-from era.core.scoring import (
-    SCORER_BOUNDARY_SHA,
-    SCORER_ID,
-    score_review_row,
+# Load the canonical scorer directly from its frozen module path.
+# This contract intentionally avoids importing era/__init__.py so
+# application/web dependencies cannot affect scorer verification.
+import importlib.util
+
+SCORING_MODULE = REPO_ROOT / "era" / "core" / "scoring.py"
+
+spec = importlib.util.spec_from_file_location(
+    "era_canonical_scoring_contract_target",
+    SCORING_MODULE,
 )
+
+if spec is None or spec.loader is None:
+    raise RuntimeError(
+        f"Unable to load canonical scorer module: {SCORING_MODULE}"
+    )
+
+scoring = importlib.util.module_from_spec(spec)
+sys.modules[spec.name] = scoring
+spec.loader.exec_module(scoring)
+
+SCORER_BOUNDARY_SHA = scoring.SCORER_BOUNDARY_SHA
+SCORER_ID = scoring.SCORER_ID
+score_review_row = scoring.score_review_row
 
 
 FIXTURE = (
