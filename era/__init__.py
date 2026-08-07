@@ -2691,65 +2691,10 @@ _W_RR        = 0.18    # increased — tachypnea is key early deterioration sign
 _W_TEMP      = 0.75    # increased slightly
 
 def _score_row(r: Dict[str, Any], prev: Dict[str, Any] = None) -> float:
-    """
-    Compute ERA risk score for a single row.
-    Improvement 2: increased HR/RR/SBP weights.
-    Improvement 2: trend velocity modifier — rate of change adds up to +1.5
-    if multiple vitals are deteriorating simultaneously between readings.
-    """
-    try:
-        hr   = float(r.get("heart_rate", 0) or 0)
-        spo2 = float(r.get("spo2", 100) or 100)
-        sbp  = float(r.get("bp_systolic", 120) or 120)
-        rr   = float(r.get("respiratory_rate", 16) or 16)
-        temp = float(r.get("temperature_f", 98.6) or 98.6)
+    """Compatibility shim to the canonical ERA Review Score."""
+    from era.core.scoring import score_review_row
 
-        risk  = max(0, hr - 90)    * _W_HR_BASE
-        risk += max(0, 94 - spo2)  * _W_SPO2
-        risk += max(0, sbp - 140)  * _W_SBP
-        risk += max(0, rr - 20)    * _W_RR
-        risk += max(0, temp - 99.0)* _W_TEMP
-
-        # Compound deterioration rules — prespecified rules-based patterns
-        if prev:
-            try:
-                dhr  = hr   - float(prev.get("heart_rate", hr) or hr)
-                dspo = spo2 - float(prev.get("spo2", spo2) or spo2)
-                drr  = rr   - float(prev.get("respiratory_rate", rr) or rr)
-                dsbp = sbp  - float(prev.get("bp_systolic", sbp) or sbp)
-                dtemp= temp - float(prev.get("temperature_f", temp) or temp)
-                # Individual trend flags — lower thresholds to catch earlier
-                hr_rising   = dhr  >  5     # HR rising (was 8)
-                spo2_drop   = dspo < -1.5   # SpO2 dropping (was -2)
-                rr_rising   = drr  >  2     # RR rising (was 3)
-                sbp_drop    = dsbp < -10    # SBP dropping — hypotension pattern
-                temp_rising = dtemp > 0.3   # Fever developing
-                # Count deteriorating signals
-                det_count = sum([hr_rising, spo2_drop, rr_rising, sbp_drop, temp_rising])
-                # Compound rule bonuses — prespecified multi-signal patterns
-                if det_count >= 3:
-                    risk += 1.5   # 3+ signals: strong sepsis/deterioration pattern
-                elif det_count == 2:
-                    risk += 0.9   # 2 signals: significant combined deterioration
-                elif det_count == 1:
-                    risk += 0.4   # Single trend: early warning
-                # Specific high-priority compound patterns — prespecified rules-based logic
-                if hr_rising and spo2_drop:
-                    risk += 0.6   # Tachycardia + hypoxia: respiratory failure pattern
-                if spo2_drop and rr_rising:
-                    risk += 0.7   # SpO2 falling + RR rising: strongest respiratory signal
-                if hr_rising and rr_rising and not spo2_drop:
-                    risk += 0.4   # Tachycardia + tachypnea: early sepsis pattern
-                if sbp_drop and hr_rising:
-                    risk += 0.6   # Hypotension + tachycardia: shock pattern
-                if hr_rising and temp_rising:
-                    risk += 0.3   # Tachycardia + fever: infection/SIRS pattern
-            except Exception:
-                pass
-
-        return round(_clamp(risk, 0.0, 9.9), 2)
-    except Exception:
-        return 0.0
+    return score_review_row(r, prev)
 
 
 def _threshold_alert(r: Dict[str, Any]) -> bool:
