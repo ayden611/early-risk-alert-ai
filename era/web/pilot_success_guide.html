@@ -25,6 +25,24 @@ p,li{line-height:1.6}
 
 </head>
 <body>
+<!-- ERA_CANONICAL_EVIDENCE_2026_08_07: MIMIC lock e07d173bab3e3de41efc4b7ef363ebc1e7817092; eICU lock bf38d6afd39bc4188ed1fbea4560bbafcf5ffad3; public current operating point t=6.0 only; outcome-proxy/subcohort results historical when retained. -->
+<!-- ERA-EVIDENCE-INTEGRITY-HOLD-2026-08-07 -->
+<div style="
+  margin:18px 0;
+  padding:16px 18px;
+  border:1px solid rgba(255,255,255,.25);
+  border-radius:12px;
+  background:rgba(255,255,255,.07);
+  line-height:1.55;">
+  <strong>EVIDENCE INTEGRITY HOLD</strong><br>
+  Canonical retrospective product evidence on this page is limited to
+  the locked t=6.0 full-cohort MIMIC-IV and eICU harmonized results.
+  Historical outcome-proxy and subcohort results remain separately
+  identified as non-canonical provenance. Timing is reported only as
+  retrospective timing context. Decision-support only. No prospective
+  clinical-validation claim.
+</div>
+
 <div class="wrap">
 <span class="pill">Pilot Success Guide · Ready</span>
 <h1>Pilot Success Guide</h1>
@@ -38,7 +56,7 @@ p,li{line-height:1.6}
 
 <section class="card">
 <h2>Pilot Purpose</h2>
-<p>Evaluate whether Early Risk Alert AI can support authorized healthcare professionals with explainable patient prioritization, review-burden reduction, and command-center workflow visibility.</p>
+<p>Evaluate whether Early Risk Alert AI can support authorized healthcare professionals with explainable patient prioritization, alert-volume reduction, and command-center workflow visibility.</p>
 <p class="guard">Pilot success should be measured with pre-agreed workflow and review metrics, not unsupported outcome or hard-dollar ROI claims.</p>
 </section>
 
@@ -46,7 +64,7 @@ p,li{line-height:1.6}
 <h2>Suggested Pilot Success Metrics</h2>
 <ul>
 <li>Alerts or reviews per patient-day.</li>
-<li>Visibility of priority tier, primary driver, trend direction, queue rank, and lead-time context.</li>
+<li>Visibility of priority tier, primary driver, trend direction, queue rank, and retrospective timing context.</li>
 <li>Reviewer understanding of why a case may warrant review.</li>
 <li>Workflow-state completion.</li>
 <li>Safety: no autonomous escalation, diagnosis, treatment direction, or independent escalation.</li>
@@ -117,19 +135,15 @@ p,li{line-height:1.6}
       '<p style="color:#b9c7d6;line-height:1.5">DUA-safe aggregate evidence only. Raw restricted data, row-level outputs, patient identifiers, timestamps, and enriched CSVs remain local-only.</p>' +
       '<div style="border:1px solid rgba(255,213,107,.55);background:rgba(255,213,107,.10);color:#ffe5a4;border-radius:14px;padding:12px 14px;font-weight:800;margin:14px 0">MIMIC-IV and eICU results should be framed as retrospective multi-dataset evidence under a harmonized threshold framework, not as final clinical validation.</div>' +
       '<h3>MIMIC-IV threshold matrix</h3>' +
-      table(['Threshold','Suggested setting','Alert reduction','FPR','Detection','ERA alerts / patient-day','Median lead time'],[
-        ['t=4.0','ICU / high-acuity','80.3%','14.4%','37.9%','2.22','4.0 hrs'],
-        ['t=5.0','Mixed units / balanced','89.1%','8.0%','24.6%','1.23','4.0 hrs'],
-        ['t=6.0','Telemetry / stepdown conservative','94.3%','4.2%','15.3%','0.65','4.0 hrs']
+      table(['Threshold','Suggested setting','Alert-volume reduction','FPR','Detection','ERA alerts / patient-day','Median retrospective timing context'],[
+        ['t=6.0','Telemetry / stepdown conservative','93.9%','4.5%','14.8%','0.6859','4.0 hrs']
       ]) +
       '<h3>eICU harmonized clinical-event matrix</h3>' +
-      table(['Threshold','Suggested setting','Alert reduction','FPR','Detection','Alerts / patient-day','Median lead time'],[
-        ['t=4.0','ICU / high-acuity','69.74%','5.34%','62.51%','29.2181','5.67 hrs'],
-        ['t=5.0','Mixed units / balanced','87.85%','2.23%','38.80%','11.733','5.17 hrs'],
-        ['t=6.0','Telemetry / stepdown conservative','94.25%','0.98%','24.66%','5.5536','4.83 hrs']
+      table(['Threshold','Suggested setting','Alert-volume reduction','FPR','Detection','Alerts / patient-day','Median retrospective timing context'],[
+        ['t=6.0','Telemetry / stepdown conservative','88.53%','2.24%','41.4%','10.9337','4.75 hrs']
       ]) +
       '<h3>Representative review examples</h3>' +
-      table(['Queue rank','Case','Tier','Primary driver','Trend','Lead-time context','Handling'],[
+      table(['Queue rank','Case','Tier','Primary driver','Trend','Retrospective timing context','Handling'],[
         ['#1','Case-001','Critical','SpO2 decline','Worsening','~4 hrs','Review-prioritization context only'],
         ['#2','Case-002','Critical','BP instability','Worsening','~3.5 hrs','Requires authorized clinician review'],
         ['#3','Case-003','Elevated','HR instability','Stable / Watch','~3 hrs','Workflow support only']
@@ -170,11 +184,11 @@ p,li{line-height:1.6}
       '<div style="display:inline-block;border:1px solid rgba(168,255,176,.55);background:rgba(72,180,110,.16);color:#a8ffb0;border-radius:999px;padding:7px 11px;font-weight:900;letter-spacing:.08em;font-size:11px;text-transform:uppercase">Run registry</div>' +
       '<h2 style="font-size:32px;margin:14px 0 8px">Validation run history</h2>' +
       '<p style="color:#b9c7d6;line-height:1.5">Locked DUA-safe aggregate run registry. Raw restricted data and row-level outputs remain local-only.</p>' +
-      table(['Run','Dataset','Event definition','Cases / stays','Rows','Threshold','Alert reduction','FPR','Detection','Lead time','Status'],[
-        ['MIMIC-IV full cohort','MIMIC-IV v3.1','Strict clinical-event clusters','1,705','456,453','t=6.0','94.3%','4.2%','15.3%','4.0 hrs','Locked'],
-        ['MIMIC-IV subcohort B','MIMIC-IV v3.1','Strict clinical-event labels','577','~150K','t=6.0','94.0%','4.4%','16.0%','4.0 hrs','Locked'],
-        ['MIMIC-IV subcohort C','MIMIC-IV v3.1','Strict clinical-event labels','621','~159K','t=6.0','94.9%','3.7%','14.1%','4.0 hrs','Locked'],
-        ['eICU harmonized pass','eICU v2.0','Harmonized clinical-event labels','2,394','2,023,962','t=6.0','94.25%','0.98%','24.66%','4.83 hrs','Locked aggregate']
+      table(['Run','Dataset','Event definition','Cases / stays','Rows','Threshold','Alert-volume reduction','FPR','Detection','Retrospective timing context','Status'],[
+        ['MIMIC-IV full cohort','MIMIC-IV v3.1','Strict clinical-event clusters','1,705','456,453','t=6.0','93.9%','4.5%','14.8%','4.0 hrs','Canonical locked'],
+        ['MIMIC-IV subcohort B','MIMIC-IV v3.1','Strict clinical-event labels','577','~150K','t=6.0','94.0%','4.4%','16.0%','4.0 hrs','Historical reference — non-canonical'],
+        ['MIMIC-IV subcohort C','MIMIC-IV v3.1','Strict clinical-event labels','621','~159K','t=6.0','94.9%','3.7%','14.1%','4.0 hrs','Historical reference — non-canonical'],
+        ['eICU harmonized full cohort','eICU v2.0','Harmonized clinical-event clusters','2,394','2,023,962','t=6.0','88.53%','2.24%','41.4%','4.75 hrs','Canonical locked']
       ]) +
       '<p style="color:#b9c7d6;margin-top:16px">Safe wording: retrospectively evaluated across MIMIC-IV and eICU using a harmonized threshold framework. Do not claim full clinical validation.</p>';
     document.body.appendChild(sec);

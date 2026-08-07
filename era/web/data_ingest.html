@@ -82,6 +82,24 @@
 
 </head>
 <body>
+<!-- ERA_CANONICAL_EVIDENCE_2026_08_07: MIMIC lock e07d173bab3e3de41efc4b7ef363ebc1e7817092; eICU lock bf38d6afd39bc4188ed1fbea4560bbafcf5ffad3; public current operating point t=6.0 only; outcome-proxy/subcohort results historical when retained. -->
+<!-- ERA-EVIDENCE-INTEGRITY-HOLD-2026-08-07 -->
+<div style="
+  margin:18px 0;
+  padding:16px 18px;
+  border:1px solid rgba(255,255,255,.25);
+  border-radius:12px;
+  background:rgba(255,255,255,.07);
+  line-height:1.55;">
+  <strong>EVIDENCE INTEGRITY HOLD</strong><br>
+  Canonical retrospective product evidence on this page is limited to
+  the locked t=6.0 full-cohort MIMIC-IV and eICU harmonized results.
+  Historical outcome-proxy and subcohort results remain separately
+  identified as non-canonical provenance. Timing is reported only as
+  retrospective timing context. Decision-support only. No prospective
+  clinical-validation claim.
+</div>
+
 <div class="wrap">
   <div class="topbar">
     <div class="brand">Early Risk Alert AI</div>
@@ -273,11 +291,11 @@
     html += '<div class="stat"><div class="stat-k">Patient Detection (T=6.0)</div><div class="stat-v">' + (hasEvents ? fmtPct(summary.era_patient_sensitivity_pct ?? summary.era_sensitivity_pct) : 'N/A') + '</div></div>';
     html += '<div class="stat"><div class="stat-k">Reading Sensitivity (T=6.0)</div><div class="stat-v">' + (hasEvents ? fmtPct(summary.era_sensitivity_pct) : 'N/A') + '</div></div>';
     html += '<div class="stat"><div class="stat-k">ERA False Positive Rate</div><div class="stat-v">' + fmtPct(summary.era_fpr_pct) + '</div></div>';
-    html += '<div class="stat"><div class="stat-k">Review Burden Reduction</div><div class="stat-v">' + fmtPct(summary.alert_reduction_pct) + '</div></div>';
+    html += '<div class="stat"><div class="stat-k">Alert-Volume Reduction</div><div class="stat-v">' + fmtPct(summary.alert_reduction_pct) + '</div></div>';
     html += '</div>';
 
     if (comparison.length){
-      html += '<div class="table-wrap"><table><thead><tr><th>Threshold</th><th>Patient Detection</th><th>Reading Sensitivity</th><th>False Positive Rate</th><th>Review Burden Reduction</th><th>Best For</th></tr></thead><tbody>';
+      html += '<div class="table-wrap"><table><thead><tr><th>Threshold</th><th>Patient Detection</th><th>Reading Sensitivity</th><th>False Positive Rate</th><th>Alert-Volume Reduction</th><th>Best For</th></tr></thead><tbody>';
       comparison.forEach(function(row){
         html += '<tr><td>' + escapeHtml(row.threshold) + '</td><td>' + escapeHtml(hasEvents ? fmtPct(row.era_patient_sensitivity_pct ?? '') : 'N/A') + '</td><td>' + escapeHtml(hasEvents ? fmtPct(row.era_sensitivity_pct) : 'N/A') + '</td><td>' + escapeHtml(fmtPct(row.era_fpr_pct)) + '</td><td>' + escapeHtml(fmtPct(row.alert_reduction_pct)) + '</td><td>' + escapeHtml(row.recommendation || '') + '</td></tr>';
       });
@@ -1160,12 +1178,10 @@
   window.__ERA_COMMAND_CENTER_EXPLAINABILITY_POLISH_V1__ = true;
 
   const ERA_EVIDENCE = {
-    alertReduction: "94.0%–94.9%",
+    alertReduction: "93.9%",
     medianLead: "4.0 hours",
-    fpr: "3.7%–4.4%",
-    threshold: "t=6.0",
-    highAcuity: "t=4.0",
-    highAcuityReduction: "80.3%"
+    fpr: "4.5%",
+    threshold: "t=6.0"
   };
 
   function textOf(el) {
@@ -1442,7 +1458,7 @@
           <small>${ERA_EVIDENCE.threshold} conservative mode</small>
         </div>
         <div class="era-xai-proof">
-          <span>Median Lead Time</span>
+          <span>Median Retrospective Timing Context</span>
           <b>${ERA_EVIDENCE.medianLead}</b>
           <small>DUA-safe retrospective testing</small>
         </div>
@@ -1450,11 +1466,6 @@
           <span>ERA FPR</span>
           <b>${ERA_EVIDENCE.fpr}</b>
           <small>t=6.0 low-burden review queue</small>
-        </div>
-        <div class="era-xai-proof">
-          <span>High-Acuity Option</span>
-          <b>${ERA_EVIDENCE.highAcuity}</b>
-          <small>${ERA_EVIDENCE.highAcuityReduction} alert reduction</small>
         </div>
       </div>
 
@@ -1628,24 +1639,24 @@
 </style>
 
 <section id="era-cross-cohort-release-panel" class="era-release-lock-panel">
-  <div class="era-release-lock-kicker">Stable Cross-Cohort Validation Evidence Release</div>
-  <h2 class="era-release-lock-title">Command Center aligned to locked t=6.0 cross-cohort evidence.</h2>
-  <p class="era-release-lock-copy">Across the full validation cohort and two deterministic patient-level subcohorts (577–1,705 cases each), the conservative t=6.0 ERA setting showed consistent low-burden review-queue performance, with 94.0%–94.9% alert reduction, 3.7%–4.4% ERA FPR, 14.1%–16.0% event-cluster detection, and a stable 4.0 hours median lead-time context across all cohorts.</p>
+  <div class="era-release-lock-kicker">Canonical MIMIC-IV Full-Cohort Evidence</div>
+  <h2 class="era-release-lock-title">Command Center aligned to locked canonical MIMIC-IV full-cohort t=6.0 evidence.</h2>
+  <p class="era-release-lock-copy">In the canonical MIMIC-IV full-cohort reverification (1,705 patients; 456,453 rows), the conservative t=6.0 ERA setting showed 93.9% alert-volume reduction, 4.5% ERA FPR, 14.8% event-cluster detection, and 4.0 hours median retrospective timing context. Earlier MIMIC subcohort B/C results are retained separately as historical, non-canonical reference evidence.</p>
 
   <div class="era-release-lock-grid">
     <div class="era-release-lock-metric">
-      <span>Alert Reduction Range</span>
-      <b>94.0%–94.9%</b>
-      <small>t=6.0 across 3 cohorts</small>
+      <span>Alert-Volume Reduction</span>
+      <b>93.9%</b>
+      <small>Canonical full cohort · 1,705 patients</small>
     </div>
     <div class="era-release-lock-metric">
-      <span>ERA FPR Range</span>
-      <b>3.7%–4.4%</b>
+      <span>ERA FPR</span>
+      <b>4.5%</b>
       <small>conservative review queue</small>
     </div>
     <div class="era-release-lock-metric">
-      <span>Detection Range</span>
-      <b>14.1%–16.0%</b>
+      <span>Event-Cluster Detection</span>
+      <b>14.8%</b>
       <small>event-cluster detection</small>
     </div>
     <div class="era-release-lock-metric">
@@ -1671,12 +1682,12 @@
 (function(){
   window.ERA_CROSS_COHORT_RELEASE = {
     releaseId: "stable-cross-cohort-validation-release-2026-04-25",
-    alertReductionRange: "94.0%–94.9%",
-    fprRange: "3.7%–4.4%",
-    detectionRange: "14.1%–16.0%",
+    alertReductionRange: "93.9%",
+    fprRange: "4.5%",
+    detectionRange: "14.8%",
     leadTimeRange: "4.0 hours",
-    casesRange: "577–1,705",
-    headline: "Across the full validation cohort and two deterministic patient-level subcohorts (577\u20131,705 cases each), the conservative t=6.0 ERA setting showed consistent low-burden review-queue performance, with 94.0%\u201394.9% alert reduction, 3.7%\u20134.4% ERA FPR, 14.1%\u201316.0% event-cluster detection, and a stable 4.0 hours median lead-time context across all cohorts."
+    casesRange: "1,705",
+    headline: "Canonical MIMIC-IV full-cohort t=6.0 evidence: 1,705 patients; 456,453 rows; 93.9% alert-volume reduction; 4.5% ERA FPR; 14.8% event-cluster detection; and 4.0 hours median retrospective timing context. Earlier subcohort B/C results remain historical, non-canonical provenance only."
   };
 
   function updateEvidenceText() {
@@ -1692,8 +1703,6 @@
 
     textNodes.forEach((n) => {
       let s = n.nodeValue;
-      s = s.replace(/94\.3%/g, "94.0%–94.9%");
-      s = s.replace(/4\.2%/g, "3.7%–4.4%");
       s = s.replace(/4\.0h/g, "4.0 hours");
       n.nodeValue = s;
     });
@@ -1759,19 +1768,15 @@
       '<p style="color:#b9c7d6;line-height:1.5">DUA-safe aggregate evidence only. Raw restricted data, row-level outputs, patient identifiers, timestamps, and enriched CSVs remain local-only.</p>' +
       '<div style="border:1px solid rgba(255,213,107,.55);background:rgba(255,213,107,.10);color:#ffe5a4;border-radius:14px;padding:12px 14px;font-weight:800;margin:14px 0">MIMIC-IV and eICU results should be framed as retrospective multi-dataset evidence under a harmonized threshold framework, not as final clinical validation.</div>' +
       '<h3>MIMIC-IV threshold matrix</h3>' +
-      table(['Threshold','Suggested setting','Alert reduction','FPR','Detection','ERA alerts / patient-day','Median lead time'],[
-        ['t=4.0','ICU / high-acuity','80.3%','14.4%','37.9%','2.22','4.0 hrs'],
-        ['t=5.0','Mixed units / balanced','89.1%','8.0%','24.6%','1.23','4.0 hrs'],
-        ['t=6.0','Telemetry / stepdown conservative','94.3%','4.2%','15.3%','0.65','4.0 hrs']
+      table(['Threshold','Suggested setting','Alert-volume reduction','FPR','Detection','ERA alerts / patient-day','Median retrospective timing context'],[
+        ['t=6.0','Telemetry / stepdown conservative','93.9%','4.5%','14.8%','0.6859','4.0 hrs']
       ]) +
       '<h3>eICU harmonized clinical-event matrix</h3>' +
-      table(['Threshold','Suggested setting','Alert reduction','FPR','Detection','Alerts / patient-day','Median lead time'],[
-        ['t=4.0','ICU / high-acuity','69.74%','5.34%','62.51%','29.2181','5.67 hrs'],
-        ['t=5.0','Mixed units / balanced','87.85%','2.23%','38.80%','11.733','5.17 hrs'],
-        ['t=6.0','Telemetry / stepdown conservative','94.25%','0.98%','24.66%','5.5536','4.83 hrs']
+      table(['Threshold','Suggested setting','Alert-volume reduction','FPR','Detection','Alerts / patient-day','Median retrospective timing context'],[
+        ['t=6.0','Telemetry / stepdown conservative','88.53%','2.24%','41.4%','10.9337','4.75 hrs']
       ]) +
       '<h3>Representative review examples</h3>' +
-      table(['Queue rank','Case','Tier','Primary driver','Trend','Lead-time context','Handling'],[
+      table(['Queue rank','Case','Tier','Primary driver','Trend','Retrospective timing context','Handling'],[
         ['#1','Case-001','Critical','SpO2 decline','Worsening','~4 hrs','Review-prioritization context only'],
         ['#2','Case-002','Critical','BP instability','Worsening','~3.5 hrs','Requires authorized clinician review'],
         ['#3','Case-003','Elevated','HR instability','Stable / Watch','~3 hrs','Workflow support only']
@@ -1812,11 +1817,11 @@
       '<div style="display:inline-block;border:1px solid rgba(168,255,176,.55);background:rgba(72,180,110,.16);color:#a8ffb0;border-radius:999px;padding:7px 11px;font-weight:900;letter-spacing:.08em;font-size:11px;text-transform:uppercase">Run registry</div>' +
       '<h2 style="font-size:32px;margin:14px 0 8px">Validation run history</h2>' +
       '<p style="color:#b9c7d6;line-height:1.5">Locked DUA-safe aggregate run registry. Raw restricted data and row-level outputs remain local-only.</p>' +
-      table(['Run','Dataset','Event definition','Cases / stays','Rows','Threshold','Alert reduction','FPR','Detection','Lead time','Status'],[
-        ['MIMIC-IV full cohort','MIMIC-IV v3.1','Strict clinical-event clusters','1,705','456,453','t=6.0','94.3%','4.2%','15.3%','4.0 hrs','Locked'],
-        ['MIMIC-IV subcohort B','MIMIC-IV v3.1','Strict clinical-event labels','577','~150K','t=6.0','94.0%','4.4%','16.0%','4.0 hrs','Locked'],
-        ['MIMIC-IV subcohort C','MIMIC-IV v3.1','Strict clinical-event labels','621','~159K','t=6.0','94.9%','3.7%','14.1%','4.0 hrs','Locked'],
-        ['eICU harmonized pass','eICU v2.0','Harmonized clinical-event labels','2,394','2,023,962','t=6.0','94.25%','0.98%','24.66%','4.83 hrs','Locked aggregate']
+      table(['Run','Dataset','Event definition','Cases / stays','Rows','Threshold','Alert-volume reduction','FPR','Detection','Retrospective timing context','Status'],[
+        ['MIMIC-IV full cohort','MIMIC-IV v3.1','Strict clinical-event clusters','1,705','456,453','t=6.0','93.9%','4.5%','14.8%','4.0 hrs','Canonical locked'],
+        ['MIMIC-IV subcohort B','MIMIC-IV v3.1','Strict clinical-event labels','577','~150K','t=6.0','94.0%','4.4%','16.0%','4.0 hrs','Historical reference — non-canonical'],
+        ['MIMIC-IV subcohort C','MIMIC-IV v3.1','Strict clinical-event labels','621','~159K','t=6.0','94.9%','3.7%','14.1%','4.0 hrs','Historical reference — non-canonical'],
+        ['eICU harmonized full cohort','eICU v2.0','Harmonized clinical-event clusters','2,394','2,023,962','t=6.0','88.53%','2.24%','41.4%','4.75 hrs','Canonical locked']
       ]) +
       '<p style="color:#b9c7d6;margin-top:16px">Safe wording: retrospectively evaluated across MIMIC-IV and eICU using a harmonized threshold framework. Do not claim full clinical validation.</p>';
     document.body.appendChild(sec);

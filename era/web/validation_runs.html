@@ -216,6 +216,23 @@
   </style>
 </head>
 <body>
+<!-- ERA_CANONICAL_EVIDENCE_2026_08_07: MIMIC lock e07d173bab3e3de41efc4b7ef363ebc1e7817092; eICU lock bf38d6afd39bc4188ed1fbea4560bbafcf5ffad3; public current operating point t=6.0 only; outcome-proxy/subcohort results historical when retained. -->
+<div style="
+  margin:18px 0;
+  padding:16px 18px;
+  border:1px solid rgba(255,255,255,.22);
+  border-radius:12px;
+  background:rgba(255,255,255,.06);
+  line-height:1.5;">
+  <strong>EVIDENCE INTEGRITY HOLD</strong><br>
+  Canonical retrospective product evidence on this page is limited to
+  the locked t=6.0 full-cohort MIMIC-IV and eICU harmonized results.
+  Historical outcome-proxy and subcohort results remain separately
+  identified as non-canonical provenance. Timing is reported only as
+  retrospective timing context. Decision-support only. No prospective
+  clinical-validation claim.
+</div>
+
   <main class="wrap">
     <section class="top">
       <div>
@@ -243,7 +260,7 @@
         The earlier validation-runs page displayed one eICU row using harmonized clinical-event numbers while the terminal log and evidence page showed the eICU outcome-proxy check. This has now been corrected by separating the eICU tracks instead of presenting them as one interchangeable result.
       </p>
       <div class="resolved">
-        Authoritative public eICU outcome-proxy track at t=6.0: <strong>96.8% alert reduction, 1.8% FPR, 66.6% detection, and 3.41 hours lead-time context.</strong>
+        Canonical harmonized eICU full-cohort result at t=6.0: <strong>88.53% alert-volume reduction, 2.24% FPR outside event windows, 41.4% event-cluster detection, and 4.75 hours retrospective timing context.</strong> The 96.8% outcome-proxy result is retained separately as historical reference only.
       </div>
       <div class="callout">
         Guardrail: Detection rates must not be merged across event definitions. MIMIC-IV strict clinical-event results, eICU outcome-proxy results, and eICU harmonized clinical-event results answer related but different validation questions.
@@ -269,20 +286,20 @@
           <tr>
             <td>
               MIMIC-IV strict clinical-event evidence
-              <small>Full cohort plus subcohort robustness range.</small>
+              <small>Canonical locked full-cohort result.</small>
             </td>
             <td>Strict clinical-event labels / event clusters</td>
             <td>t=6.0</td>
-            <td class="num">94.0%–94.9%</td>
-            <td class="num">3.7%–4.4%</td>
-            <td class="num">14.1%–16.0%</td>
+            <td class="num">93.9%</td>
+            <td class="num">4.5%</td>
+            <td class="num">14.8%</td>
             <td class="num">4.0 hrs</td>
-            <td>Locked aggregate</td>
+            <td>Canonical locked</td>
           </tr>
           <tr>
             <td>
               eICU outcome-proxy check
-              <small>Authoritative terminal/evidence output for the public eICU outcome-proxy track.</small>
+              <small>Historical outcome-proxy reference retained for endpoint provenance; not canonical product evidence.</small>
             </td>
             <td>Mortality/discharge-derived outcome-proxy event context</td>
             <td>t=6.0</td>
@@ -290,7 +307,7 @@
             <td class="num">1.8%</td>
             <td class="num">66.6%</td>
             <td class="num">3.41 hrs</td>
-            <td>Corrected primary eICU public row</td>
+            <td>Historical reference — non-canonical</td>
           </tr>
           <tr>
             <td>
@@ -299,16 +316,16 @@
             </td>
             <td>Harmonized clinical-event labeling pass</td>
             <td>t=6.0</td>
-            <td class="num">94.25%</td>
-            <td class="num">0.98%</td>
-            <td class="num">24.66%</td>
-            <td class="num">4.83 hrs</td>
-            <td>Separate track — not merged</td>
+            <td class="num">88.53%</td>
+            <td class="num">2.24%</td>
+            <td class="num">41.4%</td>
+            <td class="num">4.75 hrs</td>
+            <td>Canonical locked</td>
           </tr>
           <tr>
             <td>
               eICU harmonized subcohorts B/C
-              <small>Internal robustness checkpoint for harmonized eICU subcohorts.</small>
+              <small>Historical internal eICU subcohort checkpoint; not canonical product evidence.</small>
             </td>
             <td>Harmonized clinical-event labeling pass, subcohort robustness</td>
             <td>t=6.0</td>
@@ -316,7 +333,7 @@
             <td class="num">1.78%–2.02%</td>
             <td class="num">64.03%–64.49%</td>
             <td class="num">3.13–3.69 hrs</td>
-            <td>Internal aggregate checkpoint</td>
+            <td>Historical internal reference — non-canonical</td>
           </tr>
         </tbody>
       </table>

@@ -74,7 +74,7 @@
     banner.className = "era-metric-guardrail-box era-command-score-guardrail";
     banner.innerHTML =
       "<strong>Metric clarity:</strong> Queue values use a 0–10 Review Score for prioritization. " +
-      "Validation percentages such as 94.3% are aggregate alert-reduction metrics, not patient-risk percentages.";
+      "Validation percentages such as 93.9% are aggregate alert-reduction metrics, not patient-risk percentages.";
 
     var heading = Array.from(root.querySelectorAll("h1,h2,h3,h4")).find(function(h){
       return /queue|command wall|patient review/i.test(txt(h));
@@ -105,7 +105,7 @@
       n = n.replace(/\brisk score\b/ig, "review score");
       n = n.replace(/\bcurrent risk\b/ig, "review score");
 
-      n = n.replace(/\b([0-9](?:\.[0-9])?)\s*%\s*(risk|review score)?\b/ig, function(match, num){
+      n = n.replace(/\b([0-9](?:\.[0-9])?)\s*%\s*(risk|review score)\b/ig, function(match, num){
         return num + " / 10";
       });
 
@@ -132,8 +132,6 @@
 
       var n = t;
 
-      n = n.replace(/\b(9[0-9](?:\.[0-9])?|100)\s*%\s*risk\b/ig, "$1% alert reduction");
-      n = n.replace(/\b(9[0-9](?:\.[0-9])?|100)\s*%\s*patient risk\b/ig, "$1% alert reduction");
 
       if(n !== t){
         el.textContent = n;
@@ -196,10 +194,10 @@
           <h3>eICU outcome-proxy check</h3>
           <p>Earlier second-dataset check using mortality/discharge-derived outcome-proxy event context.</p>
           <div class="era-eicu-metrics">
-            <div class="era-eicu-metric"><span>t=6 alert reduction</span><strong>96.8%</strong></div>
+            <div class="era-eicu-metric"><span>Historical outcome-proxy t=6 alert reduction</span><strong>96.8%</strong></div>
             <div class="era-eicu-metric"><span>t=6 FPR</span><strong>1.8%</strong></div>
             <div class="era-eicu-metric"><span>t=6 detection</span><strong>66.6%</strong></div>
-            <div class="era-eicu-metric"><span>lead-time context</span><strong>3.41 hrs</strong></div>
+            <div class="era-eicu-metric"><span>retrospective timing context</span><strong>3.41 hrs</strong></div>
           </div>
         </div>
 
@@ -207,10 +205,10 @@
           <h3>eICU harmonized clinical-event pass</h3>
           <p>Newer pass intended to better align eICU evaluation with the MIMIC clinical-event framework.</p>
           <div class="era-eicu-metrics">
-            <div class="era-eicu-metric"><span>t=6 alert reduction</span><strong>94.25%</strong></div>
-            <div class="era-eicu-metric"><span>t=6 FPR</span><strong>0.98%</strong></div>
-            <div class="era-eicu-metric"><span>t=6 detection</span><strong>24.66%</strong></div>
-            <div class="era-eicu-metric"><span>lead-time context</span><strong>4.83 hrs</strong></div>
+            <div class="era-eicu-metric"><span>t=6 alert reduction</span><strong>88.53%</strong></div>
+            <div class="era-eicu-metric"><span>t=6 FPR</span><strong>2.24%</strong></div>
+            <div class="era-eicu-metric"><span>t=6 detection</span><strong>41.4%</strong></div>
+            <div class="era-eicu-metric"><span>retrospective timing context</span><strong>4.75 hrs</strong></div>
           </div>
         </div>
       </div>

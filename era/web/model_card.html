@@ -25,6 +25,24 @@ p,li{line-height:1.6}
 
 </head>
 <body>
+<!-- ERA_CANONICAL_EVIDENCE_2026_08_07: MIMIC lock e07d173bab3e3de41efc4b7ef363ebc1e7817092; eICU lock bf38d6afd39bc4188ed1fbea4560bbafcf5ffad3; public current operating point t=6.0 only; outcome-proxy/subcohort results historical when retained. -->
+<!-- ERA-EVIDENCE-INTEGRITY-HOLD-2026-08-07 -->
+<div style="
+  margin:18px 0;
+  padding:16px 18px;
+  border:1px solid rgba(255,255,255,.25);
+  border-radius:12px;
+  background:rgba(255,255,255,.07);
+  line-height:1.55;">
+  <strong>EVIDENCE INTEGRITY HOLD</strong><br>
+  Canonical retrospective product evidence on this page is limited to
+  the locked t=6.0 full-cohort MIMIC-IV and eICU harmonized results.
+  Historical outcome-proxy and subcohort results remain separately
+  identified as non-canonical provenance. Timing is reported only as
+  retrospective timing context. Decision-support only. No prospective
+  clinical-validation claim.
+</div>
+
 <div class="wrap">
 <span class="pill">Model Card · Ready</span>
 <h1>Early Risk Alert AI Model Card</h1>
@@ -46,7 +64,7 @@ p,li{line-height:1.6}
 <h2>Evidence Status</h2>
 <ul>
 <li>MIMIC-IV strict clinical-event retrospective validation.</li>
-<li>eICU second-dataset outcome-proxy robustness check.</li>
+<li>eICU harmonized clinical-event full-cohort reverification; the earlier outcome-proxy check is retained separately as historical, non-canonical endpoint context.</li>
 <li>DUA-safe aggregate-only public outputs.</li>
 <li>Raw restricted files and row-level derived files remain local-only.</li>
 </ul>
@@ -121,19 +139,15 @@ p,li{line-height:1.6}
       '<p style="color:#b9c7d6;line-height:1.5">DUA-safe aggregate evidence only. Raw restricted data, row-level outputs, patient identifiers, timestamps, and enriched CSVs remain local-only.</p>' +
       '<div style="border:1px solid rgba(255,213,107,.55);background:rgba(255,213,107,.10);color:#ffe5a4;border-radius:14px;padding:12px 14px;font-weight:800;margin:14px 0">MIMIC-IV and eICU results should be framed as retrospective multi-dataset evidence under a harmonized threshold framework, not as final clinical validation.</div>' +
       '<h3>MIMIC-IV threshold matrix</h3>' +
-      table(['Threshold','Suggested setting','Alert reduction','FPR','Detection','ERA alerts / patient-day','Median lead time'],[
-        ['t=4.0','ICU / high-acuity','80.3%','14.4%','37.9%','2.22','4.0 hrs'],
-        ['t=5.0','Mixed units / balanced','89.1%','8.0%','24.6%','1.23','4.0 hrs'],
-        ['t=6.0','Telemetry / stepdown conservative','94.3%','4.2%','15.3%','0.65','4.0 hrs']
+      table(['Threshold','Suggested setting','Alert-volume reduction','FPR','Detection','ERA alerts / patient-day','Median retrospective timing context'],[
+        ['t=6.0','Telemetry / stepdown conservative','93.9%','4.5%','14.8%','0.6859','4.0 hrs']
       ]) +
       '<h3>eICU harmonized clinical-event matrix</h3>' +
-      table(['Threshold','Suggested setting','Alert reduction','FPR','Detection','Alerts / patient-day','Median lead time'],[
-        ['t=4.0','ICU / high-acuity','69.74%','5.34%','62.51%','29.2181','5.67 hrs'],
-        ['t=5.0','Mixed units / balanced','87.85%','2.23%','38.80%','11.733','5.17 hrs'],
-        ['t=6.0','Telemetry / stepdown conservative','94.25%','0.98%','24.66%','5.5536','4.83 hrs']
+      table(['Threshold','Suggested setting','Alert-volume reduction','FPR','Detection','Alerts / patient-day','Median retrospective timing context'],[
+        ['t=6.0','Telemetry / stepdown conservative','88.53%','2.24%','41.4%','10.9337','4.75 hrs']
       ]) +
       '<h3>Representative review examples</h3>' +
-      table(['Queue rank','Case','Tier','Primary driver','Trend','Lead-time context','Handling'],[
+      table(['Queue rank','Case','Tier','Primary driver','Trend','Retrospective timing context','Handling'],[
         ['#1','Case-001','Critical','SpO2 decline','Worsening','~4 hrs','Review-prioritization context only'],
         ['#2','Case-002','Critical','BP instability','Worsening','~3.5 hrs','Requires authorized clinician review'],
         ['#3','Case-003','Elevated','HR instability','Stable / Watch','~3 hrs','Workflow support only']
@@ -174,11 +188,11 @@ p,li{line-height:1.6}
       '<div style="display:inline-block;border:1px solid rgba(168,255,176,.55);background:rgba(72,180,110,.16);color:#a8ffb0;border-radius:999px;padding:7px 11px;font-weight:900;letter-spacing:.08em;font-size:11px;text-transform:uppercase">Run registry</div>' +
       '<h2 style="font-size:32px;margin:14px 0 8px">Validation run history</h2>' +
       '<p style="color:#b9c7d6;line-height:1.5">Locked DUA-safe aggregate run registry. Raw restricted data and row-level outputs remain local-only.</p>' +
-      table(['Run','Dataset','Event definition','Cases / stays','Rows','Threshold','Alert reduction','FPR','Detection','Lead time','Status'],[
-        ['MIMIC-IV full cohort','MIMIC-IV v3.1','Strict clinical-event clusters','1,705','456,453','t=6.0','94.3%','4.2%','15.3%','4.0 hrs','Locked'],
-        ['MIMIC-IV subcohort B','MIMIC-IV v3.1','Strict clinical-event labels','577','~150K','t=6.0','94.0%','4.4%','16.0%','4.0 hrs','Locked'],
-        ['MIMIC-IV subcohort C','MIMIC-IV v3.1','Strict clinical-event labels','621','~159K','t=6.0','94.9%','3.7%','14.1%','4.0 hrs','Locked'],
-        ['eICU harmonized pass','eICU v2.0','Harmonized clinical-event labels','2,394','2,023,962','t=6.0','94.25%','0.98%','24.66%','4.83 hrs','Locked aggregate']
+      table(['Run','Dataset','Event definition','Cases / stays','Rows','Threshold','Alert-volume reduction','FPR','Detection','Retrospective timing context','Status'],[
+        ['MIMIC-IV full cohort','MIMIC-IV v3.1','Strict clinical-event clusters','1,705','456,453','t=6.0','93.9%','4.5%','14.8%','4.0 hrs','Canonical locked'],
+        ['MIMIC-IV subcohort B','MIMIC-IV v3.1','Strict clinical-event labels','577','~150K','t=6.0','94.0%','4.4%','16.0%','4.0 hrs','Historical reference — non-canonical'],
+        ['MIMIC-IV subcohort C','MIMIC-IV v3.1','Strict clinical-event labels','621','~159K','t=6.0','94.9%','3.7%','14.1%','4.0 hrs','Historical reference — non-canonical'],
+        ['eICU harmonized full cohort','eICU v2.0','Harmonized clinical-event clusters','2,394','2,023,962','t=6.0','88.53%','2.24%','41.4%','4.75 hrs','Canonical locked']
       ]) +
       '<p style="color:#b9c7d6;margin-top:16px">Safe wording: retrospectively evaluated across MIMIC-IV and eICU using a harmonized threshold framework. Do not claim full clinical validation.</p>';
     document.body.appendChild(sec);
@@ -201,5 +215,89 @@ p,li{line-height:1.6}
 <link rel="stylesheet" href="/static/era_validation_public_alignment_safe.css?v=publicalign1">
 <script src="/static/era_validation_public_alignment_safe.js?v=publicalign1"></script>
 <!-- ERA_PUBLIC_ALIGNMENT_SAFE_END -->
+
+<!-- ERA_SCORER_PROVENANCE_2026_08_07: scorer era-review-score-v1; callable era/core/scoring.py::score_review_row; spec 1.0.0; scorer-file-sha256 c37dc62136f13d11c7b54502a8ec1ee77facb3f7d889695f5480185a83b796da; scorer-contract 205eb4f3d9330bf1ebbe423c7a3fdf500953508d; corrected-boundary 4b792cc745bca5db03e8dfcb58c62cb22c3bef79; MIMIC-lock e07d173bab3e3de41efc4b7ef363ebc1e7817092; eICU-lock bf38d6afd39bc4188ed1fbea4560bbafcf5ffad3 -->
+
+<section
+  class="era-scorer-provenance"
+  id="eraScorerProvenance"
+>
+  <h2>Canonical Scoring Provenance</h2>
+
+  <p>
+    The canonical review scores and alert states underlying the
+    locked retrospective evidence were generated by the adopted
+    ERA Review Score contract. Aggregate performance metrics were
+    subsequently calculated under the locked dataset-specific
+    retrospective validation methodology.
+  </p>
+
+  <table>
+    <tbody>
+      <tr>
+        <th>Scorer ID</th>
+        <td><code>era-review-score-v1</code></td>
+      </tr>
+
+      <tr>
+        <th>Canonical callable</th>
+        <td>
+          <code>era/core/scoring.py::score_review_row</code>
+        </td>
+      </tr>
+
+      <tr>
+        <th>Scorer specification version</th>
+        <td><code>1.0.0</code></td>
+      </tr>
+
+      <tr>
+        <th>Scorer file SHA-256</th>
+        <td><code>c37dc62136f13d11c7b54502a8ec1ee77facb3f7d889695f5480185a83b796da</code></td>
+      </tr>
+
+      <tr>
+        <th>Canonical scorer-contract commit</th>
+        <td><code>205eb4f3d9330bf1ebbe423c7a3fdf500953508d</code></td>
+      </tr>
+
+      <tr>
+        <th>Corrected scorer-boundary commit</th>
+        <td><code>4b792cc745bca5db03e8dfcb58c62cb22c3bef79</code></td>
+      </tr>
+
+      <tr>
+        <th>Current evidence-facing operating point</th>
+        <td><strong>t=6.0</strong></td>
+      </tr>
+
+      <tr>
+        <th>MIMIC-IV evidence-lock commit</th>
+        <td><code>e07d173bab3e3de41efc4b7ef363ebc1e7817092</code></td>
+      </tr>
+
+      <tr>
+        <th>eICU harmonized evidence-lock commit</th>
+        <td><code>bf38d6afd39bc4188ed1fbea4560bbafcf5ffad3</code></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p class="guardrail">
+    The scorer-contract commit and evidence-lock commits are distinct
+    provenance identifiers and must not be conflated. Historical
+    MIMIC-IV subcohort B/C results and the earlier eICU outcome-proxy
+    result are retained for provenance only. They are non-canonical
+    and are not combined with or used in place of the locked
+    full-cohort t=6.0 results.
+  </p>
+
+  <p class="guardrail">
+    These metrics are retrospective characterization results.
+    They are not patient-level risk probabilities, diagnoses,
+    treatment recommendations, or autonomous escalation instructions.
+  </p>
+</section>
+
 </body>
 </html>

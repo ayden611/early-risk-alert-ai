@@ -77,7 +77,7 @@
           </thead>
           <tbody>
             <tr>
-              <td><strong>MIMIC-IV strict clinical-event release</strong><br>Full cohort + subcohorts B/C</td>
+              <td><strong>MIMIC-IV strict clinical-event release</strong><br>Canonical full cohort; subcohorts B/C historical/non-canonical</td>
               <td>Strict clinical-event labels / event clusters</td>
               <td>94.0%-94.9%</td>
               <td>3.7%-4.4%</td>
@@ -87,14 +87,14 @@
             <tr>
               <td><strong>eICU harmonized clinical-event full cohort</strong></td>
               <td>Harmonized clinical-event labeling pass</td>
-              <td>94.25%</td>
-              <td>0.98%</td>
-              <td>24.66%</td>
-              <td>4.83 hrs</td>
+              <td>88.53%</td>
+              <td>2.24%</td>
+              <td>41.4%</td>
+              <td>4.75 hrs</td>
             </tr>
             <tr>
               <td><strong>eICU harmonized subcohorts B/C</strong></td>
-              <td>Harmonized clinical-event labeling pass; subcohort robustness check</td>
+              <td>Historical internal subcohort checkpoint — non-canonical product evidence</td>
               <td>95.26%-95.64%</td>
               <td>1.78%-2.02%</td>
               <td>64.03%-64.49%</td>
@@ -103,7 +103,7 @@
             <tr>
               <td><strong>eICU outcome-proxy check</strong><br>Separate earlier second-dataset track</td>
               <td>Mortality/discharge-derived outcome-proxy context</td>
-              <td>96.8%</td>
+              <td>96.8% <small>(historical outcome-proxy; non-canonical)</small></td>
               <td>1.8%</td>
               <td>66.6%</td>
               <td>3.41 hrs</td>
