@@ -1,0 +1,78 @@
+{
+  "accepted_t6_metrics": {
+    "alert_volume_reduction_pct": 93.9,
+    "era_alerts_per_patient_day": 0.6859,
+    "era_fpr_pct": 4.5,
+    "event_cluster_detection_pct": 14.8,
+    "patient_detection_pct": 14.9,
+    "retrospective_median_timing_context_hours": 4.0,
+    "standard_threshold_alerts_per_patient_day": 11.2743
+  },
+  "canonical_minus_historical": {
+    "alert_reduction_percentage_points": -0.4,
+    "era_alerts_per_patient_day": 0.0392,
+    "era_fpr_percentage_points": 0.3,
+    "event_cluster_detection_percentage_points": -0.5,
+    "median_lead_time_hours": 0.0
+  },
+  "canonical_scorer": {
+    "callable": "era.core.scoring::score_review_row",
+    "repository_git_sha": "e375ae5c8fe62a56a09ebcb2594ddd29e27a1065",
+    "scorer_file_sha256": "c37dc62136f13d11c7b54502a8ec1ee77facb3f7d889695f5480185a83b796da",
+    "scorer_id": "era-review-score-v1",
+    "spec_version": "1.0.0"
+  },
+  "canonical_vs_legacy": {
+    "canonical_only_alert_rows": 8208,
+    "interpretation": "The canonical and historical validation-local scorers were materially different implementations. Despite this, the full-cohort aggregate operating-point results remained close. This does not establish historical scorer equivalence.",
+    "legacy_only_alert_rows": 7045,
+    "t6_alert_classification_disagreement_pct": 3.3416,
+    "t6_alert_classification_disagreement_rows": 15253
+  },
+  "claim_control": {
+    "accepted_language": "Retrospective MIMIC-IV full-cohort analysis at t=6.0 showed a 93.9% reduction in alert volume relative to standard threshold-only alerting, with 4.5% ERA FPR, 14.8% event-cluster detection, and 4.0 hours median retrospective timing context among detected event clusters.",
+    "historical_values_status": "Retired as canonical product evidence. Preserve only as historical/reference results.",
+    "prohibited_interpretations": [
+      "prospective clinical validation",
+      "proven early detection",
+      "diagnostic performance",
+      "treatment recommendation",
+      "autonomous escalation",
+      "measured clinician burden reduction"
+    ],
+    "public_release_status": "HOLD until canonical eICU full-cohort reverification and evidence-page reconciliation are complete."
+  },
+  "cohort": {
+    "description": "Historical full validation cohort reconstructed from deterministic disjoint cohort folds 1/2/3",
+    "patients": 1705,
+    "reconstructed_input_sha256": "40edc61de4356f39521523f63139bbb573f9232099c4744703599c7a85d0485a",
+    "rows": 456453,
+    "source_fold_sha256": {
+      "fold_1": "8f4554934a4600ba02a4d8f0973c44d144702423a4920dd9c84890b5c475614f",
+      "fold_2": "affa86c4b17d2e64aef097fa9f24d502a5e5df2aed583dcee0bd83a7b354fdaa",
+      "fold_3": "a45f46ed8abc793179583f6e35121f9a3fb9e9923224f9b835306fb178b86906"
+    }
+  },
+  "dataset": "MIMIC-IV",
+  "evidence_artifacts": {
+    "canonical_aggregate": {
+      "path": "data/validation/reverified_runs/mimic_canonical_20260807_155707_t6_0_e375ae5c8fe6_40edc61de435_aggregate.json",
+      "sha256": "472cecf9b8d03a2bda29c652c3e69dcd11d04f61cc7430550b9dc6f37be1af2e"
+    },
+    "legacy_divergence": {
+      "path": "data/validation/reverified_runs/mimic_canonical_20260807_155707_t6_0_e375ae5c8fe6_40edc61de435_legacy_divergence.json",
+      "sha256": "3648e906b0b009227642ebde75ce3195795ad7a473d62432bd98721045fb2647"
+    }
+  },
+  "historical_reference": {
+    "alert_reduction_pct": 94.3,
+    "era_alerts_per_patient_day": 0.6467,
+    "era_fpr_pct": 4.2,
+    "event_cluster_detection_pct": 15.3,
+    "median_lead_time_hours": 4.0,
+    "status": "retired_historical_reference_only"
+  },
+  "reviewed_at_utc": "2026-08-07T16:02:51.317732+00:00",
+  "schema_version": "era-mimic-canonical-evidence-lock-v1",
+  "status": "ACCEPTED_CANONICAL_INTERNAL_EVIDENCE"
+}
