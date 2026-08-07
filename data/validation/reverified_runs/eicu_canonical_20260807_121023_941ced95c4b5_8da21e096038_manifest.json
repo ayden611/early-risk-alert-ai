@@ -1,0 +1,30 @@
+{
+  "aggregate_artifact": {
+    "path": "data/validation/reverified_runs/eicu_canonical_20260807_121023_941ced95c4b5_8da21e096038_harmonized_aggregate.json",
+    "sha256": "43b34d9764928a9ea39abdddec11f0db8b479867c83cdd3bc3da3baf3ace410e"
+  },
+  "canonical_scorer": {
+    "callable": "era.core.scoring::score_review_row",
+    "scorer_file_sha256": "c37dc62136f13d11c7b54502a8ec1ee77facb3f7d889695f5480185a83b796da",
+    "scorer_id": "era-review-score-v1",
+    "spec_version": "1.0.0"
+  },
+  "claim_boundary": "Retrospective aggregate reverification only. Not prospective clinical validation.",
+  "cohort": {
+    "input_sha256": "8da21e0960382260e5f4d48fb1daeade6979acee628852ff48f5d6ffd3b0a110",
+    "patients_or_stays": 2394,
+    "rows": 2023962
+  },
+  "dataset": "eICU v2.0",
+  "execution": {
+    "canonical_adapter_sha256": "6d3db6f75318369f036ef6a45a14456b0734b9ce1ea8cb8d2e9890b9e6a4c60d",
+    "harmonized_labeler_sha256": "71b3f5a77d1476c05263c7fc89d4d4231b0cc295cd8fa92bee49c6dedc24f04f",
+    "harmonized_runner_sha256": "ce8d27a2f2d05f631823ad6fdde3aefd4c8262c0f3a6cdbbf333359f0a52c587",
+    "method_note": "Canonical ERA Review Score applied first. Existing harmonized clinical-event labeling pipeline then executed without rescoring.",
+    "repository_git_sha": "941ced95c4b5a2faca1aa6ab5f9eaa75e97e2d20"
+  },
+  "generated_at_utc": "2026-08-07T16:51:27.906680+00:00",
+  "run_id": "eicu_canonical_20260807_121023_941ced95c4b5_8da21e096038",
+  "schema_version": "era-eicu-canonical-reverification-v1",
+  "status": "candidate_canonical_reverification_unreviewed"
+}

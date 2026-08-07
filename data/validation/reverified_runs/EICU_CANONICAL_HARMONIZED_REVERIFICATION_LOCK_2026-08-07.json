@@ -1,0 +1,73 @@
+{
+  "accepted_t6_metrics": {
+    "alert_volume_reduction_pct": 88.53,
+    "era_alert_rows": 78824,
+    "era_alerts_per_patient_day": 10.9337,
+    "event_cluster_detection_pct": 41.4,
+    "events_detected": 5274,
+    "events_total": 12738,
+    "fpr_pct_outside_event_windows": 2.24,
+    "retrospective_median_timing_context_hours": 4.75,
+    "standard_threshold_alert_rows": 687474,
+    "standard_threshold_alerts_per_patient_day": 95.3601
+  },
+  "canonical_minus_historical": {
+    "alert_reduction_percentage_points": -5.72,
+    "event_detection_percentage_points": 16.74,
+    "fpr_percentage_points": 1.26,
+    "median_timing_hours": -0.08
+  },
+  "canonical_scorer": {
+    "callable": "era.core.scoring::score_review_row",
+    "repository_git_sha": "941ced95c4b5a2faca1aa6ab5f9eaa75e97e2d20",
+    "scorer_file_sha256": "c37dc62136f13d11c7b54502a8ec1ee77facb3f7d889695f5480185a83b796da",
+    "scorer_id": "era-review-score-v1",
+    "spec_version": "1.0.0"
+  },
+  "claim_control": {
+    "accepted_language": "Retrospective eICU harmonized clinical-event full-cohort analysis at t=6.0 showed an 88.53% reduction in alert volume relative to standard threshold-only alerting, 2.24% FPR outside event windows, 41.4% event-cluster detection, and 4.75 hours median retrospective timing context among detected event clusters.",
+    "historical_harmonized_values_status": "Retired as canonical product evidence; preserved as historical reference only.",
+    "prohibited_interpretations": [
+      "prospective clinical validation",
+      "proven early detection",
+      "diagnostic performance",
+      "patient-level probability",
+      "treatment recommendation",
+      "autonomous escalation",
+      "measured clinician burden reduction"
+    ],
+    "public_release_status": "HOLD until evidence pages and Model Card are rebuilt from canonical immutable outputs."
+  },
+  "cohort": {
+    "harmonized_clinical_event_clusters": 12738,
+    "input_sha256": "8da21e0960382260e5f4d48fb1daeade6979acee628852ff48f5d6ffd3b0a110",
+    "patients_or_stays": 2394,
+    "rows": 2023962
+  },
+  "dataset": "eICU v2.0",
+  "endpoint_separation": {
+    "harmonized_clinical_event": "This evidence lock.",
+    "outcome_proxy": "Separate historical retrospective endpoint. Do not combine or average with the harmonized clinical-event result."
+  },
+  "endpoint_track": "harmonized clinical-event",
+  "evidence_artifacts": {
+    "harmonized_aggregate": {
+      "path": "data/validation/reverified_runs/eicu_canonical_20260807_121023_941ced95c4b5_8da21e096038_harmonized_aggregate.json",
+      "sha256": "43b34d9764928a9ea39abdddec11f0db8b479867c83cdd3bc3da3baf3ace410e"
+    },
+    "provenance_manifest": {
+      "path": "data/validation/reverified_runs/eicu_canonical_20260807_121023_941ced95c4b5_8da21e096038_manifest.json",
+      "sha256": "a372e0cded10b7314a26e17cdbeff36a963d280d06710f1105b228687ea04ac6"
+    }
+  },
+  "historical_harmonized_reference": {
+    "alert_reduction_pct": 94.25,
+    "event_detection_pct": 24.66,
+    "fpr_pct_outside_event_windows": 0.98,
+    "median_lead_time_hours": 4.83,
+    "status": "retired_historical_reference_only"
+  },
+  "reviewed_at_utc": "2026-08-07T17:05:19.461019+00:00",
+  "schema_version": "era-eicu-canonical-harmonized-evidence-lock-v1",
+  "status": "ACCEPTED_CANONICAL_INTERNAL_EVIDENCE"
+}
