@@ -2742,7 +2742,7 @@ def _score_row(r: Dict[str, Any], prev: Dict[str, Any] = None) -> float:
                     risk += 0.4   # Tachycardia + tachypnea: early sepsis pattern
                 if sbp_drop and hr_rising:
                     risk += 0.6   # Hypotension + tachycardia: shock pattern
-                if hr_rising and tmp_r:
+                if hr_rising and temp_rising:
                     risk += 0.3   # Tachycardia + fever: infection/SIRS pattern
             except Exception:
                 pass
