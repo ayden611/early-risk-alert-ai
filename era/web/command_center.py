@@ -3,6 +3,21 @@ from __future__ import annotations
 from pathlib import Path
 from flask import Blueprint, Response
 
+_COMMAND_CENTER_CANONICAL_IMPORT_ERROR = None
+
+try:
+    from era.web.command_center_canonical_demo import (
+        build_canonical_command_center_snapshots_json,
+    )
+except Exception as exc:
+    # Fail closed at the Command Center boundary if the canonical
+    # synthetic-demo adapter itself cannot be imported.
+    #
+    # Do not prevent the rest of the ERA application from importing
+    # and do not fall back to historical/hardcoded Review Scores.
+    build_canonical_command_center_snapshots_json = None
+    _COMMAND_CENTER_CANONICAL_IMPORT_ERROR = repr(exc)
+
 command_center_bp = Blueprint("command_center", __name__)
 
 COMMAND_CENTER_HTML = r"""
@@ -1700,7 +1715,7 @@ td{
           </div>
           <div class="metric">
             <small>Average review score</small>
-            <b id="statAverage">7.4/10</b>
+            <b id="statAverage">—</b>
             <span>0–10 queue scale</span>
           </div>
           <div class="metric">
@@ -1779,7 +1794,7 @@ td{
           </div>
           <div class="side-card">
             <small>Avg review score</small>
-            <b id="sideAverage">7.4/10</b>
+            <b id="sideAverage">—</b>
             <p>Average score on the 0–10 queue scale.</p>
           </div>
           <div class="side-card">
@@ -1827,44 +1842,7 @@ td{
   </main>
 
   <script>
-    const snapshots = [
-      {
-        label:"Snapshot 1/4",
-        rows:[
-          {patient:"ICU-12",unit:"ICU",tier:"Critical",score:9.2,driver:"SpO2 decline",trend:"Worsening",lead:"~4.8 hrs",workflow:"Needs review",vitals:{SpO2:"88% ↓",HR:"127 bpm",BP:"168/99",RR:"29/min",Temp:"100.8°F"},why:["Oxygen saturation below threshold and trending down.","Heart rate elevated relative to baseline.","Respiratory rate outside normal range.","Lead-time context supports higher review priority."]},
-          {patient:"ICU-07",unit:"ICU",tier:"Elevated",score:8.1,driver:"BP instability",trend:"Worsening",lead:"~4.1 hrs",workflow:"Acknowledged",vitals:{SpO2:"92%",HR:"118 bpm",BP:"91/58",RR:"24/min",Temp:"99.7°F"},why:["Blood-pressure instability is the primary driver.","Trend is worsening across the visible window.","Lead-time context remains relevant for review."]},
-          {patient:"TEL-18",unit:"Telemetry",tier:"Elevated",score:7.5,driver:"HR instability",trend:"Stable",lead:"~3.4 hrs",workflow:"Acknowledged",vitals:{SpO2:"8.4/10",HR:"132 bpm",BP:"138/84",RR:"23/min",Temp:"99.1°F"},why:["Heart-rate instability remains visible.","Current trend is stable rather than worsening.","Elevated tier supports continued review."]},
-          {patient:"SDU-04",unit:"Stepdown",tier:"Watch",score:6.8,driver:"RR elevation",trend:"Stable",lead:"~2.9 hrs",workflow:"Monitoring",vitals:{SpO2:"95%",HR:"101 bpm",BP:"128/76",RR:"25/min",Temp:"98.8°F"},why:["Respiratory rate is elevated but stable.","No critical driver is dominant in this snapshot.","Monitoring state remains appropriate."]}
-        ]
-      },
-      {
-        label:"Snapshot 2/4",
-        rows:[
-          {patient:"TEL-18",unit:"Telemetry",tier:"Critical",score:8.6,driver:"HR instability",trend:"Worsening",lead:"~4.0 hrs",workflow:"Needs review",vitals:{SpO2:"93%",HR:"138 bpm",BP:"141/86",RR:"24/min",Temp:"99.4°F"},why:["Heart-rate instability increased compared with prior snapshot.","Trend moved to worsening.","Telemetry case rises to top queue position."]},
-          {patient:"ICU-12",unit:"ICU",tier:"Elevated",score:7.4,driver:"SpO2 recovery watch",trend:"Stable / Watch",lead:"~3.2 hrs",workflow:"Assigned",vitals:{SpO2:"91%",HR:"116 bpm",BP:"156/94",RR:"25/min",Temp:"99.8°F"},why:["ICU-12 remains visible but is no longer fixed as top priority.","Oxygenation remains under watch but trend is less severe.","Assigned workflow state is shown."]},
-          {patient:"ICU-07",unit:"ICU",tier:"Elevated",score:7.1,driver:"BP trend",trend:"Watch",lead:"~3.0 hrs",workflow:"Acknowledged",vitals:{SpO2:"8.4/10",HR:"108 bpm",BP:"96/62",RR:"22/min",Temp:"99.0°F"},why:["Blood-pressure trend remains a review driver.","Trend supports watch/elevated review rather than critical tier.","Acknowledged workflow state remains visible."]},
-          {patient:"WARD-21",unit:"Ward",tier:"Watch",score:6.1,driver:"BP trend",trend:"Stable",lead:"~2.5 hrs",workflow:"Monitoring",vitals:{SpO2:"96%",HR:"94 bpm",BP:"149/90",RR:"19/min",Temp:"98.6°F"},why:["Blood-pressure trend is visible but stable.","Watch tier keeps this lower in the review queue.","Monitoring continues."]}
-        ]
-      },
-      {
-        label:"Snapshot 3/4",
-        rows:[
-          {patient:"SDU-04",unit:"Stepdown",tier:"Critical",score:8.4,driver:"RR elevation",trend:"Worsening",lead:"~4.2 hrs",workflow:"Needs review",vitals:{SpO2:"90%",HR:"121 bpm",BP:"144/91",RR:"31/min",Temp:"100.1°F"},why:["Respiratory trend worsened.","RR elevation is the primary driver.","Lead-time context moved this patient to top rank."]},
-          {patient:"ICU-12",unit:"ICU",tier:"Watch",score:6.7,driver:"SpO2 stable",trend:"Stable",lead:"~2.6 hrs",workflow:"Monitoring",vitals:{SpO2:"93%",HR:"108 bpm",BP:"145/88",RR:"21/min",Temp:"99.1°F"},why:["ICU-12 is not highest priority in this snapshot.","SpO2 is stable compared with prior snapshot.","Monitoring is the current workflow state."]},
-          {patient:"TEL-18",unit:"Telemetry",tier:"Elevated",score:7.5,driver:"HR instability",trend:"Stable / Watch",lead:"~3.4 hrs",workflow:"Acknowledged",vitals:{SpO2:"95%",HR:"124 bpm",BP:"133/82",RR:"22/min",Temp:"98.6°F"},why:["HR instability remains visible.","Trend is no longer worsening.","Acknowledged workflow state is maintained."]},
-          {patient:"WARD-21",unit:"Ward",tier:"Watch",score:5.9,driver:"BP trend",trend:"Stable",lead:"~2.1 hrs",workflow:"Monitoring",vitals:{SpO2:"96%",HR:"94 bpm",BP:"146/89",RR:"18/min",Temp:"98.4°F"},why:["Blood-pressure trend is stable.","Lower review score keeps this item lower in queue.","Monitoring continues."]}
-        ]
-      },
-      {
-        label:"Snapshot 4/4",
-        rows:[
-          {patient:"ICU-21",unit:"ICU",tier:"Critical",score:8.3,driver:"BP instability",trend:"Worsening",lead:"~3.9 hrs",workflow:"Needs review",vitals:{SpO2:"92%",HR:"122 bpm",BP:"172/96",RR:"24/min",Temp:"99.9°F"},why:["Blood-pressure instability is the top driver.","Worsening trend raises priority.","Lead-time context supports top queue placement."]},
-          {patient:"ICU-12",unit:"ICU",tier:"Elevated",score:7.6,driver:"SpO2 watch",trend:"Stable / Watch",lead:"~3.3 hrs",workflow:"Assigned",vitals:{SpO2:"92%",HR:"115 bpm",BP:"150/91",RR:"24/min",Temp:"99.5°F"},why:["ICU-12 remains visible but not static.","Review score and tier changed from prior snapshots.","Assigned workflow state is shown."]},
-          {patient:"TEL-18",unit:"Telemetry",tier:"Elevated",score:7.1,driver:"HR variability",trend:"Stable",lead:"~2.9 hrs",workflow:"Acknowledged",vitals:{SpO2:"95%",HR:"118 bpm",BP:"129/80",RR:"21/min",Temp:"98.5°F"},why:["HR variability remains a driver.","Trend is stable.","Acknowledged workflow state."]},
-          {patient:"WARD-21",unit:"Ward",tier:"Watch",score:6.0,driver:"BP trend",trend:"Stable",lead:"~2.4 hrs",workflow:"Monitoring",vitals:{SpO2:"96%",HR:"93 bpm",BP:"148/90",RR:"18/min",Temp:"98.6°F"},why:["Blood-pressure trend is stable.","Watch tier keeps this lower in review queue.","Monitoring continues."]}
-        ]
-      }
-    ];
+    const snapshots = __ERA_COMMAND_CENTER_CANONICAL_SNAPSHOTS__;
 
     let snapshotIndex = 0;
     let currentFilter = "all";
@@ -1914,7 +1892,7 @@ td{
 
       const critical = snap.rows.filter(r => r.tier === "Critical").length;
 
-      document.getElementById("snapshotLabel").textContent = snap.label;
+      document.getElementById("snapshotLabel").textContent = snap.label + " · Canonical single-observation synthetic scoring · trend/compound terms inactive";
       const priorityText = currentFilter === "all" ? "All Priorities" : currentFilter;
       const unitText = currentUnitScope === "all" ? "All Units" : currentUnitScope;
       document.getElementById("filterLabel").textContent = unitText + " / " + priorityText;
@@ -1997,7 +1975,7 @@ td{
       `).join("");
 
       document.getElementById("reason").textContent =
-        `${r.driver} is the selected primary driver. Trend: ${r.trend}. Lead-time context: ${r.lead}.`;
+        `Canonical score uses current synthetic vitals only; no prior same-patient observation is supplied. ${r.driver}.`;
 
       document.getElementById("explainBullets").innerHTML =
         r.why.map(x => `<li>${x}</li>`).join("");
@@ -2270,6 +2248,94 @@ td{
 </body>
 </html>
 """
+
+_COMMAND_CENTER_CANONICAL_SNAPSHOTS_MARKER = (
+    "__ERA_COMMAND_CENTER_CANONICAL_SNAPSHOTS__"
+)
+
+_COMMAND_CENTER_HTML_TEMPLATE = COMMAND_CENTER_HTML
+
+_COMMAND_CENTER_CANONICAL_HOLD_HTML = r"""
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Early Risk Alert AI — Command Center Review Hold</title>
+  <style>
+    body{
+      margin:0;
+      min-height:100vh;
+      display:grid;
+      place-items:center;
+      background:#07111f;
+      color:#eef5ff;
+      font-family:Arial,Helvetica,sans-serif;
+    }
+    .hold{
+      width:min(760px,calc(100% - 40px));
+      box-sizing:border-box;
+      padding:32px;
+      border:1px solid rgba(255,211,109,.4);
+      border-radius:18px;
+      background:#0c1929;
+    }
+    h1{margin-top:0}
+    p{line-height:1.6;color:#cbd8e8}
+    strong{color:#ffe5a4}
+  </style>
+</head>
+<body>
+  <main class="hold">
+    <h1>Command Center — Canonical Review Hold</h1>
+    <p>
+      The synthetic Command Center scoring presentation is temporarily
+      unavailable because canonical scoring input or rendering validation
+      did not complete successfully.
+    </p>
+    <p>
+      <strong>No fallback, historical, or hardcoded Review Scores are being shown.</strong>
+    </p>
+    <p>
+      Other Early Risk Alert AI application surfaces remain independent
+      from this demonstration hold.
+    </p>
+  </main>
+</body>
+</html>
+"""
+
+
+def _build_command_center_runtime_html() -> str:
+    template = _COMMAND_CENTER_HTML_TEMPLATE
+
+    if build_canonical_command_center_snapshots_json is None:
+        return _COMMAND_CENTER_CANONICAL_HOLD_HTML
+
+    if (
+        template.count(
+            _COMMAND_CENTER_CANONICAL_SNAPSHOTS_MARKER
+        )
+        != 1
+    ):
+        return _COMMAND_CENTER_CANONICAL_HOLD_HTML
+
+    try:
+        payload = build_canonical_command_center_snapshots_json()
+    except Exception:
+        # Fail closed at the Command Center surface.
+        # Never fall back to historical/hardcoded scores.
+        return _COMMAND_CENTER_CANONICAL_HOLD_HTML
+
+    return template.replace(
+        _COMMAND_CENTER_CANONICAL_SNAPSHOTS_MARKER,
+        payload,
+        1,
+    )
+
+
+COMMAND_CENTER_HTML = _build_command_center_runtime_html()
+
 
 def command_center_page() -> Response:
     return Response(COMMAND_CENTER_HTML, mimetype="text/html")
