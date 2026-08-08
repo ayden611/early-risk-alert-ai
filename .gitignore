@@ -46,3 +46,11 @@ docs/private/outreach/
 
 # Private FDA regulatory records — local only
 docs/private/regulatory/
+
+# --- ERA local-only / private working artifacts (added 2026-08-07) ---
+era_evidence_reconciliation/
+era_archive_screening/
+era/local_only/
+tests/local_only/
+grants/
+ERA_Asset_Value_Assessment_*.docx
