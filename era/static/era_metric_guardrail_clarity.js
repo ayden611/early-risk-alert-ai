@@ -193,17 +193,11 @@
         <div class="era-eicu-track">
           <h3>eICU outcome-proxy check</h3>
           <p>Earlier second-dataset check using mortality/discharge-derived outcome-proxy event context.</p>
-          <div class="era-eicu-metrics">
-            <div class="era-eicu-metric"><span>Historical outcome-proxy t=6 alert reduction</span><strong>96.8%</strong></div>
-            <div class="era-eicu-metric"><span>t=6 FPR</span><strong>1.8%</strong></div>
-            <div class="era-eicu-metric"><span>t=6 detection</span><strong>66.6%</strong></div>
-            <div class="era-eicu-metric"><span>retrospective timing context</span><strong>3.41 hrs</strong></div>
-          </div>
+          <p class="era-eicu-metric">Historical outcome-proxy figures withheld from public presentation.</p>
         </div>
 
         <div class="era-eicu-track">
           <h3>eICU harmonized clinical-event pass</h3>
-          <p>Newer pass intended to better align eICU evaluation with the MIMIC clinical-event framework.</p>
           <div class="era-eicu-metrics">
             <div class="era-eicu-metric"><span>t=6 alert reduction</span><strong>88.53%</strong></div>
             <div class="era-eicu-metric"><span>t=6 FPR</span><strong>2.24%</strong></div>

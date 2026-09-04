@@ -103,10 +103,10 @@
             <tr>
               <td><strong>eICU outcome-proxy check</strong><br>Separate earlier second-dataset track</td>
               <td>Mortality/discharge-derived outcome-proxy context</td>
-              <td>96.8% <small>(historical outcome-proxy; non-canonical)</small></td>
-              <td>1.8%</td>
-              <td>66.6%</td>
-              <td>3.41 hrs</td>
+              <td>withheld <small>(historical outcome-proxy; non-canonical)</small></td>
+              <td>withheld</td>
+              <td>withheld</td>
+              <td>withheld</td>
             </tr>
           </tbody>
         </table>

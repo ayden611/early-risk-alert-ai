@@ -858,10 +858,7 @@
       </div>
       <div class="actions">
         <button class="btn primary" onclick="window.print()">Print / Save PDF</button>
-        <a class="btn" href="/validation-evidence/download.md">Download Markdown</a>
-        <a class="btn" href="/validation-evidence/download.json">Download JSON</a>
         <a class="btn" href="/validation-evidence" title="Row-level MIMIC-derived enriched CSV is local-only and blocked from public download">Enriched CSV: Local Only</a>
-        <a class="btn" href="/validation-evidence/examples.csv">Examples CSV</a>
         <a class="btn" href="/validation-intelligence">Validation Intelligence</a>
         <a class="btn" href="/command-center">Command Center</a>
       </div>
@@ -1004,67 +1001,45 @@
   </div>
 
 <script>
+/* ERA_PUBLIC_EVIDENCE_HOLD_2026_09_04_EVIDENCE_FETCH_NEUTRALIZED_START */
 (function(){
-  function pct(v){ if(v===null||v===undefined||v==='') return '—'; return String(v).replace('.0','') + '%'; }
-  function fmt(v){ if(v===null||v===undefined||v==='') return '—'; return Number(v).toLocaleString(); }
-  function esc(v){ return String(v ?? '').replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
-  function lead(v){ const n=Number(v); if(!Number.isFinite(n)) return '—'; return (Math.round(n*10)/10).toString() + ' hrs'; }
-  function driver(v){ if(!v) return 'Review context'; return String(v).toLowerCase()==='Composite multi-signal pattern' ? 'Composite multi-signal pattern' : v; }
+  'use strict';
 
-  fetch('/api/validation/evidence', {cache:'no-store'})
-    .then(r => r.json())
-    .then(data => {
-      const d = data.default_threshold || {};
-      const ds = data.dataset || {};
-      const metrics = data.next_validation_metrics || {};
-      const leadData = data.computed_validation_metrics && data.computed_validation_metrics.lead_time_before_event ? data.computed_validation_metrics.lead_time_before_event : {};
-      const comparison = data.operational_alert_burden_comparison || {};
-      const examples = (leadData.detected_examples || []).slice(0,8).sort((a,b)=>Number(b.score||0)-Number(a.score||0));
+  var msg = 'Validation numerical detail is withheld from public presentation pending claims-alignment review. Retrospective research evidence remains maintained in controlled evidence records.';
+  var ph = /^(\s*|—|-|…|\.\.\.|loading\.?|n\/a)$/i;
 
-      document.getElementById('headline').textContent = data.approved_claim || data.headline || 'Retrospective validation summary.';
-      document.getElementById('alertReduction').textContent = pct(d.alert_reduction_pct);
-      document.getElementById('leadTime').textContent = lead(metrics.median_lead_time_before_event_hours);
-      document.getElementById('fpr').textContent = pct(d.era_fpr_pct);
-      document.getElementById('detection').textContent = pct(d.era_patient_sensitivity_pct);
-      document.getElementById('alertBurden').textContent = 'Historical operational alert-burden summary withheld pending real-engine reverification and provenance reconciliation.';
+  ['alertReduction','leadTime','fpr','detection'].forEach(function(id){
+    var el = document.getElementById(id);
+    if (el && ph.test(el.textContent)) el.textContent = 'Withheld';
+  });
 
-      document.getElementById('datasetRows').innerHTML = [
-        ['Rows analyzed', fmt(ds.total_rows)],
-        ['Cases', fmt(ds.total_patients)],
-        ['Clinical events', fmt(ds.total_events)],
-        ['Event window', (ds.event_window_hours || 6) + ' hours'],
-        ['Thresholds tested', (ds.thresholds_tested || [4,5,6]).join(', ')]
-      ].map(x => '<tr><th>'+esc(x[0])+'</th><td>'+esc(x[1])+'</td></tr>').join('');
+  ['headline','alertBurden'].forEach(function(id){
+    var el = document.getElementById(id);
+    if (el && ph.test(el.textContent)) el.textContent = msg;
+  });
 
-      document.getElementById('thresholdRows').innerHTML = (data.threshold_profiles || []).map(p => `
-        <tr>
-          <td><span class="pill">t=${esc(p.threshold)}</span></td>
-          <td>${esc(p.unit_profile)}</td>
-          <td>${esc(p.framing)}</td>
-          <td>${pct(p.era_patient_sensitivity_pct)}</td>
-          <td>${pct(p.era_fpr_pct)}</td>
-          <td>${pct(p.alert_reduction_pct)}</td>
-        </tr>
-      `).join('');
+  ['datasetRows','thresholdRows','exampleRows'].forEach(function(id){
+    var el = document.getElementById(id);
+    if (el && !el.querySelector('tr')) {
+      el.innerHTML = '<tr><td colspan="8">' + msg + '</td></tr>';
+    }
+  });
 
-      document.getElementById('exampleRows').innerHTML = examples.map((x, idx) => `
-        <tr>
-          <td><strong>#${idx+1}</strong></td>
-          <td>${esc((x.case_id || x.patient_id))}</td>
-          <td>${lead(x.lead_hours)}</td>
-          <td>${esc(x.priority_tier)}</td>
-          <td>${esc(driver(x.primary_driver))}</td>
-          <td>${esc(x.score)}</td>
-        </tr>
-      `).join('');
-
-      document.getElementById('avoidClaims').innerHTML = (data.claims_to_avoid || []).map(x => '<li>'+esc(x)+'</li>').join('');
-    })
-    .catch(err => {
-      document.getElementById('headline').textContent = 'Evidence packet could not load.';
-      console.error(err);
-    });
+  var ac = document.getElementById('avoidClaims');
+  if (ac && !ac.querySelector('li')) {
+    ac.innerHTML = [
+      'ERA predicts deterioration.',
+      'ERA detects crises early.',
+      'ERA prevents adverse events.',
+      'ERA outperforms standard monitoring.',
+      'ERA replaces clinician judgment.',
+      'ERA independently triggers escalation.'
+    ].map(function(x){
+      return '<li>' + x + '</li>';
+    }).join('');
+  }
 })();
+/* ERA_PUBLIC_EVIDENCE_HOLD_2026_09_04_EVIDENCE_FETCH_NEUTRALIZED_END */
 </script>
 
 <script>
@@ -1118,43 +1093,23 @@
   }
 
   function hydrate(){
-    fetch('/api/validation/milestone', {cache:'no-store'})
-      .then(function(r){ return r.json(); })
-      .then(function(data){
-        var d = data.default_threshold || {};
-        var profiles = data.threshold_profiles || [];
-        var metrics = data.next_validation_metrics || {};
+    /* ERA_PUBLIC_EVIDENCE_HOLD_2026_09_04:
+       milestone numerical fetch neutralized */
+    var ph = /^(\s*|—|-|…|\.\.\.|loading\.?|n\/a)$/i;
 
-        var ar = document.getElementById('eraRealAlertReduction');
-        var fpr = document.getElementById('eraRealFpr');
-        var lead = document.getElementById('eraRealLead');
-        var det = document.getElementById('eraRealDetection');
-
-        if (ar) ar.textContent = pct(d.alert_reduction_pct);
-        if (fpr) fpr.textContent = pct(d.era_fpr_pct);
-        if (lead) lead.textContent = val(d.median_lead_time_hours || metrics.median_lead_time_before_event_hours) + ' hrs';
-        if (det) det.textContent = pct(d.era_event_cluster_detection_pct || d.era_patient_sensitivity_pct);
-
-        var rows = document.getElementById('eraRealThresholdRows');
-        if (rows) {
-          rows.innerHTML = profiles.map(function(p){
-            return '<tr>' +
-              '<td><span class="era-real-engine-pill">t=' + esc(p.threshold) + '</span></td>' +
-              '<td>' + esc(p.unit_profile || 'Configurable') + '</td>' +
-              '<td>' + esc(p.framing || 'Configurable operating point') + '</td>' +
-              '<td>' + pct(p.alert_reduction_pct) + '</td>' +
-              '<td>' + pct(p.era_fpr_pct) + '</td>' +
-              '<td>' + pct(p.era_event_cluster_detection_pct || p.era_patient_sensitivity_pct) + '</td>' +
-              '<td>' + esc(p.era_alerts_per_patient_day || '—') + '</td>' +
-            '</tr>';
-          }).join('');
-        }
-
-        setTimeout(hideLegacyBlocks, 150);
-      })
-      .catch(function(err){
-        console.error('Real-engine public wording failed to load:', err);
+    ['eraRealAlertReduction','eraRealFpr','eraRealLead','eraRealDetection']
+      .forEach(function(id){
+        var el = document.getElementById(id);
+        if (el && ph.test(el.textContent)) el.textContent = 'Withheld';
       });
+
+    var rows = document.getElementById('eraRealThresholdRows');
+    if (rows && !rows.querySelector('tr')) {
+      rows.innerHTML =
+        '<tr><td colspan="7">Validation numerical detail is withheld from public presentation pending claims-alignment review. Retrospective research evidence remains maintained in controlled evidence records.</td></tr>';
+    }
+
+    setTimeout(hideLegacyBlocks, 150);
   }
 
   document.addEventListener('DOMContentLoaded', function(){
@@ -1194,35 +1149,17 @@
 <script>
 /* ERA_LEAD_TIME_ROBUSTNESS_PROGRESS_V1_SCRIPT_START */
 (function(){
-  function pct(v){ return (v === null || v === undefined || v === '') ? '—' : String(v).replace('.0','') + '%'; }
-  function esc(v){ return String(v ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+  'use strict';
 
-  fetch('/api/validation/lead-time-sensitivity', {cache:'no-store'})
-    .then(r => r.json())
-    .then(data => {
-      const rows = data.runs || [];
-      const tbody = document.getElementById('eraLeadRobustnessRows');
-      if(!tbody) return;
+  /* ERA_PUBLIC_EVIDENCE_HOLD_2026_09_04:
+     lead-time numerical fetch neutralized */
 
-      tbody.innerHTML = rows
-        .sort((a,b) => (a.event_window_hours - b.event_window_hours) || (a.threshold - b.threshold))
-        .map(r => {
-          const detection = r.event_cluster_detection_pct ?? r.patient_detection_pct;
-          return `
-            <tr>
-              <td><span class="era-lead-pill">${esc(r.event_window_hours)}h</span></td>
-              <td>t=${esc(r.threshold)}</td>
-              <td>${esc(r.suggested_setting)}</td>
-              <td>${pct(r.alert_reduction_pct)}</td>
-              <td>${pct(r.era_fpr_pct)}</td>
-              <td>${pct(detection)}</td>
-              <td>${esc(r.median_lead_time_hours)} hrs</td>
-              <td>${esc(r.era_alerts_per_patient_day)}</td>
-            </tr>
-          `;
-        }).join('');
-    })
-    .catch(err => console.error('Lead-time robustness section failed to load', err));
+  var tbody = document.getElementById('eraLeadRobustnessRows');
+
+  if (tbody && !tbody.querySelector('tr')) {
+    tbody.innerHTML =
+      '<tr><td colspan="8">Validation numerical detail is withheld from public presentation pending claims-alignment review. Retrospective research evidence remains maintained in controlled evidence records.</td></tr>';
+  }
 })();
 /* ERA_LEAD_TIME_ROBUSTNESS_PROGRESS_V1_SCRIPT_END */
 </script>

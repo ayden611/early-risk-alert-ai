@@ -3347,6 +3347,49 @@ def create_app() -> Flask:
     app = Flask(__name__)
 
     # ERA_MODEL_PILOT_PUBLIC_ONLY_V3_START
+    # ERA_PUBLIC_EVIDENCE_HOLD_2026_09_04_START
+    # Temporary serving hold on public validation data/download children.
+    # Underlying controlled evidence records remain unchanged.
+    _ERA_PUBLIC_HOLD_PREFIXES = (
+        "/api/validation/",
+        "/validation-evidence/",
+    )
+    _ERA_PUBLIC_HOLD_MESSAGE = (
+        "Validation numerical detail is withheld from public presentation "
+        "pending claims-alignment review. Retrospective research evidence "
+        "remains maintained in controlled evidence records."
+    )
+
+    @app.before_request
+    def _era_public_evidence_hold():
+        from flask import Response as _era_hold_response
+        from flask import jsonify as _era_hold_jsonify
+        from flask import request as _era_hold_request
+
+        _path = _era_hold_request.path or ""
+
+        if not _path.startswith(_ERA_PUBLIC_HOLD_PREFIXES):
+            return None
+
+        if _path.endswith((".md", ".csv", ".txt")):
+            _resp = _era_hold_response(
+                _ERA_PUBLIC_HOLD_MESSAGE + "\n",
+                status=200,
+                mimetype="text/plain",
+            )
+        else:
+            _resp = _era_hold_jsonify({
+                "public_release": "held",
+                "message": _ERA_PUBLIC_HOLD_MESSAGE,
+            })
+            _resp.status_code = 200
+
+        _resp.headers["Cache-Control"] = "no-store"
+        _resp.headers["X-ERA-Public-Release"] = "held"
+        return _resp
+
+    # ERA_PUBLIC_EVIDENCE_HOLD_2026_09_04_END
+
     @app.before_request
     def era_model_pilot_public_only_v3():
         from pathlib import Path
