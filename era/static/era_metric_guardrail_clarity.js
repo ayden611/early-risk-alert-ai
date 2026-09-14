@@ -151,7 +151,7 @@
     banner.id = "era-validation-metric-note";
     banner.className = "era-metric-guardrail-box";
     banner.innerHTML =
-      "<strong>Validation metric note:</strong> Alert reduction, FPR, detection, and lead-time are aggregate retrospective evidence metrics. " +
+      "<strong>Validation metric note:</strong> Alert reduction, FPR, detection, and retrospective timing context are aggregate retrospective evidence metrics. " +
       "They are not individual patient-risk percentages.";
 
     var heading = Array.from(document.querySelectorAll("h1,h2")).find(function(h){
@@ -235,7 +235,7 @@
       var t = txt(el);
       if(/^[0-9]{1,3}(?:\.[0-9])?%$/.test(t)){
         var nearby = txt(el.closest("section,article,div,td,li") || el);
-        if(/alert reduction|validation|mimic|eicu|fpr|detection|lead/i.test(nearby)){
+        if(/alert reduction|validation|mimic|eicu|fpr|detection|lead|timing context/i.test(nearby)){
           el.classList.add("era-validation-metric-chip");
         }
       }

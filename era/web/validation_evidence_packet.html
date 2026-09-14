@@ -617,18 +617,18 @@
 <!-- ERA_LEAD_TIME_ROBUSTNESS_PROGRESS_V1_START -->
 <div class="wrap" style="padding-top:0;">
   <section class="era-lead-robustness">
-    <div class="era-lead-eyebrow">Progress Update · Lead-Time Robustness</div>
-    <h1 class="era-lead-title">Lead-time robustness tested across 3h, 6h, and 12h windows</h1>
+    <div class="era-lead-eyebrow">Progress Update · Retrospective Timing Context Robustness</div>
+    <h1 class="era-lead-title">Retrospective timing context robustness tested across 3h, 6h, and 12h windows</h1>
     <p class="era-lead-sub">
       ERA completed a DUA-safe event-window sensitivity matrix across 3-hour, 6-hour, and 12-hour retrospective windows.
-      Results remain aggregate-only and show how detection and lead time scale as the review window expands.
+      Results remain aggregate-only and show how detection and retrospective timing context scale as the review window expands.
     </p>
 
     <div class="era-lead-grid">
       <div class="era-lead-card">
         <div class="era-lead-k">Windows tested</div>
         <div class="era-lead-v">3 / 6 / 12h</div>
-        <div class="era-lead-note">Checks whether lead-time findings depend on the selected retrospective window.</div>
+        <div class="era-lead-note">Checks whether the retrospective timing context findings depend on the selected window.</div>
       </div>
       <div class="era-lead-card">
         <div class="era-lead-k">Thresholds tested</div>
@@ -652,7 +652,7 @@
             <th>Alert reduction</th>
             <th>FPR</th>
             <th>Detection</th>
-            <th>Median lead time</th>
+            <th>Median retrospective timing context</th>
             <th>ERA alerts / patient-day</th>
           </tr>
         </thead>
@@ -687,9 +687,9 @@
 <div class="wrap" style="padding-top:0;">
   <section class="era-matrix-story">
     <div class="era-matrix-eyebrow">DUA-Safe Threshold Matrix · Real-Engine Validation</div>
-    <h1 class="era-matrix-title">Stable 4-hour lead time across thresholds</h1>
+    <h1 class="era-matrix-title">Stable 4-hour retrospective timing context across thresholds</h1>
     <p class="era-matrix-sub">
-      Across t=4.0, t=5.0, and t=6.0, ERA maintained a 4.0-hour median lead time among detected event clusters.
+      Across t=4.0, t=5.0, and t=6.0, ERA maintained a 4.0-hour median retrospective timing context among detected event clusters.
       The threshold tradeoff is configurable: lower thresholds increase detection and alert volume; higher thresholds reduce alert burden and false positives.
     </p>
 
@@ -716,7 +716,7 @@
             <th>FPR</th>
             <th>Detection</th>
             <th>ERA alerts / patient-day</th>
-            <th>Median lead time</th>
+            <th>Median retrospective timing context</th>
           </tr>
         </thead>
         <tbody id="eraMatrixRows">
@@ -768,7 +768,7 @@
         <div class="era-real-engine-note">Low false-positive rate at t=6.0.</div>
       </div>
       <div class="era-real-engine-card">
-        <div class="era-real-engine-k">Median lead time</div>
+        <div class="era-real-engine-k">Median retrospective timing context</div>
         <div class="era-real-engine-v" id="eraRealLead">4 hrs</div>
         <div class="era-real-engine-note">Among detected event clusters within the 6-hour pre-event window.</div>
       </div>
@@ -874,7 +874,7 @@
         and 14.8% event-cluster detection at t=6.0 at conservative threshold t=6.0.
       </p>
       <div class="evidence-table-note">
-        Lead time is retrospective and applies to detected event clusters inside the configured 6-hour pre-event window.
+        Retrospective timing context applies to detected event clusters inside the configured 6-hour pre-event window.
       </div>
     </section>
     <!-- ERA_EVIDENCE_PACKET_FINAL_POLISH_V3_END -->
@@ -887,7 +887,7 @@
 
       <div class="grid">
         <div class="metric"><div class="k">Alert reduction</div><div class="v good" id="alertReduction">—</div></div>
-        <div class="metric"><div class="k">Median lead time</div><div class="v good" id="leadTime">—</div></div>
+        <div class="metric"><div class="k">Median retrospective timing context</div><div class="v good" id="leadTime">—</div></div>
         <div class="metric"><div class="k">ERA FPR</div><div class="v good" id="fpr">—</div></div>
         <div class="metric"><div class="k">Case detection</div><div class="v blue" id="detection">—</div></div>
       </div>
@@ -907,8 +907,8 @@
           <p>ERA is positioned as a selective review-prioritization layer that reduces unnecessary review interruptions.</p>
         </div>
         <div class="packet-reading-card">
-          <strong>2. Read lead time carefully.</strong>
-          <p>Lead time is measured only among detected event clusters inside the configured 6-hour pre-event window.</p>
+          <strong>2. Read retrospective timing context carefully.</strong>
+          <p>Retrospective timing context is measured only among detected event clusters inside the configured 6-hour pre-event window.</p>
         </div>
         <div class="packet-reading-card">
           <strong>3. Use thresholds by setting.</strong>
@@ -952,13 +952,13 @@
 
     <section class="section card">
       <h2>Representative Detected Review Examples</h2>
-      <p>These examples show how ERA can present queue rank, lead time, priority tier, primary driver, and score together.</p>
+      <p>These examples show how ERA can present queue rank, timing context, priority tier, primary driver, and score together.</p>
       <div class="table-scroll"><table>
         <thead>
           <tr>
             <th>Rank</th>
             <th>Case ID</th>
-            <th>Lead time</th>
+            <th>Timing context</th>
             <th>Tier</th>
             <th>Primary driver</th>
             <th>Score</th>
@@ -973,7 +973,7 @@
         <h2>How To Read This</h2>
         <ul>
           <li><strong>Alert reduction</strong> describes fewer unnecessary review interruptions versus standard threshold-only alerting.</li>
-          <li><strong>Lead time</strong> is retrospective timing from first ERA flag to documented event timestamp among detected event clusters.</li>
+          <li><strong>Timing context</strong> is retrospective timing from first ERA flag to documented event timestamp among detected event clusters.</li>
           <li><strong>Priority tier</strong> converts raw score into a command-center review category.</li>
           <li><strong>Primary driver</strong> gives reviewers a clinical signal context, not a diagnosis.</li>
         </ul>
@@ -1187,7 +1187,7 @@
     <div class="era-mini-explainability-chip"><b>Queue rank</b><span>Relative review ordering</span></div>
     <div class="era-mini-explainability-chip"><b>Primary driver</b><span>SpO2 / HR / BP / RR context</span></div>
     <div class="era-mini-explainability-chip"><b>Trend</b><span>Worsening / stable / improving</span></div>
-    <div class="era-mini-explainability-chip"><b>Lead-time context</b><span>Retrospective first-flag timing</span></div>
+    <div class="era-mini-explainability-chip"><b>Timing context</b><span>Retrospective first-flag timing</span></div>
   </div>
 </section>
 <!-- ERA_MINIMAL_EXPLAINABILITY_KEY_END -->

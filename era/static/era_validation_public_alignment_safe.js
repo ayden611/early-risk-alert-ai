@@ -55,7 +55,7 @@
               <th>t=6.0 Alert Reduction</th>
               <th>t=6.0 FPR</th>
               <th>t=6.0 Detection</th>
-              <th>Lead-Time Context</th>
+              <th>Retrospective Timing Context</th>
             </tr>
           </thead>
           <tbody>

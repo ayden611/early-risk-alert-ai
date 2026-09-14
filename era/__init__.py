@@ -4506,7 +4506,7 @@ def create_app() -> Flask:
         <p>
           These internal analyses evaluated review-notification volume relative to
           standard single-parameter threshold alerting and included retrospective
-          lead-time context relative to documented clinical events.
+          timing context relative to documented clinical events.
         </p>
 
         <p>
