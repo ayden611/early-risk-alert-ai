@@ -1605,6 +1605,36 @@ td{
 
 /* ERA_CLINICAL_WORKBOARD_FINAL_POLISH_END */
 
+/* ERA_PRESENTATION_REPAIR_V1_START */
+/* Size queue cards by available space; keep identifiers clear of tier badges. */
+#cards{
+  grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr)) !important;
+}
+#cards .patient-card:first-child{
+  grid-column:1 / -1 !important;
+  grid-row:auto !important;
+  min-height:0 !important;
+}
+#cards .patient-card:first-child::before{
+  position:static !important;
+}
+#cards .patient-card:first-child .pill{
+  margin-top:0;
+}
+#cards .patient-top{
+  grid-template-columns:minmax(0,1fr) !important;
+}
+#cards .patient-top .pill{
+  justify-self:start;
+}
+#cards .rank-title{
+  max-width:none;
+  overflow-wrap:normal !important;
+  word-break:normal;
+  white-space:nowrap;
+}
+/* ERA_PRESENTATION_REPAIR_V1_END */
+
 </style>
 </head>
 <body>
@@ -1643,9 +1673,8 @@ td{
         </p>
       </div>
       <div class="status-pills">
-        <span class="pill green">Role: Admin</span>
-        <span class="pill blue">Scope: All Units</span>
-        <span class="pill green">MFA Active</span>
+        <span class="pill blue">Simulated queue</span>
+        <span class="pill">Access status not shown</span>
         <span class="pill amber" id="lastUpdated">Updated now</span>
       </div>
     </section>
@@ -1719,9 +1748,9 @@ td{
             <span>Visible-queue average on the 0–10 scale</span>
           </div>
           <div class="metric">
-            <small>System status</small>
-            <b>Connected</b>
-            <span>Role scoped • MFA active</span>
+            <small>Display mode</small>
+            <b>Simulation</b>
+            <span>Role, MFA and connection status are not shown.</span>
           </div>
         </div>
 
@@ -1799,9 +1828,9 @@ td{
             <p>Average score of visible items on the 0–10 queue scale.</p>
           </div>
           <div class="side-card">
-            <small>System status</small>
-            <b>Connected</b>
-            <p>Admin role, all-units scope, MFA active.</p>
+            <small>Display mode</small>
+            <b>Simulation</b>
+            <p>Role, MFA and connection status are not shown.</p>
           </div>
         </div>
         <div class="guardrail">
