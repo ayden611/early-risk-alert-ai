@@ -7,6 +7,12 @@ import ast
 import json
 import re
 
+raise SystemExit(
+    "STOP_RETIRED_EVIDENCE_GENERATOR: "
+    "ERA-FRONTEND-EMITTER-CONTROL-2026-08-11-R1; this legacy generator "
+    "emits retired evidence defaults and is disabled."
+)
+
 DATA = Path("data/validation")
 DOCS = Path("docs/validation")
 WEB = Path("era/web")

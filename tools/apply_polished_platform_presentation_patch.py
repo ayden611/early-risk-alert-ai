@@ -6,6 +6,12 @@ from datetime import datetime, timezone
 import json
 import re
 
+raise SystemExit(
+    "STOP_RETIRED_EVIDENCE_GENERATOR: "
+    "ERA-SPONSOR-EMITTER-CONTROL-2026-08-11-R1; this legacy generator "
+    "emits retired or mixed-track evidence and is disabled."
+)
+
 ROOT = Path(".")
 CHANGED = []
 
