@@ -4045,11 +4045,6 @@ def create_app() -> Flask:
   <div class="card">
     <h2>Performance — retrospective validation</h2>
     <div class="disclaimer" style="background:rgba(58,211,143,.07);border-color:rgba(58,211,143,.2);color:#b6f5d9"><strong>Synthetic-data development context.</strong> Historical synthetic-data testing is maintained in controlled private evidence materials. These findings do not constitute prospective clinical validation, diagnostic-performance claims, or proof of patient-outcome improvement.</div>
-    <div class="grid-3">
-      <div class="stat-card"><div class="stat-k">ERA Sensitivity (t=6.0)</div><div class="stat-v" style="color:#3ad38f">18.8–19.3%</div><div class="stat-p">Clinical events flagged at t=6.0 across 2,000–10,000 patient datasets. Intentional trade for lower false positives. Threshold 4.0 yields 33–35% sensitivity for ICU.</div></div>
-      <div class="stat-card"><div class="stat-k">False Positive Rate (t=6.0)</div><div class="stat-v" style="color:#3ad38f">4.2–4.5%</div><div class="stat-p">ERA false positive rate vs 27–28% for standard threshold alerting — a 22–24 percentage point reduction in unnecessary interruptions across all tested datasets.</div></div>
-      <div class="stat-card"><div class="stat-k">Alert Reduction (t=6.0)</div><div class="stat-v" style="color:#3ad38f">83–84%</div><div class="stat-p">Reduction in alert volume vs standard threshold alerting. Results validated across five synthetic cohort sizes — 500, 1,000, 2,000, 5,000, and 10,000 patients (12,873–260,765 rows). ERA sensitivity 18.8–23.4% at t=6.0, false positive rate 4.2–5.1% vs 26.9–28.5% for standard thresholds, alert reduction 81.9–84.2%. Results most consistent at 2,000–10,000 patients: 19–19.3% sensitivity, 4.2–4.5% FPR, 83.3–84.2% alert reduction.</div></div>
-    </div>
     <p style="font-size:13px;color:#b6f5d9;background:rgba(58,211,143,.06);padding:12px 14px;border-radius:12px;border:1px solid rgba(58,211,143,.16);line-height:1.65;margin-bottom:10px"><strong>Why is ERA sensitivity lower?</strong> The ERA rules-based logic intentionally trades some sensitivity for dramatically lower false positives (6.2% vs 20.4%), resulting in 71.6% fewer unnecessary alerts while still surfacing key deterioration patterns in the critical 6-hour pre-event window (10,000-patient synthetic retrospective validation, April 2026). In clinical settings where alarm fatigue is a primary safety risk, reducing false positives is often more impactful than maximizing raw sensitivity.</p>
     <div style="overflow-x:auto;margin-bottom:10px">
     <table style="width:100%;border-collapse:collapse;font-size:13px">
@@ -4092,7 +4087,7 @@ def create_app() -> Flask:
       </tbody>
     </table></div>
     <p style="font-size:12px;color:#9fb4d6;margin-bottom:6px">Threshold is configurable per unit in the command center. Primary benchmark: 10,000-patient synthetic dataset · 260,765 rows · 54,161 events · April 2026. Validated across 5 confirmed cohort sizes (500–10,000 patients). MIMIC-IV real de-identified ICU data validation is planned for Q2 2026, subject to data-access approval and completion of the evaluation. Results are intended to be published publicly upon completion. Primary benchmark: 10,000-patient synthetic dataset, 260,765 rows, 54,161 clinical events, April 2026. Threshold framing: t=4.0 recommended for ICU/high-acuity, t=5.0 for mixed units, t=6.0 for telemetry/alarm fatigue reduction. All ERA thresholds produce materially lower FPR than standard threshold-only alerting. Threshold selection should be calibrated to your unit's acuity level and alarm fatigue tolerance.</p>
-    <p style="font-size:13px;margin-top:10px">MIMIC-IV real de-identified ICU data validation is planned for Q2 2026, subject to data-access approval and completion of the evaluation. Results Results are intended to be published publicly upon completion.</p>
+    <p style="font-size:13px;margin-top:10px">MIMIC-IV real de-identified ICU data validation is planned for Q2 2026, subject to data-access approval and completion of the evaluation. Results are intended to be published publicly upon completion.</p>
   </div>
 
   <div class="card">

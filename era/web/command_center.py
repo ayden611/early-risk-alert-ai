@@ -1711,12 +1711,12 @@ td{
           <div class="metric">
             <small>Critical items</small>
             <b id="statCritical">1</b>
-            <span>Higher-priority items</span>
+            <span>Critical tier items in the visible queue</span>
           </div>
           <div class="metric">
             <small>Average review score</small>
             <b id="statAverage">—</b>
-            <span>0–10 queue scale</span>
+            <span>Visible-queue average on the 0–10 scale</span>
           </div>
           <div class="metric">
             <small>System status</small>
@@ -1732,6 +1732,7 @@ td{
               <span>Sort: Queue Rank ↓ • Filter: <span id="filterLabel">All Units</span> • Operating Point: t=6.0 Conservative</span>
             </div>
 
+            <p class="scope-note">Ranks show position in the current visible queue.</p>
             <div class="card-row" id="cards"></div>
 
             <div class="table-wrap">
@@ -1790,12 +1791,12 @@ td{
           <div class="side-card">
             <small>Higher-priority items</small>
             <b id="sideHigh">1</b>
-            <p>Critical tier items in current snapshot.</p>
+            <p>Critical tier items in the visible queue.</p>
           </div>
           <div class="side-card">
             <small>Avg review score</small>
             <b id="sideAverage">—</b>
-            <p>Average score on the 0–10 queue scale.</p>
+            <p>Average score of visible items on the 0–10 queue scale.</p>
           </div>
           <div class="side-card">
             <small>System status</small>
@@ -1886,29 +1887,45 @@ td{
       const visible = rows();
       const displayRows = visible;
 
-      if(!selectedPatient || !displayRows.some(r => r.patient === selectedPatient)){
-        selectedPatient = displayRows[0].patient;
-      }
-
-      const critical = snap.rows.filter(r => r.tier === "Critical").length;
+      const critical = displayRows.filter(r => r.tier === "Critical").length;
 
       document.getElementById("snapshotLabel").textContent = snap.label + " · Canonical single-observation synthetic scoring · trend/compound terms inactive";
       const priorityText = currentFilter === "all" ? "All Priorities" : currentFilter;
       const unitText = currentUnitScope === "all" ? "All Units" : currentUnitScope;
       document.getElementById("filterLabel").textContent = unitText + " / " + priorityText;
-      document.getElementById("statOpen").textContent = snap.rows.length;
+      document.getElementById("statOpen").textContent = displayRows.length;
       document.getElementById("statCritical").textContent = critical;
-      document.getElementById("statAverage").textContent = averageScore(snap.rows);
-      document.getElementById("sideOpen").textContent = snap.rows.length;
+      document.getElementById("statAverage").textContent = averageScore(displayRows);
+      document.getElementById("sideOpen").textContent = displayRows.length;
       document.getElementById("sideHigh").textContent = critical;
-      document.getElementById("sideAverage").textContent = averageScore(snap.rows);
+      document.getElementById("sideAverage").textContent = averageScore(displayRows);
       document.getElementById("lastUpdated").textContent = "Updated: " + new Date().toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"});
 
       const cards = document.getElementById("cards");
+      const body = document.getElementById("queueBody");
       cards.innerHTML = "";
+      body.innerHTML = "";
       if(!displayRows.length){
+        selectedPatient = null;
         cards.innerHTML = `<div class="scope-note" style="grid-column:1/-1"><strong>No visible items</strong>No review items match the current view scope and priority filter.</div>`;
+        body.innerHTML = `<tr><td colspan="8">No rows match the selected unit scope and priority filter.</td></tr>`;
+        body.closest(".table-wrap").scrollLeft = 0;
+        document.getElementById("detailPatient").textContent = "No item selected";
+        document.getElementById("detailSub").textContent = "No review items match the current view scope and priority filter.";
+        const tier = document.getElementById("detailTier");
+        tier.textContent = "—";
+        tier.className = "pill";
+        document.getElementById("detailScore").textContent = "—";
+        document.getElementById("vitals").textContent = "";
+        document.getElementById("reason").textContent = "";
+        document.getElementById("explainBullets").textContent = "";
+        return;
       }
+
+      if(!selectedPatient || !displayRows.some(r => r.patient === selectedPatient)){
+        selectedPatient = displayRows[0].patient;
+      }
+
       displayRows.forEach((r, idx) => {
         const card = document.createElement("article");
         card.className = "patient-card" + (r.patient === selectedPatient ? " selected" : "");
@@ -1931,11 +1948,6 @@ td{
         cards.appendChild(card);
       });
 
-      const body = document.getElementById("queueBody");
-      body.innerHTML = "";
-      if(!displayRows.length){
-        body.innerHTML = `<tr><td colspan="8">No rows match the selected unit scope and priority filter.</td></tr>`;
-      }
       displayRows.forEach((r, idx) => {
         const tr = document.createElement("tr");
         tr.onclick = () => { selectedPatient = r.patient; render(); };
@@ -1958,8 +1970,8 @@ td{
         body.appendChild(tr);
       });
 
-      const selected = snap.rows.find(r => r.patient === selectedPatient) || displayRows[0];
-      renderDetail(selected, snap.rows.indexOf(selected) + 1);
+      const selected = displayRows.find(r => r.patient === selectedPatient);
+      renderDetail(selected, displayRows.indexOf(selected) + 1);
     }
 
     function renderDetail(r, rank){
@@ -2537,15 +2549,16 @@ COMMAND_CENTER_DECK_HTML = r"""
         <h3>V&V-lite sheet</h3>
         <table>
           <thead>
-            <tr><th>ID</th><th>Check</th><th>Evidence</th><th>Status</th></tr>
+            <tr><th>ID</th><th>Check</th><th>Evidence</th><th>Record type</th></tr>
           </thead>
           <tbody>
-            <tr><td>VV-001</td><td>Role/unit scope respected</td><td>Route and access-context checks.</td><td>Pass</td></tr>
-            <tr><td>VV-002</td><td>Workflow actions remain operational</td><td>Audit/action routes and UI workflow controls.</td><td>Pass</td></tr>
-            <tr><td>VV-003</td><td>Explainability fields visible</td><td>Queue + selected-patient detail panel.</td><td>Pass</td></tr>
-            <tr><td>VV-004</td><td>Decision-support guardrails visible</td><td>Header, banner, page footer, and governance deck.</td><td>Pass</td></tr>
+            <tr><td>VV-001</td><td>Role/unit scope respected</td><td>Route and access-context checks.</td><td>Illustrative check</td></tr>
+            <tr><td>VV-002</td><td>Workflow actions remain operational</td><td>Audit/action routes and UI workflow controls.</td><td>Illustrative check</td></tr>
+            <tr><td>VV-003</td><td>Explainability fields visible</td><td>Queue + selected-patient detail panel.</td><td>Illustrative check</td></tr>
+            <tr><td>VV-004</td><td>Decision-support guardrails visible</td><td>Header, banner, page footer, and governance deck.</td><td>Illustrative check</td></tr>
           </tbody>
         </table>
+        <p>These rows describe intended checks. This page does not report a completed test run.</p>
       </div>
     </section>
 
