@@ -1704,8 +1704,7 @@ td{
             <span class="eyebrow">Simulated review queue • simulated pilot view</span>
             <h1>Prioritized patient review queue</h1>
             <p>
-              Compact workboard showing rank, unit, priority tier, review score, primary driver,
-              trend, lead-time context, and workflow state in one glanceable view.
+              Single-observation demo: tier, driver, trend context, timing context, and workflow state.
             </p>
           </div>
           <div class="controls scope-controls" aria-label="Demo queue filters">
@@ -1774,7 +1773,7 @@ td{
                     <th>Review Score</th>
                     <th>Primary Driver</th>
                     <th>Trend</th>
-                    <th>Retrospective Context</th>
+                    <th>Timing context</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -1847,15 +1846,14 @@ td{
         <ul>
           <li>Priority tier appears as a badge.</li>
           <li>Primary driver is visible in the queue.</li>
-          <li>Trend and lead-time context are not buried in paragraphs.</li>
+          <li>Trend is display context only. Timing context is N/A for this single-observation demo.</li>
           <li>Selected patient detail shows vitals and short bullets.</li>
         </ul>
       </div>
       <div class="panel">
         <h3>Metric clarity</h3>
         <p>
-          Review Score is always shown as 0–10. Aggregate validation percentages such as alert reduction,
-          FPR, detection, and lead-time stay in validation pages and evidence packets.
+          Review Score is always shown as 0–10. Aggregate validation metrics, including alert reduction, FPR, detection, and retrospective timing context, belong in validation pages and evidence packets.
         </p>
       </div>
       <div class="panel">
@@ -1971,7 +1969,7 @@ td{
           <div class="mini">
             <b>Driver:</b> ${r.driver}<br>
             <b>Trend:</b> ${r.trend}<br>
-            <b>Lead:</b> ${r.lead}
+            <b>Timing context:</b> ${r.lead}
           </div>
         `;
         cards.appendChild(card);
@@ -2071,7 +2069,7 @@ td{
           mini.innerHTML = mini.innerHTML
             .replace(/<b>Driver:<\/b>/g, "<b>Driver</b>")
             .replace(/<b>Trend:<\/b>/g, "<b>Trend</b>")
-            .replace(/<b>Lead:<\/b>/g, "<b>Lead</b>");
+            .replace(/<b>Timing context:<\/b>/g, "<b>Timing context</b>");
         }
       });
 
@@ -2079,7 +2077,7 @@ td{
       if(reason){
         reason.innerHTML = reason.innerHTML
           .replace("is the selected primary driver.", "drives this review position.")
-          .replace("Lead-time context:", "Lead:");
+          .replace("Lead-time context:", "Timing context:");
       }
 
       var lower = document.querySelector("section.lower");
@@ -2202,7 +2200,7 @@ td{
       // Shorten the repeated title paragraph once the visible queue is doing the work.
       var queueHead = document.querySelector(".queue-head p");
       if(queueHead){
-        queueHead.textContent = "Live review workboard: tier, driver, trend, lead time, and workflow state.";
+        queueHead.textContent = "Single-observation demo: tier, driver, trend context, timing context, and workflow state.";
       }
 
       // Make the view-scope disclaimer smaller without removing it.
@@ -2239,12 +2237,12 @@ td{
         footer.textContent = "No diagnosis. No treatment direction. Does not replace clinician judgment. Does not independently trigger escalation. Simulated demo queue only; validation evidence remains aggregate and DUA-safe.";
       }
 
-      // Tighten card microcopy. Keep driver/trend/lead only.
+      // Tighten card microcopy. Keep driver/trend/timing context only.
       Array.prototype.slice.call(document.querySelectorAll(".patient-card .mini")).forEach(function(el){
         var txt = el.innerHTML || "";
         txt = txt.replace(/<b>Driver:<\/b>/gi, "<b>Driver</b>");
         txt = txt.replace(/<b>Trend:<\/b>/gi, "<b>Trend</b>");
-        txt = txt.replace(/<b>Lead:<\/b>/gi, "<b>Lead</b>");
+        txt = txt.replace(/<b>Timing context:<\/b>/gi, "<b>Timing context</b>");
         el.innerHTML = txt;
       });
 
