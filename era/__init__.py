@@ -5484,7 +5484,7 @@ def create_app() -> Flask:
 
       <!-- Consistency box -->
       <div style="margin:16px 0;padding:14px 16px;border-radius:14px;background:rgba(122,162,255,.07);border:1px solid rgba(122,162,255,.18);font-size:13px;color:#dce9ff;line-height:1.65">
-        <strong style="color:#9adfff">Consistency across scales:</strong> These results are consistent with validation runs across 500, 1,000, 2,000, 5,000, and 10,000 patient synthetic datasets. ERA sensitivity 18.8–23.4% at t=6.0, false positive rate 4.2–5.1%, alert reduction 81.9–84.2%. Results most stable at 2,000–10,000 patients. MIMIC-IV real de-identified ICU validation planned Q2 2026, subject to data-access approval.
+        <strong style="color:#9adfff">Historical synthetic development testing removed from current validation presentation pending evidence reconciliation.</strong>
       </div>
       <!-- Next steps CTA -->
       <div style="margin:12px 0;padding:12px 16px;border-radius:12px;background:rgba(58,211,143,.06);border:1px solid rgba(58,211,143,.15);font-size:13px;color:#b6f5d9;line-height:1.6">
