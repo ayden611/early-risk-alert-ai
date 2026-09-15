@@ -1,0 +1,22 @@
+{
+  "record_id": "ERA-FINAL-FRONTEND-EVIDENCE-MANIFEST-2026-08-11-R1",
+  "status": "CURRENT_REVIEWED_AUTHORITY_POINTER",
+  "supersedes": {
+    "path": "data/validation/final_frontend_evidence_polish_manifest.json",
+    "sha256": "f43ac3151c9d174c9dd878f953552a9f682ed55fb33fdb62eb1d611501cc8253",
+    "disposition": "PRESERVED_HISTORICAL_BUILD_LOG"
+  },
+  "active_sponsor_record_index": "data/validation/active_sponsor_evidence_record_2026-08-11.json",
+  "current_sponsor_summary": "docs/validation/pilot_sponsor_summary_2026-08-11_r1.md",
+  "evidence_status": "ACCEPTED_CANONICAL_INTERNAL_RETROSPECTIVE_EVIDENCE",
+  "numerical_public_release": "HOLD_PENDING_RECONCILIATION_AND_DATED_CLEARANCE",
+  "safe_claim": "Dataset-specific internal retrospective evidence exists; numerical public release remains held.",
+  "not_established": [
+    "Prospective clinical validation",
+    "Diagnosis or treatment direction",
+    "Autonomous escalation",
+    "Measured clinician burden reduction",
+    "Proven early detection",
+    "Patient-level risk probability"
+  ]
+}

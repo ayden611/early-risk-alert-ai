@@ -1,0 +1,16 @@
+{
+  "record_id": "ERA-ACTIVE-SPONSOR-EVIDENCE-2026-08-11-R1",
+  "status": "CURRENT_SPONSOR_RECORD_POINTER",
+  "current_sponsor_summary": "docs/validation/pilot_sponsor_summary_2026-08-11_r1.md",
+  "historical_sponsor_summary": {
+    "path": "docs/validation/pilot_sponsor_summary.md",
+    "sha256": "dc1a7702298770968bc327e34cd7434078c27d15a0fde9a4f4bd630b288d335f",
+    "disposition": "PRESERVED_HISTORICAL_MAY_LOCKED_NOT_CURRENT_AUTHORITY"
+  },
+  "numerical_public_release": "HOLD_PENDING_RECONCILIATION_AND_DATED_CLEARANCE",
+  "governing_acceptance_records": [
+    "docs/validation/MIMIC_CANONICAL_REVERIFICATION_ACCEPTANCE_2026-08-07.md",
+    "docs/validation/EICU_CANONICAL_HARMONIZED_REVERIFICATION_ACCEPTANCE_2026-08-07.md"
+  ],
+  "authority_note": "May manifest membership preserves historical identity; it is not canonical status or August release clearance."
+}

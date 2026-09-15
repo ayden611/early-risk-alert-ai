@@ -1,397 +1,99 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Validation Intelligence — Early Risk Alert AI</title>
-  
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Validation Intelligence — Early Risk Alert AI</title>
 <style>
-:root{
-  --bg:#07101f;
-  --panel:#101b2e;
-  --panel2:#0d1626;
-  --line:rgba(170,205,255,.22);
-  --text:#f6fbff;
-  --muted:#b8c6d8;
-  --green:#8fffd2;
-  --blue:#8bb8ff;
-  --gold:#ffe2a5;
-  --red:#ff9da8;
-}
+body{margin:0;background:#07101f;color:#f6fbff;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.wrap{width:min(1050px,calc(100% - 28px));margin:auto;padding:32px 0 60px}
+a{color:#8fffd2;text-decoration:none;font-weight:800}
+nav{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0}
+nav a{border:1px solid rgba(170,205,255,.22);border-radius:999px;padding:9px 12px;color:#f6fbff}
+.card{border:1px solid rgba(170,205,255,.22);border-radius:24px;background:linear-gradient(145deg,rgba(16,27,46,.96),rgba(7,16,31,.96));padding:22px;margin-top:16px}
+h1{font-size:clamp(34px,5vw,58px);letter-spacing:-.06em;line-height:1;margin:0 0 12px}
+p,li{line-height:1.6}
+.guard{border-left:4px solid #ffe2a5;background:rgba(255,226,165,.09);border-radius:14px;padding:12px 14px;color:#ffe2a5;font-weight:800}
+.pill{display:inline-block;border:1px solid rgba(143,255,210,.35);background:rgba(143,255,210,.1);color:#8fffd2;border-radius:999px;padding:6px 10px;font-size:11px;font-weight:900;letter-spacing:.1em;text-transform:uppercase}
+
+/* Qualitative evidence content: wrap provenance without changing the accepted palette. */
 *{box-sizing:border-box}
-body{
-  margin:0;
-  font-family:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  background:
-    radial-gradient(circle at 10% 0%, rgba(139,184,255,.16), transparent 28%),
-    radial-gradient(circle at 90% 10%, rgba(143,255,210,.12), transparent 28%),
-    var(--bg);
-  color:var(--text);
-}
-a{color:var(--green);text-decoration:none;font-weight:850}
-.wrapper{width:min(1180px, calc(100% - 28px));margin:0 auto;padding:28px 0 52px}
-.eyebrow{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--green);font-weight:950}
-h1{font-size:clamp(34px,6vw,64px);letter-spacing:-.07em;line-height:.95;margin:8px 0 14px}
-h2{font-size:clamp(24px,3vw,36px);letter-spacing:-.05em;margin:0 0 12px}
-h3{margin:22px 0 10px;letter-spacing:-.03em}
-p{line-height:1.56}
-.muted{color:var(--muted)}
-.hero,.card{
-  border:1px solid var(--line);
-  background:linear-gradient(145deg, rgba(16,27,46,.95), rgba(7,16,31,.95));
-  border-radius:28px;
-  padding:24px;
-  box-shadow:0 22px 65px rgba(0,0,0,.28);
-}
-.hero{margin-top:20px}
-.grid{display:grid;gap:14px}
-.grid.cols4{grid-template-columns:repeat(4,1fr)}
-.grid.cols3{grid-template-columns:repeat(3,1fr)}
-.grid.cols2{grid-template-columns:repeat(2,1fr)}
-.metric{
-  border:1px solid rgba(170,205,255,.18);
-  background:rgba(255,255,255,.055);
-  border-radius:20px;
-  padding:18px;
-}
-.metric span{display:block;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.13em;font-weight:950}
-.metric strong{display:block;font-size:clamp(26px,4vw,44px);margin-top:8px;color:var(--green);letter-spacing:-.06em}
-.metric em{display:block;color:var(--muted);font-style:normal;font-size:12px;margin-top:6px}
-.callout{
-  border-left:4px solid var(--green);
-  background:rgba(143,255,210,.09);
-  border-radius:16px;
-  padding:14px 16px;
-  font-weight:850;
-}
-.guardrail{
-  border:1px solid rgba(255,226,165,.35);
-  background:rgba(255,226,165,.09);
-  color:var(--gold);
-  border-radius:18px;
-  padding:14px 16px;
-  font-weight:780;
-}
-table{
-  width:100%;
-  border-collapse:collapse;
-  overflow:hidden;
-  border-radius:18px;
-  border:1px solid rgba(170,205,255,.20);
-  background:rgba(255,255,255,.035);
-  margin-top:12px;
-}
-th,td{
-  text-align:left;
-  padding:12px 14px;
-  border-bottom:1px solid rgba(170,205,255,.14);
-  vertical-align:top;
-  font-size:14px;
-}
-th{
-  color:#dce9ff;
-  background:rgba(139,184,255,.12);
-  font-size:11px;
-  text-transform:uppercase;
-  letter-spacing:.12em;
-}
-tr:last-child td{border-bottom:0}
-.pill{
-  display:inline-flex;
-  align-items:center;
-  gap:6px;
-  padding:6px 10px;
-  border-radius:999px;
-  border:1px solid rgba(143,255,210,.35);
-  background:rgba(143,255,210,.11);
-  color:var(--green);
-  font-size:11px;
-  font-weight:950;
-  letter-spacing:.08em;
-  text-transform:uppercase;
-}
-.warn{border-color:rgba(255,226,165,.35);background:rgba(255,226,165,.10);color:var(--gold)}
-.topnav{
-  display:flex;
-  flex-wrap:wrap;
-  gap:8px;
-  margin:18px 0;
-}
-.topnav a{
-  color:#eaf4ff;
-  border:1px solid rgba(170,205,255,.18);
-  background:rgba(255,255,255,.06);
-  border-radius:999px;
-  padding:9px 12px;
-  font-size:12px;
-}
-.section{margin-top:18px}
-ul{line-height:1.7}
-.footer{margin-top:24px;color:var(--muted);font-size:12px}
-@media(max-width:900px){
-  .grid.cols4,.grid.cols3,.grid.cols2{grid-template-columns:1fr}
-  table{display:block;overflow-x:auto;white-space:nowrap}
-}
-@media print{
-  body{background:#fff;color:#111}
-  .hero,.card,.metric{box-shadow:none;background:#fff;color:#111;border-color:#ccc}
-  .topnav{display:none}
-  a{color:#111}
-}
+main,section,nav,dl,dd{min-width:0}
+body{overflow-wrap:anywhere}
+.brand{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#8fffd2;font-weight:800;margin-bottom:12px}
+h2{margin-top:0;line-height:1.2}
+h3{line-height:1.25}
+a:focus-visible{outline:3px solid #ffe2a5;outline-offset:4px}
+a:hover{text-decoration:underline}
+.status{border-color:rgba(255,226,165,.4);background:rgba(255,226,165,.08)}
+.status-label{color:#ffe2a5;font-weight:900}
+code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:.9em;overflow-wrap:anywhere;white-space:normal}
+dt{font-weight:800;margin-top:14px;color:#8fffd2}
+dd{margin:4px 0 0;line-height:1.6}
+.context-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr));gap:12px}
+.context-grid div{border:1px solid rgba(170,205,255,.22);border-radius:14px;padding:14px}
+.context-grid b{display:block;color:#8fffd2;margin-bottom:5px}
+.context-grid span{line-height:1.5}
+footer{font-size:13px;line-height:1.6;margin-top:24px;color:#b8c6d8}
+@media(max-width:480px){.card{padding:18px}nav a{font-size:13px}h1{font-size:36px}}
+@media print{body{background:#fff;color:#111}nav{display:none}.card{background:#fff;border-color:#ccc;break-inside:avoid}.guard,.status{background:#fff;color:#111}.status-label,.brand,dt,.context-grid b,a,footer{color:#111}}
 </style>
-
-<!-- ERA_METRIC_GUARDRAIL_CLARITY_HEAD_START -->
-<link rel="stylesheet" href="/era-static/era_metric_guardrail_clarity.css?v=guardrail1">
-<!-- ERA_METRIC_GUARDRAIL_CLARITY_HEAD_END -->
-<!-- ERA_COMMAND_QUEUE_CONSISTENCY_HEAD_START -->
-<link rel="stylesheet" href="/era-static/era_command_queue_consistency.css?v=queue-consistency1">
-<!-- ERA_COMMAND_QUEUE_CONSISTENCY_HEAD_END -->
-
 </head>
 <body>
-<!-- ERA_CANONICAL_EVIDENCE_2026_08_07: MIMIC lock e07d173bab3e3de41efc4b7ef363ebc1e7817092; eICU lock bf38d6afd39bc4188ed1fbea4560bbafcf5ffad3; public current operating point t=6.0 only; outcome-proxy/subcohort results historical when retained. -->
-<div style="
-  margin:18px 0;
-  padding:16px 18px;
-  border:1px solid rgba(255,255,255,.22);
-  border-radius:12px;
-  background:rgba(255,255,255,.06);
-  line-height:1.5;">
-  <strong>EVIDENCE INTEGRITY HOLD</strong><br>
-  Canonical retrospective product evidence on this page is limited to
-  the locked t=6.0 full-cohort MIMIC-IV and eICU harmonized results.
-  Historical outcome-proxy and subcohort results remain separately
-  identified as non-canonical provenance. Timing is reported only as
-  retrospective timing context. Decision-support only. No prospective
-  clinical-validation claim.
-</div>
-
-<!-- ERA_SAFE_MULTI_DATASET_INTELLIGENCE_V2_START -->
-
-<section id="multi-dataset-retrospective-evidence" style="margin: 28px 0; padding: 22px; border: 1px solid rgba(164,255,190,.32); border-radius: 24px; background: rgba(9,18,32,.72);">
-  <div style="display:inline-block; padding: 6px 12px; border-radius:999px; border:1px solid rgba(164,255,190,.45); color:#b8ffc8; font-weight:800; letter-spacing:.08em; font-size:.75rem; text-transform:uppercase;">DUA-safe aggregate evidence</div>
-  <h2 style="margin:12px 0 8px; font-size: clamp(1.8rem, 3vw, 2.8rem); line-height:1.05;">Multi-dataset retrospective evidence: MIMIC-IV + eICU</h2>
-  <p style="max-width:1060px; opacity:.92;">Early Risk Alert AI has retrospective aggregate evidence across MIMIC-IV strict clinical-event cohorts and eICU harmonized clinical-event cohorts. Across conservative t=6.0 operating points, alert reduction remained high and false-positive burden remained low. Event definitions differ, so detection rates are reported separately and are not treated as equivalent endpoints.</p>
-
-  <div style="overflow-x:auto; margin-top:16px;">
-    <table style="width:100%; border-collapse:collapse; min-width:920px;">
-      <thead>
-        <tr style="background:rgba(120,160,220,.18);">
-          <th style="text-align:left; padding:12px;">Evidence Family</th>
-          <th style="text-align:left; padding:12px;">Event Definition</th>
-          <th style="text-align:left; padding:12px;">t=6.0 Alert Reduction</th>
-          <th style="text-align:left; padding:12px;">t=6.0 FPR</th>
-          <th style="text-align:left; padding:12px;">Detection</th>
-          <th style="text-align:left; padding:12px;">Retrospective Timing Context</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td style="padding:12px; border-top:1px solid rgba(255,255,255,.12);">MIMIC-IV v3.1</td>
-          <td style="padding:12px; border-top:1px solid rgba(255,255,255,.12);">Strict clinical-event cohorts</td>
-          <td style="padding:12px; border-top:1px solid rgba(255,255,255,.12);">93.9%</td>
-          <td style="padding:12px; border-top:1px solid rgba(255,255,255,.12);">4.5%</td>
-          <td style="padding:12px; border-top:1px solid rgba(255,255,255,.12);">14.8%</td>
-          <td style="padding:12px; border-top:1px solid rgba(255,255,255,.12);">4.0 hrs</td>
-        </tr>
-        <tr>
-          <td style="padding:12px; border-top:1px solid rgba(255,255,255,.12);">eICU v2.0</td>
-          <td style="padding:12px; border-top:1px solid rgba(255,255,255,.12);">Harmonized clinical-event cohorts</td>
-          <td style="padding:12px; border-top:1px solid rgba(255,255,255,.12);">88.53%</td>
-          <td style="padding:12px; border-top:1px solid rgba(255,255,255,.12);">2.24%</td>
-          <td style="padding:12px; border-top:1px solid rgba(255,255,255,.12);">41.4%</td>
-          <td style="padding:12px; border-top:1px solid rgba(255,255,255,.12);">4.75 hrs</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-
-  <p style="margin-top:14px; padding:12px 14px; border-radius:16px; border:1px solid rgba(255,205,110,.45); color:#ffd778; background:rgba(255,205,110,.08);">Approved framing: retrospectively evaluated across MIMIC-IV and eICU under a harmonized threshold framework. Avoid unqualified claims such as “clinically validated on two datasets” until the same validation question and endpoint definition are applied equivalently.</p>
-</section>
-<!-- ERA_SAFE_MULTI_DATASET_INTELLIGENCE_V2_END -->
-
-  <div class="wrapper">
-    <div class="eyebrow">Early Risk Alert AI · Retrospective Evidence</div>
-    <h1>Validation Intelligence</h1>
-    
-<nav class="topnav">
-  <a href="/command-center">Command Center</a>
-  <a href="/validation-intelligence">Validation Intelligence</a>
-  <a href="/validation-evidence">Evidence Packet</a>
-  <a href="/validation-runs">Validation Runs</a>
-  <a href="/model-card">Model Card</a>
-  <a href="/pilot-success-guide">Pilot Success Guide</a>
+<main class="wrap">
+<div class="brand">Early Risk Alert AI</div>
+<h1>Validation Intelligence</h1>
+<p>A reading guide for distinct retrospective evidence tracks and the questions they can support.</p>
+<nav aria-label="Evidence navigation">
+<a href="/command-center">Command Center</a>
+<a href="/validation-intelligence">Validation Intelligence</a>
+<a href="/validation-evidence">Evidence Packet</a>
+<a href="/validation-runs">Validation Runs</a>
+<a href="/model-card">Model Card</a>
+<a href="/pilot-success-guide">Pilot Success Guide</a>
 </nav>
-
-    
-<section class="hero">
-  <span class="pill">Published · DUA-safe aggregate evidence</span>
-  <h2 style="margin-top:18px;">Multi-dataset retrospective robustness story</h2>
-  <p class="callout">Early Risk Alert AI has canonical retrospective full-cohort evidence across two de-identified ICU datasets: MIMIC-IV strict clinical-event analysis and eICU harmonized clinical-event analysis, reported at the current evidence-facing operating point t=6.0. The earlier eICU outcome-proxy check is retained separately as historical, non-canonical endpoint context.</p>
-  <p class="muted"><strong>The current evidence-facing operating point is t=6.0. Canonical MIMIC-IV and canonical eICU harmonized full-cohort results remain separate under their dataset-specific event constructions.</strong></p>
-  <p class="muted">At the conservative t=6.0 setting, canonical MIMIC-IV showed 4.0 hrs median retrospective timing context, while canonical eICU harmonized clinical-event analysis showed 4.75 hrs.</p>
-  <div class="grid cols4 section">
-    <div class="metric"><span>MIMIC-IV t=6.0 Alert-Volume Reduction</span><strong>93.9%</strong><em>Canonical locked full-cohort result</em></div>
-    <div class="metric"><span>MIMIC-IV t=6.0 FPR</span><strong>4.5%</strong><em>Canonical locked full-cohort result</em></div>
-    <div class="metric"><span>eICU harmonized t=6.0 Alert-Volume Reduction</span><strong>88.53%</strong><em>Canonical locked full-cohort result</em></div>
-    <div class="metric"><span>Retrospective Timing Context</span><strong>4.0–4.75 hrs</strong><em>Canonical full-cohort t=6 results</em></div>
-  </div>
+<section class="card status" aria-labelledby="release-status">
+<h2 id="release-status">Evidence status</h2>
+<p class="status-label">Canonical internal evidence accepted · Public numerical release on hold</p>
+<p>The August canonical MIMIC-IV and eICU reverification records state <code>ACCEPTED_CANONICAL_INTERNAL_EVIDENCE</code>. Their public-release status remains <strong>HOLD</strong>. This page presents a qualitative summary and does not publish performance figures or grant numerical public-release clearance.</p>
+<p>Public numerical evidence remains withheld pending the dated release-clearance decision required by the existing claim-content adjudication. Rebuilding this page does not itself change that status.</p>
 </section>
-
-<section class="card section">
-  <h2>Side-by-Side Conservative Operating Point</h2>
-  <p class="muted">The strongest public story is consistent threshold-direction behavior, not direct equality between different event definitions.</p>
-  <table>
-    <thead><tr><th>Dataset</th><th>Evidence Role</th><th>Event Definition</th><th>Cases</th><th>Rows</th><th>Alert-Volume Reduction</th><th>FPR</th><th>Detection</th><th>Retrospective Timing Context</th></tr></thead>
-    <tbody>
-      <tr><td><strong>MIMIC-IV v3.1</strong></td><td>Canonical locked full-cohort strict clinical-event result</td><td>Strict clinical-event labels / event clusters</td><td>1,705</td><td>456,453</td><td>93.9%</td><td>4.5%</td><td>14.8%</td><td>4 hrs</td></tr>
-      <tr><td><strong>eICU v2.0</strong></td><td>Historical outcome-proxy reference</td><td>Mortality/discharge-derived outcome proxy</td><td>2394</td><td>2023962</td><td>withheld</td><td>withheld</td><td>withheld</td><td>withheld</td></tr>
-    </tbody>
-  </table>
-  <p class="guardrail">Canonical MIMIC-IV and canonical eICU harmonized results should not be pooled across dataset-specific event constructions. The earlier eICU mortality/discharge-derived outcome-proxy track is historical, non-canonical evidence and remains separate.</p>
+<section class="card">
+<h2>Interpret the validation question first</h2>
+<p>Each evidence track pairs a dataset, event definition, scoring implementation, and evaluation population. Those choices determine what the result describes. A change in endpoint or population cannot be treated as an interchangeable measurement of the same clinical outcome.</p>
 </section>
-
-<section class="card section">
-  <h2>Explainability Context</h2>
-  <p class="muted">The command-center display should make prioritization understandable without relying on raw score alone.</p>
-  <div class="grid cols4">
-    <div class="metric"><span>Priority Tier</span><strong>Critical</strong><em>Low / Watch / Elevated / Critical</em></div>
-    <div class="metric"><span>Queue Rank</span><strong>#1</strong><em>Relative review ordering</em></div>
-    <div class="metric"><span>Primary Driver</span><strong>SpO₂</strong><em>SpO₂ / HR / BP / RR</em></div>
-    <div class="metric"><span>Trend</span><strong>Worsening</strong><em>Context for review</em></div>
-  </div>
+<section class="card" aria-labelledby="evidence-tracks">
+<h2 id="evidence-tracks">Evidence tracks and their limits</h2>
+<dl>
+<dt>MIMIC-IV strict clinical-event full cohort</dt>
+<dd>Canonical retrospective internal evidence. The immutable August reverification record is the authority for this track; public numerical release remains on hold.</dd>
+<dt>eICU harmonized clinical-event full cohort</dt>
+<dd>Canonical retrospective internal evidence under a separate August reverification record and public-release hold. Its event definition is not interchangeable with the MIMIC-IV definition.</dd>
+<dt>Historical eICU outcome-proxy</dt>
+<dd>Mortality/discharge-derived endpoint context, preserved as historical reference. It is not direct deterioration-event validation and must not be combined or averaged with harmonized clinical-event results.</dd>
+<dt>Historical harmonized full-cohort and subcohort references</dt>
+<dd>Earlier full-cohort results are retired as canonical product evidence. The B/C subcohort results remain historical internal robustness checkpoints; their comparability with the adopted canonical scorer has not been established.</dd>
+</dl>
+<p>No cross-dataset equivalence, combined detection result, or current product-performance claim follows from these different evidence tracks.</p>
 </section>
-
-    <div class="footer">
-      Decision support only. Retrospective aggregate analysis only. Not intended to diagnose, direct treatment, replace clinician judgment, or independently trigger escalation.
-    </div>
-  </div>
-
-<!-- ERA_MINIMAL_EXPLAINABILITY_KEY_START -->
-<style>
-.era-mini-explainability-key{margin:18px auto;max-width:1180px;border:1px solid rgba(183,215,255,.22);background:rgba(16,27,46,.74);border-radius:18px;padding:16px;color:#f4f7fb;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-.era-mini-explainability-key h3{margin:0 0 8px;font-size:18px}
-.era-mini-explainability-key p{margin:0 0 12px;color:#b9c7d6;line-height:1.45}
-.era-mini-explainability-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
-.era-mini-explainability-chip{border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.055);border-radius:14px;padding:11px}
-.era-mini-explainability-chip b{display:block;color:#a8ffb0;font-size:16px}
-.era-mini-explainability-chip span{color:#b9c7d6;font-size:12px}
-</style>
-<section class="era-mini-explainability-key" aria-label="Explainability view key">
-  <h3>Explainability view key</h3>
-  <p>Visible review context for authorized users. These fields support prioritization and workflow awareness only; they are not diagnosis, treatment direction, or autonomous escalation.</p>
-  <div class="era-mini-explainability-grid">
-    <div class="era-mini-explainability-chip"><b>Priority tier</b><span>Low / Watch / Elevated / Critical</span></div>
-    <div class="era-mini-explainability-chip"><b>Queue rank</b><span>Relative review ordering</span></div>
-    <div class="era-mini-explainability-chip"><b>Primary driver</b><span>SpO2 / HR / BP / RR context</span></div>
-    <div class="era-mini-explainability-chip"><b>Trend</b><span>Worsening / stable / improving</span></div>
-    <div class="era-mini-explainability-chip"><b>Timing context</b><span>Retrospective first-flag timing</span></div>
-  </div>
+<section class="card">
+<h2>Reading retrospective metrics</h2>
+<dl>
+<dt>Alert volume and false-positive burden</dt><dd>Retrospective alert comparisons describe their stated evaluation and denominator. They do not measure clinician workload or treatment benefit.</dd>
+<dt>Event detection</dt><dd>Detection depends on the track’s event definition. Do not merge outcome-proxy and clinical-event tracks or treat dataset-specific detection measures as equivalent endpoints.</dd>
+<dt>Retrospective timing context</dt><dd>Timing among detected retrospective events is not proven prospective early detection or a patient-specific prediction.</dd>
+</dl>
 </section>
-<!-- ERA_MINIMAL_EXPLAINABILITY_KEY_END -->
-
-
-<!-- ERA_VALIDATION_EVIDENCE_LOADING_FALLBACK_START -->
-<script>
-(function(){
-  function table(headers, rows){
-    var h = '<table><thead><tr>' + headers.map(function(x){return '<th>'+x+'</th>';}).join('') + '</tr></thead><tbody>';
-    rows.forEach(function(r){ h += '<tr>' + r.map(function(x){return '<td>'+x+'</td>';}).join('') + '</tr>'; });
-    return h + '</tbody></table>';
-  }
-  function replaceLoadingText(){
-    document.querySelectorAll('td,th,p,div,span').forEach(function(el){
-      if(el.children.length === 0 && el.textContent.trim().toLowerCase() === 'locked aggregate evidence available.'){
-        el.textContent = 'Locked aggregate evidence available below.';
-      }
-    });
-  }
-  function addFallback(){
-    if(document.getElementById('era-locked-evidence-fallback')) return;
-    var sec = document.createElement('section');
-    sec.id = 'era-locked-evidence-fallback';
-    sec.style.cssText = 'margin:24px auto;max-width:1180px;border:1px solid rgba(183,215,255,.22);background:rgba(16,27,46,.80);border-radius:20px;padding:20px;color:#f4f7fb;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif';
-    sec.innerHTML =
-      '<div style="display:inline-block;border:1px solid rgba(168,255,176,.55);background:rgba(72,180,110,.16);color:#a8ffb0;border-radius:999px;padding:7px 11px;font-weight:900;letter-spacing:.08em;font-size:11px;text-transform:uppercase">Locked aggregate evidence</div>' +
-      '<h2 style="font-size:32px;margin:14px 0 8px">Printable validation evidence summary</h2>' +
-      '<p style="color:#b9c7d6;line-height:1.5">DUA-safe aggregate evidence only. Raw restricted data, row-level outputs, patient identifiers, timestamps, and enriched CSVs remain local-only.</p>' +
-      '<div style="border:1px solid rgba(255,213,107,.55);background:rgba(255,213,107,.10);color:#ffe5a4;border-radius:14px;padding:12px 14px;font-weight:800;margin:14px 0">MIMIC-IV and eICU results should be framed as retrospective multi-dataset evidence under a harmonized threshold framework, not as final clinical validation.</div>' +
-      '<h3>MIMIC-IV threshold matrix</h3>' +
-      table(['Threshold','Suggested setting','Alert-volume reduction','FPR','Detection','ERA alerts / patient-day','Median retrospective timing context'],[
-        ['t=6.0','Telemetry / stepdown conservative','93.9%','4.5%','14.8%','0.6859','4.0 hrs']
-      ]) +
-      '<h3>eICU harmonized clinical-event matrix</h3>' +
-      table(['Threshold','Suggested setting','Alert-volume reduction','FPR','Detection','Alerts / patient-day','Median retrospective timing context'],[
-        ['t=6.0','Telemetry / stepdown conservative','88.53%','2.24%','41.4%','10.9337','4.75 hrs']
-      ]) +
-      '<h3>Representative review examples</h3>' +
-      table(['Queue rank','Case','Tier','Primary driver','Trend','Retrospective timing context','Handling'],[
-        ['#1','Case-001','Critical','SpO2 decline','Worsening','~4 hrs','Review-prioritization context only'],
-        ['#2','Case-002','Critical','BP instability','Worsening','~3.5 hrs','Requires authorized clinician review'],
-        ['#3','Case-003','Elevated','HR instability','Stable / Watch','~3 hrs','Workflow support only']
-      ]) +
-      '<p style="color:#b9c7d6;margin-top:16px">Decision support only. Retrospective aggregate analysis only. Not intended to diagnose, direct treatment, replace clinician judgment, or independently trigger escalation.</p>';
-    document.body.appendChild(sec);
-  }
-  document.addEventListener('DOMContentLoaded', function(){
-    replaceLoadingText();
-    addFallback();
-  });
-})();
-</script>
-<!-- ERA_VALIDATION_EVIDENCE_LOADING_FALLBACK_END -->
-
-
-<!-- ERA_VALIDATION_RUNS_LOADING_FALLBACK_START -->
-<script>
-(function(){
-  function table(headers, rows){
-    var h = '<table><thead><tr>' + headers.map(function(x){return '<th>'+x+'</th>';}).join('') + '</tr></thead><tbody>';
-    rows.forEach(function(r){ h += '<tr>' + r.map(function(x){return '<td>'+x+'</td>';}).join('') + '</tr>'; });
-    return h + '</tbody></table>';
-  }
-  function replaceLoadingText(){
-    document.querySelectorAll('td,th,p,div,span').forEach(function(el){
-      if(el.children.length === 0 && el.textContent.trim().toLowerCase() === 'locked aggregate evidence available.'){
-        el.textContent = 'Locked aggregate run registry available below.';
-      }
-    });
-  }
-  function addFallback(){
-    if(document.getElementById('era-locked-runs-fallback')) return;
-    var sec = document.createElement('section');
-    sec.id = 'era-locked-runs-fallback';
-    sec.style.cssText = 'margin:24px auto;max-width:1180px;border:1px solid rgba(183,215,255,.22);background:rgba(16,27,46,.80);border-radius:20px;padding:20px;color:#f4f7fb;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif';
-    sec.innerHTML =
-      '<div style="display:inline-block;border:1px solid rgba(168,255,176,.55);background:rgba(72,180,110,.16);color:#a8ffb0;border-radius:999px;padding:7px 11px;font-weight:900;letter-spacing:.08em;font-size:11px;text-transform:uppercase">Run registry</div>' +
-      '<h2 style="font-size:32px;margin:14px 0 8px">Validation run history</h2>' +
-      '<p style="color:#b9c7d6;line-height:1.5">Locked DUA-safe aggregate run registry. Raw restricted data and row-level outputs remain local-only.</p>' +
-      table(['Run','Dataset','Event definition','Cases / stays','Rows','Threshold','Alert-volume reduction','FPR','Detection','Retrospective timing context','Status'],[
-        ['MIMIC-IV full cohort','MIMIC-IV v3.1','Strict clinical-event clusters','1,705','456,453','t=6.0','93.9%','4.5%','14.8%','4.0 hrs','Canonical locked'],
-        ['MIMIC-IV subcohort B','MIMIC-IV v3.1','Strict clinical-event labels','577','~150K','t=6.0','94.0%','4.4%','16.0%','4.0 hrs','Historical reference — non-canonical'],
-        ['MIMIC-IV subcohort C','MIMIC-IV v3.1','Strict clinical-event labels','621','~159K','t=6.0','94.9%','3.7%','14.1%','4.0 hrs','Historical reference — non-canonical'],
-        ['eICU harmonized full cohort','eICU v2.0','Harmonized clinical-event clusters','2,394','2,023,962','t=6.0','88.53%','2.24%','41.4%','4.75 hrs','Canonical locked']
-      ]) +
-      '<p style="color:#b9c7d6;margin-top:16px">Safe wording: retrospectively evaluated across MIMIC-IV and eICU using a harmonized threshold framework. Do not claim full clinical validation.</p>';
-    document.body.appendChild(sec);
-  }
-  document.addEventListener('DOMContentLoaded', function(){
-    replaceLoadingText();
-    addFallback();
-  });
-})();
-</script>
-<!-- ERA_VALIDATION_RUNS_LOADING_FALLBACK_END -->
-
-<!-- ERA_METRIC_GUARDRAIL_CLARITY_BODY_START -->
-<script src="/era-static/era_metric_guardrail_clarity.js?v=guardrail1"></script>
-<!-- ERA_METRIC_GUARDRAIL_CLARITY_BODY_END -->
-<!-- ERA_COMMAND_QUEUE_CONSISTENCY_BODY_START -->
-<script src="/era-static/era_command_queue_consistency.js?v=queue-consistency1"></script>
-<!-- ERA_COMMAND_QUEUE_CONSISTENCY_BODY_END -->
-<!-- ERA_PUBLIC_ALIGNMENT_SAFE_START -->
-<link rel="stylesheet" href="/static/era_validation_public_alignment_safe.css?v=publicalign1">
-<script src="/static/era_validation_public_alignment_safe.js?v=publicalign1"></script>
-<!-- ERA_PUBLIC_ALIGNMENT_SAFE_END -->
+<section class="card">
+<h2>Where to read next</h2>
+<p><a href="/validation-runs">Validation Runs</a> describes the status of each evidence family. <a href="/model-card">The Model Card</a> identifies the canonical scorer and immutable run records. <a href="/validation-evidence">The Evidence Packet</a> states the current download hold.</p>
+</section>
+<section class="card" aria-labelledby="authority-status">
+<h2 id="authority-status">Authority and public-use status</h2>
+<p>The May evidence manifest authenticates membership and byte identity at its historical baseline. It does not confer current canonical status or clear the later August results for public release. The August run-specific aggregates and acceptance records are separate authorities.</p>
+<p>Historical evidence files remain preserved. Current reader-facing wording follows the claim-content adjudication <code>ERA-CLAIM-ADJ-2026-08-10-C1-R2</code>, including the distinction between accepted internal evidence and public-release clearance.</p>
+</section>
+<footer>Decision support only. Not intended to diagnose, direct treatment, replace clinician judgment, or independently trigger escalation. No prospective clinical-validation, measured clinician-burden reduction, or autonomous-escalation claim is made by this page.</footer>
+</main>
 </body>
 </html>

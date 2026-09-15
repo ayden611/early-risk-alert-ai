@@ -72,12 +72,8 @@ pre{font-size:10px;color:#9adfff;margin-top:10px;overflow-x:auto;background:rgba
 .progress-bar{height:100%;background:#3ad38f;animation:prog 2s linear infinite}
 @keyframes prog{0%{width:0%;margin-left:0}50%{width:60%;margin-left:20%}100%{width:0%;margin-left:100%}}
 </style>
-<!-- ERA_METRIC_GUARDRAIL_CLARITY_HEAD_START -->
-<link rel="stylesheet" href="/era-static/era_metric_guardrail_clarity.css?v=guardrail1">
-<!-- ERA_METRIC_GUARDRAIL_CLARITY_HEAD_END -->
-<!-- ERA_COMMAND_QUEUE_CONSISTENCY_HEAD_START -->
-<link rel="stylesheet" href="/era-static/era_command_queue_consistency.css?v=queue-consistency1">
-<!-- ERA_COMMAND_QUEUE_CONSISTENCY_HEAD_END -->
+
+
 
 </head>
 <body>
@@ -241,16 +237,9 @@ function runExtract(download) {
   return false;
 }
 </script>
-<!-- ERA_METRIC_GUARDRAIL_CLARITY_BODY_START -->
-<script src="/era-static/era_metric_guardrail_clarity.js?v=guardrail1"></script>
-<!-- ERA_METRIC_GUARDRAIL_CLARITY_BODY_END -->
-<!-- ERA_COMMAND_QUEUE_CONSISTENCY_BODY_START -->
-<script src="/era-static/era_command_queue_consistency.js?v=queue-consistency1"></script>
-<!-- ERA_COMMAND_QUEUE_CONSISTENCY_BODY_END -->
-<!-- ERA_PUBLIC_ALIGNMENT_SAFE_START -->
-<link rel="stylesheet" href="/static/era_validation_public_alignment_safe.css?v=publicalign1">
-<script src="/static/era_validation_public_alignment_safe.js?v=publicalign1"></script>
-<!-- ERA_PUBLIC_ALIGNMENT_SAFE_END -->
+
+
+
 </body>
 </html>
 """
@@ -7449,7 +7438,7 @@ def create_app() -> Flask:
         from flask import jsonify
 
         root_dir = Path(__file__).resolve().parent.parent
-        p = root_dir / "data" / "validation" / "final_frontend_evidence_polish_manifest.json"
+        p = root_dir / "data" / "validation" / "final_frontend_evidence_polish_manifest_2026-08-11_r1.json"
         if not p.exists():
             return jsonify({"ok": False, "error": "Final frontend polish manifest not found."}), 404
         data = json.loads(p.read_text(encoding="utf-8"))
