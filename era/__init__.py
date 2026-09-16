@@ -2896,9 +2896,9 @@ def _run_retro_analysis(
         sens_patient  = pct(pat_ev_det[t],  total_patients_with_events)
         fpr           = pct(ne_fp_r[t],     total_nonevents_r)
         ar            = pct(thr_total - era_tot, thr_total) if thr_total else 0.0
-        rec = ("Best for ICU / high-acuity — maximum patient detection (61.4%), higher FPR acceptable at t=4.0" if t == 4.0 else
-               "Best for mixed units — balanced detection (48.1% patients) and alert burden (63.2% reduction) at t=5.0"       if t == 5.0 else
-               "Best for telemetry / stepdown — lowest alarm burden (71.6% reduction), 38.3% patient detection at t=6.0")
+        rec = ("Best for ICU / high-acuity — maximum patient detection, higher FPR acceptable at t=4.0" if t == 4.0 else
+               "Best for mixed units — balanced detection and alert burden at t=5.0"       if t == 5.0 else
+               "Best for telemetry / stepdown — lowest alarm burden at t=6.0")
         threshold_comparison.append({
             "threshold":                   t,
             "era_sensitivity_pct":         sens_reading,
@@ -5194,10 +5194,12 @@ def create_app() -> Flask:
   <div class="card">
     <h2>Required CSV Schema</h2>
     <p>Your CSV must include these columns. Column names are case-insensitive. Extra columns are ignored.</p>
+    <div style="overflow-x:auto">
     <table class="schema-table">
       <thead><tr><th>Column</th><th>Required</th><th>Format</th><th>Description</th></tr></thead>
       <tbody id="schemaTableBody"></tbody>
     </table>
+    </div>
   </div>
 
   <div class="card">
@@ -5387,6 +5389,7 @@ def create_app() -> Flask:
     const threshRows = tc.map(t => `
       <tr style="background:${t.threshold===6.0?'rgba(58,211,143,.05)':''}">
         <td><strong style="color:${t.threshold===4.0?'#f4bd6a':t.threshold===5.0?'#9adfff':'#3ad38f'}">${t.threshold.toFixed(1)}</strong></td>
+        <td>${t.era_patient_sensitivity_pct != null ? t.era_patient_sensitivity_pct + '%' : '—'}</td>
         <td>${t.era_sensitivity_pct}%</td>
         <td>${t.era_fpr_pct}%</td>
         <td style="color:#3ad38f">${t.alert_reduction_pct}%</td>
@@ -5437,6 +5440,7 @@ def create_app() -> Flask:
             <th>Reading Sensitivity</th>
             <th>False Positive Rate</th>
             <th>Alert Reduction</th>
+            <th>Total Alerts</th>
             <th>Best For</th>
           </tr>
         </thead>
@@ -5444,10 +5448,11 @@ def create_app() -> Flask:
           ${threshRows}
           <tr style="background:rgba(255,255,255,.03);border-top:2px solid rgba(255,255,255,.1)">
             <td><strong style="color:#9fb4d6">Standard</strong></td>
-            <td style="color:#9fb4d6">${s.threshold_patient_sensitivity_pct !== undefined ? s.threshold_patient_sensitivity_pct + '%' : '—'}</td>
+            <td style="color:#9fb4d6">${s.threshold_patient_sensitivity_pct != null ? s.threshold_patient_sensitivity_pct + '%' : '—'}</td>
             <td>${s.threshold_sensitivity_pct}%</td>
             <td style="color:#ff667d">${s.threshold_fpr_pct}%</td>
             <td style="color:#9fb4d6">—</td>
+            <td>${s.threshold_total_alerts != null ? s.threshold_total_alerts.toLocaleString() : '—'}</td>
             <td style="font-size:11px;color:var(--muted)">Baseline threshold-only alerting (no ERA)</td>
           </tr>
         </tbody>
